@@ -68,3 +68,10 @@ This authorises implementation of the extract experiment only. The earlier think
 **Authorised investigation:** test supported arrival signals in unmodified Thorium 3.5.1 on Linux, retain native turns and accessible alternatives, and keep PR #1 unmerged. If reliability cannot be established, retain explicit playback as a separate capability and explain the reader integration needed. No new reader or reader patch is authorised by this step.
 
 **Finding:** the load/intersection hypothesis can perform after the tested native turn but also performs during a controlled invisible preload. No supported reliable active-page contract was established; automatic encounter remains unresolved. Native recordings and the source inspection are in [[Planetary Model EPUB Test]]. The prior interpretation of Ted's recording as failed progressive typing is superseded.
+
+
+## 2026-10-20 — Reading position is a reader integration boundary
+
+**Finding, not a new implementation:** Thorium 3.5.1 and its pinned vendored Readium code coordinate native location, TTS start/highlighting/navigation and media overlays through application/preload mechanisms. No supported publication-facing silent component-arrival contract was found. Speech playback is not an activation workaround. See [[Planetary Model EPUB Test]] and the linked exact-source trace.
+
+**Proposed next step, not a settled platform choice or authorised reader build:** agree a small supported presentation bridge with a reader/toolkit before another automatic-arrival experiment. Existing Readium application APIs could support integration, with additional committed-presentation filtering. Keep working playback-v2 unchanged. No new EPUB is justified by this trace; automatic encounter remains unresolved and PR #1 remains unmerged.

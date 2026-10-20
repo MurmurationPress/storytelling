@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-20",
+  "thorium": "3.5.1",
+  "thorium_commit": "137e8901196bc47173580856105fe78b40473570",
+  "navigator_upstream_pin": "01a5d14e44b2daab78ea16270b35a2fe9c36490a",
+  "files": {
+    "electron/renderer/location.ts": {
+      "vendored_sha256": "318fcf140c7c828e2f060265c6b07349ee96a486edb97cbeecadf6666e1d32a9",
+      "upstream_sha256": "73c15eed87df3b0a62a932b39cf503c912df4baa0596370191de9cb96c64b51f",
+      "identical": false
+    },
+    "electron/renderer/readaloud.ts": {
+      "vendored_sha256": "da26bebefc100a136a39c84fc2c694e9ea7e4d34f1c7f3e5c4f512d73c73f10a",
+      "upstream_sha256": "75d829318f0f24e04e715bf2e7ec44a7a16428274a79edf1761166098efa0ea3",
+      "identical": false
+    },
+    "electron/renderer/media-overlays.ts": {
+      "vendored_sha256": "4c894e99de26a728c7d0c43efdb6b26a7e59cdfe7df568caaebde26a20e15de6",
+      "upstream_sha256": "7bdae61f8c9b4647b1279553f4b027b70fd5f4599f8545dd782f7859aaf61ce7",
+      "identical": false
+    },
+    "electron/renderer/webview/preload.ts": {
+      "vendored_sha256": "336977003f9ad20ed324f58ba7ddabfb6600af10dee098abcb94565891c74803",
+      "upstream_sha256": "c933277b9433ab057c4b13d2c5e8db30cfe88037e4e757a106ee4137da322319",
+      "identical": false
+    },
+    "electron/renderer/webview/readaloud.ts": {
+      "vendored_sha256": "5acfda7e881cd178b9e738db446e985af42e491fefb0543c437e1092b847db75",
+      "upstream_sha256": "3695b60ce94712c0dfb7e5f2427c358f01adf1d96451419355da6a0d5347c914",
+      "identical": false
+    },
+    "electron/renderer/webview/epubReadingSystem.ts": {
+      "vendored_sha256": "99b738fe95d8ecbd07a8a3710cbc5551945b8d2f53fd4758a96a123b45a61d1b",
+      "upstream_sha256": "99b738fe95d8ecbd07a8a3710cbc5551945b8d2f53fd4758a96a123b45a61d1b",
+      "identical": true
+    },
+    "electron/renderer/dom.ts": {
+      "vendored_sha256": "96b93cb110845dad6522394e85ab598187625c7cb169cc19bcc5f2135eec23e3",
+      "upstream_sha256": "f484b54de5f06b22ca12f7ed33bc9050b2234a9bd8b047971d09ee1bb235ee91",
+      "identical": false
+    }
+  }
+}

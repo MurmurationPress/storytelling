@@ -1,5 +1,7 @@
 # Current result: typing works; reliable automatic encounter remains unresolved
 
+**Reading-position follow-up (2026-10-20):** [the implementation trace](READING-POSITION.md) follows native turns, TTS and media overlays through the exact Thorium/Readium versions. Location APIs remain application-side; narration mechanisms do not supply a supported silent-reading encounter signal to publication scripts. No credible new supported trigger was found, so no new EPUB or native run was added. Playback-v2 remains unchanged.
+
 **Ted's recording demonstrates progressive typing in playback-v2.** The clarification changes the interpretation of the preceding investigation: the remaining problem is that the complete YAML is readable before Begin/Replay clears and performs it. Manual playback does not meet the intended first encounter. It is no longer appropriate to describe Ted's recording as an unexplained failure of progressive typing.
 
 **No reliable supported arrival signal was established in unmodified Thorium Desktop 3.5.1 on Linux.** A separately named load/intersection probe automatically performs after the tested page turn, without flashing complete text. However, it also performs in a controlled invisible preload and then shows already-completed output on first actual arrival. It is therefore **not an accepted automatic-playback implementation**. Playback-v2 is retained unchanged as the working explicit-start artifact, not as fulfilment of automatic performance on encounter.

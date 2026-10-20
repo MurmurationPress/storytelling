@@ -1,5 +1,7 @@
 # Planetary Model EPUB capability experiment
 
+**Reading-position follow-up (2026-10-20):** [the implementation trace](READING-POSITION.md) follows native turns, TTS and media overlays through the exact Thorium/Readium versions. Location APIs remain application-side; narration mechanisms do not supply a supported silent-reading encounter signal to publication scripts. No credible new supported trigger was found, so no new EPUB or native run was added. Playback-v2 remains unchanged.
+
 **Progressive typing is demonstrated in Ted's recording. Automatic performance on actual encounter remains unresolved.** Playback-v2 is retained as a working explicit-start artifact; showing the complete state before Begin/Replay does not meet the desired first scripted encounter. See [current findings and native recordings](RESULTS.md). The earlier [original report](evidence/RESULTS-v1.md) and [playback-v2 investigation](evidence/RESULTS-playback-v2.md) remain historical; the recording clarifies that the issue is revelation on arrival, rather than failed progression.
 
 [Download the retained playback-v2 EPUB](dist/planetary-model-playback-v2.epub), library title **Planetary Model — PRIME playback-v2**. It requires explicit playback and is not being presented as satisfying automatic arrival. Its bytes and printout treatment are unchanged.
