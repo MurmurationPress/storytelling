@@ -51,4 +51,11 @@ Consequence: retain modular composition as an authoring possibility, but do not 
 
 This authorises implementation of the extract experiment only. The earlier thinking-space constraint continues to apply to general platform work. No publishing platform, general authoring language, hosting service or technology stack is selected by this work.
 
-**Experiment finding, not a platform decision:** Thorium Desktop 3.5.1 on Linux supports the tested mixed-layout sequence and explicitly started YAML performance with native page turns. Automatic encounter-triggered playback was not established; Begin output is required. Other reader/platform support remains unverified. See [[Planetary Model EPUB Test]] for source pin, artifact and evidence.
+**Original experiment finding, qualified by the subsequent playback investigation in [[Planetary Model EPUB Test]]:** Thorium Desktop 3.5.1 on Linux supports the tested mixed-layout sequence and explicitly started YAML performance with native page turns. Automatic encounter-triggered playback was not established; Begin output is required. Other reader/platform support remains unverified. See [[Planetary Model EPUB Test]] for source pin, artifact and evidence.
+
+
+## 2026-10-20 — Repair explicit-start playback within PR #1
+
+**Ted's direction:** investigate the reported immediate full-reveal defect using default-reader native tests, correct playback without changing his settings, preserve authored content and reader page turns, and keep the existing PR unmerged. Automatic arrival activation remains outside this repair.
+
+**Finding:** the original symptom has not reproduced locally; playback-v2 hardens demonstrated colour/visibility failure paths and has temporal native evidence. Ted's exact failure cause is not established. Preserve the original success report as history rather than replacing it with an unqualified correction claim. See [[Planetary Model EPUB Test]].

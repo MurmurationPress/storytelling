@@ -22,3 +22,5 @@ dist/
 !experiments/planetary-epub/dist/planetary-model.epub
 !experiments/planetary-epub/dist/extraction.json
 __pycache__/
+!experiments/planetary-epub/dist/planetary-model-playback-v2.epub
+!experiments/planetary-epub/dist/planetary-model-playback-v2-diagnostic.epub

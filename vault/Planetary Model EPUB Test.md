@@ -60,7 +60,7 @@ No video, murmuration simulation, hosting, new authoring syntax or full-book com
 
 See [[Art Prototype]], [[PRIME and JANUS]], [[Chat Performance]] and [[Existing Platforms]].
 
-## 2026-10-20 — First capability experiment
+## 2026-10-20 — First capability experiment (historical report)
 
 **Ted's explicit authorisation:** implement this small EPUB experiment, produce a downloadable artifact and reproducible build, evaluate it in a reader, and open a focused PR. This supersedes the earlier no-implementation status for this experiment only. It does not authorise a general platform, manuscript changes, site publication or a broader backlog.
 
@@ -70,7 +70,7 @@ See [[Art Prototype]], [[PRIME and JANUS]], [[Chat Performance]] and [[Existing 
 
 **Exact extraction:** ContinuityReview closing prose, source lines 48–58, beginning “Demand reduced. Restoration followed through network operations.” and ending “Extend the assessment beyond the interval.”; HostComparison YAML 63–69; SharedDependency prose 72–77; unchanged SVG at embed line 79; remaining prose 81–96 ending “Retain dispersal. Recalculate what it protects.” Only the fenced HostComparison content is performed. Frontmatter, State metadata, other YAML, callout wrappers and other sections are omitted. Paragraphs, wording, YAML indentation and punctuation remain intact.
 
-**Verified in native Thorium Desktop 3.5.1, Linux x86_64 (Zorin OS 18.1):** ordinary reader turns move from prose to the isolated state surface, then prose, image, and remaining prose. Explicit Begin output types three-character bursts with a restrained cursor. Leaving before completion works even with button focus. Turning back shows complete YAML with optional Replay. Immediate reveal and natural completion work. State text and the complete original SVG fit 1024×768 and 800×600 reader windows. Smaller fixed text is a tradeoff. Reader security controls and code were not changed.
+**Original local report, subsequently qualified by Ted’s contradictory playback result:** In native Thorium Desktop 3.5.1, Linux x86_64 (Zorin OS 18.1), ordinary reader turns move from prose to the isolated state surface, then prose, image, and remaining prose. Explicit Begin output types three-character bursts with a restrained cursor. Leaving before completion works even with button focus. Turning back shows complete YAML with optional Replay. Immediate reveal and natural completion work. State text and the complete original SVG fit 1024×768 and 800×600 reader windows. Smaller fixed text is a tradeoff. Reader security controls and code were not changed.
 
 **Presentation choice for this test:** reflowable prose plus two fixed-layout spine surfaces (state and image), no spreads. Native testing supports these boundaries in this reader. This is not a settled treatment for every block or reader. The image remains at its original narrative position and preserves the companion definition's meaning.
 
@@ -80,4 +80,19 @@ See [[Art Prototype]], [[PRIME and JANUS]], [[Chat Performance]] and [[Existing 
 
 **Separate validation:** EPUBCheck 5.3.0 reports zero errors and warnings; exact source, ordering, original image bytes and local references pass verification. Chromium component checks pass reduced motion, JavaScript-disabled full-text fallback and stable animation bounds, but these are not native-reader accessibility or compatibility results. No secondary EPUB reader was installed; no iPad, touch or screen-reader result is established.
 
-**What this establishes:** a qualified yes for prose → explicitly started performed PRIME state → prose with Thorium's own page turning. It establishes neither automatic activation nor general EPUB-reader compatibility. EPUB remains an experiment, not an agreed publication platform.
+**Original interpretation (subsequently qualified below):** a qualified yes for prose → explicitly started performed PRIME state → prose with Thorium's own page turning. It establishes neither automatic activation nor general EPUB-reader compatibility. EPUB remains an experiment, not an agreed publication platform.
+
+
+## 2026-10-20 — Playback-v2 defect investigation
+
+**Ted's observation:** in Thorium Desktop 3.5.1 on Linux, default installed appearance/settings, Begin output flashes then immediately shows complete YAML. Ted likes the printout appearance. Treat this as a defect, despite the earlier local success. His subsequent reset does not by itself establish a correction.
+
+**Reproduction finding:** the unchanged original EPUB progressed normally in a new isolated default profile. Temporary diagnostics recorded one Begin activation, motion preference false, document visible, growing prefixes, transparent complete text, and natural completion after 5,332 ms. No early lifecycle event or showAll was recorded. Ted's exact failure path remains unestablished; the original report is preserved as historical evidence in the prototype's `evidence/RESULTS-v1.md`.
+
+**Candidate correction:** playback-v2 hides complete text using opacity rather than colour, retains its layout and accessibility text, pauses/resumes an explicitly begun performance on hidden/visible events, completes on pagehide, ignores duplicate Begin activations while running, and explains reduced-motion static output. Synthetic browser tests demonstrate the old colour-override and hidden-event failure paths and verify the new protection. Neither path was observed as the cause of Ted's native result. No accessibility preference, reader setting or security control needs changing.
+
+**Native verification of the new build:** multiple timed frames show sustained prefixes for pointer, Enter and Space, followed by complete YAML near the intended 5.33 seconds. Separate diagnostic native runs record complete opacity zero during playback and completion at 5,396 and 5,330 ms. Early departure with control focus, quick and later return to complete state, optional replay, immediate reveal, and state/image bounds at 1024×768 and 800×600 were checked. Browser-only checks cover reduced motion, no-script, duplicate activation, colour overrides, synthetic hidden pause/resume and accessibility-tree text retention. Native accessibility modes, touch, iPad and a second reader remain unverified.
+
+**Artifacts:** [playback-v2 EPUB](../experiments/planetary-epub/dist/planetary-model-playback-v2.epub), [diagnostic variant](../experiments/planetary-epub/dist/planetary-model-playback-v2-diagnostic.epub), [current findings and temporal evidence](../experiments/planetary-epub/RESULTS.md). New filenames, identifiers, library titles and state labels prevent confusion with the old imported copy. Both EPUBs pass EPUBCheck 5.3.0 with zero errors/warnings, and both pass exact source/image/package verification. The manuscript remains pinned and untouched.
+
+**Remaining uncertainty:** Ted should retest the distinctly titled new import with his settings unchanged. If the symptom persists, the diagnostic variant provides a local copyable transition/style log without developer tools. This is hardening plus local verification, not a claim that Ted's exact cause has been found. Automatic page-arrival playback remains a separate unresolved question. PR #1 remains unmerged.

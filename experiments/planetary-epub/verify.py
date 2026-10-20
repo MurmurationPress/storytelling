@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Verify package text/order against independently specified pinned source ranges."""
 from pathlib import Path, PurePosixPath
+import argparse
 import hashlib
 import json
 import posixpath
@@ -13,7 +14,10 @@ source = (ROOT / 'source/scene.md').read_text().splitlines()
 # Inclusive manuscript lines, not generated extraction output.
 ranges = {'opening.xhtml': (48, 58), 'state.xhtml': (63, 69),
           'before-image.xhtml': (72, 78), 'after-image.xhtml': (81, 96)}
-with zipfile.ZipFile(ROOT / 'dist/planetary-model.epub') as z:
+parser = argparse.ArgumentParser()
+parser.add_argument('--diagnostic', action='store_true')
+variant = '-diagnostic' if parser.parse_args().diagnostic else ''
+with zipfile.ZipFile(ROOT / ('dist/planetary-model-playback-v2' + variant + '.epub')) as z:
     assert z.infolist()[0].filename == 'mimetype'
     assert z.infolist()[0].compress_type == zipfile.ZIP_STORED
     assert z.read('mimetype') == b'application/epub+zip'

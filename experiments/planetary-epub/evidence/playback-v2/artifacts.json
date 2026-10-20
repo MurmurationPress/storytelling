@@ -1,0 +1,8 @@
+{
+  "sha256": {
+    "planetary-model-playback-v2.epub": "9acb254df2428995f7e69fd6f78f2cb90abd04c1aad06dc703103766445ba0ed",
+    "planetary-model-playback-v2-diagnostic.epub": "563fb7cb855e55849ff206ab48687e44b7773dd374fc333d19b4f8c0c8318bf3"
+  },
+  "rebuild_byte_identical": true,
+  "epubcheck_version": "5.3.0"
+}

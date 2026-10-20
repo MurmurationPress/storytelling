@@ -4,7 +4,7 @@ from pathlib import Path
 import hashlib
 import html
 import json
-import re
+import argparse
 import zipfile
 import xml.etree.ElementTree as ET
 
@@ -38,25 +38,26 @@ def extract():
               'after-image': [image + 2, end]}
     return parts, bounds
 
-def document(title, body, fixed=False, script=False):
+def document(title, body, fixed=False, script=False, diagnostic=False):
     viewport = '<meta name="viewport" content="width=1000,height=720"/>' if fixed else ''
-    js = '<script src="state.js"></script>' if script else ''
+    js = ('<script src="diagnostics.js"></script>' if diagnostic else '') + ('<script src="state.js"></script>' if script else '')
     return f'''<?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"><head><title>{E(title)}</title>{viewport}<link rel="stylesheet" href="style.css"/></head><body class="{'fixed' if fixed else 'prose'}">{body}{js}</body></html>'''
 
 def paragraphs(text):
     return ''.join('<p>' + E(p) + '</p>' for p in text.split('\n\n'))
 
-def build():
+def build(diagnostic=False):
+    version = "playback-v2" + ("-diagnostic" if diagnostic else "")
     parts, bounds = extract()
     settings = json.loads((PRESENTATION / 'settings.json').read_text())
     assert (settings['surface_width'], settings['surface_height']) == (1000, 720)
     OUT.mkdir(exist_ok=True)
     files = {}
     files['opening.xhtml'] = document('ContinuityReview — closing prose', paragraphs(parts['opening']))
-    files['state.xhtml'] = document('HostComparison', f'''<main class="state"><h1>PRIME · 2030-04-04 08:22</h1>
+    files['state.xhtml'] = document('HostComparison', f'''<main class="state"><h1>PRIME · 2030-04-04 08:22 <small style="font-size:14px">{version}</small></h1>
 <div id="surface" data-burst="{settings['burst_characters']}" data-interval="{settings['interval_ms']}"><pre id="complete">{E(parts['state'])}</pre><pre id="output" aria-hidden="true"></pre></div>
-<div id="controls" hidden="hidden"><button id="begin" type="button">Begin output</button><button id="reveal" type="button">Show complete output</button><p id="status" role="status">Complete text is available. Begin output to perform it; turn the page whenever you wish.</p></div></main>''', True, True)
+<div id="controls" hidden="hidden"><button id="begin" type="button">Begin output</button><button id="reveal" type="button">Show complete output</button><p id="status" role="status">Complete text is available. Begin output to perform it; turn the page whenever you wish.</p></div></main>''', True, True, diagnostic)
     files['before-image.xhtml'] = document('SharedDependency', paragraphs(parts['before-image']))
     files['image.xhtml'] = document('PRIME habitat', '<main class="map"><img src="habitat.svg" alt="PRIME infrastructure comparison. Hatching estimates UK-linked JANUS operational reach, not sovereignty. Presence does not imply complete access or control; contours illustrate infrastructure concentration."/></main>', True)
     files['after-image.xhtml'] = document('SharedDependency — continued', paragraphs(parts['after-image']))
@@ -65,6 +66,8 @@ def build():
     files['nav.xhtml'] = document('Contents', '<nav xmlns:epub="http://www.idpf.org/2007/ops" epub:type="toc"><h1>Planetary Model — capability extract</h1><ol>' + ''.join(f'<li><a href="{name}">{E(title)}</a></li>' for name, title in zip(spine, titles)) + '</ol></nav>')
     files['style.css'] = (PRESENTATION / 'style.css').read_text()
     files['state.js'] = (PRESENTATION / 'state.js').read_text()
+    if diagnostic:
+        files['diagnostics.js'] = (PRESENTATION / 'diagnostics.js').read_text()
     files['habitat.svg'] = (SOURCE / 'habitat.svg').read_bytes()
     manifest = []
     for name in files:
@@ -77,9 +80,9 @@ def build():
         props = ' properties="rendition:layout-pre-paginated rendition:spread-none"' if name in ('state.xhtml', 'image.xhtml') else ''
         refs.append(f'<itemref idref="{name.replace(".", "-")}"{props}/>')
     files['package.opf'] = f'''<?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" prefix="rendition: http://www.idpf.org/vocab/rendition/#"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:murmuration:planetary-model:84fcdb5:experiment-1</dc:identifier><dc:title>Planetary Model — PRIME capability extract</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">2026-10-20T00:00:00Z</meta><meta property="rendition:layout">reflowable</meta><meta property="rendition:spread">none</meta></metadata><manifest>{''.join(manifest)}</manifest><spine>{''.join(refs)}</spine></package>'''
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="id" prefix="rendition: http://www.idpf.org/vocab/rendition/#"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:identifier id="id">urn:murmuration:planetary-model:84fcdb5:{version}</dc:identifier><dc:title>Planetary Model — PRIME {version}</dc:title><dc:language>en</dc:language><meta property="dcterms:modified">2026-10-20T15:00:00Z</meta><meta property="rendition:layout">reflowable</meta><meta property="rendition:spread">none</meta></metadata><manifest>{''.join(manifest)}</manifest><spine>{''.join(refs)}</spine></package>'''
     container = '<?xml version="1.0"?><container xmlns="urn:oasis:names:tc:opendocument:xmlns:container" version="1.0"><rootfiles><rootfile full-path="EPUB/package.opf" media-type="application/oebps-package+xml"/></rootfiles></container>'
-    path = OUT / 'planetary-model.epub'
+    path = OUT / ('planetary-model-' + version + '.epub')
     with zipfile.ZipFile(path, 'w') as z:
         def put(name, data, compression=zipfile.ZIP_DEFLATED):
             info = zipfile.ZipInfo(name, (2026, 10, 20, 0, 0, 0))
@@ -95,4 +98,6 @@ def build():
     print(path)
 
 if __name__ == '__main__':
-    build()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--diagnostic", action="store_true")
+    build(parser.parse_args().diagnostic)
