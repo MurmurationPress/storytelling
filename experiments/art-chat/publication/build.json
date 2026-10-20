@@ -1,0 +1,22 @@
+{
+  "publication": "art-chat-v1",
+  "sha256": "bc95fe97842a225e54c85026fad99003c74d17338788b7b7617a50f592f68cd4",
+  "identities": {
+    "ask.xhtml": {
+      "resource": "ask.xhtml",
+      "component": "art.robin-presence",
+      "publication": "art-chat-v1",
+      "contract": "presentation-v1-draft1",
+      "stateVersion": 1,
+      "contentVersion": "cf30c8324a3436ddc7e33f35f6c219c20c8c2a8bc0b8f7554e3ba69aa1662752"
+    },
+    "permission.xhtml": {
+      "resource": "permission.xhtml",
+      "component": "art.robin-permission",
+      "publication": "art-chat-v1",
+      "contract": "presentation-v1-draft1",
+      "stateVersion": 1,
+      "contentVersion": "84ae60f5078a03251e3e261337007eb12b7c8bd8b7f622016bf4bd35084628d9"
+    }
+  }
+}

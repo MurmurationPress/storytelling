@@ -25,6 +25,7 @@ This vault develops that question and records evidence before broader product co
 - [[Authoring and Storyboarding]] — Obsidian, markup and a visual storyboard.
 - [[Planetary Model EPUB Test]] — EPUB artifacts, demonstrated typing and unresolved automatic-encounter limits.
 - [[PRIME Reader Integration]] — separate toolkit-host encounter experiment and its custom presentation connection.
+- [[Art Chat Slice]] — first implementation slice: pinned Art exchange, initial contract and reader demonstration.
 - [[Art Prototype]] — the selected starting chapter from CONSTRAINT.
 - [[Platform and Audience]] — wider publication possibilities and willingness to pay.
 - [[Decisions]] — what is agreed and what remains provisional.

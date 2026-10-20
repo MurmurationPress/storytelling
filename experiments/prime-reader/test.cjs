@@ -1,7 +1,7 @@
 /* Integration tests against the actual EPUB.js browser renderer and real EPUB. */
 const {chromium} = require('playwright');
 const assert = require('node:assert/strict'), fs = require('node:fs'), path = require('node:path');
-const ROOT=__dirname, OUT=path.join(ROOT,'evidence');
+const ROOT=__dirname, OUT=process.env.READER_EVIDENCE_DIR || path.join(ROOT,'evidence');
 const url=process.env.READER_URL || 'http://127.0.0.1:4173';
 fs.mkdirSync(OUT,{recursive:true});
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));

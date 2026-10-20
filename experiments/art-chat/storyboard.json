@@ -1,0 +1,49 @@
+{
+  "publication": "art-chat-v1",
+  "contract": "presentation-v1-draft1",
+  "state_version": 1,
+  "sequences": [
+    {
+      "resource": "ask.xhtml",
+      "component": "art.robin-presence",
+      "title": "Canvas · permission to ask",
+      "messages": [
+        {
+          "speaker": "Pip",
+          "text": "Robin's here with me, asking for another bird.",
+          "source_line": 477,
+          "delay_ms": 900,
+          "typing_ms": 0
+        },
+        {
+          "speaker": "Skip",
+          "text": "May I ask what colour?",
+          "source_line": 479,
+          "delay_ms": 1000,
+          "typing_ms": 1000
+        }
+      ]
+    },
+    {
+      "resource": "permission.xhtml",
+      "component": "art.robin-permission",
+      "title": "Canvas · just this drawing",
+      "messages": [
+        {
+          "speaker": "Pip",
+          "text": "You can ask. Just this drawing for now.",
+          "source_line": 495,
+          "delay_ms": 900,
+          "typing_ms": 0
+        },
+        {
+          "speaker": "Skip",
+          "text": "What colour shall the bird be, Robin?",
+          "source_line": 497,
+          "delay_ms": 1000,
+          "typing_ms": 1000
+        }
+      ]
+    }
+  ]
+}

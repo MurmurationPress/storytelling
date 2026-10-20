@@ -1,9 +1,11 @@
 ---
 type: prototype-study
-status: proposed
+status: first-slice-implemented
 ---
 
 # Art Prototype
+
+**Current scope:** Ted has now selected Art for the first authored-chat slice. See [[Art Chat Slice]] for the pinned source, late-chapter selection, adaptation record and reader demonstration. Earlier proposed chapter-wide/drawing work below remains exploratory.
 
 ## Relationship to the first capability test
 

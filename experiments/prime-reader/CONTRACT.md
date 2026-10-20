@@ -60,3 +60,7 @@ The complete text reserves space and remains available to accessibility APIs; th
 Storage is local to this browser origin/profile and publication version. It is not synced. If localStorage is unavailable the shell continues in memory but reopening cannot be guaranteed. Clearing site data/reset reading intentionally resets both location and progress. This first version persists on progress and locator events rather than promising a crash-atomic checkpoint at every painted character.
 
 Page turns are never conditional on completion or component acknowledgement. Arrow keys in the publication (including focused buttons) and reader buttons call toolkit navigation. Swipe detection is host integration, not new pagination. No TTS is enabled or needed.
+
+## Art first-slice profile
+
+The [initial PRIME/chat contract draft](../art-chat/CONTRACT-DRAFT.md) adds stable occurrence/content/state identities and opaque phase snapshots using this same version-1 channel. The immutable accepted PRIME EPUB remains on the legacy profile documented above; Art exercises the new draft profile. This is progress on #3, not a stable general interface or completion of #5.

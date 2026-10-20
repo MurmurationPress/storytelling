@@ -1,0 +1,37 @@
+{
+  "repository": "tedwarddick/PrimeTrilogy",
+  "revision": "75b4a92456d459474771364ca35a11211b6ee8bc",
+  "path": "Books/CONSTRAINT/COLLISION/Art.md",
+  "blob": "b67a556df2f121ad371c6a61bc8421a7aea164a8",
+  "sha256": "2625789554f7c743e56ca114b08c80992a84d6e298e95414d3d1785f85594497",
+  "extraction_inclusive": [
+    462,
+    504
+  ],
+  "source_unchanged": true,
+  "assets_inspected": [
+    {
+      "path": "Media/Media Book 3/The-Mark-Stencil.png",
+      "blob": "bc3eadedc20fde1fbc51c4d797615c0d11eed8d0",
+      "packaged": false,
+      "reason": "Outside selected lines 462–504; visual content is not enacted in this permission exchange.",
+      "inspected_sha256": "d658cc0d7caaab84de6223bb9e8bf5f1124121ea23c9dcd4223d7f24eac207e9",
+      "git_lfs": true
+    },
+    {
+      "path": "Media/Media Book 3/roppo.png",
+      "blob": "b28e63095ed22ffe23d984b2d17daeb10aee2107",
+      "packaged": false,
+      "reason": "Outside selected lines 462–504; visual content is not enacted in this permission exchange.",
+      "inspected_sha256": "270033babdd4de6495c347df73665e75eb18b05fa3a750846ec5cba1c25e60ae",
+      "git_lfs": true
+    },
+    {
+      "path": "Media/Media Book 3/greenshank.jpg.sidecar.md",
+      "blob": "29e03e0248cc698ca21a2cf4341831cab0c48a15",
+      "packaged": false,
+      "reason": "Outside selected lines 462–504; visual content is not enacted in this permission exchange.",
+      "inspected_sha256": "0de549b8cee815348d0147b07e139f0078c8cd2bbc85372ba0ffbebe3e9325ad"
+    }
+  ]
+}

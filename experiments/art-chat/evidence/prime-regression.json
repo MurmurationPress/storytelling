@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "browser": "149.0.7827.55",
+  "build": {
+    "version": "encounter-v1",
+    "baseline_sha256": "9acb254df2428995f7e69fd6f78f2cb90abd04c1aad06dc703103766445ba0ed",
+    "epub_sha256": "cf7e7474491615fdff4c763fb5dfb391b422ba993f22fe60c7b5c66134636d4c"
+  },
+  "platform": "linux",
+  "runs": [
+    {
+      "id": "linux-desktop",
+      "viewport": {
+        "width": 1280,
+        "height": 800
+      },
+      "replayDurationMs": 5346,
+      "checks": [
+        "Controlled real-toolkit invisible preload: >7s, zero characters/ticks",
+        "Blank first encounter then sustained visible prefixes, complete text opacity zero",
+        "Early focused-control departure stops; quick and >6s later return resume; natural completion",
+        "Wrong instance and old sequence rejected; rapid toolkit turns settle correctly; incomplete reopen resumes",
+        "Immediate reveal retained across completed reopen; full replay timing; dynamic reduced-motion static output"
+      ]
+    },
+    {
+      "id": "tablet-responsive",
+      "viewport": {
+        "width": 820,
+        "height": 1180
+      },
+      "replayDurationMs": 5349,
+      "checks": [
+        "Controlled real-toolkit invisible preload: >7s, zero characters/ticks",
+        "Blank first encounter then sustained visible prefixes, complete text opacity zero",
+        "Early focused-control departure stops; quick and >6s later return resume; natural completion",
+        "Wrong instance and old sequence rejected; rapid toolkit turns settle correctly; incomplete reopen resumes",
+        "Immediate reveal retained across completed reopen; full replay timing; dynamic reduced-motion static output"
+      ]
+    }
+  ],
+  "fallbacks": {
+    "reduced-motion": "PASS",
+    "no-publication-script": "PASS",
+    "unsupported-bridge": "PASS"
+  }
+}
