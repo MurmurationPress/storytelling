@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "vault/PRIME and JANUS.md",
+                "file": "vault/Reading Experience.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "PRIME and JANUS"
+              "title": "Reading Experience"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "vault/PRIME and JANUS.md",
+                "file": "vault/Reading Experience.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "vault/PRIME and JANUS.md",
+                "file": "vault/Reading Experience.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "vault/PRIME and JANUS.md",
+                "file": "vault/Reading Experience.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -202,8 +202,17 @@
   },
   "active": "8e480c9db7841110",
   "lastOpenFiles": [
-    "vault/Chat Performance.md",
     "vault/Art Prototype.md",
+    "vault/PRIME and JANUS.md",
+    "vault/Platform and Audience.md",
+    "vault/Origins and Purpose.md",
+    "vault/Open Questions.md",
+    "vault/Home.md",
+    "vault/Delivery Types.md",
+    "vault/Decisions.md",
+    "vault/Chat Performance.md",
+    "vault/Authoring and Storyboarding.md",
+    "vault/Assets/README.md",
     "README.md",
     "AGENTS.md"
   ]
