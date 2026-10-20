@@ -1,6 +1,6 @@
 # Working in this repository
 
-This is initially a thinking space, not an implementation backlog.
+The vault remains the project's thinking space. Ted has now authorised review/integration of the accepted EPUB experiments and one limited milestone for reusable PRIME and authored-chat components. See `vault/Managed EPUB Foundation.md` and `vault/Decisions.md`. This supersedes the initial no-tickets-yet direction only for that scope; it does not authorise a general platform backlog or implementation of the new milestone in the planning task.
 
 - Read `vault/Home.md`, `vault/Decisions.md` and the relevant notes before making changes.
 - Preserve the distinction between Ted's stated intentions, agreed directions, proposed designs and unanswered questions.

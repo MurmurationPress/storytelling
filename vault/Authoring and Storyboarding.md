@@ -66,3 +66,8 @@ Rather than giving every template unrelated settings, define a small number of d
 A small experiment with Art can help decide how much structure is useful. First describe a few actual sections and the settings an author would want to change; let the template boundaries and markup follow those examples.
 
 No template syntax, compiler implementation or deployment work is authorised by recording this proposal.
+
+
+## Foundation scope — 2026-10-20
+
+The limited [[Managed EPUB Foundation]] milestone now authorises planning around actual PRIME and chat passages. It does not settle a general authoring representation, storyboard editor, template language or Obsidian dependency. Obsidian remains the present workshop; concrete content/settings fixtures may inform a later choice. Earlier compiler/editor proposals in this note remain proposals.

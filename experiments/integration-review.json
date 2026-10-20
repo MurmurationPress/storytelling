@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-20",
+  "integration": {
+    "initial_main": "14acfed63ac621578654ae393968dd3b2bc348e3",
+    "pr1_initial": "d8cc6494265273c8e9eea76cecfd73209d2c853a",
+    "pr1_reviewed": "2584e5cb4ca9f0ee56c98589b7c7f4575d1f9683",
+    "pr2_reviewed": "1edc684aa68f9242b8d8b38adefc342767f162e4",
+    "pr1_merge": "3c3922329d80a224075a3ee90167f23867320a67",
+    "pr2_effective_file_count": 78,
+    "pr2_merge": "b55f08bd03953f01e05544c9e3f9dbd7c91893eb",
+    "component_types_source": "/home/thawkins/Documents/GitHub/storytelling/vault/Component Types.md",
+    "component_types_sha256": "9af227cea02a2f21349c6948aeebd1eefcc5faf22a96d3321bb06dfc29ce10e2",
+    "component_types_source_head": "2646b97b5cd5320cb1622490edff931780c97804",
+    "acceptance_recordings": [
+      {
+        "filename": "Screencast from 2026-10-20 16-35-47.webm",
+        "sha256": "d8681a6d735499982e4082be8287a0cd84f6b5410f868b7c3fd05a4ab42ada8f",
+        "duration_seconds": 11.668945,
+        "stored_in_repository": false
+      },
+      {
+        "filename": "Screencast from 2026-10-20 16-34-22.webm",
+        "sha256": "6f0de613a70072d7f633a3c4bd348170fb4a4e1489df4f0feb7420b9c58f92cd",
+        "duration_seconds": 17.750816,
+        "stored_in_repository": false
+      }
+    ],
+    "interaction_review": {
+      "browser": "149.0.7827.55",
+      "status": "PASS",
+      "runs": [
+        {
+          "id": "linux-desktop",
+          "viewport": {
+            "width": 1280,
+            "height": 800
+          },
+          "replay_ms": 5342,
+          "closed_position": 57,
+          "restored_position": 57,
+          "checks": [
+            "Controlled real-toolkit invisible preload: >7s, zero characters/ticks",
+            "Blank first encounter then sustained visible prefixes, complete text opacity zero",
+            "Early focused-control departure stops; quick and >6s later return resume; natural completion",
+            "Wrong instance and old sequence rejected; rapid toolkit turns settle correctly; incomplete reopen resumes",
+            "Immediate reveal retained across completed reopen; full replay timing; dynamic reduced-motion static output"
+          ]
+        },
+        {
+          "id": "tablet-responsive",
+          "viewport": {
+            "width": 820,
+            "height": 1180
+          },
+          "replay_ms": 5344,
+          "closed_position": 60,
+          "restored_position": 60,
+          "checks": [
+            "Controlled real-toolkit invisible preload: >7s, zero characters/ticks",
+            "Blank first encounter then sustained visible prefixes, complete text opacity zero",
+            "Early focused-control departure stops; quick and >6s later return resume; natural completion",
+            "Wrong instance and old sequence rejected; rapid toolkit turns settle correctly; incomplete reopen resumes",
+            "Immediate reveal retained across completed reopen; full replay timing; dynamic reduced-motion static output"
+          ]
+        }
+      ],
+      "fallbacks": {
+        "reduced-motion": "PASS",
+        "no-publication-script": "PASS",
+        "unsupported-bridge": "PASS"
+      }
+    }
+  },
+  "milestone": {
+    "number": 1,
+    "url": "https://github.com/MurmurationPress/storytelling/milestone/1",
+    "title": "Managed EPUB foundation: reusable PRIME and chat"
+  },
+  "issues": {
+    "contract": {
+      "number": 3,
+      "url": "https://github.com/MurmurationPress/storytelling/issues/3",
+      "title": "Define the small PRIME/chat component contract"
+    },
+    "reader": {
+      "number": 4,
+      "url": "https://github.com/MurmurationPress/storytelling/issues/4",
+      "title": "Make managed-reader presentation lifecycle maintainable"
+    },
+    "prime": {
+      "number": 5,
+      "url": "https://github.com/MurmurationPress/storytelling/issues/5",
+      "title": "Extract the accepted reusable PRIME typing component"
+    },
+    "chat": {
+      "number": 6,
+      "url": "https://github.com/MurmurationPress/storytelling/issues/6",
+      "title": "Build authored chat from a pinned manuscript conversation"
+    },
+    "packaging": {
+      "number": 7,
+      "url": "https://github.com/MurmurationPress/storytelling/issues/7",
+      "title": "Package PRIME and chat with meaningful EPUB fallbacks"
+    }
+  }
+}

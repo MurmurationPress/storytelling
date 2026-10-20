@@ -1,5 +1,7 @@
 # PRIME encounter: small EPUB reader integration
 
+**Integration status (2026-10-20):** PRs #1 and #2 were subsequently reviewed and merged under Ted's explicit authorisation. Earlier keep-unmerged instructions below describe the original experiment stage. See the [integration review](../INTEGRATION-REVIEW.md) and [accepted foundation](../../vault/Managed%20EPUB%20Foundation.md). Ordinary-Thorium automatic encounter remains unresolved; automatic encounter is demonstrated in our managed host extension.
+
 This experiment supplies the missing presentation connection using **EPUB.js 0.3.93** and a real EPUB. A page turn from prose starts PRIME automatically; turning onward remains available throughout. This is a small local reading shell, not Thorium, a reader fork or a publishing platform.
 
 It is stacked on **PR #1**, base `experiment/planetary-model-epub` at `d8cc649`. Neither PR is to be merged as part of this experiment. The accepted playback-v2 artifact and all previous research artifacts remain unchanged.

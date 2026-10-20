@@ -1,5 +1,7 @@
 # Result: automatic encounter works in the explicit EPUB.js host integration
 
+**Integration status (2026-10-20):** PRs #1 and #2 were subsequently reviewed and merged under Ted's explicit authorisation. Earlier keep-unmerged instructions below describe the original experiment stage. See the [integration review](../INTEGRATION-REVIEW.md) and [accepted foundation](../../vault/Managed%20EPUB%20Foundation.md). Ordinary-Thorium automatic encounter remains unresolved; automatic encounter is demonstrated in our managed host extension.
+
 **The real EPUB moves from prose through a toolkit page turn into automatically accumulating PRIME output, then onward to prose.** A separate real-toolkit invisible rendition remains at zero characters for more than seven seconds. This demonstrates the missing presentation connection in our small shell, **not in standard EPUB or ordinary Thorium**.
 
 The accepted typing treatment remains: three characters per 65 ms, restrained cursor, no sound, stable reserved space. The original playback-v2 and previous research packages are untouched. [PR #1's ordinary-reader findings](../planetary-epub/READING-POSITION.md) remain valid and unmerged.

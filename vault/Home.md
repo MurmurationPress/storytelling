@@ -8,9 +8,13 @@ created: 2026-10-20
 
 What would it mean to publish a story using prose, images, performed conversations, video and interactive maps, with the author controlling how those forms work together?
 
-This vault is a place to develop that question before committing to a product or backlog. It is part of the repository from the beginning.
+This vault develops that question and records evidence before broader product commitments. It now includes one authorised foundation milestone, grounded in the accepted EPUB experiments; exploratory ideas remain distinct from implementation work.
 
 ## Start here
+
+- [[Managed EPUB Foundation]] — Ted's acceptance, publication/component/reader separation and the five-issue milestone.
+- [[Component Types]] — Ted's original authored component possibilities, preserved intact.
+- [[Future Component Possibilities]] — ideas retained outside this milestone.
 
 - [[Origins and Purpose]] — why this arose, including the Eleven narration problem.
 - [[Reading Experience]] — managed sequential delivery, page turning and bounded asides.

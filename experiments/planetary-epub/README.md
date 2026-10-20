@@ -1,5 +1,7 @@
 # Planetary Model EPUB capability experiment
 
+**Integration status (2026-10-20):** PRs #1 and #2 were subsequently reviewed and merged under Ted's explicit authorisation. Earlier keep-unmerged instructions below describe the original experiment stage. See the [integration review](../INTEGRATION-REVIEW.md) and [accepted foundation](../../vault/Managed%20EPUB%20Foundation.md). Ordinary-Thorium automatic encounter remains unresolved; automatic encounter is demonstrated in our managed host extension.
+
 **Reading-position follow-up (2026-10-20):** [the implementation trace](READING-POSITION.md) follows native turns, TTS and media overlays through the exact Thorium/Readium versions. Location APIs remain application-side; narration mechanisms do not supply a supported silent-reading encounter signal to publication scripts. No credible new supported trigger was found, so no new EPUB or native run was added. Playback-v2 remains unchanged.
 
 **Progressive typing is demonstrated in Ted's recording. Automatic performance on actual encounter remains unresolved.** Playback-v2 is retained as a working explicit-start artifact; showing the complete state before Begin/Replay does not meet the desired first scripted encounter. See [current findings and native recordings](RESULTS.md). The earlier [original report](evidence/RESULTS-v1.md) and [playback-v2 investigation](evidence/RESULTS-playback-v2.md) remain historical; the recording clarifies that the issue is revelation on arrival, rather than failed progression.

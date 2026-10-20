@@ -86,3 +86,18 @@ This authorises implementation of the extract experiment only. The earlier think
 **Integration distinction:** the host's explicit committed-presentation contract is our extension, not an EPUB-standard feature or an API available in ordinary Thorium. See [[PRIME Reader Integration]] for results, evidence, fallback behaviour and platform limits.
 
 **Verified result in this host:** the real EPUB.js sequence automatically performs on encounter while a controlled invisible rendition remains inactive. Departure/return, stored-checkpoint reopening, stale-message rejection and accessible static alternatives pass browser checks at desktop and portrait tablet dimensions. Actual iPad/Safari remains unverified. This establishes a small host-integration capability, not an ordinary-Thorium fix.
+
+
+## 2026-10-20 — Accept the experiment direction and authorise the foundation milestone
+
+**Ted's acceptance:** the tested prose → page turn → automatically typed PRIME state → prose experience is the sought direction. Typing is excellent, well paced and alien. The local 16:35:47 recording and companion 16:34:22 recording are referenced with hashes in the [integration review](../experiments/INTEGRATION-REVIEW.md); private recordings are not uploaded. This is prototype acceptance, not production readiness, broad reader compatibility or blanket approval of implementation details.
+
+**Current direction:** EPUB 3 is the candidate publication package; components perform authored passages; our managed reader supplies explicit presentation lifecycle. The encounter connection is our extension, not standard EPUB or a capability available in ordinary Thorium. Preserve meaningful static fallback and optional manual playback where supported. Components grow from real passages. Chat is the next new component; Obsidian remains the current workshop with its long-term role open.
+
+**Superseding authorisation:** Ted explicitly authorised reviewing/integrating PRs #1/#2 and creating one five-issue milestone. This supersedes earlier keep-unmerged and no-tickets-yet instructions for this bounded work. It does not authorise implementing the milestone in this task or expanding into a general platform. Historical entries remain evidence of their original scope.
+
+**Verified integration:** PR #1 reviewed at `d8cc649`, workspace-only correction `2584e5c`, merged as `3c3922329d80a224075a3ee90167f23867320a67`. PR #2 reviewed at `1edc684`, retargeted to main with all 78 effective changes intact, merged as `b55f08bd03953f01e05544c9e3f9dbd7c91893eb`. Expected-head merge guards were used. Builds/source/package/browser interaction checks pass; browser viewports do not constitute actual iPad/Safari verification. Ordinary-Thorium publication-only encounter remains unresolved.
+
+**Notes preserved:** Ted's local [[Component Types]] was brought into main byte-for-byte without switching/resetting his authoring worktree. Future drawing/line invitation/JANUS/previews/video/apps/footnotes/sound ideas remain in the vault, outside the milestone.
+
+**Planned, not implemented:** [Managed EPUB foundation: reusable PRIME and chat](https://github.com/MurmurationPress/storytelling/milestone/1); contract #3, reader #4, reusable PRIME #5, authored chat #6, packaging/fallback #7. See [[Managed EPUB Foundation]] for issue links, proposed order, evidence and security/dependency constraints.

@@ -6,6 +6,8 @@ date: 2026-10-20
 
 # PRIME Reader Integration
 
+**Subsequent acceptance/integration:** Ted accepts the managed-reader experience. PRs #1 and #2 have now been reviewed and merged; historical keep-unmerged directions below are superseded for this integration. See [[Managed EPUB Foundation]] and the [integration review](../experiments/INTEGRATION-REVIEW.md).
+
 **Ted's authorised next experiment:** build a small browser reading shell using an existing EPUB toolkit, with an explicit versioned connection that tells PRIME when its surface is actually presented. This is separate from PR #1, which remains unmerged. No general publishing platform or Thorium fork is authorised.
 
 The distinction remains: **the typing component works**. The ordinary EPUB investigation in [[Planetary Model EPUB Test]] did not establish a supported automatic encounter signal in unmodified Thorium 3.5.1. This experiment supplies that missing connection in a host that we control; it does not retroactively add it to standard EPUB or Thorium.

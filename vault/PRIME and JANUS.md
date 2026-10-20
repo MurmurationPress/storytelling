@@ -32,3 +32,8 @@ Consider profiles separate from dialogue content. An author could assign a passa
 Verify the actual typography and dialogue structure in the current manuscript before adapting a session.
 
 See [[Chat Performance]] and [[Art Prototype]].
+
+
+## Accepted PRIME reference — 2026-10-20
+
+Ted accepts the prototype typing as excellent, with good pace and the alien quality sought. Preserve its restrained printout and default burst timing as the reference for reusable PRIME. This does not select JANUS's presentation or require sound. Chat is the next new component to test the common lifecycle against real manuscript dialogue. See [[Managed EPUB Foundation]].

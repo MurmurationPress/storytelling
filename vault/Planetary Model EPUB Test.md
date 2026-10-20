@@ -6,6 +6,8 @@ date: 2026-10-20
 
 # Planetary Model EPUB Test
 
+**Subsequent acceptance/integration:** Ted accepts the managed-reader experience. PRs #1 and #2 have now been reviewed and merged; historical keep-unmerged directions below are superseded for this integration. See [[Managed EPUB Foundation]] and the [integration review](../experiments/INTEGRATION-REVIEW.md).
+
 ## Current first target
 
 Ted selected **Planetary Model** from CONSTRAINT for the first focused test. This precedes the broader Art study. The immediate question is whether page turning can carry the reader from normally readable prose to performed PRIME state YAML and back to prose.

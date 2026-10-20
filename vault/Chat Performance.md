@@ -30,3 +30,8 @@ A pause can be expressive or merely frustrating. Readers may also interpret a lo
 Decide what happens after navigation, backgrounding a browser or reopening a sequence. Do not silently consume unread messages while the reader is elsewhere.
 
 See [[PRIME and JANUS]], [[Reading Experience]] and [[Authoring and Storyboarding]].
+
+
+## Next practical component — 2026-10-20
+
+Chat is the next new component in the limited [[Managed EPUB Foundation]] milestone. Select and pin a real conversation from the authoritative manuscript before settling its model. Message/typing/silence phases should refine the PRIME-derived lifecycle rather than copy a YAML counter blindly. Authored dialogue stays intact; timing and presentation are editorial metadata. Transcript fallback must preserve essential silence/unsent-typing meaning where necessary. No chat implementation or live chatbot is introduced by this planning step. See [the chat issue](https://github.com/MurmurationPress/storytelling/issues/6).
