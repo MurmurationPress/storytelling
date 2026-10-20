@@ -20,6 +20,7 @@ This vault is a place to develop that question before committing to a product or
 - [[PRIME and JANUS]] — contrasting presentation profiles.
 - [[Authoring and Storyboarding]] — Obsidian, markup and a visual storyboard.
 - [[Planetary Model EPUB Test]] — EPUB artifacts, demonstrated typing and unresolved automatic-encounter limits.
+- [[PRIME Reader Integration]] — separate toolkit-host encounter experiment and its custom presentation connection.
 - [[Art Prototype]] — the selected starting chapter from CONSTRAINT.
 - [[Platform and Audience]] — wider publication possibilities and willingness to pay.
 - [[Decisions]] — what is agreed and what remains provisional.

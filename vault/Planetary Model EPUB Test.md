@@ -122,3 +122,8 @@ See [[Art Prototype]], [[PRIME and JANUS]], [[Chat Performance]] and [[Existing 
 **Portability finding:** EPUB 3.3 media-overlay classes concern playback. Apple documents narration controls; Readium Kotlin and EPUB.js expose application integration facilities. These do not make an arrival API available in every publication or establish universal absence across readers. Other readers were not tested. Exact versions/source links and provenance hashes are in the trace.
 
 **Proposed next experiment:** seek an agreed supported reader-side contract, then separately authorise a minimal toolkit-host bridge test for committed component presentation, including initial snapshot, preload suppression, enter/leave, restoration and pre-paint gating. A locator callback alone is insufficient. No reader, bridge or new EPUB was built in this follow-up; no new native success is claimed. Retain playback-v2 and prior native evidence; PR #1 stays unmerged.
+
+
+## Separate toolkit-host follow-up
+
+Ted subsequently authorised [[PRIME Reader Integration]]: a small EPUB.js reading shell and an explicit presentation connection, on a separate stacked PR. That experiment supplies the missing host integration; it does not establish automatic encounter in unmodified Thorium or change the standard EPUB API findings above. Playback-v2 and all PR #1 research artifacts remain unchanged, and PR #1 remains unmerged.

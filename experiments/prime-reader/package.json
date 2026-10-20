@@ -1,0 +1,11 @@
+{
+  "name": "prime-reader-integration",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.cjs",
+    "test": "node test.cjs"
+  },
+  "dependencies": {"epubjs": "0.3.93", "jszip": "3.10.1"},
+  "devDependencies": {"playwright": "1.61.1"}
+}
