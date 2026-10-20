@@ -8,13 +8,15 @@ status: exploring
 ## Established direction
 
 - Preserve page turning and an intentional narrative path.
-- Allow the story world to have a wiki-like structure, with linked material available for exploration.
+- Deliver the story in an author-controlled sequence within a managed app-like environment.
+- Keep optional asides local to the current narrative moment, with a direct return to the story.
+- A wiki is no longer the intended reading model; component includes may still be useful for assembly.
 - Let delivery vary with the needs of the passage.
 - The platform need not be constrained by Ghost or by a conventional web page.
 
 ## Proposed principles to test
 
-The reader provides a journey; linked material provides depth. Opening a map, image or world entry should preserve a clear route back to the same reading position.
+The container delivers the authored sequence. A contextual aside may provide depth, but should preserve a clear route back to the same reading position rather than opening unrestricted traversal of the story world.
 
 The author should be able to control sequence, pace and revelation. A link can itself reveal information, so visibility and availability may need to depend on reading progress. The handling of rereading and spoiler preferences is unresolved.
 
@@ -32,7 +34,7 @@ See [[Delivery Types]], [[Chat Performance]] and [[Open Questions]].
 
 ## 2026-10-20 — Component documents and the container
 
-**Ted's framing:** a component document, much like a wiki assembled from includes. Scenes can be composed from reusable sections, while the container determines how readers encounter those sections.
+**Ted's initial assembly analogy:** a component document, much like a wiki assembled from includes. Scenes can be composed from reusable sections, while the container determines how readers encounter those sections. His later clarification below rejects a wiki as the reader-facing experience.
 
 Ted particularly likes turning a page of prose or manga and encountering a video or an interactive murmuration application. Media can be part of the story itself, not only supplementary links. Other material is an aside and could be delivered like a footnote.
 
@@ -70,3 +72,13 @@ Returning should restore the exact page and meaningful component state, includin
 Record these as design possibilities; the container implementation and markup remain undecided.
 
 See [[Authoring and Storyboarding]] and [[Delivery Types]].
+
+## 2026-10-20 — Managed sequential delivery supersedes the wiki model
+
+Ted clarified that this should feel like an app: a very managed environment delivering the story in sequence. He has stopped considering a wiki because containing the reader's freedom to move around the story would be too difficult.
+
+Keep component/include-based authoring distinct from publication navigation. An interactive map, conversation or simulation may offer local interaction without permitting a jump elsewhere in the narrative. Asides remain bounded departures with a return.
+
+Exactly how revisiting already-read material, chapter selection and replay should work remains open. Do not infer a prohibition on all backwards reading or impose completion gates on every interaction.
+
+Ted requested a check for existing platforms before committing to building one. See [[Existing Platforms]] for the initial documentation review.
