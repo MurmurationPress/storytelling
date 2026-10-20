@@ -1,0 +1,11 @@
+{
+  "pr1_base": "d8cc6494265273c8e9eea76cecfd73209d2c853a",
+  "sha256": {
+    "extraction.json": "a8498287f8837707e25e523952dd416fdac831e3643a130a78df7aacf7f16604",
+    "planetary-model-arrival-load-probe-v1.epub": "e35fb3a0334ccfb722e6677ef145cbed3b092e239d9c9a99795232d972d04bd5",
+    "planetary-model-arrival-preload-counterexample-v1.epub": "5f07f00f303a064ba91db5ef362adc2a8a91d6eb11c3dc8ade06c4129a45cdcc",
+    "planetary-model-playback-v2-diagnostic.epub": "563fb7cb855e55849ff206ab48687e44b7773dd374fc333d19b4f8c0c8318bf3",
+    "planetary-model-playback-v2.epub": "9acb254df2428995f7e69fd6f78f2cb90abd04c1aad06dc703103766445ba0ed",
+    "planetary-model.epub": "aeb0a85bddbb9fe28f5d5d188cddd7e1dbaa6747fcfd912de2c1fe7a409e530a"
+  }
+}

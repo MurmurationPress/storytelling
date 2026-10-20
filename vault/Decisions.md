@@ -75,3 +75,14 @@ This authorises implementation of the extract experiment only. The earlier think
 **Finding, not a new implementation:** Thorium 3.5.1 and its pinned vendored Readium code coordinate native location, TTS start/highlighting/navigation and media overlays through application/preload mechanisms. No supported publication-facing silent component-arrival contract was found. Speech playback is not an activation workaround. See [[Planetary Model EPUB Test]] and the linked exact-source trace.
 
 **Proposed next step, not a settled platform choice or authorised reader build:** agree a small supported presentation bridge with a reader/toolkit before another automatic-arrival experiment. Existing Readium application APIs could support integration, with additional committed-presentation filtering. Keep working playback-v2 unchanged. No new EPUB is justified by this trace; automatic encounter remains unresolved and PR #1 remains unmerged.
+
+
+## 2026-10-20 — Authorised separate reader-integration experiment
+
+**Ted's explicit direction:** build a minimal browser reading shell using an existing EPUB toolkit and a versioned host-to-PRIME presentation connection. Use a new branch/stacked PR, preserve PR #1 and its artifacts, and merge/deploy neither. This authorises the small shell, not a general platform or a Thorium fork.
+
+**Implementation choice for this experiment:** EPUB.js opens and paginates a distinctly named derivative EPUB. Its global-layout limitation is addressed with bounded reflowable state/image resources; manuscript text and SVG remain preserved. This is not a settled project-wide toolkit decision.
+
+**Integration distinction:** the host's explicit committed-presentation contract is our extension, not an EPUB-standard feature or an API available in ordinary Thorium. See [[PRIME Reader Integration]] for results, evidence, fallback behaviour and platform limits.
+
+**Verified result in this host:** the real EPUB.js sequence automatically performs on encounter while a controlled invisible rendition remains inactive. Departure/return, stored-checkpoint reopening, stale-message rejection and accessible static alternatives pass browser checks at desktop and portrait tablet dimensions. Actual iPad/Safari remains unverified. This establishes a small host-integration capability, not an ordinary-Thorium fix.
