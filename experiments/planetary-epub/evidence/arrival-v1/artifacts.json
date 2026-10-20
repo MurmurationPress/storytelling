@@ -1,0 +1,10 @@
+{
+  "sha256": {
+    "planetary-model-arrival-load-probe-v1.epub": "e35fb3a0334ccfb722e6677ef145cbed3b092e239d9c9a99795232d972d04bd5",
+    "planetary-model-arrival-preload-counterexample-v1.epub": "5f07f00f303a064ba91db5ef362adc2a8a91d6eb11c3dc8ade06c4129a45cdcc"
+  },
+  "rebuild_byte_identical": true,
+  "explicit_start_artifacts_unchanged": true,
+  "reader_source_revision": "137e8901196bc47173580856105fe78b40473570",
+  "epubcheck_version": "5.3.0"
+}

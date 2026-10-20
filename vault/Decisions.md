@@ -44,3 +44,34 @@ No product name, markup syntax, technology stack, business model or delivery sch
 Consequence: retain modular composition as an authoring possibility, but do not treat links as permission for free traversal of the narrative. Asides can remain contextual and bounded. Details of revisiting read material remain open.
 
 **Ted's requested next investigation:** check existing platforms before committing to building our own. An initial documentation comparison is in [[Existing Platforms]]. No platform is selected and no purchase or implementation is authorised by that comparison.
+
+## 2026-10-20 — Authorised focused Planetary Model EPUB experiment
+
+**Ted's explicit direction:** build and evaluate the first small EPUB 3 capability prototype, using the current authoritative Planetary Model manuscript, preserving wording and the existing image, with reader-owned page turns. Create a branch and PR; do not merge or publish a site.
+
+This authorises implementation of the extract experiment only. The earlier thinking-space constraint continues to apply to general platform work. No publishing platform, general authoring language, hosting service or technology stack is selected by this work.
+
+**Original experiment finding, qualified by the subsequent playback investigation in [[Planetary Model EPUB Test]]:** Thorium Desktop 3.5.1 on Linux supports the tested mixed-layout sequence and explicitly started YAML performance with native page turns. Automatic encounter-triggered playback was not established; Begin output is required. Other reader/platform support remains unverified. See [[Planetary Model EPUB Test]] for source pin, artifact and evidence.
+
+
+## 2026-10-20 — Repair explicit-start playback within PR #1 (subsequently clarified)
+
+**Ted's direction:** investigate the reported immediate full-reveal defect using default-reader native tests, correct playback without changing his settings, preserve authored content and reader page turns, and keep the existing PR unmerged. Automatic arrival activation remains outside this repair.
+
+**Finding:** the original symptom has not reproduced locally; playback-v2 hardens demonstrated colour/visibility failure paths and has temporal native evidence. Ted's exact failure cause is not established. Preserve the original success report as history rather than replacing it with an unqualified correction claim. See [[Planetary Model EPUB Test]].
+
+
+## 2026-10-20 — Distinguish typing from automatic encounter
+
+**Ted's recording and clarification:** playback-v2 demonstrates progressive typing. The remaining requirement is for the page turn itself to introduce a blank scripted surface and automatically perform PRIME's state, rather than first showing complete text and requiring Play. Completed-page return may show complete state with optional replay.
+
+**Authorised investigation:** test supported arrival signals in unmodified Thorium 3.5.1 on Linux, retain native turns and accessible alternatives, and keep PR #1 unmerged. If reliability cannot be established, retain explicit playback as a separate capability and explain the reader integration needed. No new reader or reader patch is authorised by this step.
+
+**Finding:** the load/intersection hypothesis can perform after the tested native turn but also performs during a controlled invisible preload. No supported reliable active-page contract was established; automatic encounter remains unresolved. Native recordings and the source inspection are in [[Planetary Model EPUB Test]]. The prior interpretation of Ted's recording as failed progressive typing is superseded.
+
+
+## 2026-10-20 — Reading position is a reader integration boundary
+
+**Finding, not a new implementation:** Thorium 3.5.1 and its pinned vendored Readium code coordinate native location, TTS start/highlighting/navigation and media overlays through application/preload mechanisms. No supported publication-facing silent component-arrival contract was found. Speech playback is not an activation workaround. See [[Planetary Model EPUB Test]] and the linked exact-source trace.
+
+**Proposed next step, not a settled platform choice or authorised reader build:** agree a small supported presentation bridge with a reader/toolkit before another automatic-arrival experiment. Existing Readium application APIs could support integration, with additional committed-presentation filtering. Keep working playback-v2 unchanged. No new EPUB is justified by this trace; automatic encounter remains unresolved and PR #1 remains unmerged.

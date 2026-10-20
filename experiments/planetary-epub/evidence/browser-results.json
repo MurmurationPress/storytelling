@@ -1,0 +1,17 @@
+{
+  "scope": "Browser component checks only, not EPUB pagination or native-reader compatibility",
+  "browser": "Playwright Chromium",
+  "version": "156.0.8078.4",
+  "passed": [
+    "explicit start; no autoplay on load",
+    "partial burst output",
+    "stable surface and control bounds",
+    "immediate reveal",
+    "completion",
+    "browser navigation away/back returns complete",
+    "reduced motion",
+    "JavaScript-disabled complete fallback",
+    "SVG loading",
+    "no script exceptions"
+  ]
+}

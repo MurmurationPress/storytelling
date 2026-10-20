@@ -19,6 +19,7 @@ This vault is a place to develop that question before committing to a product or
 - [[Chat Performance]] — messages, timing, silence and typing indicators.
 - [[PRIME and JANUS]] — contrasting presentation profiles.
 - [[Authoring and Storyboarding]] — Obsidian, markup and a visual storyboard.
+- [[Planetary Model EPUB Test]] — EPUB artifacts, demonstrated typing and unresolved automatic-encounter limits.
 - [[Art Prototype]] — the selected starting chapter from CONSTRAINT.
 - [[Platform and Audience]] — wider publication possibilities and willingness to pay.
 - [[Decisions]] — what is agreed and what remains provisional.

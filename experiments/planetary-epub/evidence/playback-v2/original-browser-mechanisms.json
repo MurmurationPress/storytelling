@@ -1,0 +1,12 @@
+{
+  "scope": "Synthetic browser mechanism checks on unchanged v1; NOT reproduced default-native cause",
+  "complete_with_colour_override": {
+    "color": "rgb(24, 35, 40)",
+    "opacity": "1"
+  },
+  "after_hidden_event": {
+    "performing": false,
+    "output_chars": 0,
+    "status": "Complete output. Turn the page whenever you wish."
+  }
+}

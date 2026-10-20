@@ -1,0 +1,32 @@
+{
+  "scenario": "first-return",
+  "window": "0xc0000b",
+  "timing": "Seconds since capture process launch; media start may lag slightly.",
+  "actions": [
+    {
+      "seconds": 2.001,
+      "key": "Right",
+      "ctrl": false
+    },
+    {
+      "seconds": 10.002,
+      "key": "Right",
+      "ctrl": false
+    },
+    {
+      "seconds": 13.003,
+      "key": "Left",
+      "ctrl": false
+    },
+    {
+      "seconds": 16.006,
+      "key": "a",
+      "ctrl": true
+    },
+    {
+      "seconds": 16.307,
+      "key": "c",
+      "ctrl": true
+    }
+  ]
+}

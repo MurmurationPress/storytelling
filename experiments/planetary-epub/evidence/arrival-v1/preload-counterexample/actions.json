@@ -1,0 +1,22 @@
+{
+  "scenario": "preload",
+  "window": "0x3600015",
+  "timing": "Seconds since capture process launch; media start may lag slightly.",
+  "actions": [
+    {
+      "seconds": 9.001,
+      "key": "Right",
+      "ctrl": false
+    },
+    {
+      "seconds": 13.203,
+      "key": "a",
+      "ctrl": true
+    },
+    {
+      "seconds": 13.504,
+      "key": "c",
+      "ctrl": true
+    }
+  ]
+}

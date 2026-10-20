@@ -1,0 +1,23 @@
+{
+  "repository": "tedwarddick/PrimeTrilogy",
+  "revision": "84fcdb52841ce5280aa3f23397a4dd2b829c1133",
+  "previously_inspected_revision": "84fcdb52841ce5280aa3f23397a4dd2b829c1133",
+  "changes_since_previous_inspection": "None: current remote HEAD equals previously inspected revision.",
+  "files": {
+    "scene.md": {
+      "path": "Books/CONSTRAINT/INSTABILITY/Planetary Model.md",
+      "sha256": "235d6fc31fccffa84ffca409050aed4d86b1572fc0dcd2e2604ad6c80b5a4cc4",
+      "blob": "b1ab3b0e9b6ea68d586676e99f4b5547d317d87a"
+    },
+    "habitat.svg": {
+      "path": "Story World/Visualisations/PRIME Habitat - Planetary Model - 2030-04-04.svg",
+      "sha256": "d2fcfed00846f1cf9241f45ebe00b7da7a7f258c2a69e35bc53b7bfb7924aea2",
+      "blob": "5336ffae1e9cb628d6a359d91c39f34fc92778e7"
+    },
+    "image-definition.md": {
+      "path": "Story World/Visualisations/Definitions/PRIME Habitat - Planetary Model - 2030-04-04.md",
+      "sha256": "e18afbef0c7fb8034b3e02454494045093389614e7b0c768e70d0f2ee881453e",
+      "blob": "bb4fd11a0a4a109af0025a651fe6376c5eeeb73c"
+    }
+  }
+}

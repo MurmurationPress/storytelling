@@ -1,0 +1,11 @@
+{
+  "filename": "Screencast from 2026-10-20 15-23-11.webm",
+  "sha256": "b1f0800f54f6b1f68eeb8320fee82e16077c4675817a892ae3fe20f240db5191",
+  "duration_seconds": 33.42535,
+  "dimensions": [
+    1176,
+    837
+  ],
+  "observation": "Progressive typing works in playback-v2. Complete YAML is shown before Replay clears and performs it. This is an encounter/revelation problem, not evidence of failed progression.",
+  "review": "Reviewed temporal frames across all 33 seconds, with detailed arrival and replay frames. Original remains in Ted’s Screencasts folder; not copied into the repository."
+}
