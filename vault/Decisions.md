@@ -36,3 +36,11 @@ Consequence: leave platform and hosting choices open.
 **Ted's subsequent choice:** created the private repository [MurmurationPress/storytelling](https://github.com/MurmurationPress/storytelling) and supplied its URL for the prepared vault to be added. The vault lives under `vault/`, alongside repository-level documentation. The earlier repository name was provisional; no product name is settled.
 
 No product name, markup syntax, technology stack, business model or delivery schedule is agreed.
+
+## 2026-10-20 — Sequential app experience; wiki reading model dropped
+
+**Ted's explicit clarification:** the publication is delivered in sequence in a managed app-like environment. He has stopped considering a wiki as the reading model because controlling navigation would be too difficult.
+
+Consequence: retain modular composition as an authoring possibility, but do not treat links as permission for free traversal of the narrative. Asides can remain contextual and bounded. Details of revisiting read material remain open.
+
+**Ted's requested next investigation:** check existing platforms before committing to building our own. An initial documentation comparison is in [[Existing Platforms]]. No platform is selected and no purchase or implementation is authorised by that comparison.

@@ -13,7 +13,8 @@ This vault is a place to develop that question before committing to a product or
 ## Start here
 
 - [[Origins and Purpose]] — why this arose, including the Eleven narration problem.
-- [[Reading Experience]] — page turning, optional depth and author-controlled revelation.
+- [[Reading Experience]] — managed sequential delivery, page turning and bounded asides.
+- [[Existing Platforms]] — initial comparison before choosing to adopt, extend or build.
 - [[Delivery Types]] — prose, comic/image frames, chats, video and maps.
 - [[Chat Performance]] — messages, timing, silence and typing indicators.
 - [[PRIME and JANUS]] — contrasting presentation profiles.
