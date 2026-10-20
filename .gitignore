@@ -1,0 +1,18 @@
+# Obsidian machine-specific and transient state
+vault/.obsidian/workspace*.json
+vault/.obsidian/cache/
+vault/.obsidian/plugins/
+vault/.trash/
+
+# Local operating-system and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Future generated output and dependencies
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
