@@ -1,0 +1,13 @@
+{
+  "scope": "Browser component checks, not native arrival evidence",
+  "browser": "156.0.8078.4",
+  "passed": [
+    "head bootstrap hides full text",
+    "automatic prefixes increase",
+    "immediate reveal",
+    "completed reload stays complete",
+    "no-script full text",
+    "reduced-motion full text and explanation"
+  ],
+  "arrival_contract": "NOT established; probe is not an approved arrival implementation"
+}

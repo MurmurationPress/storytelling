@@ -16,8 +16,11 @@ ranges = {'opening.xhtml': (48, 58), 'state.xhtml': (63, 69),
           'before-image.xhtml': (72, 78), 'after-image.xhtml': (81, 96)}
 parser = argparse.ArgumentParser()
 parser.add_argument('--diagnostic', action='store_true')
-variant = '-diagnostic' if parser.parse_args().diagnostic else ''
-with zipfile.ZipFile(ROOT / ('dist/planetary-model-playback-v2' + variant + '.epub')) as z:
+parser.add_argument('--epub', type=Path, help='Verify a separate arrival research artifact')
+args = parser.parse_args()
+variant = '-diagnostic' if args.diagnostic else ''
+artifact = args.epub or ROOT / ('dist/planetary-model-playback-v2' + variant + '.epub')
+with zipfile.ZipFile(artifact) as z:
     assert z.infolist()[0].filename == 'mimetype'
     assert z.infolist()[0].compress_type == zipfile.ZIP_STORED
     assert z.read('mimetype') == b'application/epub+zip'

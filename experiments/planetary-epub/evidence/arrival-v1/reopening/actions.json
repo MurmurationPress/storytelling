@@ -1,0 +1,17 @@
+{
+  "scenario": "reopening",
+  "window": "0xc00024",
+  "timing": "Seconds since capture process launch; media start may lag slightly.",
+  "actions": [
+    {
+      "seconds": 9.202,
+      "key": "a",
+      "ctrl": true
+    },
+    {
+      "seconds": 9.503,
+      "key": "c",
+      "ctrl": true
+    }
+  ]
+}
