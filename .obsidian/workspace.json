@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "vault/Planetary Model EPUB Test.md",
+                "file": "vault/Reading Experience.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Planetary Model EPUB Test"
+              "title": "Reading Experience"
             }
           }
         ]
@@ -99,7 +99,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "vault/Planetary Model EPUB Test.md",
+                "file": "vault/Reading Experience.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "vault/Planetary Model EPUB Test.md",
+                "file": "vault/Reading Experience.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -161,7 +161,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "vault/Planetary Model EPUB Test.md",
+                "file": "vault/Reading Experience.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -202,37 +202,6 @@
   },
   "active": "57ff03724acd2617",
   "lastOpenFiles": [
-    "experiments/planetary-epub/evidence/arrival-v1/artifacts.json",
-    "experiments/planetary-epub/evidence/arrival-v1/README.md",
-    "experiments/planetary-epub/evidence/arrival-v1/ted-recording.json",
-    "experiments/planetary-epub/evidence/arrival-v1/preload-counterexample/actions.json",
-    "experiments/planetary-epub/evidence/arrival-v1/preload-counterexample/trace.json",
-    "experiments/planetary-epub/evidence/arrival-v1/preload-counterexample/native.webm",
-    "experiments/planetary-epub/evidence/arrival-v1/preload-counterexample/capture.log",
-    "experiments/planetary-epub/evidence/arrival-v1/preload-counterexample",
-    "experiments/planetary-epub/evidence/arrival-v1/early-return/actions.json",
-    "experiments/planetary-epub/evidence/arrival-v1/early-return/trace.json",
-    "experiments/planetary-epub/evidence/arrival-v1/browser-results.json",
-    "experiments/planetary-epub/arrival/check_probe.py",
-    "experiments/planetary-epub/evidence/RESULTS-playback-v2.md",
-    "experiments/planetary-epub/evidence/playback-v2/README.md",
-    "experiments/planetary-epub/evidence/playback-v2/final-diagnostic-completion.png",
-    "experiments/planetary-epub/evidence/playback-v2/diagnostic-copy.png",
-    "experiments/planetary-epub/evidence/playback-v2/state-800x600.png",
-    "experiments/planetary-epub/evidence/playback-v2/image-800x600.png",
-    "experiments/planetary-epub/evidence/playback-v2/image-1024x768.png",
-    "experiments/planetary-epub/evidence/playback-v2/immediate-reveal.png",
-    "experiments/planetary-epub/evidence/playback-v2/later-return.png",
-    "experiments/planetary-epub/evidence/playback-v2/quick-return.png",
-    "experiments/planetary-epub/evidence/playback-v2/early-departure.png",
-    "experiments/planetary-epub/evidence/playback-v2/diagnostic-keyboard/Return-5.6s.png",
-    "experiments/planetary-epub/evidence/RESULTS-v1.md",
-    "experiments/planetary-epub/RESULTS.md",
-    "experiments/planetary-epub/README.md",
-    "experiments/planetary-epub/source/image-definition.md",
-    "experiments/planetary-epub/source/scene.md",
-    "vault/Reading Experience.md",
-    "vault/Planetary Model EPUB Test.md",
     "vault/Existing Platforms.md",
     "vault/Art Prototype.md",
     "vault/PRIME and JANUS.md",
