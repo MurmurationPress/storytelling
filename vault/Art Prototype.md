@@ -5,11 +5,15 @@ status: proposed
 
 # Art Prototype
 
+## Relationship to the first capability test
+
+[[Planetary Model EPUB Test]] is now the immediate first experiment: prose, typed PRIME state YAML, an existing image and a return to prose in an EPUB reader. Art remains the broader mixed-media chapter study once that reading transition is understood.
+
 ## Selected source
 
 Ted identified **Art**, a chapter from **CONSTRAINT**, as a good starting point. CONSTRAINT's introduction of Companions also makes it a promising source for exploring the medium.
 
-Earlier discussion considered EMERGENCE. Art is now the chosen starting point; this does not require adapting the full book.
+Earlier discussion considered EMERGENCE. Art was selected as the broader chapter study; the later Planetary Model choice narrows the first technical test. Neither requires adapting the full book.
 
 ## Work to do before implementation
 
