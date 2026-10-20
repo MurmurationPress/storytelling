@@ -1,0 +1,210 @@
+{
+  "main": {
+    "id": "eeb981e33595e052",
+    "type": "split",
+    "children": [
+      {
+        "id": "44fc0e822169cd87",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8e480c9db7841110",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "vault/PRIME and JANUS.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "PRIME and JANUS"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "f2f53acf6b759ddb",
+    "type": "split",
+    "children": [
+      {
+        "id": "68fd105eb2931963",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "09e8a407a1d11376",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "865b872a19ed9d94",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "5418db15476a27c4",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "b6d426e51b1f4258",
+    "type": "split",
+    "children": [
+      {
+        "id": "44120efb20bfeb4a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a84dadb037e27d02",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "vault/PRIME and JANUS.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "92025e293d7b64ea",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "vault/PRIME and JANUS.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "2a4fcc9cc3e992e8",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "bde31ff497b42b7c",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "4da5508df9adad8b",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "vault/PRIME and JANUS.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          },
+          {
+            "id": "57ff03724acd2617",
+            "type": "leaf",
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
+          }
+        ],
+        "currentTab": 5
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false,
+      "obsidian-git:Open Git source control": false,
+      "templater-obsidian:Templater": false
+    }
+  },
+  "active": "8e480c9db7841110",
+  "lastOpenFiles": [
+    "vault/Chat Performance.md",
+    "vault/Art Prototype.md",
+    "README.md",
+    "AGENTS.md"
+  ]
+}
