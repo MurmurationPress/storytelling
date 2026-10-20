@@ -5,8 +5,9 @@ const types = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.e
 http.createServer((req,res) => {
   let name;
   try { name = decodeURIComponent(new URL(req.url,'http://localhost').pathname); } catch { res.writeHead(400).end(); return; }
-  const target = path.resolve(root, '.'+(name === '/' ? '/index.html' : name));
-  if (!target.startsWith(root+path.sep) || name.split('/').some(p=>p.startsWith('.')) || !['GET','HEAD'].includes(req.method)) { res.writeHead(403).end(); return; }
+  const artAsset = name === '/publication/art-chat-v1.epub';
+  const target = path.resolve(root, artAsset ? '../art-chat/publication/art-chat-v1.epub' : '.'+(name === '/' ? '/index.html' : name));
+  if ((!artAsset && !target.startsWith(root+path.sep)) || name.split('/').some(p=>p.startsWith('.')) || !['GET','HEAD'].includes(req.method)) { res.writeHead(403).end(); return; }
   fs.readFile(target,(err,data)=> {
     if (err) { res.writeHead(404).end(); return; }
     res.setHeader('Content-Type',types[path.extname(target)] || 'application/octet-stream');

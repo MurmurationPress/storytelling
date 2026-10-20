@@ -1,11 +1,20 @@
 /* Small trusted-publication shell. EPUB parsing, pagination and turns are EPUB.js. */
 (() => {
   'use strict';
-  const publication = 'planetary-model-encounter-v1', storageKey = publication + ':reader-v1';
-  const reader = document.getElementById('reader'), params = new URLSearchParams(location.search);
+  const params = new URLSearchParams(location.search);
+  const art = params.get('book') === 'art';
+  const publication = art ? 'art-chat-v1' : 'planetary-model-encounter-v1';
+  const packageURL = art ? 'publication/art-chat-v1.epub' : 'publication/planetary-model-encounter-v1.epub';
+  const preloadResource = art ? 'ask.xhtml' : 'state.xhtml';
+  const storageKey = publication + ':reader-v1', protocol = MurmurationPresentation;
+  document.getElementById('book-title').textContent = art ? 'Art' : 'Planetary Model';
+  document.title = (art ? 'Art' : 'Planetary Model') + ' · reader integration';
+  const reader = document.getElementById('reader');
   const token = crypto.randomUUID(), records = new Set(), trace = [];
   let saved;
   try { saved = JSON.parse(localStorage.getItem(storageKey)) || {}; } catch { saved = {}; }
+  if (typeof saved !== 'object' || Array.isArray(saved)) saved={};
+  if (!saved.components || typeof saved.components !== 'object' || Array.isArray(saved.components)) saved.components={};
   let book, rendition, preloadBook, preloadRendition, currentLocation, pending = 0, generation = 0;
   let chain = Promise.resolve(), latestPrimary, ready = false;
   const frames = n => new Promise(resolve => { const step=()=> --n <= 0 ? resolve() : requestAnimationFrame(step); requestAnimationFrame(step); });
@@ -20,12 +29,12 @@
   function presentation(rec, active, reason, force = false) {
     if (!rec.instance || rec.closed || (!force && rec.active === active)) return;
     rec.active = active;
-    const payload = {type:'presentation',version:1,publication,resource:'state.xhtml',component:'surface',
+    const payload = {...rec.identity,type:'presentation',version:1,
       instance:rec.instance,sequence:++rec.sequence,active,reason};
-    if (!rec.initialized) { payload.restore = saved.output || {position:0,done:false}; rec.initialized = true; }
+    if (!rec.initialized) { payload.restore = rec.legacy ? saved.output || {position:0,done:false} : saved.components[protocol.key(rec.identity)] || null; rec.initialized = true; }
     rec.lastMessage = payload;
     rec.port.postMessage(payload);
-    log(active ? 'enter-sent' : 'leave-sent',{instance:rec.instance,sequence:rec.sequence,owner:rec.owner,reason});
+    log(active ? 'enter-sent' : 'leave-sent',{instance:rec.instance,sequence:rec.sequence,owner:rec.owner,component:rec.identity.component,reason});
   }
   function isPresented(rec) {
     if (rec.owner !== 'primary' || pending || document.hidden || !ready || rec.closed) return false;
@@ -71,30 +80,38 @@
       touch=undefined;
     },{passive:true});
     if (!doc.getElementById('surface') || !doc.querySelector('meta[name="prime-presentation-v1"]')) return;
+    let identity;
+    try { identity = JSON.parse(doc.querySelector('meta[name="murmuration-component"]')?.content || 'null'); } catch { return; }
+    const legacy = !identity;
+    identity ||= {publication,resource:'state.xhtml',component:'surface'};
+    if (identity.publication !== publication) return;
     const channel = new MessageChannel();
-    const rec = {contents,owner,port:channel.port1,sequence:0,active:null,closed:false};
+    const rec = {contents,owner,identity,legacy,port:channel.port1,sequence:0,active:null,closed:false};
     records.add(rec);
     if (owner === 'primary') latestPrimary=rec;
     rec.port.onmessage = ({data:m}) => {
-      if (rec.closed || !m || m.version !== 1 || m.publication !== publication || m.resource !== 'state.xhtml' || m.component !== 'surface') return;
+      if (rec.closed || !protocol.sameIdentity(m,rec.identity)) return;
       if (m.type === 'ready' && !rec.instance && typeof m.instance === 'string') {
         rec.instance=m.instance;
+        rec.capabilities=rec.legacy ? ['replay','reveal','reduced-motion','static'] : m.capabilities;
         // Atomic initial inactive snapshot, including progress restoration. A late
         // subscriber is then reconciled with the current host presentation.
         presentation(rec,false,'initial',true);
         log('registered',{owner,instance:rec.instance});
         reconcile('registration');
       } else if (m.type === 'progress' && m.instance === rec.instance && m.sequence === rec.sequence) {
-        log('progress',{owner,instance:m.instance,sequence:m.sequence,position:m.position,done:m.done,active:m.active,reason:m.reason,rejected:m.rejected});
+        log('progress',{owner,component:identity.component,instance:m.instance,sequence:m.sequence,position:m.position,done:m.done ?? m.snapshot?.done,progress:m.snapshot?.progress,active:m.active,reason:m.reason,rejected:m.rejected});
         rec.progress=m;
-        if (rec === latestPrimary && owner === 'primary' && Number.isInteger(m.position) && m.position>=0 && m.position<=m.total) {
+        if (rec.legacy && rec === latestPrimary && owner === 'primary' && Number.isInteger(m.position) && m.position>=0 && m.position<=m.total) {
           saved.output={position:m.position,done:m.done===true}; persist();
+        } else if (!rec.legacy && rec === latestPrimary && owner === 'primary' && protocol.snapshot(m.snapshot,identity)) {
+          saved.components[protocol.key(identity)]=m.snapshot; persist();
         }
       } else log('host-rejected-stale',{owner,instance:m.instance,sequence:m.sequence});
     };
     const attach = () => {
       if (rec.closed || !contents.window.frameElement?.isConnected) return;
-      contents.window.postMessage({type:'prime:connect',version:1,token,publication,resource:'state.xhtml'},'*',[channel.port2]);
+      contents.window.postMessage({...identity,type:'prime:connect',version:1,token},'*',[channel.port2]);
     };
     const delay = Number(params.get('registrationDelay') || 0);
     if (delay > 0) setTimeout(attach,Math.min(delay,10000)); else attach();
@@ -105,12 +122,12 @@
     const b = ePub();
     // Documented source hook runs before serialization and script execution.
     b.spine.hooks.content.register((doc,section)=> {
-      if (section.href !== 'state.xhtml' || params.get('bridge') === '0' || params.get('scripts') === '0') return;
+      if ((!art && section.href !== 'state.xhtml') || params.get('bridge') === '0' || params.get('scripts') === '0') return;
       const meta = doc.createElementNS('http://www.w3.org/1999/xhtml','meta');
       meta.setAttribute('name','prime-presentation-v1'); meta.setAttribute('content',token);
       doc.head.insertBefore(meta,doc.head.firstChild);
     });
-    await b.open('publication/planetary-model-encounter-v1.epub');
+    await b.open(packageURL);
     const r = b.renderTo(target,{width:'100%',height:'100%',spread:'none',flow:'paginated',manager:'default',
       allowScriptedContent:params.get('scripts') !== '0',allowPopups:false});
     r.hooks.content.register(contents=>connect(contents,owner));
@@ -157,7 +174,7 @@
   async function preload() {
     if (preloadRendition) return;
     ({b:preloadBook,r:preloadRendition}=await create('preload',document.getElementById('preloader')));
-    await preloadRendition.display('state.xhtml');
+    await preloadRendition.display(preloadResource);
     log('invisible-preload-ready');
   }
   document.getElementById('preload').onclick=preload;
@@ -169,7 +186,7 @@
   // It is host-only; not part of the publication bridge or a replacement navigator.
   window.primeExperiment={
     trace, get ready(){return ready;}, get location(){return currentLocation;}, get saved(){return saved;},
-    get records(){return [...records].map(r=>({owner:r.owner,instance:r.instance,active:r.active,sequence:r.sequence,progress:r.progress}));},
+    get records(){return [...records].map(r=>({owner:r.owner,component:r.identity.component,capabilities:r.capabilities,instance:r.instance,active:r.active,sequence:r.sequence,progress:r.progress}));},
     preload,
     staleProbe(){const r=[...records].find(r=>r.owner==='primary' && !r.closed); if(r?.lastMessage) {
       r.port.postMessage({...r.lastMessage,sequence:r.sequence-1,active:true});
@@ -181,7 +198,7 @@
     ready=true;
     await navigate(()=>rendition.display(saved.location || undefined));
     if (params.has('preload')) await preload();
-    document.getElementById('diagnostic').textContent='EPUB.js 0.3.93 · encounter-v1 · presentation extension v1';
+    document.getElementById('diagnostic').textContent='EPUB.js 0.3.93 · ' + publication + ' · presentation extension v1';
     log('shell-ready');
   })().catch(e=> { document.getElementById('error').textContent=e.stack; });
 })();

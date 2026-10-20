@@ -35,3 +35,8 @@ See [[PRIME and JANUS]], [[Reading Experience]] and [[Authoring and Storyboardin
 ## Next practical component — 2026-10-20
 
 Chat is the next new component in the limited [[Managed EPUB Foundation]] milestone. Select and pin a real conversation from the authoritative manuscript before settling its model. Message/typing/silence phases should refine the PRIME-derived lifecycle rather than copy a YAML counter blindly. Authored dialogue stays intact; timing and presentation are editorial metadata. Transcript fallback must preserve essential silence/unsent-typing meaning where necessary. No chat implementation or live chatbot is introduced by this planning step. See [the chat issue](https://github.com/MurmurationPress/storytelling/issues/6).
+
+
+## First implemented passage — Art
+
+[[Art Chat Slice]] now tests a four-message permission exchange, with the source words unchanged. Supporting narration is adapted only where the performed message carries its information. The concrete progress model stores shown-message count, delay/response phase and remaining active milliseconds; interruption must preserve the phase, not just the transcript index. New settings are proposed editorial pacing, not invented narrative hesitation. A versioned opaque snapshot extends the existing reader connection. This first case does not settle significant authored silence, unsent typing or all chat behaviour; those should wait for actual passages that call for them.

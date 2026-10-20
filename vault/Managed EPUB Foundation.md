@@ -65,3 +65,8 @@ Known foundation constraint: the scripted EPUB.js shell is for bundled trusted c
 Start #3's contract discovery together with #6's real-conversation selection/behavioural analysis. Then reader integration (#4) and PRIME extraction (#5) can proceed against the first contract while chat (#6) implements and refines it. Packaging/provenance/fallback policy (#7) can begin early; its final two-component build closes the milestone. This is a proposed order, not a dependency cycle or an implementation schedule.
 
 **Recommended first code task:** #5, extracting the accepted PRIME renderer behind #3's initial small contract, retaining the existing extract as a regression fixture. First establish that draft and the real chat case; chat remains the next new delivery component, not blocked on the PRIME extraction finishing.
+
+
+## Authorised first implementation slice — 2026-10-20
+
+Ted has subsequently authorised initial #3 contract work alongside a short Art adaptation under #6, carried into the existing reader. This supersedes the earlier planning-only restriction for this slice, not for the entire milestone. See [[Art Chat Slice]]. #3 remains draft/open; #4/#7 contain only necessary reader/packaging prerequisites; #5's full reusable PRIME extraction remains deferred. Existing accepted PRIME package bytes are preserved.

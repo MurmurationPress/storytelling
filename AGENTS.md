@@ -13,3 +13,7 @@ The vault remains the project's thinking space. Ted has now authorised review/in
 - Do not turn conceptual references such as The Sandman and Watchmen into assets or adaptations without an explicit request and appropriate rights.
 - Keep all claims about prototypes, hosting, payment and reader demand tied to evidence. A proposed feature is not an implemented feature.
 - Keep the vault in this repository as it develops; do not create a competing canonical copy elsewhere.
+
+## Current implementation boundary
+
+Ted has authorised the first milestone slice: an initial #3 contract alongside a short authored Art chat under #6 in the existing managed reader. Necessary #4/#7 prerequisites are allowed; this does not authorise completing the entire milestone or a general component framework. See `vault/Art Chat Slice.md`. Preserve the accepted PRIME artifacts and authored dialogue; record supporting-narration adaptations and retain a complete static treatment.

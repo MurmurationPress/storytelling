@@ -47,3 +47,7 @@ In a second terminal, from this directory, run `npm test`. Tests use the running
 [Results and temporal evidence](RESULTS.md) · [Presentation contract](CONTRACT.md) · [Toolkit choice and publication changes](DESIGN.md)
 
 This is a trusted, bundled-publication experiment. Scripted EPUB.js content is not a secure arbitrary-book sandbox. No file picker, upload endpoint, native execution, filesystem bridge or unrelated host API is provided. The pinned EPUB.js package has an old transitive XML dependency with npm advisories; the local shell is not offered as a production or untrusted-publication reader. See DESIGN.md for the precise scope.
+
+## Art first slice
+
+This branch adds a [short Art conversation](../art-chat/README.md) under #3/#6, using this same reader and presentation bridge. Launch `../art-chat/launch.sh` for port 4190 and open `?book=art`; the default package remains accepted PRIME. Art has its own identified EPUB, phase snapshots and draft contract. The original PRIME artifact bytes and historical evidence remain unchanged. This is a two-package trusted experiment, not a catalogue/import feature.

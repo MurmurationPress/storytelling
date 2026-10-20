@@ -101,3 +101,12 @@ This authorises implementation of the extract experiment only. The earlier think
 **Notes preserved:** Ted's local [[Component Types]] was brought into main byte-for-byte without switching/resetting his authoring worktree. Future drawing/line invitation/JANUS/previews/video/apps/footnotes/sound ideas remain in the vault, outside the milestone.
 
 **Planned, not implemented:** [Managed EPUB foundation: reusable PRIME and chat](https://github.com/MurmurationPress/storytelling/milestone/1); contract #3, reader #4, reusable PRIME #5, authored chat #6, packaging/fallback #7. See [[Managed EPUB Foundation]] for issue links, proposed order, evidence and security/dependency constraints.
+
+
+## 2026-10-20 — Authorise Art chat and the first contract draft
+
+**Ted's explicit direction:** begin #3 alongside #6 using Art, not another searched conversation. Build a short, coherent reader demonstration on a focused branch/PR, unmerged. Only necessary reader/shared/packaging changes are in scope; keep partial issues open and preserve the accepted PRIME artifact bytes and authoring worktree.
+
+**Adaptation permission:** supporting narration may be replaced when the performance carries its meaning. Dialogue, speakers and order remain intact; perception, emotion, interpretation and unperformed information stay. No invented significant hesitation, unsent messages or responses. A complete static treatment may retain supporting narration omitted during performance.
+
+**Implemented first case, awaiting Ted's editorial review:** Art revision `75b4a92456d459474771364ca35a11211b6ee8bc`, lines 462–504, with messages at 477/479/495/497. The only narrative omission is “, then typed” in performed line 470; static narration retains it. See [[Art Chat Slice]] and its linked audit. The initial contract uses the existing version-1 bridge with phase-aware opaque snapshots, stable occurrence/content/state identity and host persistence. It remains a draft; this does not complete #3–#7 or establish actual iPad/Safari support.
