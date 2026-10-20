@@ -44,3 +44,11 @@ No product name, markup syntax, technology stack, business model or delivery sch
 Consequence: retain modular composition as an authoring possibility, but do not treat links as permission for free traversal of the narrative. Asides can remain contextual and bounded. Details of revisiting read material remain open.
 
 **Ted's requested next investigation:** check existing platforms before committing to building our own. An initial documentation comparison is in [[Existing Platforms]]. No platform is selected and no purchase or implementation is authorised by that comparison.
+
+## 2026-10-20 — Authorised focused Planetary Model EPUB experiment
+
+**Ted's explicit direction:** build and evaluate the first small EPUB 3 capability prototype, using the current authoritative Planetary Model manuscript, preserving wording and the existing image, with reader-owned page turns. Create a branch and PR; do not merge or publish a site.
+
+This authorises implementation of the extract experiment only. The earlier thinking-space constraint continues to apply to general platform work. No publishing platform, general authoring language, hosting service or technology stack is selected by this work.
+
+**Experiment finding, not a platform decision:** Thorium Desktop 3.5.1 on Linux supports the tested mixed-layout sequence and explicitly started YAML performance with native page turns. Automatic encounter-triggered playback was not established; Begin output is required. Other reader/platform support remains unverified. See [[Planetary Model EPUB Test]] for source pin, artifact and evidence.

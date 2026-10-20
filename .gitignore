@@ -16,3 +16,9 @@ dist/
 .env
 .env.*
 !.env.example
+
+# This focused prototype includes its downloadable, reproducible artifact.
+!experiments/planetary-epub/dist/
+!experiments/planetary-epub/dist/planetary-model.epub
+!experiments/planetary-epub/dist/extraction.json
+__pycache__/

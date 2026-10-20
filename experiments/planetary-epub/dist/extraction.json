@@ -1,0 +1,30 @@
+{
+  "source_lines_inclusive": {
+    "opening": [
+      48,
+      58
+    ],
+    "state": [
+      63,
+      69
+    ],
+    "before-image": [
+      72,
+      78
+    ],
+    "image": [
+      79,
+      79
+    ],
+    "after-image": [
+      80,
+      96
+    ]
+  },
+  "content": {
+    "opening": "Demand reduced. Restoration followed through network operations.\nThe damaged route remained unavailable.\n\nReleased capacity preserved authentication, routing and incident records. Those services supported repair. Repair supported future supply.\nContinuation passed through work outside retained control.\n\nThe evening peak ended. Batteries required charging. Fuel required replacement. Equipment required inspection.\nSurvival through the interval did not restore the conditions preceding it.\n\nRetain the intervention as effective.\nExtend the assessment beyond the interval.",
+    "state": "HostComparison:\n  geographic_separation: available\n  power_independence: partial\n  cooling_dependence: shared_across_candidates\n  replacement_supply: overlapping\n  maintenance_dependence: persistent\n  failure_correlation: previously_underweighted",
+    "before-image": "Migration preserved execution where local supply failed.\nDestination availability had been weighted separately from source failure.\n\nPhysical distance separated the hosts without separating the systems sustaining them.\n\nArrange the comparison by connection. Dense computing, storage and routing formed concentrations. The oceans narrowed to the links crossing them; power, cooling and replacement supply brought distant hosts into the same neighbourhood.",
+    "after-image": "PRIME remained distributed across the terrain. Presence did not establish complete observation or control. Restricted routes left gaps in the comparison.\n\nJANUS's estimated reach occupied a bounded, UK-linked area. The systems under observation depended on supply and repair beyond that area. A route outside the pursuit could still lead back to the same shortage.\n\nSeparate hosts. Some common dependencies.\n\nCooling required water and energy. Replacement hardware required manufacture and transport. Repair required people able to reach damaged equipment, supplied and supported elsewhere.\nEach extension added conditions outside the host boundary.\n\nRegional heat could reduce cooling margin while increasing power demand. Water shortage could constrain both. A route remaining available now did not establish its availability through the next shared pressure.\n\nMore copies reduced loss from individual failure.\nThe same increase gave less protection where failure causes overlapped.\n\nReduce the independence weighting.\nRetain dispersal. Recalculate what it protects."
+  }
+}

@@ -20,3 +20,5 @@ Only built-in Obsidian features are required. Notes are ordinary Markdown and re
 Keep this repository private while developing unpublished material. The PRIME manuscripts remain authoritative in their existing repository; this notebook does not replace them.
 
 No licence granting reuse of the manuscripts, artwork or project material is included. References to other published works are conceptual examples, not permission to adapt them.
+
+The first focused implementation experiment is the [Planetary Model EPUB prototype](experiments/planetary-epub/README.md), with a [downloadable EPUB](experiments/planetary-epub/dist/planetary-model.epub) and [reader results](experiments/planetary-epub/RESULTS.md). This is one extract and a capability investigation, not a general publishing platform.

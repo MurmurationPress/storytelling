@@ -1,0 +1,6 @@
+{
+  "burst_characters": 3,
+  "interval_ms": 65,
+  "surface_width": 1000,
+  "surface_height": 720
+}
