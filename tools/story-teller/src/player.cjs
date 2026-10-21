@@ -5,7 +5,7 @@ const defaultScheduler = {
   setTimeout: (callback, delay) => setTimeout(callback, delay),
   clearTimeout: handle => clearTimeout(handle)
 };
-const defaultDelay = text => Math.max(800, Math.min(4000, 400 + 35 * Array.from(text).length));
+const { defaultDelay, automaticDelay } = require('./pace.cjs');
 class StoryPlayer {
   constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {} } = {}) {
     this.scene = scene; this.index = 0; this.scheduler = scheduler; this.onChange = onChange;
@@ -33,7 +33,7 @@ class StoryPlayer {
         if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
         else {
           const message = block.messages[event.message];
-          this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? defaultDelay(message.text) });
+          this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? automaticDelay(message.text, block.pace) });
           if (block.ticks && message.speaker === block.viewer) this.steps.push({ type: 'read', blockIndex, message: event.message, delayMs: 600 });
         }
       }

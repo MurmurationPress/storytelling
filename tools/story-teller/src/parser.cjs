@@ -1,5 +1,6 @@
 'use strict';
 const MarkdownIt = require('markdown-it');
+const { PACE_MULTIPLIERS } = require('./pace.cjs');
 const { inspectStructure } = require('./structure.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
 // The first slice is text-only: neither links nor images can trigger navigation/fetches.
@@ -87,6 +88,7 @@ function parseScene(source) {
         let title = null;
         let viewer = null;
         let ticks = false;
+        let pace = 'normal';
         let invalid = null;
         let invalidLine = first + token.map[0] + 1;
         const seen = new Set();
@@ -129,6 +131,13 @@ function parseScene(source) {
             responding = true;
             continue;
           }
+          if (/^@pace(?:\s|$)/.test(line.trim())) {
+            const value = line.trim().slice(5).trim();
+            if (messages.length) { invalid = '@pace must appear before the first message'; break; }
+            if (seen.has('pace')) { invalid = '@pace must appear only once'; break; }
+            if (!Object.hasOwn(PACE_MULTIPLIERS, value)) { invalid = '@pace requires normal, brisk or deliberate'; break; }
+            pace = value; seen.add('pace'); continue;
+          }
           if (line.trim() === '@ticks') {
             if (events.length || seen.has('ticks')) { invalid = '@ticks must appear once, before messages/pauses'; break; }
             ticks = true; seen.add('ticks'); continue;
@@ -162,7 +171,7 @@ function parseScene(source) {
           prose.push(token);
         } else {
           flush();
-          add({ type: 'chat', messages, events, title, viewer, ticks, line: first + token.map[0] + 1 });
+          add({ type: 'chat', messages, events, title, viewer, ticks, pace, line: first + token.map[0] + 1 });
         }
       } else prose.push(token);
     }

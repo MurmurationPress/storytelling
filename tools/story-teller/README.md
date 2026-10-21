@@ -279,3 +279,32 @@ These are [native VS Code snippets/pickers](https://code.visualstudio.com/api/re
 5. Try Tab-linked viewer editing, Escape cancellation and one Undo on a fictional/copy scene first. Save the adaptation yourself when satisfied; neither command saves or overwrites the original.
 
 A read-only local Art snapshot had four existing beat boundaries (five beats), one valid manually adapted chat and 29 remaining manuscript-style chat containers. In-memory conversion preserved all boundary bytes and the beat count exactly. The remaining legacy blocks need conversion before playback; existing Obsidian image embeds remain outside this increment's supported components. No manuscript content is included in the committed tests or automatically repaired by this exercise.
+
+## Chat pace (awaiting Ted’s acceptance)
+
+Ted accepts the existing chat experience and pacing, but finds that long exchanges accumulate too much waiting. Pace changes automatic waits locally, without changing authored silence or the global default:
+
+````markdown
+```chat
+# Harbour approach
+@pace brisk
+@viewer Mara
+@responding
+Ivo: The lantern is steady.
+@pause 900ms
+@delay 1200ms
+Mara: I can see it now.
+```
+````
+
+Use `@pace normal`, `@pace brisk` or `@pace deliberate` before the first message in that chat. Omission means Normal. Only one declaration is allowed; unknown values, duplicate declarations and declarations after a message produce line-numbered diagnostics. Continuation text and literal Markdown examples remain literal. Pace does not carry into the next chat or affect prose.
+
+Normal keeps the existing formula exactly: `min(4000, max(800, 400 + 35 × Unicode character count))` milliseconds. Apply the pace multiplier **after** that bound, rounding each result with `Math.round` to whole milliseconds. Multipliers are centrally defined in `src/pace.cjs`: Normal **1**, Brisk **0.7**, Deliberate **1.3**. Effective automatic ranges are therefore 800–4000ms, 560–2800ms and 1040–5200ms. Bounding first preserves the established length model; scaling that wait makes Brisk a modest reduction and Deliberate a modest increase. No adaptive acceleration is used.
+
+An explicit `@delay` replaces the calculated wait entirely, including at a chat boundary; it is never scaled. `@pause` adds its original silence before the next wait. A 900ms pause followed by an explicit 1200ms delay therefore remains **2100ms at every pace**. Responding occupies the effective incoming-message wait itself, with no extra timer. Outgoing read ticks retain their separate 600ms phase. Reduced motion still preserves sequential message delivery.
+
+To author a setting, place the caret inside the chat, run **Story Teller: Insert… → Pace**, then choose **Normal**, **Brisk** or **Deliberate**. The helper places configuration directly after the opening fence, replacing/moving existing declarations instead of adding duplicates. It preserves messages and makes one unsaved, undoable operation. A selection must remain entirely inside the same chat. Outside a chat it explains where to put the caret. New chat snippets continue to omit pace.
+
+To compare, launch the Development Host as above and open `lantern.md`. Its last two beats (4 and 5) contain the same eight-message fictional conversation at Normal and Brisk, both with `@responding`, a 900ms pause and a 1200ms explicit delay. Play each; Replay Beat repeats it. Total waits are **18,865ms Normal** versus **13,835ms Brisk**. The pause/delay remain unchanged. Try the Pace helper on either block, Undo, and edit the value to `deliberate` for a slower comparison. Beat navigation remains manual; source edits reset the current beat to ready.
+
+Imagery is the next feature, outside this increment. Existing manuscript, conversion and EPUB work remain separate.

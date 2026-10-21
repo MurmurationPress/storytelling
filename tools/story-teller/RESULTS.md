@@ -1,3 +1,24 @@
+# Chat-local pace — 2026-10-21
+
+Ted accepts the existing chat experience. His remaining feedback is that long exchanges accumulate too much waiting. **The new pace setting awaits his acceptance.** Imagery is next and is not implemented here.
+
+`@pace normal|brisk|deliberate` is chat-local configuration before the first message. Omission is exactly Normal. The centrally defined multipliers 1/0.7/1.3 scale the existing bounded automatic delay, rounded per message to milliseconds. Explicit inside/outside delays, additive pauses and 600ms read ticks do not scale. Responding uses the same effective incoming-message delay, without an additional wait. Prose ordering, manual beats, pause/resume, replay and cancellation remain unchanged.
+
+The Insert picker now offers Pace and then three described choices. It writes configuration at the start of the selected chat, replacing/moving existing declarations (including consolidating duplicates) in one unsaved Undo operation. It refuses other structural contexts and guards document/selection changes across both pickers. New chat snippets omit pace.
+
+## Validation
+
+- **70 deterministic tests pass**, plus build, syntax checks and `git diff --check`. Coverage includes default/explicit Normal compatibility, Unicode length, pre-scaling bounds/rounding, explicit delays and pauses, tick timing, cross-chat scope, responding duration, pause/resume/replay/cancellation, line-numbered invalid/duplicate/late configuration, helper CRLF updates and literal continuation preservation. Existing parser/converter/safe-rendering regressions remain green.
+- **Actual VS Code 1.142.0 on Linux, isolated Extension Development Host:** automated native picker interaction verified Brisk insertion, Deliberate replacement, two single Undos and outside-chat refusal. Real extension webview playback exercised all three paces with an incoming responding indicator, then a 300ms pause and explicit 1200ms delay. This is temporal DOM observation in the native host, not a browser-only player mock or Ted’s manual acceptance.
+- First-message observations: Normal **839ms** (target 800), Brisk **633ms** (560), Deliberate **1057ms** (1040). Second-message observations from Play: **2303ms**, **2124ms**, **2638ms** (targets 2300/2060/2540). Polling and IPC add measurement latency; exact timing is covered by the injected deterministic scheduler. Evidence: [pace-native.json](test/evidence/pace-native.json). Re-run with `npm run test:host`; full local run logs/temporal files were in `/tmp/story-teller-host-wVHdgb`.
+- Existing host regression checks also passed: ready idle, mixed ordering, responding, reduced-motion sequencing, viewer alignment/ticks, source reset, navigation/focus, safe rendering, conversion preview/cancellation/staleness/Undo, native snippets and context guards. The first run stopped when a pre-existing conversion notification folded its buttons out of view; the harness now opens the native notification centre before selecting notification actions. No product behaviour was changed for that test issue.
+
+`lantern.md` retains its first three beats and adds matching eight-message Normal/Brisk comparisons. Their summed waits are **18,865ms** and **13,835ms**, including the same unscaled 900ms pause and 1200ms explicit delay. Use README launch steps, Next to beats 4/5, Play, then Replay or the Pace helper. These authoring examples still need Ted’s comparison.
+
+No dependencies, imagery, conversion rules, manuscript content or EPUB artifacts were added/changed. Ted’s authoring worktree, Component Types note and private untracked Art/assets were left untouched. No push, publication, release or merge.
+
+---
+
 # Chat authoring consolidation — 2026-10-21
 
 ## Status and acceptance

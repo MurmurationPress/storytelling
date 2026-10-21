@@ -327,3 +327,54 @@ test('per-message responding remains scoped; header responding never leaks into 
   one.player.play(); one.clock.advance(800); assert.equal(one.player.responding.speaker, 'Bo');
   one.clock.advance(800); assert.equal(one.player.responding, null);
 });
+
+test('pace scales bounded automatic waits only, rounds milliseconds and preserves default compatibility', () => {
+  const { automaticDelay } = require('../src/pace.cjs');
+  for (const [pace, multiplier] of [['normal', 1], ['brisk', .7], ['deliberate', 1.3]]) {
+    for (const text of ['Hi', 'x'.repeat(13), 'x'.repeat(40), 'x'.repeat(1000), '🐦'.repeat(20)])
+      assert.equal(automaticDelay(text, pace), Math.round(defaultDelay(text) * multiplier));
+    const { player, clock } = setup(`@pace ${pace}\n@viewer A\n@responding\nB: Hi\n@pause 900ms\n@delay 1200ms\nB: Yes`);
+    player.play(); assert.equal(player.responding.speaker, 'B');
+    const wait = Math.round(800 * multiplier);
+    clock.advance(wait - 1); assert.equal(messages(player).length, 0);
+    clock.advance(1); assert.equal(messages(player).length, 1); assert.equal(player.responding, null);
+    clock.advance(900); assert.equal(player.responding.speaker, 'B');
+    clock.advance(1199); assert.equal(messages(player).length, 1);
+    clock.advance(1); assert.equal(messages(player).length, 2); assert.equal(player.phase, 'completed');
+  }
+  assert.equal(automaticDelay('Hi'), defaultDelay('Hi'));
+  assert.deepEqual(setup('A: Hi').player.steps, setup('@pace normal\nA: Hi').player.steps);
+});
+test('pace remains local; pause/resume, replay and cancelled callbacks preserve effective timing', () => {
+  const { player, clock } = setup('@pace brisk\nA: Hi', '\n\n```chat\nA: Hi\n```');
+  player.play(); clock.advance(200); player.pause(); clock.advance(10000);
+  player.play(); clock.advance(359); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1);
+  clock.advance(799); assert.equal(messages(player).length, 1);
+  clock.advance(1); assert.equal(messages(player).length, 2);
+  player.replay(); clock.advance(559); assert.equal(messages(player).length, 0);
+  player.dispose(); for (const callback of clock.retired) callback();
+  clock.advance(10000); assert.equal(messages(player).length, 0);
+});
+test('pace configuration diagnoses unknown, empty, duplicate and late declarations at their source lines', () => {
+  for (const [body, line, message] of [
+    ['@pace fast\nA: Hi', 4, 'requires normal'],
+    ['@pace\nA: Hi', 4, 'requires normal'],
+    ['@pace brisk\n@pace normal\nA: Hi', 5, 'only once'],
+    ['A: Hi\n@pace brisk', 5, 'before the first message']
+  ]) {
+    const { scene } = setup(body);
+    assert.match(scene.diagnostics.join('\n'), new RegExp(`Line ${line}:.*${message}`));
+  }
+  assert.equal(setup('@pause 50ms\n@pace brisk\nA: Hi').scene.diagnostics.length, 0);
+});
+test('pace leaves outside overrides, additive silence and outgoing tick phases untouched', () => {
+  const clock = new Clock();
+  const scene = parseScene('Before\n\n@pause 300ms\n@delay 1100ms\n\n```chat\n@pace brisk\n@viewer A\n@ticks\nA: Hi\n```\n\nAfter');
+  const player = new StoryPlayer(scene, { scheduler: clock });
+  player.play(); clock.advance(1399); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1);
+  assert.equal(player.phase, 'playing');
+  clock.advance(599); assert.equal(player.phase, 'playing');
+  clock.advance(1); assert.equal(player.phase, 'completed');
+});

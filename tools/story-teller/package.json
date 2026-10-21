@@ -50,7 +50,7 @@
   "scripts": {
     "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs",
+    "check": "node --check src/pace.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs",
     "test:host": "node test/run-host.cjs"
   },
   "dependencies": {

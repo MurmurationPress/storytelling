@@ -119,10 +119,10 @@ async function until(fn, timeout = 60000) {
     // Configure the test's final beat explicitly; do not depend on local sample edits.
     const sample = headerSource; // Keep the current chat identical while testing a preceding beat insertion.
     await request('edit', sample.replace('# The Last Lantern', 'Inserted first beat\n---\n# The Last Lantern'));
-    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 4 · ready'));
+    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 6 · ready'));
     assert.equal(await frame.locator('.chat li').count(), 0);
     await request('edit', sample.replace('Only me.', 'Only me, Mara.'));
-    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 2 of 3 · ready'));
+    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 2 of 5 · ready'));
     await frame.locator('#next').click();
     await until(async () => (await beat.textContent()).includes('ferry touched'));
     assert.equal((await beat.textContent()).includes('Beyond the wake'), false);
@@ -152,7 +152,7 @@ async function until(fn, timeout = 60000) {
     assert.equal(await frame.locator('.chat li.outgoing').count(), 1);
     assert.equal(await evaluate("doc.querySelector('.chat li.outgoing strong').textContent"), 'Mara');
     assert.ok(await evaluate("doc.querySelector('.chat li.outgoing').getBoundingClientRect().left - doc.querySelector('.chat li:not(.outgoing)').getBoundingClientRect().left") >= 10);
-    assert.equal(await frame.locator('#next').isDisabled(), true);
+    assert.equal(await frame.locator('#next').isDisabled(), false);
     await fs.writeFile(path.join(directory, 'temporal.json'), JSON.stringify(temporal, null, 2));
     await frame.locator('#previous').click();
     await frame.locator('#restart').click();
@@ -203,6 +203,7 @@ async function until(fn, timeout = 60000) {
       return response.result.value;
     }
     const action = async text => {
+      await request('show-notifications');
       const expression = `Array.from(document.querySelectorAll('.monaco-button')).find(b => b.textContent.trim() === ${JSON.stringify(text)})`;
       try { await until(async () => await workbench(`Boolean(${expression})`)); }
       catch (error) {
@@ -334,7 +335,40 @@ async function until(fn, timeout = 60000) {
     await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
     assert.equal((await insertResult()).status, 'cancelled');
     assert.equal((await snapshot()).text, chatHeader + '\nLater edit.');
-    console.log('PASS: actual VS Code Extension Development Host — playback/conversion regressions; native Insert picker, title/viewer/message tab stops, linked viewer, context refusals, all six insertions, wrapping and single Undo.');
+    // Exercise both picker levels, replacement, single Undo and outside-chat refusal.
+    await request('edit', chatHeader);
+    await request('start-insert', undefined, { start: chatHeader.indexOf('Ari: Hello') });
+    await pick('Pace'); await pick('Brisk');
+    assert.equal((await insertResult()).status, 'inserted');
+    const briskSource = (await snapshot()).text;
+    assert.ok(briskSource.includes('```chat\n@pace brisk\n'));
+    await request('start-insert', undefined, { start: briskSource.indexOf('Bo: Yes') });
+    await pick('Pace'); await pick('Deliberate');
+    assert.equal((await insertResult()).status, 'inserted');
+    assert.equal((await snapshot()).text, briskSource.replace('@pace brisk', '@pace deliberate'));
+    await request('undo'); assert.equal((await snapshot()).text, briskSource);
+    await request('undo'); assert.equal((await snapshot()).text, chatHeader);
+    await request('start-insert', undefined, { start: 0 }); await pick('Pace'); await pick('Normal');
+    assert.equal((await insertResult()).status, 'refused');
+    assert.equal((await snapshot()).text, chatHeader);
+    // Real webview playback: responding occupies the scaled wait itself, not another phase.
+    const paceEvidence = [];
+    for (const [pace, expected] of [['normal', 800], ['brisk', 560], ['deliberate', 1040]]) {
+      await request('edit', `Pace probe ${pace}\n\n\`\`\`chat\n@pace ${pace}\n@viewer Ari\n@responding\nBo: Hi\n@pause 300ms\n@delay 1200ms\nBo: Yes\n\`\`\``);
+      await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes(`Pace probe ${pace}`));
+      await inspectConverted("doc.getElementById('play').click()");
+      const began = Date.now();
+      assert.equal(await inspectConverted("doc.querySelector('.responding')?.textContent"), 'Bo is responding…');
+      await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 1);
+      const first = Date.now() - began;
+      assert.ok(first >= expected - 100 && first < expected + 700, `${pace}: first message ${first}ms`);
+      await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 2);
+      const complete = Date.now() - began;
+      assert.ok(complete >= expected + 1400 && complete < expected + 2300);
+      paceEvidence.push({ pace, expectedFirstMs: expected, observedFirstMs: first, observedCompleteMs: complete });
+    }
+    await fs.writeFile(path.join(directory, 'pace-temporal.json'), JSON.stringify(paceEvidence, null, 2));
+    console.log('PASS: actual VS Code Extension Development Host — playback/conversion regressions; native Insert picker, title/viewer/message tab stops, linked viewer, context refusals, all six original insertions, wrapping, Pace insert/update/Undo/refusal and temporal Normal/Brisk/Deliberate playback.');
     console.log(`Isolated test profile/log: ${directory}`);
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
   } finally {

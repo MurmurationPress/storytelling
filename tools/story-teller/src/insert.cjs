@@ -7,6 +7,7 @@ const choices = [
   { id: 'delay', label: 'Delay', description: 'Replace the next item’s normal delay.' },
   { id: 'pause', label: 'Pause', description: 'Add silence; the next item keeps its normal delay.' },
   { id: 'responding', label: 'Responding', description: 'Non-viewer cue during message delays; chat only.' },
+  { id: 'pace', label: 'Pace', description: 'Chat automatic timing: Normal, Brisk or Deliberate.' },
   { id: 'ticks', label: 'Ticks', description: 'Authored outgoing delivered/read marks; chat header only.' },
   { id: 'wrap', label: 'Wrap Selection as Chat', description: 'Keep selected text verbatim; does not convert its syntax.' }
 ];
@@ -67,4 +68,26 @@ function planInsertion(source, selection, kind) {
   const { prefix, suffix } = padding(before, after, context.kind === 'chat');
   return { snippet: prefix + templates[kind].replace(/\n/g, eol) + suffix };
 }
-module.exports = { choices, planInsertion };
+function planPace(source, selection, value) {
+  const { PACE_MULTIPLIERS } = require('./pace.cjs');
+  if (!Object.hasOwn(PACE_MULTIPLIERS, value)) return { error: 'Unknown chat pace.' };
+  if (selection.start < 0 || selection.end < selection.start || selection.end > source.length) return { error: 'Invalid selection.' };
+  const structure = inspectStructure(source);
+  const context = contextAt(structure, selection.start);
+  if (context.kind !== 'chat' || contextAt(structure, selection.end).span !== context.span)
+    return { error: 'Pace is chat-only. Place the caret inside the chat you want to change first.' };
+  const { lines } = structure;
+  const eol = lines[context.span.start].eol || '\n';
+  const declarations = [];
+  for (let i = context.span.start + 1; i < context.span.end; i++) {
+    if (/^\s*@pace(?:\s|$)/.test(lines[i].text)) declarations.push(i);
+  }
+  // Canonicalise configuration at the opening of this chat, without touching messages.
+  const edits = declarations.map(i => ({ start: lines[i].start, end: lines[i].end, text: '' }));
+  const start = lines[context.span.start].end;
+  const first = edits.find(edit => edit.start === start);
+  if (first) first.text = `@pace ${value}${eol}`;
+  else edits.push({ start, end: start, text: `@pace ${value}${eol}` });
+  return { edits };
+}
+module.exports = { choices, planInsertion, planPace };

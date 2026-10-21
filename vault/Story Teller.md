@@ -41,3 +41,10 @@ The converter is grounded in the current authoritative Art manuscript and the co
 **Implemented and awaiting Ted's acceptance:** native Insert picker/context-menu helpers for Chat, Beat boundary, Delay, Pause, Responding and Ticks, plus explicit Wrap Selection. Snippet title/viewer/message placeholders use the actual `@viewer Name` syntax; optional flags stay off. Wrapping preserves selected content without claiming to convert it. Structural checks now agree across parsing, conversion and insertion, protecting frontmatter and literal code and refusing unsafe context/selection edits. Normal editor Undo, selection and tab stops are reused.
 
 The existing conversion/review flow is preserved. Read-only Art exercise findings, automated host checks and limits are in extension README/results; no manuscript text or boundaries are rewritten/committed. The new helpers and complete adapted-scene experience still need Ted's authoring review. The broader EPUB foundation, images and import/export remain separate scope.
+
+
+## Chat-local pace — 2026-10-21
+
+**Ted’s acceptance and feedback:** the existing chat experience is accepted. Long exchanges accumulate too much waiting. Retain `@delay` replacement and `@pause` additional silence; imagery is next, not part of this increment.
+
+**Implemented, awaiting Ted’s acceptance:** optional chat-header `@pace normal|brisk|deliberate`. Normal is unchanged; Brisk/Deliberate scale only the existing bounded automatic message waits by 0.7/1.3, rounding milliseconds. Explicit delays, pauses, tick timing, viewer and responding semantics remain. The native Insert picker adds a Pace choice which updates that chat’s configuration in one Undo. Fictional Normal/Brisk comparison beats and validation details live in the Story Teller README/results. This is authoring presentation metadata, not dialogue rewriting or a new EPUB contract.

@@ -15,7 +15,7 @@ test('chat snippet uses native placeholders, linked viewer and supported canonic
   assert.equal(chat.viewer, 'Viewer'); assert.equal(chat.title, 'Conversation title');
   assert.equal(chat.messages.length, 2); assert.equal(chat.ticks, false);
   assert.ok(chat.messages.every(m => !m.responding));
-  assert.equal(choices.length, 7);
+  assert.equal(choices.length, 8); assert.ok(!plan.snippet.includes('@pace')); assert.equal(chat.pace, 'normal');
 });
 test('root directives and boundary are standalone without deleting existing prose', () => {
   for (const kind of ['chat', 'delay', 'pause', 'boundary']) {
@@ -100,4 +100,22 @@ test('explicit wrapping can preserve complete quote/list blocks and manuscript v
   }
   const partial = '> Quoted text';
   assert.ok(planInsertion(partial, { start: 3, end: partial.length }, 'wrap').error);
+});
+
+test('pace helper inserts/updates chat-local configuration in one edit plan, preserving messages and EOL', () => {
+  const { planPace } = require('../src/insert.cjs');
+  const apply = (source, plan) => plan.edits.sort((a, b) => b.start - a.start).reduce((text, edit) => text.slice(0, edit.start) + edit.text + text.slice(edit.end), source);
+  for (const eol of ['\n', '\r\n']) {
+    const source = ['Before', '```chat', '# Radio', '@viewer Ari', 'Ari: Hi', 'Bo: Yes', '  | @pace literal', '```', 'After'].join(eol);
+    const offset = source.indexOf('Ari: Hi');
+    const result = apply(source, planPace(source, { start: offset, end: offset }, 'brisk'));
+    assert.equal(result, source.replace('```chat' + eol, '```chat' + eol + '@pace brisk' + eol));
+    const updated = apply(result, planPace(result, { start: result.indexOf('Bo: Yes'), end: result.indexOf('Bo: Yes') }, 'deliberate'));
+    assert.equal(updated, result.replace('@pace brisk', '@pace deliberate'));
+    assert.equal(parseScene(updated).diagnostics.length, 0);
+  }
+  const late = '```chat\nA: Hi\n@pace brisk\n@pace normal\n```';
+  assert.equal(apply(late, planPace(late, { start: late.indexOf('A: Hi'), end: late.indexOf('A: Hi') }, 'normal')), '```chat\n@pace normal\nA: Hi\n```');
+  for (const source of ['Prose', '```js\nexample\n```', '---\ntitle: x\n---'])
+    assert.match(planPace(source, { start: 1, end: 1 }, 'brisk').error, /chat-only/);
 });
