@@ -1,3 +1,11 @@
+# Consistent tick flag — 2026-10-21
+
+`@ticks` now enables optional authored status marks, matching the bare `@responding` flag style. Omission leaves ticks disabled. Viewer requirements, header placement, duplicate detection and timing are unchanged. Older `@ticks on` / `@ticks off` drafts remain readable for compatibility; the sample/docs and main playback fixtures use `@ticks`.
+
+Build/syntax checks and **43 deterministic tests** pass. The actual Extension Development Host suite exercises the updated sample's bare tick flag and outgoing read marks; existing title, timing, responding and safe-rendering regressions remain covered. These are automated checks, not a manual reading review. Local Art and Component Types notes are unchanged.
+
+---
+
 # Optional chat titles — 2026-10-21
 
 `@title Title text` is an optional header inside a chat fence, once before messages/pauses. It renders a plain-text heading and names the conversation for accessibility. It appears when playback reaches the chat, before its first message, and adds no timing. Outside silence does not prematurely reveal a later title. Untitled chats retain their prior rendering. Empty, duplicate and late titles are diagnosed; titles with spaces/colons are supported. This does not add support for manuscript-specific `> Speaker` chat syntax or rewrite the local Art file.

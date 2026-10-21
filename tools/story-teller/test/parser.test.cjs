@@ -79,3 +79,13 @@ test('chat titles are optional plain text scoped to one fence; invalid headers d
     assert.doesNotMatch(invalid.beats[0].blocks[0].html, /@title/);
   }
 });
+test('bare ticks flag enables status, omission disables it; legacy drafts still parse', () => {
+  const parse = header => parseScene('```chat\n@viewer Mara\n' + header + '\nMara: Hello\n```');
+  assert.equal(parse('@ticks').beats[0].blocks[0].ticks, true);
+  assert.equal(parse('').beats[0].blocks[0].ticks, false);
+  assert.equal(parse('@ticks on').beats[0].blocks[0].ticks, true);
+  assert.equal(parse('@ticks off').beats[0].blocks[0].ticks, false);
+  for (const header of ['@ticks\n@ticks', '@ticks on\n@ticks', 'Mara: Earlier\n@ticks']) {
+    assert.equal(parse(header).diagnostics.length, 1);
+  }
+});

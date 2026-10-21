@@ -137,6 +137,10 @@ function parseScene(source) {
             responding = true;
             continue;
           }
+          if (line.trim() === '@ticks') {
+            if (events.length || seen.has('ticks')) { invalid = '@ticks must appear once, before messages/pauses'; break; }
+            ticks = true; seen.add('ticks'); continue;
+          }
           const directive = line.trim().match(/^@(delay|pause|viewer|ticks)\s+(.+)$/);
           if (!directive) { invalid = `invalid chat line or directive "${line}"`; break; }
           const [, name, value] = directive;
@@ -145,7 +149,7 @@ function parseScene(source) {
             seen.add(name);
             if (name === 'viewer') viewer = value.trim();
             else if (value === 'on' || value === 'off') ticks = value === 'on';
-            else { invalid = '@ticks expects on or off'; break; }
+            else { invalid = 'use @ticks to enable ticks, or omit it to disable them'; break; }
           } else {
             const timing = timingValue(name, value);
             if (timing.error) { invalid = timing.error; break; }
@@ -157,7 +161,7 @@ function parseScene(source) {
         }
         if (responding && !invalid) invalid = '@responding needs a following message';
         if (delayMs !== undefined && !invalid) invalid = '@delay needs a following message';
-        if (ticks && (!viewer || !messages.some(m => m.speaker === viewer)) && !invalid) invalid = '@ticks on needs @viewer matching a speaker';
+        if (ticks && (!viewer || !messages.some(m => m.speaker === viewer)) && !invalid) invalid = '@ticks needs @viewer matching a speaker';
         if (invalid || !messages.length) {
           diagnostics.push(`Line ${invalidLine}: ${invalid || 'chat needs at least one Speaker: message line'}; showing dialogue as code without executing the chat.`);
           // Keep dialogue readable on error, without printing authoring controls.

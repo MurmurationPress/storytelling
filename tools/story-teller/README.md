@@ -64,7 +64,7 @@ Original `Speaker: message` fences still work unchanged. Timing directives work 
 ```chat
 @title Lighthouse radio
 @viewer Mara
-@ticks on
+@ticks
 Mara: Are you there?
 @delay 1200ms
 @responding
@@ -79,7 +79,7 @@ Mara: I can see the light.
 - `@pause Nms`: add silent active time at that position (integer 1–60000ms). It never appears as a message. A trailing pause delays following prose/completion too.
 - `@title Title text`: optional plain-text chat heading, scoped to this fence. Put it once before messages/pauses. It appears when playback reaches the chat (before the first message), adds no time, and stays visible through Pause/completion. Titles may contain spaces and colons; Markdown/HTML is not executed or formatted. Untitled chats retain their previous appearance.
 - `@viewer Speaker`: exact speaker name of the viewing participant, scoped to this chat fence. Names may contain spaces. Header only, before any message/pause. The viewer’s messages are offset as outgoing messages independently of ticks.
-- `@ticks on` / `@ticks off`: optional header, once, **off by default**. On requires a viewer matching a speaker in the fence. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
+- `@ticks`: optional flag header, once, **off by default**. Requires a viewer matching a speaker in the fence. Omit the flag to disable ticks. The older `@ticks on` / `@ticks off` forms remain accepted for existing drafts; new examples use the bare flag. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
 
 No other directives, units, fractions or negative values are accepted. Invalid chat blocks keep dialogue as readable code with a source-line diagnostic; control lines are omitted and they never partly execute. Timing is editorial metadata, separate from dialogue wording.
 

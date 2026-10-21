@@ -68,7 +68,7 @@ test('explicit pause can be interrupted and resumed without consuming silence of
   clock.advance(1); assert.equal(messages(player).length, 2);
 });
 test('ticks off by default, viewer messages only, delivered then read after 600 active ms', () => {
-  const { player, clock } = setup('@viewer A\n@ticks on\n@delay 0ms\nA: Hi\n@delay 0ms\nB: Yes');
+  const { player, clock } = setup('@viewer A\n@ticks\n@delay 0ms\nA: Hi\n@delay 0ms\nB: Yes');
   player.play(); clock.advance(0); assert.equal(messages(player)[0].status, 'delivered');
   clock.advance(300); player.pause(); clock.advance(5000); player.play();
   clock.advance(299); assert.equal(messages(player)[0].status, 'delivered');
@@ -77,7 +77,7 @@ test('ticks off by default, viewer messages only, delivered then read after 600 
   assert.equal(messages(plain.player)[0].status, null);
 });
 test('replay clears messages, prose after chat, ticks and all old callbacks', () => {
-  const { player, clock } = setup('@viewer A\n@ticks on\n@delay 0ms\nA: Hi');
+  const { player, clock } = setup('@viewer A\n@ticks\n@delay 0ms\nA: Hi');
   player.play(); clock.advance(0); player.replay();
   assert.equal(messages(player).length, 0); assert.equal(player.visibleBlocks.length, 1);
   for (const stale of clock.retired) stale();
@@ -111,12 +111,12 @@ test('invalid directives retain the entire chat as readable code and diagnose ca
     assert.equal(scene.diagnostics.length, 1, line);
     assert.match(scene.diagnostics[0], /Line .*without executing the chat/);
   }
-  for (const chat of ['@delay 2ms', '@ticks on\nA: Hi', '@viewer B\n@ticks on\nA: Hi', 'A: Hi\n@viewer A', '@viewer A\n@viewer B\nA: Hi']) {
+  for (const chat of ['@delay 2ms', '@ticks\nA: Hi', '@viewer B\n@ticks\nA: Hi', 'A: Hi\n@viewer A', '@viewer A\n@viewer B\nA: Hi']) {
     assert.equal(parseScene('```chat\n' + chat + '\n```').diagnostics.length, 1, chat);
   }
 });
 test('trailing pause gates following prose and completion; edits during read reset statuses', () => {
-  const { player, clock, scene } = setup('@viewer A\n@ticks on\n@delay 0ms\nA: Hi\n@pause 100ms');
+  const { player, clock, scene } = setup('@viewer A\n@ticks\n@delay 0ms\nA: Hi\n@pause 100ms');
   player.play(); clock.advance(600);
   assert.equal(messages(player)[0].status, 'read');
   assert.equal(player.visibleBlocks.some(b => b.html?.includes('After')), false);
@@ -149,7 +149,7 @@ test('responding follows pause/resume, replay, source edits and navigation witho
   player.play(); player.next(); assert.equal(player.responding, null);
 });
 test('responding excludes zero delay and authored status phase; malformed directives diagnose', () => {
-  const { player, clock } = setup('@viewer Ivo\n@ticks on\n@responding\n@delay 0ms\nIvo: Hello');
+  const { player, clock } = setup('@viewer Ivo\n@ticks\n@responding\n@delay 0ms\nIvo: Hello');
   player.play(); assert.equal(player.responding, null);
   clock.advance(0); assert.equal(player.responding, null);
   assert.equal(messages(player)[0].status, 'delivered');
