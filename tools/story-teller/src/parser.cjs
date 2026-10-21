@@ -104,6 +104,7 @@ function parseScene(source) {
         const events = [];
         let delayMs;
         let responding = false;
+        let respondingForChat = false;
         let canContinue = false;
         let title = null;
         let viewer = null;
@@ -133,7 +134,7 @@ function parseScene(source) {
           if (match && match[1].trim()) {
             const message = { speaker: match[1].trim(), text: match[2] };
             if (delayMs !== undefined) message.delayMs = delayMs;
-            if (responding) message.responding = true;
+            if (responding || respondingForChat) message.responding = true;
             responding = false;
             delayMs = undefined;
             messages.push(message);
@@ -142,6 +143,10 @@ function parseScene(source) {
             continue;
           }
           if (line.trim() === '@responding') {
+            if (!events.length) {
+              if (seen.has('responding')) { invalid = '@responding header must appear once'; break; }
+              respondingForChat = true; seen.add('responding'); continue;
+            }
             if (responding) { invalid = '@responding already waiting for a message'; break; }
             responding = true;
             continue;

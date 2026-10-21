@@ -75,6 +75,11 @@ async function until(fn, timeout = 60000) {
     const beat = locator('#beat');
     await until(async () => (await beat.textContent()).includes('old radio'));
     assert.equal(await frame.locator('#previous').isDisabled(), true);
+    // Regression fixture: header flag alone, followed by viewer-first dialogue.
+    // Strip per-message cues only in this temporary test buffer, never the sample file.
+    const headerSource = (await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8'))
+      .replace(/```chat([\s\S]*?)```/, (fence, body) => '```chat' + body.replace(/^@responding\n/gm, '').replace('@viewer Mara\n', '@viewer Mara\n@responding\n') + '```');
+    await request('edit', headerSource);
     await frame.locator('#next').click();
     await until(async () => (await frame.locator('#status').textContent()).includes('ready'));
     assert.equal(await frame.locator('.chat li').count(), 0);
@@ -197,8 +202,12 @@ async function until(fn, timeout = 60000) {
       return response.result.value;
     }
     const action = async text => {
-      const expression = `Array.from(document.querySelectorAll('.notification-toast .monaco-button')).find(b => b.textContent.trim() === ${JSON.stringify(text)})`;
-      await until(async () => await workbench(`Boolean(${expression})`));
+      const expression = `Array.from(document.querySelectorAll('.monaco-button')).find(b => b.textContent.trim() === ${JSON.stringify(text)})`;
+      try { await until(async () => await workbench(`Boolean(${expression})`)); }
+      catch (error) {
+        await fs.writeFile(path.join(directory, 'failed-notification.txt'), await workbench("document.body.innerText"));
+        throw error;
+      }
       await workbench(`${expression}.click()`);
     };
     const snapshot = async () => {

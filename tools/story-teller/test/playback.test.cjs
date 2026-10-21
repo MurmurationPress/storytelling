@@ -302,3 +302,28 @@ test('converted multiline messages reveal atomically without changing timing or 
   clock.advance(199); assert.equal(messages(player).length, 1);
   clock.advance(1); assert.equal(player.phase, 'completed'); assert.equal(messages(player).length, 2);
 });
+test('header responding survives viewer-first messages and enables every incoming delay, including converted chats', () => {
+  const { convertChats } = require('../src/convert.cjs');
+  const source = '```chat\n# Link\n@viewer Ari\n@responding\n@ticks\n{{Ari|Hi|}}\n{{Bo|Hello|}}\n{{Ari|Yes|}}\n{{Bo|Again|}}\n```';
+  const converted = convertChats(source); assert.equal(converted.count, 1);
+  const { player, clock } = cross(converted.text);
+  player.play(); assert.equal(player.responding, null);
+  clock.advance(800); assert.equal(messages(player)[0].speaker, 'Ari'); assert.equal(player.responding, null);
+  clock.advance(600); assert.equal(player.responding.speaker, 'Bo');
+  player.pause(); assert.equal(player.responding, null); clock.advance(5000);
+  player.play(); assert.equal(player.responding.speaker, 'Bo');
+  clock.advance(800); assert.equal(messages(player).length, 2); assert.equal(player.responding, null);
+  clock.advance(800 + 600); assert.equal(player.responding.speaker, 'Bo');
+  clock.advance(800); assert.equal(player.phase, 'completed'); assert.equal(player.responding, null);
+  player.replay(); assert.equal(player.responding, null);
+  clock.advance(1400); assert.equal(player.responding.speaker, 'Bo');
+  player.update(player.scene); assert.equal(player.responding, null); assert.equal(player.phase, 'ready');
+});
+test('per-message responding remains scoped; header responding never leaks into the next chat', () => {
+  const { player, clock } = cross('```chat\n@viewer Ari\n@responding\nAri: Hi\nBo: Hello\n```\n\n```chat\n@viewer Ari\nBo: Again\n```');
+  player.play(); clock.advance(800); assert.equal(player.responding.speaker, 'Bo');
+  clock.advance(800); assert.equal(player.responding, null);
+  const one = setup('@viewer Ari\nAri: Hi\n@responding\nBo: Hello\nBo: Again');
+  one.player.play(); one.clock.advance(800); assert.equal(one.player.responding.speaker, 'Bo');
+  one.clock.advance(800); assert.equal(one.player.responding, null);
+});

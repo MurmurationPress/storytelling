@@ -1,3 +1,13 @@
+# Header responding correction — 2026-10-21
+
+A header `@responding` had been implemented as a one-message marker. A viewer-first message consumed it, while its visual cue was correctly suppressed for the viewer. As a result, a header-style chat setting did not reach the incoming reply. This is a reproduced parser-policy mismatch; it is not a claim to have inspected Ted's unsaved editor buffer.
+
+Before the first message/pause, `@responding` now enables incoming cues throughout that chat. Viewer messages never display or consume that setting. Existing per-message directives between messages/pauses retain their one-message scope. The cue still uses only existing message delays, disappears on Pause/reset/arrival and respects the viewer, motion and timing rules. No content setting is invented by conversion.
+
+Build/syntax checks and **55 deterministic tests pass**. New regressions cover a converted viewer-first chat with ticks, multiple incoming replies, pause/resume/replay/reset and isolation between chats, plus legacy per-message scope. The actual Extension Development Host suite runs the fictional viewer-first scene with **only a header flag**, confirms the incoming cue after the viewer's delivered/read phase, and exercises the existing conversion/Undo/multiline regressions. These are automated observations, not a reproduction of Ted's unseen current buffer. An initial full-suite run passed playback but timed out at the unrelated Regenerate-button lookup; the test-only locator now searches native workbench buttons beyond transient toast containers, and the full rerun passed. No conversion product logic changed for that harness adjustment. Author-edited Art and Component Types files are unchanged.
+
+---
+
 # Current-document chat conversion — 2026-10-21
 
 ## Evidence and implemented scope
