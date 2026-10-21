@@ -1,6 +1,8 @@
 'use strict';
-const { choices, planInsertion, planPace } = require('./insert.cjs');
+const path = require('node:path');
+const { choices, planInsertion, planPace, planImageInsertion, markdownPath } = require('./insert.cjs');
 const { paceChoices } = require('./pace.cjs');
+const { inspectImage, baseFor } = require('./media.cjs');
 function registerInsert(vscode, context) {
   const run = async wrap => {
     const editor = vscode.window.activeTextEditor;
@@ -16,11 +18,35 @@ function registerInsert(vscode, context) {
     if (!choice) return { status: 'cancelled' };
     const pace = choice.id === 'pace' ? await vscode.window.showQuickPick(paceChoices, { title: 'Chat pace', placeHolder: 'Explicit delays and pauses stay unchanged' }) : null;
     if (choice.id === 'pace' && !pace) return { status: 'cancelled' };
+    let relativeImage = null;
+    if (choice.id === 'image') {
+      const preliminary = planInsertion(source, { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) }, 'image');
+      if (preliminary.error) { vscode.window.showWarningMessage(preliminary.error); return { status: 'refused' }; }
+      const base = baseFor(vscode, document);
+      if (!base) { vscode.window.showInformationMessage('Save this Markdown document first so image paths have a known directory.'); return { status: 'refused' }; }
+      for (;;) {
+        const picked = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false,
+          defaultUri: vscode.Uri.file(base.directory), openLabel: 'Use image', filters: { Images: ['png', 'jpg', 'jpeg', 'webp'] } });
+        if (!picked?.length) return { status: 'cancelled' };
+        if (picked[0].scheme !== 'file') {
+          const another = await vscode.window.showWarningMessage('Choose a local file in this document’s workspace.', 'Choose another');
+          if (another !== 'Choose another') return { status: 'cancelled' };
+          continue;
+        }
+        relativeImage = path.relative(base.directory, picked[0].fsPath).split(path.sep).join('/');
+        try { await inspectImage(vscode, document, markdownPath(relativeImage)); break; }
+        catch (error) {
+          const another = await vscode.window.showWarningMessage(`${error.message}. The image must be in this document's workspace (or its directory when no workspace is open).`, 'Choose another');
+          if (another !== 'Choose another') return { status: 'cancelled' };
+        }
+      }
+    }
     if (document.isClosed || document.version !== version || vscode.window.activeTextEditor !== editor || !editor.selection.isEqual(selection)) {
       vscode.window.showWarningMessage('The document or selection changed while choosing. Run Insert again.'); return { status: 'stale' };
     }
     const offsets = { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) };
-    const plan = choice.id === 'pace' ? planPace(source, offsets, pace.value) : planInsertion(source, offsets, choice.id);
+    const plan = choice.id === 'pace' ? planPace(source, offsets, pace.value)
+      : choice.id === 'image' ? planImageInsertion(source, offsets, relativeImage) : planInsertion(source, offsets, choice.id);
     if (plan.error) { vscode.window.showWarningMessage(plan.error); return { status: 'refused' }; }
     let applied;
     if (plan.edits) {

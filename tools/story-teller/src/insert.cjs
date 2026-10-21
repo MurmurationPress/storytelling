@@ -8,12 +8,14 @@ const choices = [
   { id: 'pause', label: 'Pause', description: 'Add silence; the next item keeps its normal delay.' },
   { id: 'responding', label: 'Responding', description: 'Non-viewer cue during message delays; chat only.' },
   { id: 'pace', label: 'Pace', description: 'Chat automatic timing: Normal, Brisk or Deliberate.' },
+  { id: 'image', label: 'Image', description: 'Choose a local PNG, JPEG or WebP; insert a standalone image.' },
   { id: 'ticks', label: 'Ticks', description: 'Authored outgoing delivered/read marks; chat header only.' },
   { id: 'wrap', label: 'Wrap Selection as Chat', description: 'Keep selected text verbatim; does not convert its syntax.' }
 ];
 const templates = {
   chat: '```chat\n# ${1:Conversation title}\n@viewer ${2:Viewer}\n${2}: ${3:First message.}\n${4:Other participant}: ${5:Reply.}\n```\n$0',
-  boundary: '---\n$0', delay: '@delay ${1:1200}ms\n$0', pause: '@pause ${1:800}ms\n$0', responding: '@responding\n$0', ticks: '@ticks\n$0'
+  boundary: '---\n$0', delay: '@delay ${1:1200}ms\n$0', pause: '@pause ${1:800}ms\n$0', responding: '@responding\n$0', ticks: '@ticks\n$0',
+  image: '![${1:Describe the image}](<__STORY_IMAGE_PATH__>)\n$0'
 };
 function planInsertion(source, selection, kind) {
   const { start, end } = selection;
@@ -27,7 +29,7 @@ function planInsertion(source, selection, kind) {
   const overlaps = kind === 'wrap' ? structure.spans.filter(span => structure.lines[span.start].start < end && (structure.lines[span.end]?.start ?? source.length) > start) : [];
   const fullContainers = overlaps.length && overlaps.every(span => ['blockquote_open', 'bullet_list_open', 'ordered_list_open'].includes(span.type) && start <= structure.lines[span.start].start && end >= structure.lines[span.end - 1].start + structure.lines[span.end - 1].text.length);
   if (context.kind === 'literal' && !(kind === 'wrap' && fullContainers)) return fail('Move outside code examples, fence delimiters, quotes or lists before inserting story syntax.');
-  if (context.kind === 'chat' && ['chat', 'boundary', 'wrap'].includes(kind)) return fail('This is already inside a chat. Nested chat fences and beat boundaries are not inserted.');
+  if (context.kind === 'chat' && ['chat', 'boundary', 'wrap', 'image'].includes(kind)) return fail('Place the image outside the chat fence.');
   if (context.kind !== 'chat' && ['responding', 'ticks'].includes(kind)) return fail(`@${kind} is chat-only. Place the caret inside a chat fence.`);
   const eol = structure.lines.find(l => l.eol)?.eol || '\n';
   const before = source.slice(0, start);
@@ -90,4 +92,9 @@ function planPace(source, selection, value) {
   else edits.push({ start, end: start, text: `@pace ${value}${eol}` });
   return { edits };
 }
-module.exports = { choices, planInsertion, planPace };
+const markdownPath = relative => relative.split('/').map(segment => encodeURIComponent(segment).replace(/[!'()*]/g, character => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)).join('/');
+function planImageInsertion(source, selection, relative) {
+  const plan = planInsertion(source, selection, 'image');
+  return plan.error ? plan : { snippet: plan.snippet.replace('__STORY_IMAGE_PATH__', markdownPath(relative)) };
+}
+module.exports = { choices, planInsertion, planPace, planImageInsertion, markdownPath };

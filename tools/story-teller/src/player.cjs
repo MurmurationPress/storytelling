@@ -28,7 +28,7 @@ class StoryPlayer {
       if (entry.type === 'pause') { this.steps.push(entry); continue; }
       const blockIndex = entry.blockIndex;
       const block = this.current.blocks[blockIndex];
-      if (block.type === 'prose') this.steps.push({ type: 'prose', blockIndex, delayMs: block.delayMs ?? 0 });
+      if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
       else for (const event of block.events) {
         if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
         else {
@@ -38,11 +38,11 @@ class StoryPlayer {
         }
       }
     }
-    // Leading prose is immediately readable, but no timers start before Play.
+    // Leading untimed prose and images appear without starting playback.
     this.showProse();
   }
   showProse() {
-    while (this.steps[this.cursor]?.type === 'prose' && this.steps[this.cursor].delayMs === 0) {
+    while (['prose', 'image'].includes(this.steps[this.cursor]?.type) && this.steps[this.cursor].delayMs === 0) {
       this.visible.add(this.steps[this.cursor].blockIndex); this.cursor++;
     }
   }
@@ -55,7 +55,7 @@ class StoryPlayer {
   }
   get visibleBlocks() {
     return (this.current?.blocks || []).flatMap((block, index) => {
-      if (block.type === 'prose') return this.visible.has(index) ? [block] : [];
+      if (block.type === 'prose' || block.type === 'image') return this.visible.has(index) ? [block] : [];
       const messages = block.messages.slice(0, this.counts.get(index) || 0).map((message, i) => ({
         ...message,
         status: block.ticks && message.speaker === block.viewer ? (this.read.has(`${index}:${i}`) ? 'read' : 'delivered') : null
@@ -80,7 +80,7 @@ class StoryPlayer {
     this.timer = this.scheduler.setTimeout(() => {
       if (this.disposed || this.phase !== 'playing' || generation !== this.generation || cursor !== this.cursor) return;
       this.timer = null; this.remaining = null;
-      if (step.type === 'prose') this.visible.add(step.blockIndex);
+      if (step.type === 'prose' || step.type === 'image') this.visible.add(step.blockIndex);
       if (step.type === 'message') this.counts.set(step.blockIndex, step.message + 1);
       if (step.type === 'read') this.read.add(`${step.blockIndex}:${step.message}`);
       this.cursor++;

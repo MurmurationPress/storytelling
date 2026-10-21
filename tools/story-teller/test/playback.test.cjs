@@ -378,3 +378,23 @@ test('pace leaves outside overrides, additive silence and outgoing tick phases u
   clock.advance(599); assert.equal(player.phase, 'playing');
   clock.advance(1); assert.equal(player.phase, 'completed');
 });
+test('delayed image, authored viewing pause and chat retain exact source order and cancel cleanly', () => {
+  const clock = new Clock();
+  const scene = parseScene('Before\n\n@delay 900ms\n\n![Harbour](assets/harbour.png)\n\n*Caption: Evening.*\n\n@pause 1200ms\n\n```chat\nA: Hi\n```');
+  const player = new StoryPlayer(scene, { scheduler: clock });
+  assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
+  player.play(); clock.advance(899); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
+  player.pause(); clock.advance(5000); player.play(); clock.advance(1);
+  assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose', 'image']);
+  clock.advance(1199); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 0);
+  clock.advance(800); assert.equal(messages(player).length, 1);
+  player.replay(); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
+  player.next(); clock.advance(10000); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
+});
+test('untimed image appears with leading prose and inline image remains inside its prose component', () => {
+  const scene = parseScene('First\n\n![Alt](x.png)\n\n*Caption: View.*\n\nLater ![inline](i.jpg) prose.');
+  const player = new StoryPlayer(scene);
+  assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose', 'image', 'prose']);
+  assert.equal(player.phase, 'ready');
+});

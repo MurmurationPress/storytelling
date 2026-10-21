@@ -48,3 +48,11 @@ The existing conversion/review flow is preserved. Read-only Art exercise finding
 **Ted’s acceptance and feedback:** the existing chat experience is accepted. Long exchanges accumulate too much waiting. Retain `@delay` replacement and `@pause` additional silence; imagery is next, not part of this increment.
 
 **Implemented, awaiting Ted’s acceptance:** optional chat-header `@pace normal|brisk|deliberate`. Normal is unchanged; Brisk/Deliberate scale only the existing bounded automatic message waits by 0.7/1.3, rounding milliseconds. Explicit delays, pauses, tick timing, viewer and responding semantics remain. The native Insert picker adds a Pace choice which updates that chat’s configuration in one Undo. Fictional Normal/Brisk comparison beats and validation details live in the Story Teller README/results. This is authoring presentation metadata, not dialogue rewriting or a new EPUB contract.
+
+## Accepted pace; first static imagery slice — 2026-10-21
+
+**Ted’s acceptance:** chat pace is accepted. Normal remains the original timing; Brisk and Deliberate scale only calculated message waits. Existing `@delay`, `@pause`, responding, viewer and ticks behaviour is retained.
+
+**Implemented for review, not yet accepted as a reading experience:** ordinary Markdown images now form a component when the image is the whole paragraph. Inline images remain inside prose. An immediately following separate plain italic `*Caption: …*` paragraph is an optional caption, distinct from accessibility alt text. The existing outside delay and pause govern image entry and authored viewing silence. Local PNG/JPEG/WebP references resolve relative to the saved adaptation and stay within its containing workspace (or source directory outside a workspace); missing or unsupported references give a readable placeholder and warning. These are preview rules, not a manuscript or EPUB standard. No private Art adaptation or artwork was committed. See the Story Teller README and RESULTS for exact behaviour, tests and limits.
+
+**Still open:** Ted’s assessment of image composition in his separate Art adaptation, and eventual publication/export treatment. Static imagery here does not settle animation, drawings, video or a broader media library.

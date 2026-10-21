@@ -119,10 +119,10 @@ async function until(fn, timeout = 60000) {
     // Configure the test's final beat explicitly; do not depend on local sample edits.
     const sample = headerSource; // Keep the current chat identical while testing a preceding beat insertion.
     await request('edit', sample.replace('# The Last Lantern', 'Inserted first beat\n---\n# The Last Lantern'));
-    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 6 · ready'));
+    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 8 · ready'));
     assert.equal(await frame.locator('.chat li').count(), 0);
     await request('edit', sample.replace('Only me.', 'Only me, Mara.'));
-    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 2 of 5 · ready'));
+    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 2 of 7 · ready'));
     await frame.locator('#next').click();
     await until(async () => (await beat.textContent()).includes('ferry touched'));
     assert.equal((await beat.textContent()).includes('Beyond the wake'), false);
@@ -364,11 +364,52 @@ async function until(fn, timeout = 60000) {
       assert.ok(first >= expected - 100 && first < expected + 700, `${pace}: first message ${first}ms`);
       await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 2);
       const complete = Date.now() - began;
-      assert.ok(complete >= expected + 1400 && complete < expected + 2300);
+      // IPC/polling can delay observation; the injected scheduler tests exact totals.
+      assert.ok(complete >= first + 1100 && complete < first + 4000, `${pace}: ${first}ms → ${complete}ms`);
       paceEvidence.push({ pace, expectedFirstMs: expected, observedFirstMs: first, observedCompleteMs: complete });
     }
     await fs.writeFile(path.join(directory, 'pace-temporal.json'), JSON.stringify(paceEvidence, null, 2));
-    console.log('PASS: actual VS Code Extension Development Host — playback/conversion regressions; native Insert picker, title/viewer/message tab stops, linked viewer, context refusals, all six original insertions, wrapping, Pace insert/update/Undo/refusal and temporal Normal/Brisk/Deliberate playback.');
+    const imageSource = 'Harbour image probe\n\n@delay 900ms\n\n![Wide harbour](assets/harbour-landscape.webp)\n\n*Caption: The harbour wall.*\n\n@pause 600ms\n\n```chat\nA: Hi\n```';
+    await request('edit', imageSource);
+    await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes('Harbour image probe'));
+    assert.equal(await inspectConverted("doc.querySelectorAll('.story-figure').length"), 0);
+    assert.equal(await inspectConverted("doc.getElementById('warnings').textContent"), '');
+    await inspectConverted("doc.getElementById('play').click()");
+    await sleep(300);
+    assert.equal(await inspectConverted("doc.querySelectorAll('.story-figure').length"), 0);
+    await until(async () => await inspectConverted("doc.querySelectorAll('.story-figure img').length") === 1);
+    assert.equal(await inspectConverted("doc.querySelector('.story-figure img').naturalWidth"), 720);
+    assert.equal(await inspectConverted("doc.querySelector('.story-figure img').alt"), 'Wide harbour');
+    assert.equal(await inspectConverted("doc.querySelector('figcaption').textContent"), 'The harbour wall.');
+    assert.equal(await inspectConverted("doc.querySelectorAll('.chat li').length"), 0);
+    await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 1);
+    await inspectConverted("doc.documentElement.style.width = '320px'");
+    const narrow = await inspectConverted("(() => { const area=doc.getElementById('beat'), image=doc.querySelector('.story-figure img'); return {area:area.clientWidth, overflow:area.scrollWidth-area.clientWidth, image:image.getBoundingClientRect().width, right:image.getBoundingClientRect().right-area.getBoundingClientRect().right}; })()");
+    assert.ok(narrow.area <= 320 && narrow.overflow <= 1 && narrow.right <= 1, JSON.stringify(narrow));
+    await inspectConverted("doc.getElementById('replay').click()");
+    assert.equal(await inspectConverted("doc.querySelectorAll('.story-figure').length"), 0);
+    await until(async () => await inspectConverted("doc.querySelectorAll('.story-figure img').length") === 1);
+    await inspectConverted("doc.documentElement.style.width = ''");
+    const portraitSource = 'Portrait probe\n\n![Tall tower](assets/harbour-portrait.png)\n\n*Caption: The landing.*\n\nA small print ![Harbour detail](assets/harbour-detail.jpg) remained nearby.';
+    await request('edit', portraitSource);
+    await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes('Portrait probe'));
+    assert.equal(await inspectConverted("doc.querySelector('.story-figure img')?.naturalHeight"), 560);
+    assert.equal(await inspectConverted("doc.querySelector('.story-inline-image')?.naturalWidth"), 360);
+    assert.equal(await inspectConverted("doc.querySelectorAll('.prose').length"), 2);
+    await sleep(2200);
+    assert.equal(await inspectConverted("doc.querySelectorAll('.chat li').length"), 0); // No callback from the abandoned image beat.
+    const brokenSource = 'Broken image probe\n\n![Missing harbour](assets/missing.png)\n\n```chat\nA: Continue.\n```';
+    await request('edit', brokenSource);
+    await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes('Broken image probe'));
+    assert.ok((await inspectConverted("doc.querySelector('.image-placeholder')?.textContent")).includes('Missing harbour'));
+    assert.ok((await inspectConverted("doc.getElementById('warnings').textContent")).includes('missing or unreadable'));
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 1);
+    await request('edit', 'Stale image probe\n\n![Old](assets/harbour-portrait.png)');
+    await request('edit', 'Latest image probe\n\nPlain prose only.');
+    await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes('Latest image probe'));
+    assert.equal(await inspectConverted("doc.querySelectorAll('img').length"), 0);
+    console.log('PASS: actual VS Code Extension Development Host — accepted playback/conversion regressions; native chat/Pace helpers; delayed WebP, portrait PNG, inline JPEG, narrow image bounds, replay, missing-file fallback and stale-source cancellation.');
     console.log(`Isolated test profile/log: ${directory}`);
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
   } finally {

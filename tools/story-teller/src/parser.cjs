@@ -3,11 +3,25 @@ const MarkdownIt = require('markdown-it');
 const { PACE_MULTIPLIERS } = require('./pace.cjs');
 const { inspectStructure } = require('./structure.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
-// The first slice is text-only: neither links nor images can trigger navigation/fetches.
+// Image URLs are inert data here; only the VS Code host may resolve local files.
 md.renderer.rules.link_open = () => '<span class="link-text">';
 md.renderer.rules.link_close = () => '</span>';
-md.renderer.rules.image = (tokens, index) =>
-  `<span class="image-alt">[Image: ${md.utils.escapeHtml(tokens[index].content)}]</span>`;
+const imageAlt = token => md.renderer.renderInlineAsText(token.children || [], md.options, {});
+md.renderer.rules.image = (tokens, index) => {
+  const token = tokens[index];
+  return `<img class="story-inline-image" data-story-src="${md.utils.escapeHtml(token.attrGet('src') || '')}" alt="${md.utils.escapeHtml(imageAlt(token))}">`;
+};
+const standaloneImage = (tokens, index) => {
+  if (tokens[index]?.type !== 'paragraph_open' || tokens[index + 1]?.type !== 'inline' || tokens[index + 2]?.type !== 'paragraph_close') return null;
+  const children = tokens[index + 1].children || [];
+  return children.length === 1 && children[0].type === 'image' ? children[0] : null;
+};
+const captionAfter = (tokens, index) => {
+  if (tokens[index]?.type !== 'paragraph_open' || tokens[index + 1]?.type !== 'inline' || tokens[index + 2]?.type !== 'paragraph_close') return null;
+  const children = tokens[index + 1].children || [];
+  return children.length === 3 && children[0].type === 'em_open' && children[1].type === 'text' && children[2].type === 'em_close'
+    ? children[1].content.match(/^Caption: (.+)$/)?.[1] || null : null;
+};
 
 // Top-level block rule, deliberately absent from paragraph-interruption rules.
 // A line inside an existing paragraph, quote, list or code block stays literal.
@@ -37,6 +51,8 @@ function parseScene(source) {
   const structure = inspectStructure(source);
   const lines = structure.lines.map((line, i) => i === 0 ? line.text.replace(/^\uFEFF/, '') : line.text);
   const diagnostics = [];
+  const images = new Set();
+  const imageLines = Object.create(null);
   const { start } = structure;
   const frontmatter = structure.frontmatter?.closed ? lines.slice(1, structure.frontmatter.end - 1).join('\n') : null;
   if (structure.frontmatter && !structure.frontmatter.closed) diagnostics.push('Unclosed initial frontmatter; shown as prose until it is closed.');
@@ -49,7 +65,7 @@ function parseScene(source) {
     const raw = text.trim();
     const tokens = md.parse(text, {});
     const blocks = [];
-    const sequence = []; // Timing metadata and references; prose/chat remain the only components.
+    const sequence = []; // Timing metadata and references in source order.
     let pendingDelay = null;
     const diagnostic = (line, message) => diagnostics.push(`Line ${line}: ${message}`);
     const add = block => {
@@ -68,7 +84,24 @@ function parseScene(source) {
       if (prose.length) add({ type: 'prose', html: md.renderer.render(prose, md.options, {}) });
       prose = [];
     };
-    for (const token of tokens) {
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      for (const child of token.children || []) if (child.type === 'image') {
+        const src = child.attrGet('src') || '';
+        images.add(src);
+        imageLines[src] ??= first + (token.map?.[0] || 0) + 1;
+      }
+      const image = standaloneImage(tokens, i);
+      if (image && token.level === 0) {
+        images.add(image.attrGet('src') || '');
+        imageLines[image.attrGet('src') || ''] ??= first + token.map[0] + 1;
+        flush();
+        const captionIndex = i + 3;
+        const caption = tokens[captionIndex]?.map?.[0] > token.map[1] ? captionAfter(tokens, captionIndex) : null;
+        add({ type: 'image', src: image.attrGet('src') || '', alt: imageAlt(image), caption, line: first + token.map[0] + 1 });
+        i += caption === null ? 2 : 5;
+        continue;
+      }
       // Only top-level fences are components; quoted/list-nested fences remain Markdown.
       if (token.type === 'story_timing') {
         flush();
@@ -176,9 +209,9 @@ function parseScene(source) {
       } else prose.push(token);
     }
     flush();
-    if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose or chat component in this beat');
+    if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose, image or chat component in this beat');
     return { raw, line: first + 1, blocks, sequence };
   }).filter(beat => beat.raw.length);
-  return { frontmatter, beats, diagnostics };
+  return { frontmatter, beats, diagnostics, images: [...images], imageLines };
 }
 module.exports = { parseScene };

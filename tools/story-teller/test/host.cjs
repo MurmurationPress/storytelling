@@ -8,6 +8,8 @@ exports.run = async function () {
   const directory = process.env.STORY_TELLER_TEST_DIR;
   const sample = await fs.readFile(path.join(__dirname, '../samples/lantern.md'), 'utf8');
   const file = path.join(directory, 'scene.md');
+  // Original fictional fixtures only; the author's untracked Art assets are never copied.
+  await fs.cp(path.join(__dirname, '../samples/assets'), path.join(directory, 'assets'), { recursive: true });
   await fs.writeFile(file, sample);
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
   await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
@@ -55,7 +57,8 @@ exports.run = async function () {
           snapshots: vscode.workspace.textDocuments.filter(d => d.uri.scheme === 'story-teller-conversion').map(d => ({ uri: d.uri.toString(), text: d.getText() }))
         }));
       } else if (request.action === 'undo') {
-        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+        await new Promise(resolve => setTimeout(resolve, 120));
         await vscode.commands.executeCommand('undo');
       } else if (request.action === 'edit') {
         const edit = new vscode.WorkspaceEdit();

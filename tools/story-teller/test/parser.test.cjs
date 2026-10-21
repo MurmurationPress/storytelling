@@ -20,12 +20,14 @@ test('unclosed frontmatter warns instead of losing text', () => {
 });
 test('fictional sample contains prose, chat and mixed beats in source order', () => {
   const scene = parseScene(readFileSync('samples/lantern.md', 'utf8'));
-  assert.equal(scene.beats.length, 5);
+  assert.equal(scene.beats.length, 7);
   assert.deepEqual(scene.beats.slice(0, 3).map(b => b.blocks.map(c => c.type)), [['prose'], ['chat', 'prose'], ['prose', 'chat', 'prose']]);
   assert.deepEqual(scene.beats[1].blocks[0].messages[1], { speaker: 'Ivo', text: 'Only me. The stairs have gone quiet.', delayMs: 1200, responding: true });
   assert.deepEqual(scene.beats[3].blocks[1].messages, scene.beats[4].blocks[1].messages);
   assert.equal(scene.beats[3].blocks[1].pace, 'normal');
   assert.equal(scene.beats[4].blocks[1].pace, 'brisk');
+  assert.deepEqual(scene.beats[5].blocks.map(b => b.type), ['prose', 'image', 'chat']);
+  assert.deepEqual(scene.beats[6].blocks.map(b => b.type), ['prose', 'image', 'prose']);
   assert.equal(scene.diagnostics.length, 0);
 });
 test('fence separators remain literal, including longer fences, tildes and unclosed fences', () => {
@@ -63,12 +65,13 @@ test('nested chat fences remain prose; multiple top-level chat blocks can mix', 
   assert.equal(parseScene('> ```chat\n> A: Hello\n> ```').beats[0].blocks[0].type, 'prose');
   assert.deepEqual(parseScene('```chat\nA: Hello\n```\n\nMiddle\n\n```chat\nB: Yes\n```').beats[0].blocks.map(b => b.type), ['chat', 'prose', 'chat']);
 });
-test('safe prose has no executable HTML, links, images or other fetch elements', () => {
+test('safe prose escapes HTML and leaves link and image references inert', () => {
   const scene = parseScene('<script>alert(1)</script>\n\n<iframe src="https://bad.test"></iframe>\n\n[x](command:do.bad) ![alt](https://bad.test/a.png) [site](https://bad.test)\n\n<style>@import "https://bad.test";</style>');
   const html = scene.beats[0].blocks[0].html;
-  assert.doesNotMatch(html, /<(script|iframe|img|style|a)\b/i);
+  assert.doesNotMatch(html, /<(script|iframe|style|a)\b/i);
   assert.match(html, /&lt;script&gt;/);
-  assert.match(html, /\[Image: alt\]/);
+  assert.match(html, /<img class="story-inline-image" data-story-src="https:\/\/bad\.test\/a\.png" alt="alt">/);
+  assert.deepEqual(scene.images, ['https://bad.test/a.png']);
 });
 test('chat titles are optional plain text scoped to one fence; invalid headers diagnose', () => {
   const scene = parseScene('```chat\n@title Canvas: Pip & Skip\nPip: Hello\n```\n\n```chat\nSkip: Yes\n```');
@@ -91,4 +94,21 @@ test('bare ticks flag enables status, omission disables it; legacy drafts still 
   for (const header of ['@ticks\n@ticks', '@ticks on\n@ticks', 'Mara: Earlier\n@ticks']) {
     assert.equal(parse(header).diagnostics.length, 1);
   }
+});
+
+test('standalone image and separate plain caption form one component; inline images remain prose', () => {
+  const source = 'Before ![inline](<assets/my%20print.jpg>) after.\n\n@delay 700ms\n\n![**Tall** tower](<assets/tower%20%CE%A9.png> "Not a caption")\n\n*Caption: The lower landing.*\n\n@pause 300ms\n\n```chat\nA: Hi\n```';
+  const scene = parseScene(source);
+  assert.deepEqual(scene.beats[0].blocks.map(b => b.type), ['prose', 'image', 'chat']);
+  assert.match(scene.beats[0].blocks[0].html, /class="story-inline-image"/);
+  assert.deepEqual(scene.beats[0].blocks[1], { type: 'image', src: 'assets/tower%20%CE%A9.png', alt: 'Tall tower', caption: 'The lower landing.', line: 5, delayMs: 700 });
+  assert.deepEqual(scene.images, ['assets/my%20print.jpg', 'assets/tower%20%CE%A9.png']);
+  assert.deepEqual(scene.beats[0].sequence.map(s => s.type), ['component', 'component', 'pause', 'component']);
+  assert.equal(scene.diagnostics.length, 0);
+});
+test('image syntax in literal Markdown or mixed paragraphs never creates another timed component', () => {
+  const scene = parseScene('`![inline](x.png)`\n\n```md\n![code](x.png)\n```\n\n> ![quote](q.png)\n\nText ![inline](a.png) continues.');
+  assert.deepEqual(scene.beats[0].blocks.map(b => b.type), ['prose']);
+  assert.deepEqual(scene.images, ['q.png', 'a.png']);
+  assert.equal(scene.beats[0].blocks[0].html.includes('data-story-src="x.png"'), false);
 });

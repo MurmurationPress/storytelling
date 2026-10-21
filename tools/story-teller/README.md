@@ -138,11 +138,11 @@ The syntax remains a proposal, not a settled manuscript or publishing standard. 
 - `src/parser.cjs`: pure Markdown → scene model, using pinned markdown-it. No VS Code or DOM imports.
 - `src/player.cjs`: manual navigation, timed beat sequencing and source-update reconciliation. The monotonic clock/scheduler and change callback are injectable; no host or rendering dependency.
 - `src/webview.cjs`: browser renderer and small host-message adapter. Bundled with esbuild into ignored `dist/player.js`.
-- `src/extension.cjs`: command, editor/document binding, webview lifetime and resource policy only.
+- `src/extension.cjs` and `src/media.cjs`: editor/document binding, webview lifetime and bounded local resource resolution.
 
 On edits, an unchanged current beat is matched by its complete source text, choosing the nearest duplicate. Otherwise an unchanged preceding beat anchors its relative position, then the index is clamped. This is best effort: wholesale rewrites, repeated identical beats, splitting/deleting the current beat can change its identity. No persistent authored IDs are imposed in this slice. Hidden-panel recreation matches the saved beat text where possible, falls back to its ordinal, and receives the latest source; restarting VS Code is not a saved reading-session feature.
 
-Raw HTML is escaped. Chat uses text nodes. Links render their label without navigation; images show their alt text, including local images. There is **no source asset loading** yet. The webview allows only the extension's bundled script (nonce) and stylesheet. CSP denies network connections, frames, images, inline source scripts and forms; command URIs are disabled. `localResourceRoots` excludes manuscript/workspace directories. Source is sent as structured messages after a ready handshake, never interpolated into an HTML/script string. This extension has no network client or remote-content loader.
+Raw HTML is escaped. Chat uses text nodes. Links render their label without navigation. Image references are inert until the host validates a relative local PNG, JPEG or WebP and supplies a VS Code webview URI. CSP permits only webview-local images, the nonce-bundled script and the extension stylesheet; it denies network connections, frames, inline source scripts and forms. Command URIs are disabled. `localResourceRoots` includes the extension assets and the containing workspace folder, or just the document directory when it is outside a workspace. The host independently rejects traversal and symlinks escaping that boundary. Source is sent as structured messages after a ready handshake, never interpolated into an HTML/script string. This extension has no network client or remote-content loader.
 
 This follows [VS Code's documented webview resource and CSP guidance](https://code.visualstudio.com/api/extension-guides/webview). Rendering uses [markdown-it's token/renderer API](https://github.com/markdown-it/markdown-it/blob/master/docs/architecture.md), with HTML disabled and link/image renderers restricted. No general editor, custom text editing or new EPUB protocol is introduced.
 
@@ -280,9 +280,9 @@ These are [native VS Code snippets/pickers](https://code.visualstudio.com/api/re
 
 A read-only local Art snapshot had four existing beat boundaries (five beats), one valid manually adapted chat and 29 remaining manuscript-style chat containers. In-memory conversion preserved all boundary bytes and the beat count exactly. The remaining legacy blocks need conversion before playback; existing Obsidian image embeds remain outside this increment's supported components. No manuscript content is included in the committed tests or automatically repaired by this exercise.
 
-## Chat pace (awaiting Ted’s acceptance)
+## Chat pace (accepted by Ted)
 
-Ted accepts the existing chat experience and pacing, but finds that long exchanges accumulate too much waiting. Pace changes automatic waits locally, without changing authored silence or the global default:
+Ted accepts the chat experience and the new pace setting. His earlier feedback was that long exchanges accumulated too much waiting. Pace changes automatic waits locally, without changing authored silence or the global default:
 
 ````markdown
 ```chat
@@ -307,4 +307,38 @@ To author a setting, place the caret inside the chat, run **Story Teller: Insert
 
 To compare, launch the Development Host as above and open `lantern.md`. Its last two beats (4 and 5) contain the same eight-message fictional conversation at Normal and Brisk, both with `@responding`, a 900ms pause and a 1200ms explicit delay. Play each; Replay Beat repeats it. Total waits are **18,865ms Normal** versus **13,835ms Brisk**. The pause/delay remain unchanged. Try the Pace helper on either block, Undo, and edit the value to `deliberate` for a slower comparison. Beat navigation remains manual; source edits reset the current beat to ready.
 
-Imagery is the next feature, outside this increment. Existing manuscript, conversion and EPUB work remain separate.
+Static imagery is documented below. Existing manuscript, conversion and EPUB work remain separate.
+
+## Static images (first slice; awaiting Ted’s acceptance)
+
+A **standalone image paragraph** becomes one image component. An image within a prose paragraph stays inside that one prose component. The existing outside timing directives work in source order:
+
+````markdown
+The path turned toward the water.
+
+@delay 900ms
+
+![A lit tower across a harbour](../shared/harbour.webp)
+
+*Caption: The light beyond the wall.*
+
+@pause 1200ms
+
+```chat
+# On the path
+@viewer Mara
+Ivo: The light is still here.
+```
+````
+
+Put the optional **plain-text** `*Caption: …*` on its own paragraph immediately after the standalone image, with a blank line between them. The caption is visible below the image; the image’s `![alt text]` remains its accessibility description. A Markdown link title such as `"Title"` is not used as a caption. Caption markup beyond this simple italic plain-text convention stays ordinary prose. No image-specific fence is needed.
+
+Supported references are relative **PNG, JPEG (`.jpg` or `.jpeg`) and WebP** files. The source file’s directory is the base. Paths with spaces or Unicode are supported using Markdown’s angle-bracket destination with percent escapes; **Insert… → Image** writes this form. The reference remains in place: the helper selects an existing file, inserts an editable alt-text snippet and does not copy, rename or save it. Clear any selected prose first; the helper refuses to overwrite it. The insert is one normal Undo. Save an untitled adaptation before using local media, so it has a known base directory.
+
+A file may live in the source document’s containing VS Code workspace, including a shared folder reached with `../`. When no workspace contains the document, the permitted root is that document’s directory. Files beyond that root, escaping symlinks, remote URLs, data URLs and SVG or other unsupported formats are refused. Open the encompassing workspace if your adaptation and shared assets sit in sibling folders. VS Code’s `localResourceRoots`, `asWebviewUri` and a restrictive CSP provide the browser boundary; the host separately validates the path and file signature. See [VS Code’s Webview guidance](https://code.visualstudio.com/api/extension-guides/webview).
+
+The host checks local images before sending a source revision. The webview preloads them before enabling playback, with a five-second load timeout; a missing or unreadable file produces a visible placeholder and a line-numbered author warning without blocking the beat. An image enters immediately by default; it does not add viewing time. Use an explicit following `@pause` for authored viewing time. A source edit cancels current playback and stale preload results. Replay and manual beat controls retain their existing meaning. Images preserve aspect ratio and fit the reading width/height; inline images are limited to a smaller height.
+
+To try this in the separate Art adaptation, open its **containing workspace**, save the adaptation as its own Markdown file, put the caret outside chat, then use **Story Teller: Insert… → Image**. Choose a local image inside that workspace, replace the selected `Describe the image` placeholder, and optionally add a separate `*Caption: …*` paragraph. Use **Preview Scene**. Existing Obsidian `![[...]]` embeds are not automatically converted; add ordinary Markdown image links to the adaptation where you intend imagery. The source manuscript and any original art stay untouched. For a quick built-in check, open `samples/lantern.md`, turn to beats **6** and **7**, and Play beat 6 to see prose → delayed landscape image → authored pause → chat; beat 7 shows a captioned portrait and an inline JPEG.
+
+This is a local preview experiment. Image rendering in remote VS Code workspaces, Windows/macOS and assistive technology has not been verified. No animation, gallery management, media import/export or EPUB packaging is implied.

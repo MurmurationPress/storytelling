@@ -1,3 +1,27 @@
+# Static imagery preview — 2026-10-21
+
+**Acceptance:** Ted accepts the chat pace setting. Normal, Brisk and Deliberate remain as implemented; image presentation is a new experiment awaiting his assessment in Art.
+
+## Implemented behaviour
+
+A standalone ordinary Markdown image paragraph is an image component. An optional immediately following separate `*Caption: plain text*` paragraph belongs to that image; alt text remains the image’s accessibility text, and Markdown title text is not reused as a caption. Inline images stay within their prose component. Image entry defaults to zero delay. Outside `@delay` replaces that entry delay and `@pause` adds authored silence; an image itself consumes no viewing timer. The existing player governs pause, resume, replay, navigation and source-edit cancellation.
+
+The saved adaptation’s directory is the reference base. The permitted resource root is its containing workspace folder, or that directory when outside a workspace. Relative `../` links can reach shared assets inside the root. The host rejects remote/data URLs, unsupported extensions, paths and symlinks escaping the root, absent/unreadable files and mismatched PNG/JPEG/WebP signatures. It uses VS Code `asWebviewUri` and bounded `localResourceRoots`; CSP permits only webview-local images, with no network loading or embedded scripts. The host sends a pending revision immediately to stop prior playback, resolves files, then the webview preloads them before enabling Play. Browser loading has a five-second timeout and failure placeholder. Revisions reject stale results.
+
+**Insert… → Image** chooses an existing file, writes an encoded relative Markdown path with an editable alt-text snippet, and leaves the file in place. The operation is unsaved and one Undo; it refuses selected prose, chats, untitled documents and files outside the permitted root. The native file picker uses VS Code `showOpenDialog`.
+
+Three small original geometric harbour fixtures (PNG portrait, WebP landscape, JPEG inline) are committed; no manuscript artwork was copied. Sample beats 6–7 show prose → delayed image → pause → chat and a captioned portrait with inline JPEG. The private Art adaptation and existing EPUB assets remain untouched.
+
+## Validation and limits
+
+- **79 deterministic tests pass**, plus build, syntax and whitespace checks. Coverage includes image parsing/source order, caption separation, inline/literal preservation, exact image/pause/chat timing, player cancellation, spaces/Unicode/parent paths, remote/outside/symlink/missing/unsupported/unreadable failures, and Insert command success/cancel/stale/Undo settings. Existing chat pace, conversion and safe-rendering tests pass.
+- **VS Code 1.142.0 Linux Extension Development Host:** automated observations exercised the real preview and toolkit with WebP, PNG and JPEG files, delayed reveal, caption/alt, a 320px reader area, replay, missing-file placeholder, and source changes while playback was active. Earlier accepted chat/authoring regressions were also exercised. See the local `npm run test:host` runner. These are automated API/DOM observations, not Ted’s manual acceptance. The operating-system file picker was not automatically selected in this suite; the Insert command was tested with a deterministic file-picker adapter, and Ted’s manual steps in README cover the real picker.
+- The first native run exposed an inline image style-class loss, which was fixed. Browser/VS Code polling made an older pace stopwatch assertion flaky; exact totals remain covered by the injected-clock tests, while native observations use a wider timing range. A previous conversion Undo check sometimes targeted a diff after focus changed; the host harness now explicitly focuses the source editor before Undo. No chat timing code was changed.
+
+No actual Art image composition, remote VS Code workspace, Windows/macOS, screen-reader or publication/export result is established. Missing files never block beat completion, but a very slow local image may hold preparation for up to five seconds before showing a placeholder. The simple plain-text caption convention and responsive fit are provisional.
+
+---
+
 # Chat-local pace — 2026-10-21
 
 Ted accepts the existing chat experience. His remaining feedback is that long exchanges accumulate too much waiting. **The new pace setting awaits his acceptance.** Imagery is next and is not implemented here.

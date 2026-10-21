@@ -100,3 +100,34 @@ Mara: Keep it there. I am almost home.
 ```
 
 The lantern stayed lit.
+
+---
+
+## Across the harbour
+
+Mara stepped onto the path above the water.
+
+@delay 900ms
+
+![A wide harbour at dusk, with a lit tower across the water](assets/harbour-landscape.webp)
+
+*Caption: The light beyond the harbour wall.*
+
+@pause 1200ms
+
+```chat
+# On the path
+@viewer Mara
+Ivo: The light is still here.
+Mara: I can see it from the path.
+```
+
+---
+
+## At the tower
+
+![A tall view of the lit tower and its reflection](assets/harbour-portrait.png)
+
+*Caption: The tower from the lower landing.*
+
+Mara found a small print ![A smaller wide view of the harbour](assets/harbour-detail.jpg) beside the open door. The inline image stays in this prose component.
