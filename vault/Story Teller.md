@@ -21,3 +21,9 @@ created: 2026-10-21
 **Accepted workflow:** Ted accepts the Markdown/live-preview workflow and authorises timed chat **within** a manually selected beat. The original chat-line syntax remains valid; provisional `@delay`, `@pause`, `@viewer` and `@ticks` directives add bounded timing and optional authored status effects. Leading prose is readable in ready state; later prose waits for preceding chat. Play is explicit; Pause/Resume preserves active time; Replay Beat resets and plays; source edits reset to ready. The player clock is injectable and independent of VS Code. Reduced motion retains sequential whole-message reveals without animation. See the extension README/results for the formula, tick semantics, verification and limits.
 
 This supersedes the earlier timing/ticks deferral **for this slice**. Visual beat cards, import/export and other components remain deferred. No EPUB lifecycle is replaced or manuscript adapted by the fictional sample.
+
+## Cross-component timing — 2026-10-21
+
+**Ted's accepted distinction:** `@delay` replaces an item's default delay; `@pause` adds silence while preserving the item's existing timing. Both names remain; no replacement directive is introduced.
+
+The implementation now applies standalone outside directives at top-level Markdown block boundaries. Adjacent prose stays one component with zero default entry delay. An outside chat delay replaces its first message's delay; pauses add silence. Explicitly delayed prose and trailing pauses use the existing independent scheduler. Literal Markdown contexts are preserved, ambiguous overrides are diagnosed, and timing stays within the manually selected beat. The recent non-viewer responding and viewer-offset fixes remain intact. See the updated source README/results for supported positions, exact totals and automated host evidence. Syntax is still provisional; no authoring-helper UI, extra component or EPUB migration follows from this change.

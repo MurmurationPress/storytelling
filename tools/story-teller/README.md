@@ -28,7 +28,7 @@ The preview stays attached to the document used to open it, even when another ed
 - A top-level fenced block with exactly `chat` as its language contains one `Speaker: message` per nonblank line. The first colon followed by whitespace divides speaker and message. Messages are literal text, not nested Markdown. Keep each message on one source line; editor word wrapping is fine.
 - Prose and any number of chat blocks can share a beat, in source order.
 - Separators inside backtick/tilde fences stay literal. Quoted/list-nested fences remain prose code blocks. Empty beats are omitted.
-- Invalid/empty chat blocks remain readable code with a warning; no partial dialogue is discarded.
+- Invalid/empty chat blocks keep their dialogue as readable code with a warning and do not partially execute; authoring-control lines are omitted from that fallback.
 
 Example (the [fictional sample](samples/lantern.md) demonstrates all three beat arrangements):
 
@@ -58,7 +58,7 @@ The water held its reflection.
 
 ## Timed chat (provisional directives)
 
-Original `Speaker: message` fences still work unchanged. Timing directives are lines **inside** a chat fence:
+Original `Speaker: message` fences still work unchanged. Timing directives work inside chat fences and at top-level component boundaries. Chat example:
 
 ````markdown
 ```chat
@@ -79,13 +79,51 @@ Mara: I can see the light.
 - `@viewer Speaker`: exact speaker name of the viewing participant, scoped to this chat fence. Names may contain spaces. Header only, before any message/pause. The viewer’s messages are offset as outgoing messages independently of ticks.
 - `@ticks on` / `@ticks off`: optional header, once, **off by default**. On requires a viewer matching a speaker in the fence. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
 
-No other directives, units, fractions or negative values are accepted. Invalid blocks stay readable code with a diagnostic explaining why; they never partly execute. Timing is editorial metadata, separate from dialogue wording.
+No other directives, units, fractions or negative values are accepted. Invalid chat blocks keep dialogue as readable code with a source-line diagnostic; control lines are omitted and they never partly execute. Timing is editorial metadata, separate from dialogue wording.
+
+### Timing across components
+
+Use standalone `@delay Nms` and `@pause Nms` outside fences at a **top-level Markdown block boundary**. Put a blank line before them after prose; after a closed code fence or at the beginning of a beat, no preceding blank line is needed. Consecutive directives may share adjacent lines. The following prose/chat may start on the next line or after a blank line.
+
+All adjacent ordinary Markdown (including several paragraphs, headings or lists) forms **one prose component**, up to the next top-level timing directive or chat component. It appears together, never sentence by sentence. Its default entry delay is **0ms**, so untimed leading prose remains immediately readable in ready state.
+
+- Outside `@delay` replaces the next component's entry delay. Before prose it replaces zero; before chat it replaces **the first message's** calculated delay. It creates no extra chat-entry timer and leaves later messages unchanged. Leading in-chat pauses remain additive.
+- Outside `@pause` adds silence before the next component's existing timing. Consecutive pauses add. A delay can precede or follow pauses and still targets the next prose/chat component.
+- A trailing pause holds playback open after visible content, then completes the beat. A trailing delay is an error: its source line is reported and it cannot carry into the next beat.
+- Multiple outside delays aimed at one item, including an outside delay plus an in-chat delay before the first message, are diagnosed with source locations. The **first authored override is retained**; later conflicting overrides are ignored. Fix the diagnostic rather than relying on conflicts as authoring syntax. Existing duplicate directives entirely within chat still invalidate that chat.
+- Malformed outside timing directives are diagnosed and omitted without adding time. Recognised control lines are never story content. A standalone `@responding` outside chat is **not** a prose indicator; it remains ordinary Markdown. Use it only inside chat.
+- Inside fenced/indented code, inline code, blockquotes, lists, and ordinary paragraph continuations, timing-looking text stays literal. Escape `\@delay` or use code formatting to write literal examples at the start of a top-level block. Only `@delay` / `@pause` are reserved outside chat. YAML frontmatter is not interpreted as timing.
+
+Example: **prose → silence → chat → delayed prose → trailing silence**:
+
+````markdown
+The radio crackled.
+
+@pause 700ms
+@delay 1200ms
+
+```chat
+@viewer Mara
+@responding
+Ivo: I'm here.
+```
+
+@delay 1000ms
+
+Mara lowered the receiver.
+
+@pause 800ms
+````
+
+From Play: 700ms silence, then a 1200ms first-message delay showing “Ivo is responding…”, so the message arrives at **1900ms**. The prose appears at **2900ms**; the trailing pause completes the beat at **3700ms**. There are no ticks in this example. With only `@pause 700ms`, the first message would retain its normal delay; with only `@delay 1200ms`, it would arrive at 1200ms. Before prose, `@pause 700ms` + `@delay 1200ms` similarly gives 1900ms, because prose's default is zero. Optional outgoing read-status phases still add their documented 600ms where enabled.
+
+The [sample](samples/lantern.md) keeps the accepted chat timing and adds delayed prose after beat 2, and a 700ms silence + 1200ms first-message override, delayed closing prose, and trailing pause in beat 3. Syntax remains provisional and suitable for later authoring helpers; no helper interface is implemented.
 
 **Default before-message delay:** `clamp(400 + 35 × Unicode code-point count, 800, 4000)` milliseconds. The minimum avoids an unreadable rush of short messages; length adds a restrained composition delay; the maximum avoids making long messages feel stalled. This is a starting editorial heuristic, not a reading-speed or delivery estimate. There is no automatic progression to another beat.
 
 With ticks enabled, a revealed outgoing message immediately receives one tick (`delivered`), then two (`read`) after **600ms of active playback**. This is an authored presentation effect, not network delivery, actual reader attention or telemetry. The status phase is part of the linear sequence: the following message's own delay starts afterwards, and following prose waits for all status/pause phases. Replay resets both ticks and messages. These deliberately simple effects do not model a messaging service.
 
-A new beat is **ready**, with only its leading prose readable. Play starts sequential whole-message reveals. All components retain source order: prose after a chat waits for that chat's last message, status and authored pause. Pause retains the exact remaining active delay. Resume continues; Replay Beat clears all progress and immediately starts that beat again. Next/Previous/Restart cancel playback and prepare the selected beat without starting it. Completion stays on the current beat. Unsaved source edits cancel playback, retain the beat where possible and reset it to ready.
+A new beat is **ready**, with only its leading prose readable. Play starts sequential whole-message reveals. All components retain source order: prose after a chat waits for that chat's last message, status and authored pause, plus any outside timing assigned to it. Pause retains the exact remaining active delay. Resume continues; Replay Beat clears all progress and immediately starts that beat again. Next/Previous/Restart cancel playback and prepare the selected beat without starting it. Completion stays on the current beat. Unsaved source edits cancel playback, retain the beat where possible and reset it to ready.
 
 A hidden preview pauses via VS Code panel visibility and document visibility; it does **not** resume automatically. If VS Code destroys/recreates the hidden webview, the beat is restored ready rather than restoring phase progress. Closing/disposal cancels its pending work. No session-level playback persistence is promised. Losing keyboard focus while the preview is still visible does not pause it.
 

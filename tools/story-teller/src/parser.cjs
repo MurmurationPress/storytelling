@@ -7,6 +7,30 @@ md.renderer.rules.link_close = () => '</span>';
 md.renderer.rules.image = (tokens, index) =>
   `<span class="image-alt">[Image: ${md.utils.escapeHtml(tokens[index].content)}]</span>`;
 
+// Top-level block rule, deliberately absent from paragraph-interruption rules.
+// A line inside an existing paragraph, quote, list or code block stays literal.
+md.block.ruler.before('paragraph', 'story_timing', (state, startLine, endLine, silent) => {
+  if (state.level !== 0 || state.sCount[startLine] - state.blkIndent >= 4) return false;
+  const line = state.src.slice(state.bMarks[startLine] + state.tShift[startLine], state.eMarks[startLine]);
+  const match = line.match(/^@(delay|pause)\b(.*)$/);
+  if (!match) return false;
+  if (silent) return true;
+  const token = state.push('story_timing', '', 0);
+  token.map = [startLine, startLine + 1];
+  token.meta = { name: match[1], ...timingValue(match[1], match[2].trim()) };
+  state.line = startLine + 1;
+  return true;
+});
+md.renderer.rules.story_timing = () => '';
+function timingValue(name, value) {
+  const time = value.match(/^(0|[1-9][0-9]*)ms$/);
+  const amount = time ? Number(time[1]) : NaN;
+  if (!Number.isInteger(amount) || amount > 60000 || (name === 'pause' && amount === 0)) {
+    return { error: `@${name} expects integer milliseconds (${name === 'pause' ? '1' : '0'}–60000ms)` };
+  }
+  return { delayMs: amount };
+}
+
 function parseScene(source) {
   const lines = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
   const diagnostics = [];
@@ -42,17 +66,40 @@ function parseScene(source) {
   }
   ranges.push([from, lines.length]);
   const beats = ranges.map(([first, end]) => {
-    const raw = lines.slice(first, end).join('\n').trim();
-    const tokens = md.parse(raw, {});
+    const text = lines.slice(first, end).join('\n');
+    const raw = text.trim();
+    const tokens = md.parse(text, {});
     const blocks = [];
+    const sequence = []; // Timing metadata and references; prose/chat remain the only components.
+    let pendingDelay = null;
+    const diagnostic = (line, message) => diagnostics.push(`Line ${line}: ${message}`);
+    const add = block => {
+      if (pendingDelay) {
+        if (block.type === 'chat') {
+          if (block.messages[0].delayMs !== undefined) diagnostic(block.line, `multiple @delay overrides target the first chat message (outside override at line ${pendingDelay.line}); first override retained`);
+          block.messages[0].delayMs = pendingDelay.delayMs;
+        } else block.delayMs = pendingDelay.delayMs;
+        pendingDelay = null;
+      }
+      sequence.push({ type: 'component', blockIndex: blocks.length });
+      blocks.push(block);
+    };
     let prose = [];
     const flush = () => {
-      if (prose.length) blocks.push({ type: 'prose', html: md.renderer.render(prose, md.options, {}) });
+      if (prose.length) add({ type: 'prose', html: md.renderer.render(prose, md.options, {}) });
       prose = [];
     };
     for (const token of tokens) {
       // Only top-level fences are components; quoted/list-nested fences remain Markdown.
-      if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
+      if (token.type === 'story_timing') {
+        flush();
+        const line = first + token.map[0] + 1;
+        const { name, delayMs, error } = token.meta;
+        if (error) diagnostic(line, error);
+        else if (name === 'pause') sequence.push({ type: 'pause', delayMs });
+        else if (pendingDelay) diagnostic(line, `multiple @delay overrides target the same component (first at line ${pendingDelay.line}); first override retained`);
+        else pendingDelay = { delayMs, line };
+      } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];
         const events = [];
         let delayMs;
@@ -60,11 +107,13 @@ function parseScene(source) {
         let viewer = null;
         let ticks = false;
         let invalid = null;
+        let invalidLine = first + token.map[0] + 1;
         const seen = new Set();
         const chatLines = token.content.split('\n');
         for (let i = 0; i < chatLines.length; i++) {
           const line = chatLines[i];
           if (!line.trim()) continue;
+          invalidLine = first + token.map[0] + i + 2;
           const match = line.match(/^([^:\n]+):\s+(.+)$/);
           if (match && match[1].trim()) {
             const message = { speaker: match[1].trim(), text: match[2] };
@@ -91,11 +140,9 @@ function parseScene(source) {
             else if (value === 'on' || value === 'off') ticks = value === 'on';
             else { invalid = '@ticks expects on or off'; break; }
           } else {
-            const time = value.match(/^(0|[1-9][0-9]*)ms$/);
-            const amount = time ? Number(time[1]) : NaN;
-            if (!Number.isInteger(amount) || amount > 60000 || (name === 'pause' && amount === 0)) {
-              invalid = `@${name} expects integer milliseconds (${name === 'pause' ? '1' : '0'}–60000ms)`; break;
-            }
+            const timing = timingValue(name, value);
+            if (timing.error) { invalid = timing.error; break; }
+            const amount = timing.delayMs;
             if (name === 'pause') events.push({ type: 'pause', delayMs: amount });
             else if (delayMs !== undefined) { invalid = '@delay already waiting for a message'; break; }
             else delayMs = amount;
@@ -105,16 +152,20 @@ function parseScene(source) {
         if (delayMs !== undefined && !invalid) invalid = '@delay needs a following message';
         if (ticks && (!viewer || !messages.some(m => m.speaker === viewer)) && !invalid) invalid = '@ticks on needs @viewer matching a speaker';
         if (invalid || !messages.length) {
-          diagnostics.push(`Line ${first + token.map[0] + 1}: ${invalid || 'chat needs at least one Speaker: message line'}; showing the code block.`);
+          diagnostics.push(`Line ${invalidLine}: ${invalid || 'chat needs at least one Speaker: message line'}; showing dialogue as code without executing the chat.`);
+          // Keep dialogue readable on error, without printing authoring controls.
+          const content = token.content.split('\n').filter(line => !/^\s*@/.test(line) || /^([^:\n]+):\s+(.+)$/.test(line)).join('\n');
+          token.content = content;
           prose.push(token);
         } else {
           flush();
-          blocks.push({ type: 'chat', messages, events, viewer, ticks });
+          add({ type: 'chat', messages, events, viewer, ticks, line: first + token.map[0] + 1 });
         }
       } else prose.push(token);
     }
     flush();
-    return { raw, line: first + 1, blocks };
+    if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose or chat component in this beat');
+    return { raw, line: first + 1, blocks, sequence };
   }).filter(beat => beat.raw.length);
   return { frontmatter, beats, diagnostics };
 }

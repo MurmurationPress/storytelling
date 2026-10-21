@@ -21,7 +21,7 @@ test('unclosed frontmatter warns instead of losing text', () => {
 test('fictional sample contains prose, chat and mixed beats in source order', () => {
   const scene = parseScene(readFileSync('samples/lantern.md', 'utf8'));
   assert.equal(scene.beats.length, 3);
-  assert.deepEqual(scene.beats.map(b => b.blocks.map(c => c.type)), [['prose'], ['chat'], ['prose', 'chat', 'prose']]);
+  assert.deepEqual(scene.beats.map(b => b.blocks.map(c => c.type)), [['prose'], ['chat', 'prose'], ['prose', 'chat', 'prose']]);
   assert.deepEqual(scene.beats[1].blocks[0].messages[1], { speaker: 'Ivo', text: 'Only me. The stairs have gone quiet.', delayMs: 1200, responding: true });
   assert.equal(scene.diagnostics.length, 0);
 });

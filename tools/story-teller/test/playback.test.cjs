@@ -109,7 +109,7 @@ test('invalid directives retain the entire chat as readable code and diagnose ca
     const scene = parseScene('```chat\n' + line + '\nA: Hello\n```');
     assert.equal(scene.beats[0].blocks[0].type, 'prose', line);
     assert.equal(scene.diagnostics.length, 1, line);
-    assert.match(scene.diagnostics[0], /Line .*showing the code block/);
+    assert.match(scene.diagnostics[0], /Line .*without executing the chat/);
   }
   for (const chat of ['@delay 2ms', '@ticks on\nA: Hi', '@viewer B\n@ticks on\nA: Hi', 'A: Hi\n@viewer A', '@viewer A\n@viewer B\nA: Hi']) {
     assert.equal(parseScene('```chat\n' + chat + '\n```').diagnostics.length, 1, chat);
@@ -171,4 +171,113 @@ test('responding is incoming only: viewer and unspecified-viewer cues are suppre
   const incoming = setup('@viewer Mara\n@responding\n@delay 100ms\nIvo: Hello');
   incoming.player.play(); assert.equal(incoming.player.responding.speaker, 'Ivo');
   incoming.clock.advance(100); assert.equal(incoming.player.responding, null);
+});
+function cross(source) {
+  const clock = new Clock();
+  const parsed = parseScene(source);
+  return { clock, parsed, player: new StoryPlayer(parsed, { scheduler: clock }) };
+}
+const proseText = player => player.visibleBlocks.filter(b => b.type === 'prose').map(b => b.html).join('');
+test('outside delay reveals a contiguous multi-paragraph prose component atomically', () => {
+  const { player, clock, parsed } = cross('@delay 250ms\n\nFirst sentence.\n\nSecond paragraph.');
+  assert.equal(parsed.beats[0].blocks.length, 1);
+  assert.equal(proseText(player), ''); clock.advance(5000); assert.equal(proseText(player), '');
+  player.play(); clock.advance(249); assert.equal(proseText(player), '');
+  clock.advance(1); assert.match(proseText(player), /First sentence/); assert.match(proseText(player), /Second paragraph/);
+  assert.equal(player.phase, 'completed');
+});
+test('chat then delayed prose preserves exact timing and hides directives', () => {
+  const { player, clock } = cross('```chat\n@delay 100ms\nA: Hello\n```\n\n@delay 200ms\n\nAfter.\n\nMore prose.');
+  player.play(); clock.advance(100); assert.equal(messages(player).length, 1); assert.equal(proseText(player), '');
+  clock.advance(199); assert.equal(proseText(player), '');
+  clock.advance(1); assert.match(proseText(player), /After/); assert.match(proseText(player), /More prose/);
+  assert.doesNotMatch(proseText(player), /@delay/); assert.equal(clock.time, 300);
+});
+test('outside chat override replaces default; consecutive silence is additive; responding starts only after silence', () => {
+  const { player, clock } = cross('Before.\n\n@pause 100ms\n@pause 200ms\n@delay 400ms\n\n```chat\n@viewer Mara\n@responding\nIvo: Hello\n```');
+  assert.match(proseText(player), /Before/); player.play(); assert.equal(player.responding, null);
+  clock.advance(299); assert.equal(player.responding, null);
+  clock.advance(1); assert.equal(player.responding.speaker, 'Ivo');
+  clock.advance(399); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1); assert.equal(player.phase, 'completed');
+  assert.equal(clock.time, 700);
+});
+test('outside pause adds to existing first-message timing, without affecting later messages', () => {
+  const { player, clock } = cross('@pause 100ms\n\n```chat\n@delay 200ms\nA: First\n@delay 300ms\nB: Second\n```');
+  player.play(); clock.advance(299); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1);
+  clock.advance(299); assert.equal(messages(player).length, 1);
+  clock.advance(1); assert.equal(messages(player).length, 2); assert.equal(clock.time, 600);
+});
+test('outside delay targets first message after leading in-chat pause, not a separate entry timer', () => {
+  const { player, clock } = cross('@delay 200ms\n\n```chat\n@pause 100ms\nA: Hello\n```');
+  player.play(); clock.advance(299); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1); assert.equal(player.phase, 'completed');
+});
+test('combined pause/delay before prose and trailing pauses keep completion open', () => {
+  const { player, clock } = cross('Before\n\n@delay 200ms\n@pause 100ms\n\nAfter\n\n@pause 300ms\n@pause 400ms');
+  player.play(); clock.advance(299); assert.doesNotMatch(proseText(player), /After/);
+  clock.advance(1); assert.match(proseText(player), /After/); assert.equal(player.phase, 'playing');
+  clock.advance(699); assert.equal(player.phase, 'playing');
+  clock.advance(1); assert.equal(player.phase, 'completed'); assert.equal(clock.time, 1000);
+});
+test('trailing delay diagnoses its actual source line and never crosses a beat', () => {
+  const { parsed, player, clock } = cross('---\ntitle: Timing\n---\n\nBefore\n\n@delay 200ms\n---\nAfter');
+  assert.match(parsed.diagnostics[0], /^Line 7: @delay needs a following/);
+  player.play(); assert.equal(player.phase, 'completed'); assert.equal(clock.jobs.size, 0);
+  player.next(); assert.match(proseText(player), /After/); assert.equal(player.phase, 'ready');
+});
+test('duplicate outside overrides, including chat boundary, diagnose and retain first authored override', () => {
+  for (const content of ['@delay 100ms\n@delay 200ms\n\nAfter', '@delay 100ms\n\n```chat\n@delay 200ms\nA: Hello\n```']) {
+    const { player, clock, parsed } = cross(content);
+    assert.match(parsed.diagnostics[0], /Line .*multiple @delay overrides/);
+    player.play(); clock.advance(99); assert.equal(player.phase, 'playing');
+    clock.advance(1); assert.equal(player.phase, 'completed');
+  }
+});
+test('malformed outside directives diagnose with locations, consume no time, and never render', () => {
+  for (const directive of ['@delay -1ms', '@delay', '@pause 0ms', '@pause 1s', '@delay 60001ms', '@delay: 20ms']) {
+    const { parsed, player } = cross(`Before\n\n${directive}\n\nAfter`);
+    assert.match(parsed.diagnostics[0], /^Line 3: @/);
+    assert.doesNotMatch(proseText(player), /@(delay|pause)/);
+    assert.match(proseText(player), /After/);
+  }
+});
+test('literal timing examples survive fences, inline code, quotations, lists, indented code and paragraph continuations', () => {
+  const literals = [
+    '```text\n@delay 300ms\n@pause 400ms\n```',
+    '~~~markdown\n@delay 300ms\n~~~',
+    '`@delay 300ms`', '> @delay 300ms',
+    '- @delay 300ms', '- Item\n\n  @pause 400ms',
+    '    @delay 300ms', '\t@pause 400ms',
+    'An ordinary paragraph\n@delay 300ms\ncontinues here.',
+    '\\@delay 300ms'
+  ];
+  for (const source of literals) {
+    const { parsed, player } = cross(source);
+    assert.equal(parsed.diagnostics.length, 0, source);
+    assert.match(proseText(player), /@(delay|pause)/, source);
+    assert.equal(parsed.beats[0].sequence.some(e => e.type === 'pause'), false, source);
+  }
+});
+test('cross-component timing cancels on navigation, edits, replay and disposal; pauses preserve remaining time', () => {
+  const source = 'Before\n\n@pause 100ms\n@delay 200ms\n\nAfter\n---\nNext';
+  const { player, clock } = cross(source);
+  player.play(); clock.advance(150); player.pause(); assert.equal(player.remaining, 150);
+  clock.advance(5000); player.play(); clock.advance(149); assert.doesNotMatch(proseText(player), /After/);
+  clock.advance(1); assert.match(proseText(player), /After/);
+  for (const action of ['next', 'previous', 'restart', 'replay', 'update', 'dispose']) {
+    const fixture = cross(source); fixture.player.play(); fixture.clock.advance(150);
+    if (action === 'update') fixture.player.update(fixture.parsed); else fixture.player[action]();
+    for (const callback of fixture.clock.retired) callback();
+    assert.doesNotMatch(proseText(fixture.player), /After/, action);
+    assert.equal(fixture.clock.jobs.size, action === 'replay' ? 1 : 0, action);
+  }
+});
+test('malformed chat hides authoring directives but preserves dialogue without partial playback', () => {
+  const { player, parsed } = cross('Before\n\n```chat\nA: Hello\n@delay nope\nB: Goodbye\n```');
+  assert.match(parsed.diagnostics[0], /^Line 5:/);
+  assert.match(proseText(player), /Hello/); assert.match(proseText(player), /Goodbye/);
+  assert.doesNotMatch(proseText(player), /@delay/);
+  assert.equal(messages(player).length, 0);
 });

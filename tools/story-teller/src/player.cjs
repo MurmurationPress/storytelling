@@ -23,8 +23,12 @@ class StoryPlayer {
     this.phase = 'ready'; this.cursor = 0; this.remaining = null;
     this.visible = new Set(); this.counts = new Map(); this.read = new Set();
     this.steps = [];
-    for (const [blockIndex, block] of (this.current?.blocks || []).entries()) {
-      if (block.type === 'prose') this.steps.push({ type: 'prose', blockIndex, delayMs: 0 });
+    const sequence = this.current?.sequence || (this.current?.blocks || []).map((block, blockIndex) => ({ type: 'component', blockIndex }));
+    for (const entry of sequence) {
+      if (entry.type === 'pause') { this.steps.push(entry); continue; }
+      const blockIndex = entry.blockIndex;
+      const block = this.current.blocks[blockIndex];
+      if (block.type === 'prose') this.steps.push({ type: 'prose', blockIndex, delayMs: block.delayMs ?? 0 });
       else for (const event of block.events) {
         if (event.type === 'pause') this.steps.push(event);
         else {
@@ -38,7 +42,7 @@ class StoryPlayer {
     this.showProse();
   }
   showProse() {
-    while (this.steps[this.cursor]?.type === 'prose') {
+    while (this.steps[this.cursor]?.type === 'prose' && this.steps[this.cursor].delayMs === 0) {
       this.visible.add(this.steps[this.cursor].blockIndex); this.cursor++;
     }
   }
@@ -75,6 +79,7 @@ class StoryPlayer {
     this.timer = this.scheduler.setTimeout(() => {
       if (this.disposed || this.phase !== 'playing' || generation !== this.generation || cursor !== this.cursor) return;
       this.timer = null; this.remaining = null;
+      if (step.type === 'prose') this.visible.add(step.blockIndex);
       if (step.type === 'message') this.counts.set(step.blockIndex, step.message + 1);
       if (step.type === 'read') this.read.add(`${step.blockIndex}:${step.message}`);
       this.cursor++;
