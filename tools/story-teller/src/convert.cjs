@@ -1,8 +1,7 @@
 'use strict';
 // Pure, conservative manuscript adaptation. No editor/file/network access.
-const MarkdownIt = require('markdown-it');
+const { inspectStructure } = require('./structure.cjs');
 const { parseScene } = require('./parser.cjs');
-const md = new MarkdownIt({ html: false });
 function escaped(text, at) {
   let count = 0;
   while (at > 0 && text[--at] === '\\') count++;
@@ -77,20 +76,13 @@ function legacyBody(body) {
   return output;
 }
 function convertChats(source) {
-  const records = [];
-  const pattern = /([^\r\n]*)(\r\n|\n|\r|$)/g;
-  let match;
-  while ((match = pattern.exec(source)) && match[0]) records.push({ text: match[1], eol: match[2], start: match.index, end: pattern.lastIndex });
+  const structure = inspectStructure(source);
+  const records = structure.lines;
   const warnings = [];
   const changes = [];
-  let first = 0;
-  if (records[0]?.text.replace(/^\uFEFF/, '') === '---') {
-    const closing = records.findIndex((line, i) => i > 0 && /^(---|\.\.\.)\s*$/.test(line.text));
-    if (closing < 0) return { text: source, count: 0, changes, warnings: [{ line: 1, message: 'unclosed frontmatter; document left unchanged' }] };
-    first = closing + 1;
-  }
-  const offset = records[first]?.start ?? source.length;
-  for (const token of md.parse(source.slice(offset), {})) {
+  const first = structure.start;
+  if (structure.frontmatter && !structure.frontmatter.closed) return { text: source, count: 0, changes, warnings: [{ line: 1, message: 'unclosed frontmatter; document left unchanged' }] };
+  for (const token of structure.tokens) {
     if (token.type !== 'fence' || token.level !== 0 || !/^chat(?:-old(?:-old)?)?$/.test(token.info.trim().split(/\s+/)[0])) continue;
     const start = first + token.map[0];
     const stop = first + token.map[1] - 1;

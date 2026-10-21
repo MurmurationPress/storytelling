@@ -1,9 +1,11 @@
 'use strict';
 const vscode = require('vscode');
+const { registerInsert } = require('./insert-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
 const { randomBytes } = require('node:crypto');
 function activate(context) {
   registerConversion(vscode, context);
+  registerInsert(vscode, context);
   const previews = new Map();
   context.subscriptions.push(vscode.commands.registerCommand('storyTeller.previewScene', async () => {
     const editor = vscode.window.activeTextEditor;

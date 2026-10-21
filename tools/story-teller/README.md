@@ -119,7 +119,7 @@ Mara lowered the receiver.
 
 From Play: 700ms silence, then a 1200ms first-message delay showing “Ivo is responding…”, so the message arrives at **1900ms**. The prose appears at **2900ms**; the trailing pause completes the beat at **3700ms**. There are no ticks in this example. With only `@pause 700ms`, the first message would retain its normal delay; with only `@delay 1200ms`, it would arrive at 1200ms. Before prose, `@pause 700ms` + `@delay 1200ms` similarly gives 1900ms, because prose's default is zero. Optional outgoing read-status phases still add their documented 600ms where enabled.
 
-The [sample](samples/lantern.md) keeps the accepted chat timing and adds delayed prose after beat 2, and a 700ms silence + 1200ms first-message override, delayed closing prose, and trailing pause in beat 3. Syntax remains provisional and suitable for later authoring helpers; no helper interface is implemented.
+The [sample](samples/lantern.md) keeps the accepted chat timing and adds delayed prose after beat 2, and a 700ms silence + 1200ms first-message override, delayed closing prose, and trailing pause in beat 3. Syntax remains provisional. The native Insert helpers below now provide small authoring conveniences; there is no visual card editor or general authoring framework.
 
 **Default before-message delay:** `clamp(400 + 35 × Unicode code-point count, 800, 4000)` milliseconds. The minimum avoids an unreadable rush of short messages; length adds a restrained composition delay; the maximum avoids making long messages feel stalled. This is a starting editorial heuristic, not a reading-speed or delivery estimate. There is no automatic progression to another beat.
 
@@ -221,3 +221,61 @@ The implementation is `src/convert.cjs` (pure function returning text, precise r
 Read-only inspection used authoritative `tedwarddick/PrimeTrilogy` revision **`79edd0e365e3ae6ab5f5e19413d6fe12d679a518`**, `Books/CONSTRAINT/COLLISION/Art.md`, alongside Ted's local adaptation. A local Books-tree survey and `Books/CONSTRAINT/DECENTRALISATION/Flock.md` supplied additional same-format examples. The format definition/renderer was inspected at `MurmurationPress/murmuration-writing-companion` revision **`08ec248d6bdd1cef33cd1eab255df24430a8e9fa`**, `src/chat/ManuscriptChat.ts`, `src/chat/ManuscriptChatPlugin.ts` and `Help/Manuscript_Chat.md`. The inspected renderer distinguishes body/subtext, inherited speaker, channel comments, participant alignment and dividers. Unsupported meanings are flagged rather than discarded.
 
 Only fictional/minimal fixtures are committed. The original manuscript repository, local `Art.md`, Component Types notes and EPUB artifacts are not modified. This is not a whole-book importer, an Obsidian parser or a promise that every historical chat dialect is supported. Review the diff and warnings before Apply.
+
+## Chat authoring: Insert and Wrap
+
+**Accepted direction:** Ted has accepted the Markdown/live-preview workflow, chat playback and pacing, and reports that conversion is good. The replacement (`@delay`) versus additional-silence (`@pause`) distinction remains unchanged. **New and awaiting Ted's acceptance:** the Insert/Wrap workflow and these context guards. Completing this authoring slice is not a claim that every Art adaptation or the separate managed-EPUB foundation is finished.
+
+Keep the original manuscript intact. Work in a **separate Markdown EPUB+ adaptation**, for example `Art.epubplus.md`, using VS Code's normal Save As/copy workflow. No packaging/export is performed here. Ted's existing standalone `---` lines in Art are useful starting beat boundaries: keep them while adapting, then deliberately add/change them only as an editorial action. Conversion neither inserts nor rewrites them.
+
+`---` means a **manual story-beat boundary in the adaptation**, not an automatic sentence/paragraph break. The initial YAML `--- … ---` (or `...` close) remains metadata. Separators inside fenced/indented code or literal quoted/list examples are not beats. An opening `---` is reserved for frontmatter; the boundary helper refuses to insert it before any story content. Parsing, conversion and insertion share structural source inspection.
+
+Run **Story Teller: Insert…** from the Command Palette, or right-click in a Markdown editor and choose the same command. The native picker offers:
+
+| Item | Inserts / meaning |
+| --- | --- |
+| Chat block | A fenced chat with `# Title`, `@viewer Name` and two sample messages; optional features off |
+| Beat boundary | A standalone `---`, with surrounding block spacing |
+| Delay | `@delay 1200ms`; editable numeric tab stop; replaces the next item's normal delay |
+| Pause | `@pause 800ms`; editable numeric tab stop; adds silence before the item's existing delay |
+| Responding | Bare `@responding`, inside chat only; header enables all non-viewer cues |
+| Ticks | Bare `@ticks`, once in a chat header with an explicit matching viewer |
+| Wrap Selection as Chat | Separate explicit wrapping action; selected content is kept verbatim, not converted |
+
+The Chat snippet uses native **Tab / Shift+Tab** navigation: title → viewer → first message → other speaker → reply → final caret. The viewer field is linked to the first message's speaker. Edit the placeholders to the actual passage; the example words/settings are an authoring stub, not manuscript content or invented dialogue to retain. `@ticks` and `@responding` are **not** enabled by the Chat snippet.
+
+Example after editing a chat stub and explicitly opting into the flags:
+
+````markdown
+```chat
+# Harbour link
+@viewer Ari
+@ticks
+@responding
+Ari: Is the lamp still lit?
+Bo: Yes. I'll leave it on.
+```
+````
+
+Ari is the viewer/outgoing participant and receives the offset and optional authored ticks. Bo is eligible for the responding cue during Bo's message delay. Existing `@title` remains readable; helpers/conversion generate `# Title`. Both flags remain canonical bare directives. Place Delay/Pause inside a chat for message timing or outside for the next prose/chat component; the established timing totals above still apply.
+
+### Context and safety
+
+- Use one caret or one contiguous selection. Regular insertion **never replaces a nonempty selection**. Clear it or choose Wrap explicitly.
+- Chat fences/boundaries cannot be inserted inside a chat. Literal fences, inline code, frontmatter, quoted/list contexts and fence-delimiter lines are guarded. Put the caret on a normal blank line for the simplest result.
+- Responding/Ticks outside chat produce a warning and no edit. Flags require actual `@viewer Name` syntax; ticks belong in the header, must not duplicate a setting and require a matching speaker. Header responding must not be duplicated. Between-message responding retains the existing per-message behaviour.
+- Inside chat, use a blank line or a message boundary. A directive is never inserted in the middle of a message or a continuation. Helpers add line/block spacing; they do not rewrite existing words.
+- Wrap is also available separately as **Story Teller: Wrap Selection as Chat** and on the Markdown selection context menu. It adds fences around plain selected content using one editor edit, preserving `$`, backslashes, message wrappers and text literally. It refuses selections crossing beat boundaries/frontmatter, containing fences, or selecting only part of a quote/list. Complete quoted/list blocks can be wrapped verbatim; that still does not convert their syntax. It does **not** claim that selected prose or `Label: text` has become valid dialogue. Review the result; run Convert Chats only if it contains a supported manuscript container.
+- Cancel the picker with **Escape**. If the source or selection changes while choosing, insertion is refused so it cannot land at a stale position. No insertion/wrapping operation saves the file. The initial insertion or wrap is one Undo action; later placeholder typing uses normal editor Undo behaviour.
+
+These are [native VS Code snippets/pickers](https://code.visualstudio.com/api/references/vscode-api), not a text editor or storyboard UI. Literal examples and multi-cursor/complex structured wrapping can still be edited manually with the existing editor; the helpers deliberately warn rather than guess.
+
+### Continuing Art
+
+1. Open your existing adaptation, or make a separate `Art.epubplus.md` copy of the original. Keep original manuscript text and existing beat lines intact.
+2. Run **Convert Chats in Current Document**, inspect the diff and warnings, and Apply only the recognised conversions. The conversion does not add optional flags or alter boundaries.
+3. At a blank line **inside** a converted chat, use Insert for optional Ticks/Responding or timing. Keep header flags before messages/pauses. Use Insert → Chat block for new authored structure; replace its placeholders with the actual source words.
+4. Use **Preview Scene**, then Play. Use manual Previous/Next to review the existing Art beats. If you deliberately need another boundary, put the caret between components outside fences and use Insert → Beat boundary.
+5. Try Tab-linked viewer editing, Escape cancellation and one Undo on a fictional/copy scene first. Save the adaptation yourself when satisfied; neither command saves or overwrites the original.
+
+A read-only local Art snapshot had four existing beat boundaries (five beats), one valid manually adapted chat and 29 remaining manuscript-style chat containers. In-memory conversion preserved all boundary bytes and the beat count exactly. The remaining legacy blocks need conversion before playback; existing Obsidian image embeds remain outside this increment's supported components. No manuscript content is included in the committed tests or automatically repaired by this exercise.

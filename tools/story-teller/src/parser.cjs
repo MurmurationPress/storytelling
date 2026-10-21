@@ -1,5 +1,6 @@
 'use strict';
 const MarkdownIt = require('markdown-it');
+const { inspectStructure } = require('./structure.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
 // The first slice is text-only: neither links nor images can trigger navigation/fetches.
 md.renderer.rules.link_open = () => '<span class="link-text">';
@@ -32,38 +33,15 @@ function timingValue(name, value) {
 }
 
 function parseScene(source) {
-  const lines = source.replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
+  const structure = inspectStructure(source);
+  const lines = structure.lines.map((line, i) => i === 0 ? line.text.replace(/^\uFEFF/, '') : line.text);
   const diagnostics = [];
-  let frontmatter = null;
-  let start = 0;
-  if (lines[0] === '---') {
-    const end = lines.findIndex((line, i) => i > 0 && /^(---|\.\.\.)\s*$/.test(line));
-    if (end >= 0) {
-      frontmatter = lines.slice(1, end).join('\n'); // Recognise, don't evaluate YAML.
-      start = end + 1;
-    } else {
-      diagnostics.push('Unclosed initial frontmatter; shown as prose until it is closed.');
-      // Prevent a half-authored frontmatter block silently swallowing the whole scene.
-    }
-  }
+  const { start } = structure;
+  const frontmatter = structure.frontmatter?.closed ? lines.slice(1, structure.frontmatter.end - 1).join('\n') : null;
+  if (structure.frontmatter && !structure.frontmatter.closed) diagnostics.push('Unclosed initial frontmatter; shown as prose until it is closed.');
   const ranges = [];
   let from = start;
-  let fence = null;
-  for (let i = start; i < lines.length; i++) {
-    const line = lines[i];
-    if (fence) {
-      const closing = line.match(/^ {0,3}(`+|~+)\s*$/);
-      if (closing && closing[1][0] === fence.char && closing[1].length >= fence.length) fence = null;
-      continue;
-    }
-    const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
-    if (opening && !(opening[1][0] === '`' && opening[2].includes('`'))) {
-      fence = { char: opening[1][0], length: opening[1].length };
-    } else if (/^ {0,3}---\s*$/.test(line) && !(i === 0 && start === 0)) {
-      ranges.push([from, i]);
-      from = i + 1;
-    }
-  }
+  for (const boundary of structure.boundaries) { ranges.push([from, boundary]); from = boundary + 1; }
   ranges.push([from, lines.length]);
   const beats = ranges.map(([first, end]) => {
     const text = lines.slice(first, end).join('\n');

@@ -30,8 +30,8 @@ async function until(fn, timeout = 60000) {
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
   let id = 0;
-  async function request(action, source) {
-    await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action, source }));
+  async function request(action, source, options = {}) {
+    await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action, source, ...options }));
     const ack = await until(async () => {
       const value = JSON.parse(await fs.readFile(path.join(directory, 'ack.json'), 'utf8'));
       return value.id === id && value;
@@ -78,8 +78,10 @@ async function until(fn, timeout = 60000) {
     // Regression fixture: header flag alone, followed by viewer-first dialogue.
     // Strip per-message cues only in this temporary test buffer, never the sample file.
     const headerSource = (await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8'))
+      .replace('# The Last Lantern', '# The Last Lantern\n\nHeader cue regression.')
       .replace(/```chat([\s\S]*?)```/, (fence, body) => '```chat' + body.replace(/^@responding\n/gm, '').replace('@viewer Mara\n', '@viewer Mara\n@responding\n') + '```');
     await request('edit', headerSource);
+    await until(async () => (await beat.textContent()).includes('Header cue regression.'));
     await frame.locator('#next').click();
     await until(async () => (await frame.locator('#status').textContent()).includes('ready'));
     assert.equal(await frame.locator('.chat li').count(), 0);
@@ -89,7 +91,7 @@ async function until(fn, timeout = 60000) {
     await capture('ready');
     assert.equal(await locator('.chat-title').count(), 0);
     await frame.locator('#play').click();
-    assert.equal(await locator('.chat-title').textContent(), 'Lighthouse radio');
+    await until(async () => (await locator('.chat-title').textContent()) === 'Lighthouse radio');
     assert.equal(await locator('.chat li').count(), 0);
     await until(async () => await frame.locator('.chat li').count() === 1);
     await capture('first message');
@@ -115,8 +117,7 @@ async function until(fn, timeout = 60000) {
     assert.equal(await frame.locator('.chat li').count(), 0);
     await frame.locator('#pause').click();
     // Configure the test's final beat explicitly; do not depend on local sample edits.
-    const sample = (await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8'))
-      .replace('```chat\nIvo:', '```chat\n@viewer Mara\nIvo:');
+    const sample = headerSource; // Keep the current chat identical while testing a preceding beat insertion.
     await request('edit', sample.replace('# The Last Lantern', 'Inserted first beat\n---\n# The Last Lantern'));
     await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 4 · ready'));
     assert.equal(await frame.locator('.chat li').count(), 0);
@@ -232,6 +233,7 @@ async function until(fn, timeout = 60000) {
     await action('Apply');
     await until(async () => await workbench("document.body.innerText.includes('Nothing was applied.')"));
     assert.equal((await snapshot()).text, fixture + '\nAn unsaved edit after preview.');
+    await request('show-notifications');
     await action('Regenerate');
     await until(async () => (await snapshot()).snapshots.some(s => s.text.includes('Bo: First line.') && s.text.endsWith('An unsaved edit after preview.')));
     await action('Cancel'); assert.equal((await result()).status, 'cancelled');
@@ -269,7 +271,70 @@ async function until(fn, timeout = 60000) {
     assert.ok(multiline.includes('Second line, with a colon: keep this together.\n\n@pause 500ms is part of this message, not a setting.'));
     await request('undo'); const undone = await snapshot();
     assert.equal(undone.text, unsaved); assert.equal(undone.disk, initial.disk);
-    console.log('PASS: actual VS Code Extension Development Host — playback regressions; native conversion diff/count/warnings, cancellation, stale refusal/regeneration, unsaved Apply and single Undo.');
+    const pick = async label => {
+      const expression = `Array.from(document.querySelectorAll('.quick-input-list .monaco-list-row')).find(row => row.textContent.includes(${JSON.stringify(label)}))`;
+      await until(async () => await workbench(`Boolean(${expression})`));
+      await workbench(`${expression}.click()`);
+    };
+    const insertResult = () => until(async () => JSON.parse(await fs.readFile(path.join(directory, 'insert-result.json'), 'utf8')));
+    await request('edit', 'Before\n\n');
+    await request('start-insert'); await pick('Chat block');
+    assert.equal((await insertResult()).status, 'inserted');
+    let inserted = await snapshot();
+    assert.equal(inserted.selection.text, 'Conversation title');
+    assert.ok(inserted.text.includes('# Conversation title\n@viewer Viewer\nViewer: First message.'));
+    assert.ok(!inserted.text.includes('@ticks') && !inserted.text.includes('@responding'));
+    await request('type', undefined, { text: 'Harbour test' });
+    await request('snippet-next'); assert.equal((await snapshot()).selection.text, 'Viewer');
+    await request('type', undefined, { text: 'Ari' });
+    inserted = await snapshot(); assert.ok(inserted.text.includes('@viewer Ari\nAri: First message.'));
+    await request('snippet-next'); assert.equal((await snapshot()).selection.text, 'First message.');
+    await request('snippet-next'); assert.equal((await snapshot()).selection.text, 'Other participant');
+    await request('snippet-next'); assert.equal((await snapshot()).selection.text, 'Reply.');
+    await request('snippet-next');
+    // A clean insertion is one undoable operation, without subsequent typing edits.
+    await request('edit', 'Before\n\n'); await request('start-insert'); await pick('Chat block'); await insertResult();
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\n');
+
+    await request('edit', 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 8 }); await pick('Delay');
+    assert.equal((await insertResult()).status, 'inserted');
+    inserted = await snapshot(); assert.equal(inserted.selection.text, '1200');
+    assert.ok(inserted.text.includes('@delay 1200ms'));
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 8 }); await pick('Beat boundary'); await insertResult();
+    assert.ok((await snapshot()).text.includes('\n---\n'));
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+
+    await request('start-insert', undefined, { start: 8 }); await pick('Responding');
+    assert.equal((await insertResult()).status, 'refused'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 0, end: 6 }); await pick('Chat block');
+    assert.equal((await insertResult()).status, 'refused'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 0, end: 6, wrap: true });
+    assert.equal((await insertResult()).status, 'inserted');
+    assert.ok((await snapshot()).text.startsWith('```chat\nBefore\n```'));
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+
+    const chatHeader = '```chat\n# Test\n@viewer Ari\n\nAri: Hello\nBo: Yes\n```';
+    for (const [label, expected] of [['Ticks', '@ticks'], ['Responding', '@responding'], ['Pause', '@pause 800ms']]) {
+      await request('edit', chatHeader); await request('start-insert', undefined, { start: chatHeader.indexOf('\n\n') + 1 }); await pick(label);
+      assert.equal((await insertResult()).status, 'inserted');
+      assert.ok((await snapshot()).text.includes(expected));
+      await request('undo'); assert.equal((await snapshot()).text, chatHeader);
+    }
+    await request('start-insert', undefined, { start: chatHeader.indexOf('\n\n') + 1 }); await pick('Chat block');
+    assert.equal((await insertResult()).status, 'refused'); assert.equal((await snapshot()).text, chatHeader);
+    await request('start-insert', undefined, { start: 0 });
+    await request('edit', chatHeader + '\nLater edit.'); await pick('Chat block');
+    assert.equal((await insertResult()).status, 'stale');
+    assert.equal((await snapshot()).text, chatHeader + '\nLater edit.');
+    await request('start-insert', undefined, { start: 0 });
+    await until(async () => await workbench("document.querySelector('.quick-input-widget')?.innerText.includes('Wrap Selection as Chat')"));
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    assert.equal((await insertResult()).status, 'cancelled');
+    assert.equal((await snapshot()).text, chatHeader + '\nLater edit.');
+    console.log('PASS: actual VS Code Extension Development Host — playback/conversion regressions; native Insert picker, title/viewer/message tab stops, linked viewer, context refusals, all six insertions, wrapping and single Undo.');
     console.log(`Isolated test profile/log: ${directory}`);
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
   } finally {

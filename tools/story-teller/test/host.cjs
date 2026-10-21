@@ -22,7 +22,22 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'start-conversion') {
+      if (request.action === 'start-insert') {
+        const editor = await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        const start = request.start ?? document.getText().length;
+        editor.selection = new vscode.Selection(document.positionAt(start), document.positionAt(request.end ?? start));
+        await fs.rm(path.join(directory, 'insert-result.json'), { force: true });
+        vscode.commands.executeCommand(request.wrap ? 'storyTeller.wrapSelectionAsChat' : 'storyTeller.insert').then(result => fs.writeFile(path.join(directory, 'insert-result.json'), JSON.stringify(result)));
+      } else if (request.action === 'show-context-menu') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('editor.action.showContextMenu');
+      } else if (request.action === 'show-notifications') {
+        await vscode.commands.executeCommand('notifications.showList');
+      } else if (request.action === 'snippet-next') {
+        await vscode.commands.executeCommand('jumpToNextSnippetPlaceholder');
+      } else if (request.action === 'type') {
+        await vscode.commands.executeCommand('type', { text: request.text });
+      } else if (request.action === 'start-conversion') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await fs.rm(path.join(directory, 'conversion-result.json'), { force: true });
         vscode.commands.executeCommand('storyTeller.convertChats').then(result => fs.writeFile(path.join(directory, 'conversion-result.json'), JSON.stringify(result)));
@@ -32,6 +47,10 @@ exports.run = async function () {
       } else if (request.action === 'snapshot') {
         await fs.writeFile(path.join(directory, 'snapshot.json'), JSON.stringify({
           text: document.getText(), version: document.version, dirty: document.isDirty,
+          selection: vscode.window.activeTextEditor?.document === document ? {
+            start: document.offsetAt(vscode.window.activeTextEditor.selection.start), end: document.offsetAt(vscode.window.activeTextEditor.selection.end),
+            text: document.getText(vscode.window.activeTextEditor.selection)
+          } : null,
           disk: await fs.readFile(file, 'utf8'),
           snapshots: vscode.workspace.textDocuments.filter(d => d.uri.scheme === 'story-teller-conversion').map(d => ({ uri: d.uri.toString(), text: d.getText() }))
         }));

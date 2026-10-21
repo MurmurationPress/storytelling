@@ -1,3 +1,35 @@
+# Chat authoring consolidation — 2026-10-21
+
+## Status and acceptance
+
+Ted has accepted Markdown/live preview, chat playback/pacing, the separate replacement/additional-silence semantics and reports conversion is good. The new Insert/Wrap experience and contextual guard choices **await his acceptance**. No remote issue/milestone is closed by this local slice; the earlier EPUB work is separate.
+
+## Implementation
+
+Existing conversion was reused, including diff/count/warnings, explicit Apply, stale refusal/regeneration, no save and single Undo. Source inspection is now shared by parsing, conversion and helper context checks. It recognises initial frontmatter, root beat boundaries and literal/nested code contexts. Tests explicitly verify outside `---` bytes remain unchanged through conversion, including BOM/CRLF, while initial YAML and fenced examples do not create beats.
+
+Native **Story Teller: Insert…** supplies Chat, Beat boundary, Delay, Pause, Responding and Ticks, plus explicit Wrap Selection. Commands are contributed to the palette and Markdown context menu. Native SnippetString tab stops provide title/viewer/message fields, with the viewer linked to the first speaker. Optional flags are off until inserted. Context guards prevent nested fences, selected-text replacement, misplaced flags, metadata/example edits and wrapping across boundaries. Wrap keeps selected text verbatim and explains that it does not convert the syntax. Picker state is version/selection guarded and operations are unsaved/single-undo.
+
+## Validation
+
+Build/syntax checks pass; **65 deterministic parser/player/converter/helper tests pass**. Earlier timing/phase/cancellation, header responding, viewer offsets/ticks, source preservation and safe-rendering checks remain green. No dependencies or production configuration were added.
+
+The real **VS Code 1.142.0 Linux Extension Development Host** suite exercises native picker selection, all six inserts, title/viewer/message tab stops, linked viewer edits, numeric timing placeholders, wrapping, selection/context refusals and single Undo. It also retains conversion diff/warnings/Cancel/stale/Apply/Undo, converted multiline preview and accepted playback regressions. These are automated API/DOM observations, not Ted's manual authoring/reading acceptance or OS pointer testing.
+
+An initial full-suite attempt passed playback but could not reach the stale-conversion action because VS Code had folded the warning out of the transient toast UI. The harness now opens native Notifications before choosing Regenerate; product conversion behaviour was unchanged. A subsequent full insertion/Undo run passed. Picker cancellation and picker-stale checks are included in the final run. A DOM-only context-menu check timed out because the native popup was not exposed in the main document; a separate isolated host screenshot was inspected and shows “Story Teller: Insert…” in the Markdown context menu. Popup activation was not automated; invocation/picker behaviour is automated through the contributed command. No user settings were changed for that popup check. Additional harness adjustments wait for the rendered source fixture and keep the current chat text identical while testing insertion of an earlier beat; otherwise the test was exercising the documented edited-beat fallback rather than unchanged-beat preservation.
+
+## Read-only Art exercise
+
+Snapshot SHA-256 **`e60079b6167181a94ddae43370589c8bf6d2514e5221164b418353e6ee01e658`**, inspected in memory while Ted continues editing. It had **four existing boundaries / five beats**, a valid manually adapted chat and **29 remaining legacy containers**. All 29 are convertible in that snapshot, with no conversion review warning; existing valid chat is unchanged. Conversion preserves every existing boundary's exact text/EOL bytes, initial frontmatter and beat count. Second pass proposes zero changes. Source line positions may shift when fence bodies shrink; boundaries themselves do not change.
+
+Authoring observations: legacy wrapper chats produce reader diagnostics until converted; optional settings are intentionally not inferred; Obsidian artwork embeds remain literal/unsupported in this text-only slice. Existing boundaries are useful editorial starting points, not permission to automatically split paragraphs or rewrite a scene. No manuscript words, scene boundaries or source files were changed or committed by the exercise. Only fictional/minimal fixtures are committed. The local Art file may continue changing independently of this recorded snapshot.
+
+## Remaining limits
+
+The helpers are intentionally conservative around code, frontmatter, partial quotes/lists and complex selections; complete quoted/list blocks may be wrapped verbatim. They do not format/convert selected dialogue or infer speakers. Delay inserted at the end of an unfinished draft still needs following content; parser diagnostics remain the guide during authoring. Cross-platform, screen-reader/high-contrast and OS background/minimise verification remain as previously noted. No images, new component types, import/export, EPUB packaging, deployment, push, release or merge were added.
+
+---
+
 # Header responding correction — 2026-10-21
 
 A header `@responding` had been implemented as a one-message marker. A viewer-first message consumed it, while its visual cue was correctly suppressed for the viewer. As a result, a header-style chat setting did not reach the incoming reply. This is a reproduced parser-policy mismatch; it is not a claim to have inspected Ted's unsaved editor buffer.

@@ -22,13 +22,35 @@
       {
         "command": "storyTeller.convertChats",
         "title": "Story Teller: Convert Chats in Current Document"
+      },
+      {
+        "command": "storyTeller.insert",
+        "title": "Story Teller: Insert\u2026"
+      },
+      {
+        "command": "storyTeller.wrapSelectionAsChat",
+        "title": "Story Teller: Wrap Selection as Chat"
       }
-    ]
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "storyTeller.insert",
+          "when": "editorLangId == markdown",
+          "group": "storyTeller@1"
+        },
+        {
+          "command": "storyTeller.wrapSelectionAsChat",
+          "when": "editorLangId == markdown && editorHasSelection",
+          "group": "storyTeller@2"
+        }
+      ]
+    }
   },
   "scripts": {
     "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/conversion-command.cjs",
+    "check": "node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs",
     "test:host": "node test/run-host.cjs"
   },
   "dependencies": {
