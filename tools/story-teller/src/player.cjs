@@ -45,8 +45,9 @@ class StoryPlayer {
   get responding() {
     const step = this.steps[this.cursor];
     if (this.phase !== 'playing' || step?.type !== 'message' || !(this.remaining > 0)) return null;
-    const message = this.current.blocks[step.blockIndex].messages[step.message];
-    return message.responding ? { blockIndex: step.blockIndex, speaker: message.speaker } : null;
+    const block = this.current.blocks[step.blockIndex];
+    const message = block.messages[step.message];
+    return message.responding && block.viewer && message.speaker !== block.viewer ? { blockIndex: step.blockIndex, speaker: message.speaker } : null;
   }
   get visibleBlocks() {
     return (this.current?.blocks || []).flatMap((block, index) => {

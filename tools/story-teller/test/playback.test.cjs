@@ -127,7 +127,7 @@ test('trailing pause gates following prose and completion; edits during read res
   assert.equal(player.visibleBlocks.length, 1);
 });
 test('responding is opt-in, speaker-derived, delay-only and adds no timing', () => {
-  const { player, clock } = setup('@pause 100ms\n@responding\n@delay 200ms\nIvo: Hello');
+  const { player, clock } = setup('@viewer Mara\n@pause 100ms\n@responding\n@delay 200ms\nIvo: Hello');
   assert.equal(player.responding, null);
   player.play(); assert.equal(player.responding, null);
   clock.advance(100); assert.equal(player.responding.speaker, 'Ivo');
@@ -138,7 +138,7 @@ test('responding is opt-in, speaker-derived, delay-only and adds no timing', () 
   const plain = setup('Ivo: Hello'); plain.player.play(); assert.equal(plain.player.responding, null);
 });
 test('responding follows pause/resume, replay, source edits and navigation without stale cues', () => {
-  const { player, clock, scene } = setup('@responding\nIvo: Hello', '\n---\nOther');
+  const { player, clock, scene } = setup('@viewer Mara\n@responding\nIvo: Hello', '\n---\nOther');
   player.play(); clock.advance(200); player.pause();
   assert.equal(player.responding, null); clock.advance(2000);
   player.play(); assert.equal(player.responding.speaker, 'Ivo');
@@ -158,4 +158,17 @@ test('responding excludes zero delay and authored status phase; malformed direct
     assert.equal(parsed.diagnostics.length, 1);
     assert.equal(parsed.beats[0].blocks[0].type, 'prose');
   }
+});
+test('responding is incoming only: viewer and unspecified-viewer cues are suppressed without changing timing', () => {
+  for (const header of ['@viewer Ivo\n', '']) {
+    const { player, clock } = setup(header + '@responding\n@delay 100ms\nIvo: Hello');
+    player.play(); assert.equal(player.responding, null);
+    assert.equal(player.visibleBlocks.filter(b => b.type === 'chat').length, 0);
+    clock.advance(99); assert.equal(messages(player).length, 0);
+    clock.advance(1); assert.equal(messages(player).length, 1);
+    assert.equal(player.phase, 'completed');
+  }
+  const incoming = setup('@viewer Mara\n@responding\n@delay 100ms\nIvo: Hello');
+  incoming.player.play(); assert.equal(incoming.player.responding.speaker, 'Ivo');
+  incoming.clock.advance(100); assert.equal(incoming.player.responding, null);
 });
