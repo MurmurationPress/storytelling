@@ -57,4 +57,37 @@ function contextAt(structure, offset) {
   }
   return { kind: 'root', line };
 }
-module.exports = { inspectStructure, contextAt };
+// A boundary belongs to the beat it introduces. Keep UTF-16 offsets for VS Code.
+function beatRanges(structure) {
+  const { lines, boundaries, start, source } = structure;
+  const ends = [...boundaries, lines.length];
+  return ends.map((endLine, index) => {
+    const boundaryLine = index ? boundaries[index - 1] : null;
+    const bodyLine = boundaryLine === null ? start : boundaryLine + 1;
+    const nextBoundary = boundaries[index] ?? null;
+    // Before the first beat, whitespace after frontmatter is harmless.
+    let titleCandidate = bodyLine;
+    if (index === 0) while (titleCandidate < endLine && !lines[titleCandidate].text.trim()) titleCandidate++;
+    const match = lines[titleCandidate]?.text.match(/^<!-- beat: ([^\r\n]*\S) -->$/);
+    const titleLine = titleCandidate < endLine && match ? titleCandidate : null;
+    const title = titleLine === null ? null : match[1];
+    const body = lines.slice(bodyLine, endLine).filter((_, offset) => bodyLine + offset !== titleLine).map(line => line.text).join('\n').trim();
+    if (!body) return null;
+    const startLine = boundaryLine ?? bodyLine;
+    const anchorLine = titleLine ?? (boundaryLine ?? Math.min(titleCandidate, endLine - 1));
+    return {
+      title, titleLine, boundaryLine, bodyLine, anchorLine, startLine, endLine,
+      startOffset: lines[startLine]?.start ?? source.length,
+      endOffset: nextBoundary === null ? source.length : lines[nextBoundary].start
+    };
+  }).filter(Boolean);
+}
+function beatAtOffset(ranges, offset) {
+  return ranges.findIndex(range => offset >= range.startOffset && offset <= range.endOffset &&
+    (offset < range.endOffset || range === ranges.at(-1)));
+}
+function beatFoldRanges(ranges) {
+  return ranges.map(range => ({ start: range.anchorLine, end: range.endLine - 1 }))
+    .filter(range => range.end > range.start);
+}
+module.exports = { inspectStructure, contextAt, beatRanges, beatAtOffset, beatFoldRanges };

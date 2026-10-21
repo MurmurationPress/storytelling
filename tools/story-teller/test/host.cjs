@@ -12,6 +12,12 @@ exports.run = async function () {
   await fs.cp(path.join(__dirname, '../samples/assets'), path.join(directory, 'assets'), { recursive: true });
   await fs.writeFile(file, sample);
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
+  const focusSource = async () => {
+    await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+    for (let attempt = 0; attempt < 40 && vscode.window.activeTextEditor?.document !== document; attempt++)
+      await new Promise(resolve => setTimeout(resolve, 50));
+    if (vscode.window.activeTextEditor?.document !== document) throw new Error('Test source editor did not become active');
+  };
   await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
   await vscode.commands.executeCommand('storyTeller.previewScene');
   await fs.writeFile(path.join(directory, 'ready'), 'ready');
@@ -25,7 +31,8 @@ exports.run = async function () {
     if (request.action === 'stop') return;
     try {
       if (request.action === 'start-insert') {
-        const editor = await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await focusSource();
+        const editor = vscode.window.activeTextEditor;
         const start = request.start ?? document.getText().length;
         editor.selection = new vscode.Selection(document.positionAt(start), document.positionAt(request.end ?? start));
         await fs.rm(path.join(directory, 'insert-result.json'), { force: true });
@@ -33,19 +40,50 @@ exports.run = async function () {
       } else if (request.action === 'show-context-menu') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('editor.action.showContextMenu');
+      } else if (request.action === 'hide-preview') {
+        const temporary = await vscode.workspace.openTextDocument({ language: 'markdown', content: '# Temporary preview cover' });
+        await vscode.window.showTextDocument(temporary, vscode.ViewColumn.Two);
+      } else if (request.action === 'show-preview') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('storyTeller.previewScene');
       } else if (request.action === 'show-notifications') {
         await vscode.commands.executeCommand('notifications.showList');
+      } else if (request.action === 'hide-notifications') {
+        if ((await vscode.commands.getCommands(true)).includes('notifications.hideList'))
+          await vscode.commands.executeCommand('notifications.hideList');
       } else if (request.action === 'snippet-next') {
         await vscode.commands.executeCommand('jumpToNextSnippetPlaceholder');
       } else if (request.action === 'type') {
         await vscode.commands.executeCommand('type', { text: request.text });
       } else if (request.action === 'start-conversion') {
-        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await focusSource();
         await fs.rm(path.join(directory, 'conversion-result.json'), { force: true });
         vscode.commands.executeCommand('storyTeller.convertChats').then(result => fs.writeFile(path.join(directory, 'conversion-result.json'), JSON.stringify(result)));
+      } else if (request.action === 'start-callout-conversion') {
+        await focusSource();
+        await fs.rm(path.join(directory, 'callout-conversion-result.json'), { force: true });
+        vscode.commands.executeCommand('storyTeller.convertCallouts').then(result => fs.writeFile(path.join(directory, 'callout-conversion-result.json'), JSON.stringify(result)));
       } else if (request.action === 'preview-current') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');
+      } else if (request.action === 'preview-this') {
+        const editor = await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        const position = document.positionAt(request.start);
+        editor.selection = new vscode.Selection(position, position);
+        await vscode.commands.executeCommand('storyTeller.previewThisBeat');
+      } else if (request.action === 'fold-all-test') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('editor.foldAll');
+      } else if (request.action === 'beat-folds') {
+        await focusSource();
+        const folds = await vscode.commands.executeCommand('vscode.executeFoldingRangeProvider', document.uri);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await vscode.commands.executeCommand('storyTeller.collapseBeats');
+        await new Promise(resolve => setTimeout(resolve, 150));
+        await fs.writeFile(path.join(directory, 'beat-folds.json'), JSON.stringify(folds.map(item => ({ start: item.start, end: item.end, kind: item.kind }))));
+      } else if (request.action === 'expand-beats') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('storyTeller.expandBeats');
       } else if (request.action === 'snapshot') {
         await fs.writeFile(path.join(directory, 'snapshot.json'), JSON.stringify({
           text: document.getText(), version: document.version, dirty: document.isDirty,

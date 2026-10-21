@@ -5,6 +5,30 @@ status: active
 
 # Decisions
 
+## 2026-10-21 — Accept the current Story Teller authoring experience; stabilise a local installable milestone
+
+**Ted's acceptance:** Markdown editing with live preview; prose/chat sequencing, automatic chat timing and chat-local pace; explicit delays, pauses, responding indicators and ticks; static images, captions and image insertion; named beats, folding and source/preview navigation; type-out formats and audible modem/keyboard/typewriter sounds; chat conversion, callout-to-type-out conversion and the existing Insert helpers. Synthesised sounds are sufficient for this milestone. Richer texture is a possible later refinement.
+
+**Authorised work:** review and correct material defects, consolidate the guide and evidence, package and verify a local VSIX, and commit only intended Story Teller changes on the existing feature branch. This is acceptance of the tested authoring/playback behaviour, not approval of EPUB export, publication readiness, general editor compatibility or a public release. The original manuscript, private adaptations and unrelated EPUB work remain separate.
+
+## 2026-10-21 — Accept Story Teller type-out; test callout conversion
+
+**Ted's acceptance:** type-out playback and audible modem, keyboard and typewriter sounds are verified by Ted. Richer sound texture is a possible later refinement, not a requirement for this conversion task. This supersedes the earlier awaiting-acceptance status for the current type-out mechanism.
+
+**Authorised experiment:** a conservative current-document conversion of recognised manuscript machine-output and annotation callouts into titled type-out beats. The original manuscript stays unchanged. Diff review, explicit Apply and source-located warnings are part of this authoring workflow; conversion rules await Ted's assessment on a copied chapter.
+
+## 2026-10-21 — Accept Story Teller beat helpers; test performed type-out
+
+**Ted's acceptance:** named beats, beat folding, explicit source/preview navigation and Caption insertion are accepted. This supersedes their earlier awaiting-review status; it does not approve unrelated publishing or conversion work.
+
+**Authorised next experiment:** one literal type-out component for PRIME/Divergent YAML-style output and annotations, with independent format and sound settings, grapheme-based reveal and optional local sound. This is a Story Teller preview capability awaiting Ted's assessment, not an adaptation of manuscript passages or an EPUB packaging decision.
+
+## 2026-10-21 — Accept Story Teller static imagery; test beat authoring helpers
+
+**Ted's acceptance:** the first static-imagery presentation in Story Teller is accepted. This does not decide publication packaging or treatment of manuscript artwork.
+
+**Authorised next experiment:** optional beat-title metadata, native beat folding, explicit source/preview navigation and a Caption insert helper. These new authoring controls await Ted's assessment. They keep standalone `---` as the beat boundary and preserve accepted chat and imagery behaviour; no manuscript adaptation is changed by this authorisation.
+
 ## 2026-10-20 — Record ideas before opening tickets
 
 **Ted's explicit direction:** create a repository, include the vault in it and use the vault to develop ideas before launching into tickets. The purpose is buying thinking time.

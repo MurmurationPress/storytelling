@@ -1,7 +1,8 @@
 'use strict';
 const MarkdownIt = require('markdown-it');
 const { PACE_MULTIPLIERS } = require('./pace.cjs');
-const { inspectStructure } = require('./structure.cjs');
+const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS } = require('./typeout.cjs');
+const { inspectStructure, beatRanges } = require('./structure.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
 // Image URLs are inert data here; only the VS Code host may resolve local files.
 md.renderer.rules.link_open = () => '<span class="link-text">';
@@ -56,13 +57,14 @@ function parseScene(source) {
   const { start } = structure;
   const frontmatter = structure.frontmatter?.closed ? lines.slice(1, structure.frontmatter.end - 1).join('\n') : null;
   if (structure.frontmatter && !structure.frontmatter.closed) diagnostics.push('Unclosed initial frontmatter; shown as prose until it is closed.');
-  const ranges = [];
-  let from = start;
-  for (const boundary of structure.boundaries) { ranges.push([from, boundary]); from = boundary + 1; }
-  ranges.push([from, lines.length]);
-  const beats = ranges.map(([first, end]) => {
-    const text = lines.slice(first, end).join('\n');
-    const raw = text.trim();
+  const ranges = beatRanges(structure);
+  const beats = ranges.map(range => {
+    const first = range.bodyLine;
+    const end = range.endLine;
+    const bodyLines = lines.slice(first, end);
+    const raw = bodyLines.join('\n').trim();
+    if (range.titleLine !== null) bodyLines[range.titleLine - first] = '';
+    const text = bodyLines.join('\n');
     const tokens = md.parse(text, {});
     const blocks = [];
     const sequence = []; // Timing metadata and references in source order.
@@ -98,7 +100,8 @@ function parseScene(source) {
         flush();
         const captionIndex = i + 3;
         const caption = tokens[captionIndex]?.map?.[0] > token.map[1] ? captionAfter(tokens, captionIndex) : null;
-        add({ type: 'image', src: image.attrGet('src') || '', alt: imageAlt(image), caption, line: first + token.map[0] + 1 });
+        add({ type: 'image', src: image.attrGet('src') || '', alt: imageAlt(image), caption,
+          line: first + token.map[0] + 1, captionLine: caption === null ? null : first + tokens[captionIndex].map[0] + 1 });
         i += caption === null ? 2 : 5;
         continue;
       }
@@ -111,6 +114,45 @@ function parseScene(source) {
         else if (name === 'pause') sequence.push({ type: 'pause', delayMs });
         else if (pendingDelay) diagnostic(line, `multiple @delay overrides target the same component (first at line ${pendingDelay.line}); first override retained`);
         else pendingDelay = { delayMs, line };
+      } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'typeout') {
+        const openLine = first + token.map[0];
+        const contentLines = token.content.split('\n');
+        const separator = contentLines.findIndex(line => !line.trim());
+        const settings = { format: null, sound: 'none', speed: DEFAULT_SPEED };
+        const seen = new Set();
+        let error = null;
+        let errorLine = openLine + 1;
+        if (separator < 0) error = 'typeout needs a blank line between its header and literal body';
+        else for (let header = 0; header < separator; header++) {
+          const line = contentLines[header].trim();
+          errorLine = openLine + header + 2;
+          const setting = line.match(/^@(format|sound|speed)\s+(.+)$/);
+          if (!setting) { error = 'typeout header accepts only @format, @sound and @speed before the blank line'; break; }
+          const [, name, value] = setting;
+          if (seen.has(name)) { error = `duplicate @${name} in typeout header`; break; }
+          seen.add(name);
+          if (name === 'format' && !FORMATS.includes(value)) error = '@format requires yaml or annotation';
+          else if (name === 'sound' && !SOUNDS.includes(value)) error = '@sound requires modem, keyboard, typewriter or none';
+          else if (name === 'speed' && (!/^[1-9][0-9]*$/.test(value) || Number(value) < MIN_SPEED || Number(value) > MAX_SPEED)) error = `@speed requires ${MIN_SPEED}–${MAX_SPEED} graphemes per second`;
+          if (error) break;
+          settings[name] = name === 'speed' ? Number(value) : value;
+        }
+        if (!error && !seen.has('format')) { error = 'typeout needs @format yaml or @format annotation'; errorLine = openLine + 1; }
+        const lastLine = first + token.map[1] - 1;
+        const closing = /^(?: {0,3})(`+|~+)\s*$/.test(structure.lines[lastLine]?.text || '') &&
+          structure.lines[lastLine].text.trim()[0] === token.markup[0] && structure.lines[lastLine].text.trim().length >= token.markup.length;
+        const bodyStartLine = openLine + 2 + separator;
+        const bodyStart = structure.lines[bodyStartLine]?.start ?? source.length;
+        const bodyEnd = closing ? structure.lines[lastLine].start : source.length;
+        const body = separator < 0 ? '' : source.slice(bodyStart, bodyEnd);
+        if (!error && !body.trim()) { error = 'typeout needs literal body text after its blank header separator'; errorLine = bodyStartLine + 1; }
+        if (error) {
+          diagnostic(errorLine, `${error}; showing the fence as readable code.`);
+          prose.push(token);
+        } else {
+          flush();
+          add({ type: 'typeout', ...settings, text: body, line: openLine + 1 });
+        }
       } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];
         const events = [];
@@ -209,9 +251,9 @@ function parseScene(source) {
       } else prose.push(token);
     }
     flush();
-    if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose, image or chat component in this beat');
-    return { raw, line: first + 1, blocks, sequence };
-  }).filter(beat => beat.raw.length);
+    if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose, image, chat or typeout component in this beat');
+    return { raw, line: first + 1, title: range.title, sourceRange: range, blocks, sequence };
+  });
   return { frontmatter, beats, diagnostics, images: [...images], imageLines };
 }
 module.exports = { parseScene };

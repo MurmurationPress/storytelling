@@ -6,6 +6,8 @@ created: 2026-10-21
 
 # Story Teller
 
+**Current acceptance (2026-10-21):** Ted accepts the Markdown/live-preview workflow and the accumulated prose, chat, pace, timing, responding, ticks, imagery/caption, named-beat/folding/navigation, type-out/audio, conversion and Insert helper behaviour. Synthesised modem, keyboard and typewriter sound is sufficient; a richer texture is only a possible later refinement. The historical “awaiting acceptance” notes below record earlier states and are superseded for these features. This remains a local authoring tool, not an EPUB exporter or a general publishing platform. The stabilisation milestone prepares a VSIX for local installation without touching the separate manuscript adaptation.
+
 **Ted's current direction:** start a VS Code extension for adapting completed books into sequences of presented story beats. This authorises a small manual-preview implementation, not a general editor or publishing platform. It is a separate authoring experiment alongside [[Managed EPUB Foundation]]; the earlier EPUB artifacts and Art work are preserved, not restructured or migrated.
 
 **Provisional syntax being tested:** normal Markdown prose, initial YAML frontmatter excluded from performance, standalone `---` beat boundaries, and top-level fenced `chat` blocks containing `Speaker: message` lines. Prose and chat may share a beat. This is not an agreed long-term interchange format or a change to manuscript sources. The fictional sample has no authoritative-manuscript adaptation claims.
@@ -56,3 +58,23 @@ The existing conversion/review flow is preserved. Read-only Art exercise finding
 **Implemented for review, not yet accepted as a reading experience:** ordinary Markdown images now form a component when the image is the whole paragraph. Inline images remain inside prose. An immediately following separate plain italic `*Caption: …*` paragraph is an optional caption, distinct from accessibility alt text. The existing outside delay and pause govern image entry and authored viewing silence. Local PNG/JPEG/WebP references resolve relative to the saved adaptation and stay within its containing workspace (or source directory outside a workspace); missing or unsupported references give a readable placeholder and warning. These are preview rules, not a manuscript or EPUB standard. No private Art adaptation or artwork was committed. See the Story Teller README and RESULTS for exact behaviour, tests and limits.
 
 **Still open:** Ted’s assessment of image composition in his separate Art adaptation, and eventual publication/export treatment. Static imagery here does not settle animation, drawings, video or a broader media library.
+
+## Accepted static imagery; beat authoring helpers — 2026-10-21
+
+**Ted’s acceptance:** static imagery is accepted. The prior “awaiting acceptance” status above records its state when first implemented and is superseded for the static-image treatment. Publication/export handling remains open.
+
+**Implemented for Ted’s review:** an optional `<!-- beat: Title -->` immediately after a `---` boundary, or before first-beat content after frontmatter, gives authoring metadata without reader text or playback time. Duplicate titles are valid; source ranges drive navigation. The preview shows the current title, and explicit Preview This Beat / Show Beat in Source commands connect the editor and preview without cursor-driven playback changes. Native beat folding and beat-only collapse/expand commands use the existing Markdown editor. Insert Beat asks for an optional title; Insert Caption completes the existing plain italic caption convention. These helpers are provisional and await Ted’s acceptance. No Art adaptation or manuscript artwork is changed; normal Markdown, existing chat pace and timing, and manual beat progression remain.
+
+## Accepted beat helpers; provisional type-out — 2026-10-21
+
+**Ted's acceptance:** named beats, folding, source/preview navigation and Caption insertion are accepted. The earlier awaiting-acceptance wording above is historical.
+
+**Implemented for review:** a top-level fenced `typeout` component shares one literal grapheme-reveal mechanism across YAML-style PRIME/Divergent output and annotations. `@format` chooses visual treatment; `@sound` independently chooses a restrained local modem, keyboard, typewriter or silent treatment; `@speed` sets graphemes per second. Audio is reader-controlled and muted preference is stored outside the manuscript. Existing `@delay`/`@pause` still govern entry and subsequent content. Source and manuscript conversion remain separate work; fictional examples and validation are in the extension README/results. This new type-out/sound experience awaits Ted's acceptance, especially its heard quality.
+
+**Audio defect and correction:** Ted also saw “Sound unavailable” in his normal Development Host. Native diagnostics captured `TypeError: Illegal invocation` at voice creation while `AudioContext` was running. The browser interval methods had been called with the component as receiver. Their default wrappers now invoke them through the browser global. Native automation sees a running context and connected/disconnected voice with no warning after the fix; actual heard quality still requires Ted's check. The CSP and manuscript content were not changed. See the extension RESULTS for the bounded evidence.
+
+## Accepted type-out; conservative callout conversion — 2026-10-21
+
+**Ted's verification:** type-out playback and audible modem, keyboard and typewriter sound work for him. The previous note's pending sound assessment is superseded. Richer sound texture remains a possible future refinement.
+
+**Implemented for review:** a current-document command proposes conversion of observed `[!prime-log]`, `[!divergent]` YAML callouts and `[!annotation]` notes into named beats with the accepted type-out component. Its source rules were inspected read-only in the local CONSTRAINT checkout at `341923a917a84be5cfbcbf4601ba7d572e0235d6`. Unclear wrappers remain unchanged with source warnings. The diff/explicit Apply, stale-source protection, one Undo and no-save rules reuse the existing chat-conversion workflow. This authoring conversion awaits Ted's assessment on a copied chapter; it does not establish a full manuscript import or EPUB export.

@@ -1,0 +1,10 @@
+.vscode/**
+samples/**
+test/**
+src/webview.cjs
+src/player.cjs
+src/sound.cjs
+RESULTS.md
+package-lock.json
+.gitignore
+*.vsix

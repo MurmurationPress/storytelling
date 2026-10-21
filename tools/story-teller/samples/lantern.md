@@ -3,11 +3,14 @@ title: The Last Lantern
 status: fictional syntax example
 ---
 
+<!-- beat: The old radio -->
+
 # The Last Lantern
 
 Mara found the old radio beneath the ferry seat. Its dial glowed despite the missing battery.
 
 ---
+<!-- beat: Lighthouse contact -->
 
 ```chat
 @title Lighthouse radio
@@ -102,6 +105,7 @@ Mara: Keep it there. I am almost home.
 The lantern stayed lit.
 
 ---
+<!-- beat: Across the harbour -->
 
 ## Across the harbour
 

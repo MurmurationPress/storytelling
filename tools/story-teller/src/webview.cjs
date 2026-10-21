@@ -1,8 +1,14 @@
 'use strict';
 const { parseScene } = require('./parser.cjs');
+const { beatAtOffset } = require('./structure.cjs');
 const { StoryPlayer } = require('./player.cjs');
+const { TypeoutSound } = require('./sound.cjs');
 const api = acquireVsCodeApi();
-const player = new StoryPlayer(undefined, { onChange: render });
+const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches });
+const sound = new TypeoutSound();
+let muted = Boolean(api.getState()?.muted);
+let lastTypeoutRender = null;
 let presented = true;
 let revision = -1;
 let incomingRevision = -1;
@@ -13,6 +19,27 @@ let preparing = false;
 const content = document.getElementById('beat');
 const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
+function controls() {
+  const beat = player.current;
+  const active = player.activeTypeout;
+  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase}` : 'No beats';
+  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics,
+    ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
+  document.getElementById('previous').disabled = preparing || player.index === 0;
+  document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
+  document.getElementById('restart').disabled = preparing || !beat;
+  document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented || document.hidden;
+  document.getElementById('pause').disabled = preparing || !['playing', 'paused'].includes(player.phase) || !presented || document.hidden;
+  document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
+  document.getElementById('replay').disabled = preparing || !beat || !presented || document.hidden;
+  const reveal = document.getElementById('reveal');
+  reveal.hidden = !active; reveal.disabled = preparing || !active || !presented || document.hidden;
+  const mute = document.getElementById('mute');
+  mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
+  document.getElementById('show-source').disabled = preparing || !beat;
+  sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
+  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted });
+}
 function imageElement(src, alt, inline = false) {
   const image = document.createElement('img');
   image.alt = alt;
@@ -38,6 +65,16 @@ function imageOrPlaceholder(src, alt, inline = false) {
   return placeholder;
 }
 function render() {
+  const active = player.activeTypeout;
+  if (active && lastTypeoutRender?.scene === player.scene && lastTypeoutRender.index === player.index && lastTypeoutRender.blockIndex === active.blockIndex) {
+    const progress = content.querySelector('.typeout-progress');
+    if (progress) {
+      progress.textContent = player.visibleBlocks.find(block => block.type === 'typeout' && block.line === active.block.line)?.visibleText || '';
+      progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
+      controls(); return;
+    }
+  }
+  lastTypeoutRender = null;
   content.replaceChildren();
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
@@ -61,6 +98,18 @@ function render() {
         figure.append(caption);
       }
       content.append(figure);
+    } else if (block.type === 'typeout') {
+      const section = document.createElement('section');
+      section.className = `typeout typeout-${block.format}`;
+      section.setAttribute('aria-label', block.format === 'yaml' ? 'PRIME state output' : 'Annotation');
+      const accessible = document.createElement('span');
+      accessible.className = 'visually-hidden'; accessible.textContent = block.text;
+      const surface = document.createElement('div'); surface.className = 'typeout-surface';
+      const reserve = document.createElement('pre'); reserve.className = 'typeout-reserve'; reserve.setAttribute('aria-hidden', 'true'); reserve.textContent = block.text;
+      const progress = document.createElement('pre'); progress.className = 'typeout-progress'; progress.setAttribute('aria-hidden', 'true'); progress.textContent = block.visibleText;
+      progress.classList.toggle('active', Boolean(active) && player.phase === 'playing' && !player.reducedMotion);
+      surface.append(reserve, progress); section.append(accessible, surface); content.append(section);
+      if (active && active.block.line === block.line) lastTypeoutRender = { scene: player.scene, index: player.index, blockIndex: active.blockIndex };
     } else {
       if (block.title) {
         const heading = document.createElement('h2');
@@ -98,16 +147,7 @@ function render() {
       }
     }
   }
-  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length} · ${player.phase}` : 'No beats';
-  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics].join('\n');
-  document.getElementById('previous').disabled = preparing || player.index === 0;
-  document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
-  document.getElementById('restart').disabled = preparing || !beat;
-  document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented || document.hidden;
-  document.getElementById('pause').disabled = preparing || !['playing', 'paused'].includes(player.phase) || !presented || document.hidden;
-  document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
-  document.getElementById('replay').disabled = preparing || !beat || !presented || document.hidden;
-  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw });
+  controls();
 }
 function preload(url) {
   return new Promise(resolve => {
@@ -130,14 +170,31 @@ for (const action of ['previous', 'next', 'restart']) {
     player[action](); render(); content.scrollTop = 0;
   });
 }
-document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.play(); });
+const unlockSound = () => {
+  if (player.reducedMotion !== motion.matches) player.setReducedMotion(motion.matches);
+  if (!muted && !player.reducedMotion && player.current?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) sound.unlock();
+};
+document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.play(); } });
 document.getElementById('pause').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  if (player.phase === 'playing') player.pause(); else player.play();
+  if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
-document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.replay(); });
+document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.replay(); } });
+document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
+document.getElementById('mute').addEventListener('click', () => {
+  muted = !muted; api.postMessage({ type: 'mute-preference', muted });
+  if (!muted && player.phase === 'playing') unlockSound(); render();
+});
+motion.addEventListener('change', event => player.setReducedMotion(event.matches));
+document.getElementById('show-source').addEventListener('click', () => {
+  if (preparing || !player.current) return;
+  const range = player.current.sourceRange;
+  player.reset(); render();
+  api.postMessage({ type: 'show-source', uri: sourceUri, revision, index: player.index, startOffset: range.startOffset, endOffset: range.endOffset });
+});
 document.addEventListener('visibilitychange', () => { if (document.hidden) player.pause(); render(); });
-window.addEventListener('pagehide', () => player.dispose());
+window.addEventListener('pagehide', () => { player.dispose(); sound.dispose(); });
+window.addEventListener('beforeunload', () => sound.dispose());
 window.addEventListener('message', async event => {
   const message = event.data;
   if (message?.type === 'source-pending' && Number.isInteger(message.revision) && message.revision > incomingRevision) {
@@ -149,6 +206,9 @@ window.addEventListener('message', async event => {
     presented = message.visible;
     if (!presented) player.pause();
     render(); return;
+  }
+  if (message?.type === 'mute-preference' && typeof message.muted === 'boolean') {
+    muted = message.muted; render(); return;
   }
   if (message?.type !== 'source' || typeof message.source !== 'string' || !Number.isInteger(message.revision) || message.revision < incomingRevision || message.revision <= revision) return;
   incomingRevision = message.revision;
@@ -162,6 +222,7 @@ window.addEventListener('message', async event => {
   }));
   if (message.revision !== incomingRevision || player.disposed) return;
   revision = message.revision;
+  if (typeof message.muted === 'boolean') muted = message.muted;
   media = prepared;
   mediaDiagnostics = [...(message.mediaDiagnostics || [])];
   for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Image ${src}: ${entry.error}`);
@@ -169,7 +230,10 @@ window.addEventListener('message', async event => {
   sourceUri = message.uri;
   player.update(parseScene(message.source));
   const saved = api.getState();
-  if (first && saved?.sourceUri === sourceUri && Number.isInteger(saved.index)) {
+  if (Number.isInteger(message.targetOffset)) {
+    const selected = beatAtOffset(player.scene.beats.map(beat => beat.sourceRange), message.targetOffset);
+    if (selected >= 0) { player.index = selected; player.reset(); }
+  } else if (first && saved?.sourceUri === sourceUri && Number.isInteger(saved.index)) {
     const matches = player.scene.beats.map((beat, i) => beat.raw === saved.raw ? i : -1).filter(i => i >= 0);
     const restored = matches.length ? matches.reduce((a, b) => Math.abs(a - saved.index) <= Math.abs(b - saved.index) ? a : b) : saved.index;
     player.index = Math.max(0, Math.min(restored, player.scene.beats.length - 1));

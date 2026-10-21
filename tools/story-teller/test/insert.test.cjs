@@ -15,7 +15,7 @@ test('chat snippet uses native placeholders, linked viewer and supported canonic
   assert.equal(chat.viewer, 'Viewer'); assert.equal(chat.title, 'Conversation title');
   assert.equal(chat.messages.length, 2); assert.equal(chat.ticks, false);
   assert.ok(chat.messages.every(m => !m.responding));
-  assert.equal(choices.length, 9); assert.ok(!plan.snippet.includes('@pace')); assert.equal(chat.pace, 'normal');
+  assert.equal(choices.length, 11); assert.ok(!plan.snippet.includes('@pace')); assert.equal(chat.pace, 'normal');
 });
 test('root directives and boundary are standalone without deleting existing prose', () => {
   for (const kind of ['chat', 'delay', 'pause', 'boundary']) {

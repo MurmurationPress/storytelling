@@ -1,5 +1,5 @@
 'use strict';
-const { spawn } = require('node:child_process');
+const { spawn, execFileSync } = require('node:child_process');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
@@ -23,9 +23,28 @@ async function until(fn, timeout = 60000) {
   const port = server.address().port;
   await new Promise(resolve => server.close(resolve));
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
-  const code = spawn(process.env.VSCODE_EXECUTABLE || '/usr/share/code/code', [
+  const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
+  const vsix = process.env.STORY_TELLER_VSIX;
+  let developmentPath = root;
+  if (vsix) {
+    // The test adapter is a separate, disposable development extension. Story
+    // Teller itself must be loaded from the installed VSIX, not from `root`.
+    developmentPath = path.join(directory, 'test-adapter');
+    await fs.mkdir(developmentPath);
+    await fs.writeFile(path.join(developmentPath, 'package.json'), JSON.stringify({
+      name: 'story-teller-test-adapter', publisher: 'local', version: '0.0.1',
+      engines: { vscode: '^1.95.0' }, main: './extension.cjs'
+    }));
+    await fs.writeFile(path.join(developmentPath, 'extension.cjs'), 'exports.activate = () => {};\n');
+    execFileSync(process.env.VSCODE_CLI || '/usr/bin/code', [
+      `--user-data-dir=${path.join(directory, 'profile')}`,
+      `--extensions-dir=${path.join(directory, 'extensions')}`,
+      '--install-extension', path.resolve(vsix), '--force'
+    ], { stdio: ['ignore', log.fd, log.fd] });
+  }
+  const code = spawn(executable, [
     `--user-data-dir=${path.join(directory, 'profile')}`, `--extensions-dir=${path.join(directory, 'extensions')}`,
-    `--extensionDevelopmentPath=${root}`, `--extensionTestsPath=${path.join(__dirname, 'host.cjs')}`,
+    `--extensionDevelopmentPath=${developmentPath}`, `--extensionTestsPath=${path.join(__dirname, 'host.cjs')}`,
     `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window'
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
@@ -58,9 +77,9 @@ async function until(fn, timeout = 60000) {
       pending.set(id, { resolve, reject });
       socket.send(JSON.stringify({ id, method, params }));
     });
-    async function evaluate(expression) {
+    async function evaluate(expression, userGesture = false) {
       const result = await send('Runtime.evaluate', {
-        expression: `(() => { const doc = document.getElementById('active-frame')?.contentDocument; return (${expression}); })()`, returnByValue: true
+        expression: `(() => { const doc = document.getElementById('active-frame')?.contentDocument; return (${expression}); })()`, returnByValue: true, userGesture
       });
       if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
       return result.result.value;
@@ -75,6 +94,162 @@ async function until(fn, timeout = 60000) {
     const beat = locator('#beat');
     await until(async () => (await beat.textContent()).includes('old radio'));
     assert.equal(await frame.locator('#previous').isDisabled(), true);
+    assert.match(await locator('#status').textContent(), /Beat 1 of 7 · The old radio · ready/);
+    const authoredSample = await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8');
+    const chatOffset = authoredSample.indexOf('Lighthouse contact');
+    await request('preview-this', undefined, { start: chatOffset });
+    await until(async () => /Beat 2 of 7 · Lighthouse contact · ready/.test(await locator('#status').textContent()));
+    await request('snapshot');
+    assert.equal(JSON.parse(await fs.readFile(path.join(directory, 'snapshot.json'), 'utf8')).selection.start, chatOffset);
+    await locator('#show-source').click();
+    await until(async () => {
+      await request('snapshot');
+      return JSON.parse(await fs.readFile(path.join(directory, 'snapshot.json'), 'utf8')).selection?.start === authoredSample.indexOf('<!-- beat: Lighthouse contact -->');
+    });
+    const mainPage = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item => item.type === 'page');
+    const sourceLines = async () => {
+      const connection = new WebSocket(mainPage.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { connection.onopen = resolve; connection.onerror = reject; });
+      try {
+        return await new Promise((resolve, reject) => {
+          connection.onmessage = event => {
+            const response = JSON.parse(event.data);
+            if (response.id !== 1) return;
+            response.error ? reject(new Error(JSON.stringify(response.error))) : resolve((response.result?.result?.value || '').replace(/\u00a0/g, ' '));
+          };
+          connection.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: {
+            expression: "document.querySelector('.editor-group-container .monaco-editor.focused .view-lines')?.innerText || ''", returnByValue: true
+          } }));
+        });
+      } finally { connection.close(); }
+    };
+    await request('beat-folds');
+    const nativeFolds = JSON.parse(await fs.readFile(path.join(directory, 'beat-folds.json'), 'utf8'));
+    assert.ok(nativeFolds.some(range => range.start === 12 && range.end > range.start));
+    const foldedLines = await until(async () => {
+      const value = await sourceLines();
+      await fs.writeFile(path.join(directory, 'last-fold-lines.txt'), value);
+      return value.includes('Lighthouse contact') && !value.includes('Ivo: Only me.') && value;
+    }, 3000);
+    await fs.writeFile(path.join(directory, 'folded-lines.txt'), foldedLines);
+    assert.match(foldedLines, /Lighthouse contact/);
+    assert.doesNotMatch(foldedLines, /Ivo: Only me\./);
+    await locator('#show-source').click();
+    await until(async () => (await sourceLines()).includes('Only me. The stairs'));
+    await request('expand-beats');
+    await request('fold-all-test');
+    await until(async () => !(await sourceLines()).includes('Ivo: Only me.'));
+    await locator('#show-source').click();
+    await until(async () => (await sourceLines()).includes('Only me. The stairs'));
+    await request('preview-this', undefined, { start: authoredSample.indexOf('old radio') });
+    await until(async () => /Beat 1 of 7 · The old radio · ready/.test(await locator('#status').textContent()));
+    const webAudioEvents = [];
+    const priorReceiver = socket.onmessage;
+    socket.onmessage = event => {
+      const payload = JSON.parse(event.data);
+      if (payload.method?.startsWith('WebAudio.')) webAudioEvents.push({ at: Date.now(), method: payload.method,
+        contextState: payload.params?.context?.contextState });
+      priorReceiver(event);
+    };
+    let webAudioTracing = true;
+    try { await send('WebAudio.enable', {}); } catch { webAudioTracing = false; }
+    const typeoutSource = await fs.readFile(path.join(root, 'samples/typeout.md'), 'utf8');
+    await request('edit', typeoutSource);
+    await frame.locator('#restart').click();
+    await until(async () => (await beat.textContent()).includes('receiver beside the lantern'));
+    assert.equal(await locator('.typeout-progress').count(), 0);
+    assert.equal(await evaluate("doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches"), false);
+    const typeoutTemporal = [];
+    const prefix = () => evaluate("doc.querySelector('.typeout-progress')?.textContent || ''");
+    await evaluate("doc.getElementById('play').click()", true);
+    await until(async () => (await prefix()).length >= 4);
+    assert.doesNotMatch(await locator('#warnings').textContent(), /Sound unavailable/);
+    if (webAudioTracing) {
+      await until(() => webAudioEvents.filter(event => event.method === 'WebAudio.nodesConnected').length >= 2);
+      assert.equal(webAudioEvents.filter(event => event.method === 'WebAudio.nodesDisconnected').length, 0);
+      await until(() => webAudioEvents.some(event => event.method === 'WebAudio.contextChanged' && event.contextState === 'running'));
+    }
+    typeoutTemporal.push({ phase: 'early', text: await prefix(), at: Date.now() });
+    assert.equal(await evaluate("doc.defaultView.getComputedStyle(doc.querySelector('.typeout-reserve')).visibility"), 'hidden');
+    await sleep(350);
+    const later = await prefix(); assert.ok(later.length > typeoutTemporal[0].text.length);
+    typeoutTemporal.push({ phase: 'later', text: later, at: Date.now() });
+    await evaluate("doc.documentElement.style.width = '320px'");
+    const typeoutBounds = await evaluate("(() => { const area=doc.getElementById('beat'), surface=doc.querySelector('.typeout-surface'); return {width:area.clientWidth, overflow:area.scrollWidth-area.clientWidth, surface:surface.getBoundingClientRect().width}; })()");
+    assert.ok(typeoutBounds.width <= 320 && typeoutBounds.overflow <= 1 && typeoutBounds.surface <= typeoutBounds.width, JSON.stringify(typeoutBounds));
+    await evaluate("doc.documentElement.style.width = ''");
+    await locator('#pause').click();
+    if (webAudioTracing) await until(() => webAudioEvents.filter(event => event.method === 'WebAudio.nodesDisconnected').length >= 2);
+    const pausedPrefix = await prefix(); await sleep(350); assert.equal(await prefix(), pausedPrefix);
+    await locator('#mute').click(); assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
+    await locator('#pause').click();
+    await request('hide-preview');
+    await until(async () => (await locator('#status').textContent()).includes('paused'));
+    const hiddenPrefix = await prefix(); await sleep(400); assert.equal(await prefix(), hiddenPrefix);
+    await request('show-preview');
+    await until(async () => (await locator('#status').textContent()).includes('paused'));
+    assert.equal(await prefix(), hiddenPrefix);
+    assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
+    await fs.writeFile(path.join(directory, 'typeout-hide-state.json'), JSON.stringify(await evaluate("({hidden: doc.hidden, pauseDisabled: doc.getElementById('pause').disabled, status: doc.getElementById('status').textContent})"), null, 2));
+    await until(async () => !(await locator('#pause').isDisabled()), 5000);
+    await locator('#pause').click();
+    await until(async () => (await prefix()).length > hiddenPrefix.length);
+    await locator('#reveal').click();
+    assert.equal(await prefix(), 'status: listening\nsource:\n  direction: beyond the harbour\n  confidence: unresolved\n');
+    assert.equal((await beat.textContent()).includes('The light beyond the wall remained still.'), false);
+    await until(async () => (await beat.textContent()).includes('The light beyond the wall remained still.'));
+    typeoutTemporal.push({ phase: 'complete', text: await prefix(), at: Date.now() });
+    await fs.writeFile(path.join(directory, 'typeout-temporal.json'), JSON.stringify(typeoutTemporal, null, 2));
+    await locator('#replay').click();
+    assert.equal(await locator('.typeout-progress').count(), 0);
+    await until(async () => (await prefix()).length > 0);
+    await request('edit', typeoutSource.replace('status: listening', 'status: changed'));
+    await until(async () => (await locator('#status').textContent()).includes('ready'));
+    assert.equal(await locator('.typeout-progress').count(), 0);
+    assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+    await until(async () => await evaluate("doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches"));
+    await locator('#play').click();
+    await until(async () => (await prefix()).includes('confidence: unresolved'));
+    assert.equal(await prefix(), 'status: changed\nsource:\n  direction: beyond the harbour\n  confidence: unresolved\n');
+    await send('Emulation.setEmulatedMedia', { features: [] });
+    await until(async () => !(await evaluate("doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches")));
+    await frame.locator('#next').click();
+    await until(async () => (await locator('#status').textContent()).includes('A note in the margin'));
+    await locator('#mute').click(); assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'false');
+    await locator('#play').click();
+    await until(async () => (await prefix()).length > 0);
+    assert.equal(await evaluate("doc.querySelector('.typeout-annotation') !== null"), true);
+    assert.equal(await evaluate("doc.getElementById('reveal').hidden"), false);
+    const keyboardAudioState = await evaluate("({warning:doc.getElementById('warnings').textContent,mute:doc.getElementById('mute').getAttribute('aria-pressed'),reduced:doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches})");
+    await locator('#reveal').click();
+    await frame.locator('#next').click();
+    await until(async () => (await locator('#status').textContent()).includes('An older machine'));
+    await locator('#play').click();
+    await until(async () => (await prefix()).length > 0);
+    assert.equal(await evaluate("doc.getElementById('reveal').hidden"), false);
+    const typewriterAudioState = await evaluate("({warning:doc.getElementById('warnings').textContent,mute:doc.getElementById('mute').getAttribute('aria-pressed'),reduced:doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches})");
+    await locator('#reveal').click();
+    await sleep(100);
+    const nodesBeforeSilent = webAudioEvents.filter(event => event.method === 'WebAudio.audioNodeCreated').length;
+    await fs.writeFile(path.join(directory, 'typeout-audio-states.json'), JSON.stringify({ keyboardAudioState, typewriterAudioState, nodesBeforeSilent }, null, 2));
+    assert.doesNotMatch(keyboardAudioState.warning, /Sound unavailable/);
+    assert.doesNotMatch(typewriterAudioState.warning, /Sound unavailable/);
+    if (webAudioTracing) assert.ok(nodesBeforeSilent >= 7, `Expected modem, keyboard and typewriter voices; saw ${nodesBeforeSilent} audio nodes`);
+    await frame.locator('#next').click();
+    await until(async () => (await locator('#status').textContent()).includes('Silent output'));
+    await locator('#play').click();
+    await until(async () => (await prefix()).length > 0);
+    await locator('#reveal').click();
+    await sleep(100);
+    assert.equal(webAudioEvents.filter(event => event.method === 'WebAudio.audioNodeCreated').length, nodesBeforeSilent);
+    await locator('#mute').click();
+    assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
+    await request('edit', authoredSample);
+    await until(async () => (await locator('#status').textContent()).includes('of 7'));
+    await frame.locator('#restart').click();
+    await until(async () => (await beat.textContent()).includes('old radio'));
+    await fs.writeFile(path.join(directory, 'typeout-audio-events.json'), JSON.stringify({ webAudioTracing, events: webAudioEvents }, null, 2));
     // Regression fixture: header flag alone, followed by viewer-first dialogue.
     // Strip per-message cues only in this temporary test buffer, never the sample file.
     const headerSource = (await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8'))
@@ -119,10 +294,10 @@ async function until(fn, timeout = 60000) {
     // Configure the test's final beat explicitly; do not depend on local sample edits.
     const sample = headerSource; // Keep the current chat identical while testing a preceding beat insertion.
     await request('edit', sample.replace('# The Last Lantern', 'Inserted first beat\n---\n# The Last Lantern'));
-    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 8 · ready'));
+    await until(async () => /Beat 3 of 8 .* ready/.test(await frame.locator('#status').textContent()));
     assert.equal(await frame.locator('.chat li').count(), 0);
     await request('edit', sample.replace('Only me.', 'Only me, Mara.'));
-    await until(async () => (await frame.locator('#status').textContent()).includes('Beat 2 of 7 · ready'));
+    await until(async () => /Beat 2 of 7 .* ready/.test(await frame.locator('#status').textContent()));
     await frame.locator('#next').click();
     await until(async () => (await beat.textContent()).includes('ferry touched'));
     assert.equal((await beat.textContent()).includes('Beyond the wake'), false);
@@ -204,7 +379,9 @@ async function until(fn, timeout = 60000) {
     }
     const action = async text => {
       await request('show-notifications');
-      const expression = `Array.from(document.querySelectorAll('.monaco-button')).find(b => b.textContent.trim() === ${JSON.stringify(text)})`;
+      // Earlier conversion notices can remain in the notification centre;
+      // the newest matching action belongs to the current review.
+      const expression = `Array.from(document.querySelectorAll('.monaco-button')).filter(b => b.textContent.trim() === ${JSON.stringify(text)}).at(-1)`;
       try { await until(async () => await workbench(`Boolean(${expression})`)); }
       catch (error) {
         await fs.writeFile(path.join(directory, 'failed-notification.txt'), await workbench("document.body.innerText"));
@@ -264,7 +441,8 @@ async function until(fn, timeout = 60000) {
         });
       } finally { connection.close(); }
     }
-    await until(async () => await inspectConverted("Boolean(doc?.getElementById('play'))"));
+    await until(async () => (await inspectConverted("doc?.getElementById('status')?.textContent || ''")).includes('· ready'));
+    assert.equal(await inspectConverted("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
     await inspectConverted("doc.getElementById('play').click()");
     await until(async () => (await inspectConverted("doc.querySelector('.chat-title')?.textContent")) === 'Harbour link');
     await until(async () => (await inspectConverted("doc.querySelectorAll('.chat li').length")) >= 2);
@@ -272,6 +450,48 @@ async function until(fn, timeout = 60000) {
     assert.ok(multiline.includes('Second line, with a colon: keep this together.\n\n@pause 500ms is part of this message, not a setting.'));
     await request('undo'); const undone = await snapshot();
     assert.equal(undone.text, unsaved); assert.equal(undone.disk, initial.disk);
+    const calloutFixture = await fs.readFile(path.join(root, 'samples/callout-conversion.md'), 'utf8');
+    await request('edit', calloutFixture);
+    const calloutInitial = await snapshot();
+    const calloutResult = () => until(async () => JSON.parse(await fs.readFile(path.join(directory, 'callout-conversion-result.json'), 'utf8')));
+    await request('start-callout-conversion');
+    await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('<!-- beat: Harbour.Signal -->')));
+    assert.ok(await workbench("document.body.innerText.includes('2 callout(s) to convert; 1 review warning(s).')"));
+    await action('Review Warnings');
+    await until(async () => await workbench("document.body.innerText.replaceAll('\\u00a0', ' ').includes('one top-level YAML fence')"));
+    await action('Cancel'); assert.equal((await calloutResult()).status, 'cancelled');
+    assert.equal((await snapshot()).text, calloutFixture);
+    await request('start-callout-conversion');
+    const calloutUnsaved = calloutFixture + '\nAn unsaved ending.';
+    await request('edit', calloutUnsaved);
+    await action('Apply');
+    await until(async () => await workbench("document.body.innerText.includes('Nothing was applied.')"));
+    assert.equal((await snapshot()).text, calloutUnsaved);
+    await request('show-notifications'); await action('Regenerate');
+    await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('<!-- beat: Harbour.Signal -->') && item.text.endsWith('An unsaved ending.')));
+    await action('Apply');
+    assert.deepEqual(await calloutResult(), { status: 'applied', count: 2 });
+    const calloutApplied = await snapshot();
+    assert.ok(calloutApplied.text.includes('<!-- beat: Harbour.Signal -->'));
+    assert.ok(calloutApplied.text.includes('@format annotation\n@sound keyboard'));
+    assert.ok(calloutApplied.text.includes('> [!prime-log] Unresolved note'));
+    assert.ok(calloutApplied.dirty); assert.equal(calloutApplied.disk, calloutInitial.disk);
+    await request('preview-this', undefined, { start: calloutApplied.text.indexOf('<!-- beat: Harbour.Signal -->') });
+    await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('Harbour.Signal'));
+    assert.equal(await inspectConverted("doc.querySelectorAll('.typeout-progress').length"), 0);
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => (await inspectConverted("doc.querySelector('.typeout-progress')?.textContent.length || 0")) >= 4);
+    const firstOutput = await inspectConverted("doc.querySelector('.typeout-progress').textContent.length");
+    await sleep(300);
+    assert.ok((await inspectConverted("doc.querySelector('.typeout-progress').textContent.length")) > firstOutput);
+    await inspectConverted("doc.getElementById('next').click()");
+    await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('Mara — Margin note'));
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => (await inspectConverted("doc.querySelector('.typeout-annotation .typeout-progress')?.textContent.length || 0")) >= 4);
+    await request('undo');
+    assert.equal((await snapshot()).text, calloutUnsaved);
+    assert.equal((await snapshot()).disk, calloutInitial.disk);
+    await request('hide-notifications');
     const pick = async label => {
       const expression = `Array.from(document.querySelectorAll('.quick-input-list .monaco-list-row')).find(row => row.textContent.includes(${JSON.stringify(label)}))`;
       await until(async () => await workbench(`Boolean(${expression})`));
@@ -303,9 +523,57 @@ async function until(fn, timeout = 60000) {
     inserted = await snapshot(); assert.equal(inserted.selection.text, '1200');
     assert.ok(inserted.text.includes('@delay 1200ms'));
     await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
-    await request('start-insert', undefined, { start: 8 }); await pick('Beat boundary'); await insertResult();
+    await request('start-insert', undefined, { start: 8 }); await pick('Beat boundary');
+    await until(async () => await workbench("document.querySelector('.quick-input-widget input')?.getAttribute('placeholder') === '' || document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    await insertResult();
     assert.ok((await snapshot()).text.includes('\n---\n'));
     await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 8 }); await pick('Beat boundary');
+    await until(async () => await workbench("document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));
+    await send('Input.insertText', { text: 'A named turn' });
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    assert.equal((await insertResult()).status, 'inserted');
+    assert.ok((await snapshot()).text.includes('<!-- beat: A named turn -->'));
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 8 }); await pick('Beat boundary');
+    await until(async () => await workbench("document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));
+    await workbench("document.querySelector('.quick-input-widget input')?.focus()");
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    assert.equal((await insertResult()).status, 'cancelled');
+    assert.equal((await snapshot()).text, 'Before\n\nAfter');
+
+    const imageWithoutCaption = 'Before.\n\n![Tall tower](assets/harbour-portrait.png)\n\nAfter.';
+    await request('edit', imageWithoutCaption);
+    await request('start-insert', undefined, { start: imageWithoutCaption.indexOf('Tall tower') }); await pick('Caption');
+    assert.equal((await insertResult()).status, 'inserted');
+    inserted = await snapshot();
+    assert.equal(inserted.selection.text, 'Your caption here');
+    assert.ok(inserted.text.includes('![Tall tower](assets/harbour-portrait.png)\n\n*Caption: Your caption here*'));
+    await request('undo'); assert.equal((await snapshot()).text, imageWithoutCaption);
+    const imageWithCaption = imageWithoutCaption.replace('After.', '*Caption: From the path.*\n\nAfter.');
+    await request('edit', imageWithCaption);
+    await request('start-insert', undefined, { start: imageWithCaption.indexOf('From the path') }); await pick('Caption');
+    assert.equal((await insertResult()).status, 'selected');
+    assert.equal((await snapshot()).selection.text, 'From the path.');
+
+    await request('edit', 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 8 }); await pick('Type-out'); await pick('PRIME / Divergent YAML');
+    assert.equal((await insertResult()).status, 'inserted');
+    inserted = await snapshot();
+    assert.equal(inserted.selection.text, 'status: observing');
+    assert.ok(inserted.text.includes('@format yaml\n@sound modem\n\nstatus: observing'));
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 8 }); await pick('Type-out'); await pick('Annotation');
+    assert.equal((await insertResult()).status, 'inserted');
+    assert.ok((await snapshot()).text.includes('@format annotation\n@sound keyboard'));
+    await request('undo'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
+    await request('start-insert', undefined, { start: 0, end: 6 }); await pick('Type-out'); await pick('Annotation');
+    assert.equal((await insertResult()).status, 'refused');
+    assert.equal((await snapshot()).text, 'Before\n\nAfter');
 
     await request('start-insert', undefined, { start: 8 }); await pick('Responding');
     assert.equal((await insertResult()).status, 'refused'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
@@ -361,7 +629,9 @@ async function until(fn, timeout = 60000) {
       assert.equal(await inspectConverted("doc.querySelector('.responding')?.textContent"), 'Bo is responding…');
       await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 1);
       const first = Date.now() - began;
-      assert.ok(first >= expected - 100 && first < expected + 700, `${pace}: first message ${first}ms`);
+      // CDP connection setup and an overloaded desktop can delay observation.
+      // The injected-clock tests assert exact waits; this only checks temporal order.
+      assert.ok(first >= expected - 100 && first < expected + 1500, `${pace}: first message ${first}ms`);
       await until(async () => await inspectConverted("doc.querySelectorAll('.chat li').length") === 2);
       const complete = Date.now() - began;
       // IPC/polling can delay observation; the injected scheduler tests exact totals.
@@ -409,7 +679,7 @@ async function until(fn, timeout = 60000) {
     await request('edit', 'Latest image probe\n\nPlain prose only.');
     await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes('Latest image probe'));
     assert.equal(await inspectConverted("doc.querySelectorAll('img').length"), 0);
-    console.log('PASS: actual VS Code Extension Development Host — accepted playback/conversion regressions; native chat/Pace helpers; delayed WebP, portrait PNG, inline JPEG, narrow image bounds, replay, missing-file fallback and stale-source cancellation.');
+    console.log(`PASS: actual VS Code ${vsix ? 'installed VSIX in a disposable profile' : 'Extension Development Host'} — callout diff/review/stale Apply/Undo and converted type-out playback, plus accepted preview/authoring regressions.`);
     console.log(`Isolated test profile/log: ${directory}`);
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
   } finally {

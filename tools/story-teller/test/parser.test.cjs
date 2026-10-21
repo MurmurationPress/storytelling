@@ -101,7 +101,7 @@ test('standalone image and separate plain caption form one component; inline ima
   const scene = parseScene(source);
   assert.deepEqual(scene.beats[0].blocks.map(b => b.type), ['prose', 'image', 'chat']);
   assert.match(scene.beats[0].blocks[0].html, /class="story-inline-image"/);
-  assert.deepEqual(scene.beats[0].blocks[1], { type: 'image', src: 'assets/tower%20%CE%A9.png', alt: 'Tall tower', caption: 'The lower landing.', line: 5, delayMs: 700 });
+  assert.deepEqual(scene.beats[0].blocks[1], { type: 'image', src: 'assets/tower%20%CE%A9.png', alt: 'Tall tower', caption: 'The lower landing.', line: 5, captionLine: 7, delayMs: 700 });
   assert.deepEqual(scene.images, ['assets/my%20print.jpg', 'assets/tower%20%CE%A9.png']);
   assert.deepEqual(scene.beats[0].sequence.map(s => s.type), ['component', 'component', 'pause', 'component']);
   assert.equal(scene.diagnostics.length, 0);

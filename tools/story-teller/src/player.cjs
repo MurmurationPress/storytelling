@@ -6,9 +6,11 @@ const defaultScheduler = {
   clearTimeout: handle => clearTimeout(handle)
 };
 const { defaultDelay, automaticDelay } = require('./pace.cjs');
+const { graphemes, graphemeDelay } = require('./typeout.cjs');
 class StoryPlayer {
-  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {} } = {}) {
+  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false } = {}) {
     this.scene = scene; this.index = 0; this.scheduler = scheduler; this.onChange = onChange;
+    this.reducedMotion = reducedMotion;
     this.generation = 0; this.timer = null; this.disposed = false;
     this.reset();
   }
@@ -21,7 +23,8 @@ class StoryPlayer {
   reset() {
     this.cancelTimer();
     this.phase = 'ready'; this.cursor = 0; this.remaining = null;
-    this.visible = new Set(); this.enteredChats = new Set(); this.counts = new Map(); this.read = new Set();
+    this.visible = new Set(); this.enteredChats = new Set(); this.enteredTypeouts = new Set();
+    this.typeoutCounts = new Map(); this.typeoutParts = new Map(); this.counts = new Map(); this.read = new Set();
     this.steps = [];
     const sequence = this.current?.sequence || (this.current?.blocks || []).map((block, blockIndex) => ({ type: 'component', blockIndex }));
     for (const entry of sequence) {
@@ -29,6 +32,13 @@ class StoryPlayer {
       const blockIndex = entry.blockIndex;
       const block = this.current.blocks[blockIndex];
       if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
+      else if (block.type === 'typeout') {
+        const parts = graphemes(block.text);
+        this.typeoutParts.set(blockIndex, parts);
+        this.steps.push({ type: 'typeout-start', blockIndex, delayMs: block.delayMs ?? 0 });
+        for (let index = 0; index < parts.length; index++)
+          this.steps.push({ type: 'typeout-grapheme', blockIndex, delayMs: graphemeDelay(index, block.speed) });
+      }
       else for (const event of block.events) {
         if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
         else {
@@ -53,9 +63,17 @@ class StoryPlayer {
     const message = block.messages[step.message];
     return message.responding && block.viewer && message.speaker !== block.viewer ? { blockIndex: step.blockIndex, speaker: message.speaker } : null;
   }
+  get activeTypeout() {
+    const step = this.steps[this.cursor];
+    return step?.type === 'typeout-grapheme' && ['playing', 'paused'].includes(this.phase)
+      ? { blockIndex: step.blockIndex, block: this.current.blocks[step.blockIndex] } : null;
+  }
   get visibleBlocks() {
     return (this.current?.blocks || []).flatMap((block, index) => {
       if (block.type === 'prose' || block.type === 'image') return this.visible.has(index) ? [block] : [];
+      if (block.type === 'typeout') return this.enteredTypeouts.has(index)
+        ? [{ ...block, visibleText: this.typeoutParts.get(index).slice(0, this.typeoutCounts.get(index) || 0).join(''),
+          complete: (this.typeoutCounts.get(index) || 0) >= this.typeoutParts.get(index).length }] : [];
       const messages = block.messages.slice(0, this.counts.get(index) || 0).map((message, i) => ({
         ...message,
         status: block.ticks && message.speaker === block.viewer ? (this.read.has(`${index}:${i}`) ? 'read' : 'delivered') : null
@@ -81,6 +99,14 @@ class StoryPlayer {
       if (this.disposed || this.phase !== 'playing' || generation !== this.generation || cursor !== this.cursor) return;
       this.timer = null; this.remaining = null;
       if (step.type === 'prose' || step.type === 'image') this.visible.add(step.blockIndex);
+      if (step.type === 'typeout-start') {
+        this.enteredTypeouts.add(step.blockIndex);
+        if (this.reducedMotion) {
+          this.typeoutCounts.set(step.blockIndex, this.typeoutParts.get(step.blockIndex).length);
+          while (this.steps[this.cursor + 1]?.type === 'typeout-grapheme' && this.steps[this.cursor + 1].blockIndex === step.blockIndex) this.cursor++;
+        }
+      }
+      if (step.type === 'typeout-grapheme') this.typeoutCounts.set(step.blockIndex, (this.typeoutCounts.get(step.blockIndex) || 0) + 1);
       if (step.type === 'message') this.counts.set(step.blockIndex, step.message + 1);
       if (step.type === 'read') this.read.add(`${step.blockIndex}:${step.message}`);
       this.cursor++;
@@ -91,6 +117,21 @@ class StoryPlayer {
     if (this.phase !== 'playing') return;
     this.remaining = Math.max(0, this.deadline - this.scheduler.now());
     this.cancelTimer(); this.phase = 'paused'; this.onChange();
+  }
+  revealImmediately() {
+    const active = this.activeTypeout;
+    if (!active) return false;
+    this.cancelTimer(); this.remaining = null;
+    this.typeoutCounts.set(active.blockIndex, this.typeoutParts.get(active.blockIndex).length);
+    while (this.steps[this.cursor]?.type === 'typeout-grapheme' && this.steps[this.cursor].blockIndex === active.blockIndex) this.cursor++;
+    if (this.phase === 'playing') this.schedule();
+    this.onChange();
+    return true;
+  }
+  setReducedMotion(value) {
+    this.reducedMotion = Boolean(value);
+    if (this.reducedMotion) this.revealImmediately();
+    this.onChange();
   }
   replay() { if (!this.disposed) { this.reset(); this.play(); } }
   next() { this.index = Math.min(this.index + 1, Math.max(0, this.scene.beats.length - 1)); this.reset(); }
@@ -107,6 +148,12 @@ class StoryPlayer {
         for (let i = this.index - 1; i >= 0; i--) {
           const hits = scene.beats.map((beat, j) => beat.raw === previous.beats[i].raw ? j : -1).filter(j => j >= 0);
           if (hits.length === 1) { target = hits[0] + (this.index - i); break; }
+        }
+      }
+      if (target < 0) {
+        for (let i = this.index + 1; i < previous.beats.length; i++) {
+          const hits = scene.beats.map((beat, j) => beat.raw === previous.beats[i].raw ? j : -1).filter(j => j >= 0);
+          if (hits.length === 1) { target = hits[0] - (i - this.index); break; }
         }
       }
     }

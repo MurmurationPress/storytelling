@@ -1,33 +1,40 @@
 'use strict';
 const { randomBytes } = require('node:crypto');
 const { convertChats } = require('./convert.cjs');
+const { convertCallouts } = require('./convert-callouts.cjs');
 function registerConversion(vscode, context) {
   const snapshots = new Map();
   const busy = new Set();
   const scheme = 'story-teller-conversion';
-  const report = vscode.window.createOutputChannel('Story Teller Chat Conversion');
-  context.subscriptions.push(report,
+  context.subscriptions.push(
     vscode.workspace.registerTextDocumentContentProvider(scheme, { provideTextDocumentContent: uri => snapshots.get(uri.toString()) || '' }),
-    vscode.workspace.onDidCloseTextDocument(document => { if (document.uri.scheme === scheme) snapshots.delete(document.uri.toString()); }),
-    vscode.commands.registerCommand('storyTeller.convertChats', async () => {
+    vscode.workspace.onDidCloseTextDocument(document => { if (document.uri.scheme === scheme) snapshots.delete(document.uri.toString()); })
+  );
+  for (const task of [
+    { command: 'storyTeller.convertChats', name: 'chat', plural: 'chat(s)', convert: convertChats, channel: 'Story Teller Chat Conversion' },
+    { command: 'storyTeller.convertCallouts', name: 'callout', plural: 'callout(s)', convert: convertCallouts, channel: 'Story Teller Callout Conversion' }
+  ]) {
+    const report = vscode.window.createOutputChannel(task.channel);
+    context.subscriptions.push(report, vscode.commands.registerCommand(task.command, async () => {
       const document = vscode.window.activeTextEditor?.document;
       if (!document || document.languageId !== 'markdown' || document.uri.scheme === scheme) {
-        vscode.window.showInformationMessage('Open the source Markdown document to convert its chats.'); return;
+        vscode.window.showInformationMessage(`Open the source Markdown document to convert its ${task.name}s.`); return;
       }
       const key = document.uri.toString();
-      if (busy.has(key)) { vscode.window.showInformationMessage('A chat conversion review is already open for this document.'); return; }
-      busy.add(key);
+      const lock = `${task.command}:${key}`;
+      if (busy.has(lock)) { vscode.window.showInformationMessage(`A ${task.name} conversion review is already open for this document.`); return; }
+      busy.add(lock);
       try {
         for (;;) {
           if (document.isClosed) return { status: 'stale', count: 0 };
           const source = document.getText();
           const version = document.version;
-          const result = convertChats(source);
+          const result = task.convert(source);
           const id = randomBytes(12).toString('hex');
           const before = vscode.Uri.parse(`${scheme}:/${id}/before.md`);
           const after = vscode.Uri.parse(`${scheme}:/${id}/after.md`);
           snapshots.set(before.toString(), source); snapshots.set(after.toString(), result.text);
-          const summary = `${result.count} chat(s) to convert; ${result.warnings.length} review warning(s).`;
+          const summary = `${result.count} ${task.plural} to convert; ${result.warnings.length} review warning(s).`;
           report.appendLine(`\n${key}\n${summary}`);
           for (const warning of result.warnings) report.appendLine(`Line ${warning.line}: ${warning.message}`);
           await vscode.commands.executeCommand('vscode.diff', before, after, `Story Teller conversion · ${summary}`);
@@ -48,14 +55,14 @@ function registerConversion(vscode, context) {
             }, { undoStopBefore: true, undoStopAfter: true });
           }
           if (applied) {
-            vscode.window.showInformationMessage(`Converted ${result.count} chat(s). Changes are unsaved; Undo reverts this conversion.`);
+            vscode.window.showInformationMessage(`Converted ${result.count} ${task.plural}. Changes are unsaved; Undo reverts this conversion.`);
             return { status: 'applied', count: result.count };
           }
           const action = await vscode.window.showWarningMessage('The source changed, closed, or could not be edited after preview. Nothing was applied. Regenerate the conversion?', ...(document.isClosed ? [] : ['Regenerate']), 'Cancel');
           if (action !== 'Regenerate') return { status: 'stale', count: 0 };
         }
-      } finally { busy.delete(key); }
-    })
-  );
+      } finally { busy.delete(lock); }
+    }));
+  }
 }
 module.exports = { registerConversion };

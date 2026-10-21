@@ -9,13 +9,15 @@ const choices = [
   { id: 'responding', label: 'Responding', description: 'Non-viewer cue during message delays; chat only.' },
   { id: 'pace', label: 'Pace', description: 'Chat automatic timing: Normal, Brisk or Deliberate.' },
   { id: 'image', label: 'Image', description: 'Choose a local PNG, JPEG or WebP; insert a standalone image.' },
+  { id: 'caption', label: 'Caption', description: 'Add or edit the caption of a standalone image.' },
+  { id: 'typeout', label: 'Type-out', description: 'Perform literal YAML-style output or an annotation.' },
   { id: 'ticks', label: 'Ticks', description: 'Authored outgoing delivered/read marks; chat header only.' },
   { id: 'wrap', label: 'Wrap Selection as Chat', description: 'Keep selected text verbatim; does not convert its syntax.' }
 ];
 const templates = {
   chat: '```chat\n# ${1:Conversation title}\n@viewer ${2:Viewer}\n${2}: ${3:First message.}\n${4:Other participant}: ${5:Reply.}\n```\n$0',
   boundary: '---\n$0', delay: '@delay ${1:1200}ms\n$0', pause: '@pause ${1:800}ms\n$0', responding: '@responding\n$0', ticks: '@ticks\n$0',
-  image: '![${1:Describe the image}](<__STORY_IMAGE_PATH__>)\n$0'
+  image: '![${1:Describe the image}](<__STORY_IMAGE_PATH__>)\n$0', typeout: '__STORY_TYPEOUT__'
 };
 function planInsertion(source, selection, kind) {
   const { start, end } = selection;
@@ -29,7 +31,7 @@ function planInsertion(source, selection, kind) {
   const overlaps = kind === 'wrap' ? structure.spans.filter(span => structure.lines[span.start].start < end && (structure.lines[span.end]?.start ?? source.length) > start) : [];
   const fullContainers = overlaps.length && overlaps.every(span => ['blockquote_open', 'bullet_list_open', 'ordered_list_open'].includes(span.type) && start <= structure.lines[span.start].start && end >= structure.lines[span.end - 1].start + structure.lines[span.end - 1].text.length);
   if (context.kind === 'literal' && !(kind === 'wrap' && fullContainers)) return fail('Move outside code examples, fence delimiters, quotes or lists before inserting story syntax.');
-  if (context.kind === 'chat' && ['chat', 'boundary', 'wrap', 'image'].includes(kind)) return fail('Place the image outside the chat fence.');
+  if (context.kind === 'chat' && ['chat', 'boundary', 'wrap', 'image', 'typeout'].includes(kind)) return fail('Place this component outside the chat fence.');
   if (context.kind !== 'chat' && ['responding', 'ticks'].includes(kind)) return fail(`@${kind} is chat-only. Place the caret inside a chat fence.`);
   const eol = structure.lines.find(l => l.eol)?.eol || '\n';
   const before = source.slice(0, start);
@@ -97,4 +99,51 @@ function planImageInsertion(source, selection, relative) {
   const plan = planInsertion(source, selection, 'image');
   return plan.error ? plan : { snippet: plan.snippet.replace('__STORY_IMAGE_PATH__', markdownPath(relative)) };
 }
-module.exports = { choices, planInsertion, planPace, planImageInsertion, markdownPath };
+const typeoutPresets = [
+  { value: 'yaml', label: 'PRIME / Divergent YAML', description: 'Monospaced output with restrained modem sound.' },
+  { value: 'annotation', label: 'Annotation', description: 'Readable note with keyboard sound.' }
+];
+function planTypeoutInsertion(source, selection, preset) {
+  if (!typeoutPresets.some(option => option.value === preset)) return { error: 'Choose a type-out preset.' };
+  const plan = planInsertion(source, selection, 'typeout');
+  if (plan.error) return plan;
+  const eol = inspectStructure(source).lines.find(line => line.eol)?.eol || '\n';
+  const sound = preset === 'yaml' ? 'modem' : 'keyboard';
+  const body = preset === 'yaml' ? '${1:status: observing}' : '${1:There was another light beyond the harbour wall.}';
+  const fence = ['```typeout', `@format ${preset}`, `@sound ${sound}`, '', body, '```', '$0'].join(eol);
+  return { snippet: plan.snippet.replace('__STORY_TYPEOUT__', fence) };
+}
+function planBeatInsertion(source, selection, title) {
+  if (/[\r\n]|-->/.test(title)) return { error: 'Beat titles must stay on one line and cannot contain -->.' };
+  const plan = planInsertion(source, selection, 'boundary');
+  if (plan.error || !title.trim()) return plan;
+  const eol = inspectStructure(source).lines.find(line => line.eol)?.eol || '\n';
+  const after = source.slice(selection.start);
+  const safeTitle = title.trim().replace(/[\\$}]/g, '\\$&');
+  return { snippet: plan.snippet.replace(`---${eol}$0`, `---${eol}<!-- beat: ${safeTitle} -->${after ? eol : eol + eol}$0`) };
+}
+function planCaption(source, selection) {
+  if (selection.start !== selection.end) return { error: 'Clear the selection before inserting a caption; image and prose will not be replaced.' };
+  const structure = inspectStructure(source);
+  const { lines } = structure;
+  const line = contextAt(structure, selection.start).line;
+  const images = parseScene(source).beats.flatMap(beat => beat.blocks).filter(block => block.type === 'image');
+  const image = images.find(block => {
+    const imageLine = block.line - 1;
+    const captionLine = block.captionLine === null ? imageLine + 1 : block.captionLine - 1;
+    return line >= imageLine && line <= captionLine &&
+      (line === imageLine || line === captionLine || !lines[line].text.trim());
+  });
+  if (!image) return { error: 'Place the caret on a standalone image, its caption or the intervening blank line.' };
+  if (image.captionLine !== null) {
+    const caption = lines[image.captionLine - 1];
+    const match = caption.text.match(/^\*Caption: (.+)\*$/);
+    if (!match) return { error: 'The existing caption could not be selected; edit it directly.' };
+    const start = caption.start + '*Caption: '.length;
+    return { select: { start, end: start + match[1].length } };
+  }
+  const record = lines[image.line - 1];
+  const eol = record.eol || lines.find(entry => entry.eol)?.eol || '\n';
+  return { at: record.end, snippet: `${record.eol ? eol : eol + eol}*Caption: \${1:Your caption here}*${eol}${record.eol && lines[image.line]?.text.trim() ? eol : ''}` };
+}
+module.exports = { choices, typeoutPresets, planInsertion, planPace, planImageInsertion, planTypeoutInsertion, planBeatInsertion, planCaption, markdownPath };
