@@ -21,9 +21,15 @@ function render() {
       section.innerHTML = block.html;
       content.append(section);
     } else {
+      if (block.title) {
+        const heading = document.createElement('h2');
+        heading.className = 'chat-title';
+        heading.textContent = block.title;
+        content.append(heading);
+      }
       const list = document.createElement('ol');
       list.className = 'chat';
-      list.setAttribute('aria-label', 'Conversation');
+      list.setAttribute('aria-label', block.title || 'Conversation');
       for (const message of block.messages) {
         const item = document.createElement('li');
         const speaker = document.createElement('strong');

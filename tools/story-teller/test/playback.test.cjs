@@ -281,3 +281,14 @@ test('malformed chat hides authoring directives but preserves dialogue without p
   assert.doesNotMatch(proseText(player), /@delay/);
   assert.equal(messages(player).length, 0);
 });
+test('title enters with its chat before the first message, adds no time and respects component boundaries', () => {
+  const { player, clock } = cross('Before\n\n@pause 100ms\n@delay 200ms\n\n```chat\n@title Canvas\nA: Hello\n```');
+  const chats = () => player.visibleBlocks.filter(b => b.type === 'chat');
+  assert.equal(chats().length, 0); player.play(); clock.advance(99);
+  assert.equal(chats().length, 0); clock.advance(1);
+  assert.equal(chats()[0].title, 'Canvas'); assert.equal(chats()[0].messages.length, 0);
+  player.pause(); assert.equal(chats()[0].title, 'Canvas');
+  player.play(); clock.advance(200);
+  assert.equal(player.phase, 'completed'); assert.equal(messages(player).length, 1);
+  player.update(player.scene); assert.equal(chats().length, 0);
+});

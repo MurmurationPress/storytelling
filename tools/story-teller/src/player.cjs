@@ -21,7 +21,7 @@ class StoryPlayer {
   reset() {
     this.cancelTimer();
     this.phase = 'ready'; this.cursor = 0; this.remaining = null;
-    this.visible = new Set(); this.counts = new Map(); this.read = new Set();
+    this.visible = new Set(); this.enteredChats = new Set(); this.counts = new Map(); this.read = new Set();
     this.steps = [];
     const sequence = this.current?.sequence || (this.current?.blocks || []).map((block, blockIndex) => ({ type: 'component', blockIndex }));
     for (const entry of sequence) {
@@ -30,7 +30,7 @@ class StoryPlayer {
       const block = this.current.blocks[blockIndex];
       if (block.type === 'prose') this.steps.push({ type: 'prose', blockIndex, delayMs: block.delayMs ?? 0 });
       else for (const event of block.events) {
-        if (event.type === 'pause') this.steps.push(event);
+        if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
         else {
           const message = block.messages[event.message];
           this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? defaultDelay(message.text) });
@@ -61,7 +61,7 @@ class StoryPlayer {
         status: block.ticks && message.speaker === block.viewer ? (this.read.has(`${index}:${i}`) ? 'read' : 'delivered') : null
       }));
       const responding = this.responding?.blockIndex === index ? this.responding.speaker : null;
-      return messages.length || responding ? [{ ...block, messages, responding }] : [];
+      return messages.length || responding || (block.title && this.enteredChats.has(index)) ? [{ ...block, messages, responding }] : [];
     });
   }
   play() {
@@ -72,6 +72,7 @@ class StoryPlayer {
     this.showProse();
     const step = this.steps[this.cursor];
     if (!step) { this.phase = 'completed'; return; }
+    if (step.blockIndex !== undefined && this.current.blocks[step.blockIndex].type === 'chat') this.enteredChats.add(step.blockIndex);
     const delay = this.remaining ?? step.delayMs;
     this.remaining = delay; this.deadline = this.scheduler.now() + delay;
     const generation = this.generation;

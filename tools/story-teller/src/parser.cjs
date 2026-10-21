@@ -104,6 +104,7 @@ function parseScene(source) {
         const events = [];
         let delayMs;
         let responding = false;
+        let title = null;
         let viewer = null;
         let ticks = false;
         let invalid = null;
@@ -114,6 +115,12 @@ function parseScene(source) {
           const line = chatLines[i];
           if (!line.trim()) continue;
           invalidLine = first + token.map[0] + i + 2;
+          const titleHeader = line.trim().match(/^@title(?:\s+(.*))?$/);
+          if (titleHeader) {
+            if (events.length || seen.has('title')) { invalid = '@title must appear once, before messages/pauses'; break; }
+            if (!titleHeader[1]?.trim()) { invalid = '@title needs a nonempty title'; break; }
+            title = titleHeader[1].trim(); seen.add('title'); continue;
+          }
           const match = line.match(/^([^:\n]+):\s+(.+)$/);
           if (match && match[1].trim()) {
             const message = { speaker: match[1].trim(), text: match[2] };
@@ -159,7 +166,7 @@ function parseScene(source) {
           prose.push(token);
         } else {
           flush();
-          add({ type: 'chat', messages, events, viewer, ticks, line: first + token.map[0] + 1 });
+          add({ type: 'chat', messages, events, title, viewer, ticks, line: first + token.map[0] + 1 });
         }
       } else prose.push(token);
     }

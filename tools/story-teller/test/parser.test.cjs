@@ -67,3 +67,15 @@ test('safe prose has no executable HTML, links, images or other fetch elements',
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /\[Image: alt\]/);
 });
+test('chat titles are optional plain text scoped to one fence; invalid headers diagnose', () => {
+  const scene = parseScene('```chat\n@title Canvas: Pip & Skip\nPip: Hello\n```\n\n```chat\nSkip: Yes\n```');
+  assert.equal(scene.beats[0].blocks[0].title, 'Canvas: Pip & Skip');
+  assert.equal(scene.beats[0].blocks[1].title, null);
+  assert.equal(scene.diagnostics.length, 0);
+  for (const body of ['@title\nA: Hi', '@title One\n@title Two\nA: Hi', 'A: Hi\n@title Late']) {
+    const invalid = parseScene('```chat\n' + body + '\n```');
+    assert.equal(invalid.diagnostics.length, 1);
+    assert.match(invalid.diagnostics[0], /@title/);
+    assert.doesNotMatch(invalid.beats[0].blocks[0].html, /@title/);
+  }
+});

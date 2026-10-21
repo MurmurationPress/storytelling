@@ -10,6 +10,7 @@ Mara found the old radio beneath the ferry seat. Its dial glowed despite the mis
 ---
 
 ```chat
+@title Lighthouse radio
 @viewer Mara
 @ticks on
 Mara: Is anyone still at the lighthouse?

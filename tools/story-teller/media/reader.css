@@ -21,3 +21,5 @@ pre { overflow: auto; padding: .6rem; background: var(--vscode-textCodeBlock-bac
 .ticks { position: absolute; right: .65rem; bottom: .15rem; font-size: .8rem; }
 .ticks.read { color: var(--vscode-textLink-foreground, #6bf); }
 .responding { margin: .4rem 1rem 1rem; font-size: .9rem; font-style: italic; }
+.chat-title { font-size: 1.1rem; margin: 1.5rem 0 .4rem; }
+.chat-title + .chat { margin-top: .4rem; }

@@ -1,3 +1,11 @@
+# Optional chat titles — 2026-10-21
+
+`@title Title text` is an optional header inside a chat fence, once before messages/pauses. It renders a plain-text heading and names the conversation for accessibility. It appears when playback reaches the chat, before its first message, and adds no timing. Outside silence does not prematurely reveal a later title. Untitled chats retain their prior rendering. Empty, duplicate and late titles are diagnosed; titles with spaces/colons are supported. This does not add support for manuscript-specific `> Speaker` chat syntax or rewrite the local Art file.
+
+Build and syntax checks pass; **42 deterministic tests pass**, including title scope, validation and component-entry timing. The actual Extension Development Host test checks title-before-first-message, no title leakage into the next chat, and an HTML-like title displayed as text without executing or fetching content. These are automated DOM observations, not a manual reading/accessibility review. Existing timing/lifecycle limitations below remain.
+
+---
+
 # Cross-component timing — 2026-10-21
 
 ## Automated validation

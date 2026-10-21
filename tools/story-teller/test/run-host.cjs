@@ -82,7 +82,10 @@ async function until(fn, timeout = 60000) {
     const temporal = [];
     const capture = async label => temporal.push({ label, at: Date.now(), count: await frame.locator('.chat li').count(), status: await frame.locator('#status').textContent() });
     await capture('ready');
+    assert.equal(await locator('.chat-title').count(), 0);
     await frame.locator('#play').click();
+    assert.equal(await locator('.chat-title').textContent(), 'Lighthouse radio');
+    assert.equal(await locator('.chat li').count(), 0);
     await until(async () => await frame.locator('.chat li').count() === 1);
     await capture('first message');
     await until(async () => (await locator('.responding').textContent()) === 'Ivo is responding…');
@@ -139,6 +142,7 @@ async function until(fn, timeout = 60000) {
     assert.equal(await frame.locator('.prose').count(), 2);
     assert.equal(await frame.locator('.chat li').count(), 3);
     assert.equal(await frame.locator('.ticks').count(), 0);
+    assert.equal(await locator('.chat-title').count(), 0);
     assert.equal(await frame.locator('.chat li.outgoing').count(), 1);
     assert.equal(await evaluate("doc.querySelector('.chat li.outgoing strong').textContent"), 'Mara');
     assert.ok(await evaluate("doc.querySelector('.chat li.outgoing').getBoundingClientRect().left - doc.querySelector('.chat li:not(.outgoing)').getBoundingClientRect().left") >= 10);
@@ -159,12 +163,13 @@ async function until(fn, timeout = 60000) {
       receive(event);
     };
     await send('Network.enable', {});
-    await request('edit', '# Safety\n\n<script>window.STORY_ATTACK = true</script>\n\n![photo](https://story-teller-blocked.invalid/img) [external](https://story-teller-blocked.invalid)\n\n```chat\n<img src=x onerror=alert(1)>: <iframe src="https://story-teller-blocked.invalid"></iframe>\n```');
+    await request('edit', '# Safety\n\n<script>window.STORY_ATTACK = true</script>\n\n![photo](https://story-teller-blocked.invalid/img) [external](https://story-teller-blocked.invalid)\n\n```chat\n@title <img src=x onerror=alert(1)>\n<img src=x onerror=alert(1)>: <iframe src="https://story-teller-blocked.invalid"></iframe>\n```');
     await until(async () => (await beat.textContent()).includes('Safety'));
     await locator('#play').click();
     await until(async () => (await locator('.chat li').count()) === 1);
     assert.equal(await locator('#beat script, #beat img, #beat iframe, #beat a, #beat style').count(), 0);
     assert.equal(await evaluate('doc.defaultView.STORY_ATTACK'), undefined);
+    assert.equal(await locator('.chat-title').textContent(), '<img src=x onerror=alert(1)>');
     await sleep(300);
     assert.deepEqual(fetched, []);
     await request('edit', '');

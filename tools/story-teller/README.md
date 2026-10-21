@@ -62,6 +62,7 @@ Original `Speaker: message` fences still work unchanged. Timing directives work 
 
 ````markdown
 ```chat
+@title Lighthouse radio
 @viewer Mara
 @ticks on
 Mara: Are you there?
@@ -76,6 +77,7 @@ Mara: I can see the light.
 - `@delay Nms`: replace the default delay **before the next message** (integer 0–60000ms). It applies once. A pause before that message is additional. Repeated pending overrides or an unused trailing override are errors.
 - `@responding`: show “Speaker is responding…” during the **next message’s delay**, using that message’s speaker, **only when the speaker differs from `@viewer`**. Viewer messages never show it; without an explicit viewer, no responding cue is shown. Applies once, with either the default delay or `@delay`; adds no time. It disappears when the message arrives or playback is paused/cancelled, and returns on Resume. It is absent in ready/completed state, during explicit pauses/status phases and for zero delays. Duplicate/unconsumed directives are diagnosed. This is an authored cue, not real typing activity; there is no animation under either motion preference.
 - `@pause Nms`: add silent active time at that position (integer 1–60000ms). It never appears as a message. A trailing pause delays following prose/completion too.
+- `@title Title text`: optional plain-text chat heading, scoped to this fence. Put it once before messages/pauses. It appears when playback reaches the chat (before the first message), adds no time, and stays visible through Pause/completion. Titles may contain spaces and colons; Markdown/HTML is not executed or formatted. Untitled chats retain their previous appearance.
 - `@viewer Speaker`: exact speaker name of the viewing participant, scoped to this chat fence. Names may contain spaces. Header only, before any message/pause. The viewer’s messages are offset as outgoing messages independently of ticks.
 - `@ticks on` / `@ticks off`: optional header, once, **off by default**. On requires a viewer matching a speaker in the fence. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
 
