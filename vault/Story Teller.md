@@ -15,3 +15,9 @@ created: 2026-10-21
 [Source, provisional syntax, fictional sample and development-host instructions](../tools/story-teller/README.md). Test claims and limitations are recorded in [results](../tools/story-teller/RESULTS.md).
 
 **Deferred by Ted's brief:** content-based timing, delivered/read ticks, visual beat cards, import/export. No existing EPUB lifecycle or timing is replaced, and no permanent choice about Obsidian's role or publication format follows from this slice. Future integration with the managed reader remains a proposal requiring concrete examples.
+
+## Timed-chat continuation — 2026-10-21
+
+**Accepted workflow:** Ted accepts the Markdown/live-preview workflow and authorises timed chat **within** a manually selected beat. The original chat-line syntax remains valid; provisional `@delay`, `@pause`, `@viewer` and `@ticks` directives add bounded timing and optional authored status effects. Leading prose is readable in ready state; later prose waits for preceding chat. Play is explicit; Pause/Resume preserves active time; Replay Beat resets and plays; source edits reset to ready. The player clock is injectable and independent of VS Code. Reduced motion retains sequential whole-message reveals without animation. See the extension README/results for the formula, tick semantics, verification and limits.
+
+This supersedes the earlier timing/ticks deferral **for this slice**. Visual beat cards, import/export and other components remain deferred. No EPUB lifecycle is replaced or manuscript adapted by the fictional sample.

@@ -30,6 +30,9 @@ exports.run = async function () {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');
 
+      } else if (request.action === 'close-preview') {
+        await vscode.commands.executeCommand('workbench.action.focusSecondEditorGroup');
+        await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
       } else if (request.action === 'switch') {
         const other = await vscode.workspace.openTextDocument({ language: 'markdown', content: '# Other document' });
         await vscode.window.showTextDocument(other, vscode.ViewColumn.One);

@@ -1,0 +1,128 @@
+'use strict';
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const { StoryPlayer, defaultDelay } = require('../src/player.cjs');
+const { parseScene } = require('../src/parser.cjs');
+class Clock {
+  time = 0; id = 0; jobs = new Map(); retired = [];
+  now = () => this.time;
+  setTimeout = (callback, delay) => { this.jobs.set(++this.id, { callback, at: this.time + delay }); return this.id; };
+  clearTimeout = id => { if (this.jobs.has(id)) this.retired.push(this.jobs.get(id).callback); this.jobs.delete(id); };
+  advance(ms) {
+    const end = this.time + ms;
+    for (;;) {
+      const next = [...this.jobs].sort((a, b) => a[1].at - b[1].at)[0];
+      if (!next || next[1].at > end) break;
+      this.time = next[1].at; this.jobs.delete(next[0]); next[1].callback();
+    }
+    this.time = end;
+  }
+}
+function setup(chat, suffix = '') {
+  const clock = new Clock();
+  const scene = parseScene(`Before\n\n\`\`\`chat\n${chat}\n\`\`\`\n\nAfter${suffix}`);
+  const player = new StoryPlayer(scene, { scheduler: clock });
+  return { player, clock, scene };
+}
+const messages = player => player.visibleBlocks.filter(b => b.type === 'chat').flatMap(b => b.messages);
+test('default delay uses Unicode character length and bounded readable delays', () => {
+  assert.equal(defaultDelay('Hi'), 800);
+  assert.equal(defaultDelay('x'.repeat(40)), 1800);
+  assert.equal(defaultDelay('x'.repeat(10000)), 4000);
+  assert.equal(defaultDelay('🐦'.repeat(20)), 1100);
+});
+test('ready has no timers; ordered messages gate later prose; beat progression stays manual', () => {
+  const { player, clock } = setup('A: Hi\nB: Yes', '\n---\nNext beat');
+  assert.equal(player.phase, 'ready'); assert.equal(clock.jobs.size, 0);
+  assert.equal(player.visibleBlocks.length, 1);
+  clock.advance(20000); assert.equal(messages(player).length, 0);
+  player.play(); player.play(); assert.equal(clock.jobs.size, 1);
+  clock.advance(799); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1);
+  assert.equal(player.visibleBlocks.some(b => b.html?.includes('After')), false);
+  clock.advance(800); assert.equal(messages(player).length, 2);
+  assert.equal(player.visibleBlocks.at(-1).type, 'prose');
+  assert.equal(player.phase, 'completed'); assert.equal(player.index, 0);
+  clock.advance(20000); assert.equal(player.index, 0);
+});
+test('overrides replace default, pauses add silence without messages, including zero delay', () => {
+  const { player, clock } = setup('@delay 0ms\nA: Hi\n@pause 1000ms\n@delay 200ms\nB: Yes');
+  player.play(); clock.advance(0); assert.equal(messages(player).length, 1);
+  clock.advance(1199); assert.equal(messages(player).length, 1);
+  clock.advance(1); assert.equal(messages(player).length, 2);
+  assert.equal(player.phase, 'completed');
+});
+test('pause/resume preserves remaining delay through long absence and repeated pause', () => {
+  const { player, clock } = setup('@delay 1000ms\nA: Hi');
+  player.play(); clock.advance(300); player.pause(); player.pause();
+  assert.equal(player.remaining, 700); assert.equal(clock.jobs.size, 0);
+  clock.advance(10000); assert.equal(messages(player).length, 0);
+  player.play(); clock.advance(699); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1);
+});
+test('explicit pause can be interrupted and resumed without consuming silence offscreen', () => {
+  const { player, clock } = setup('@delay 0ms\nA: Hi\n@pause 1000ms\n@delay 0ms\nB: Yes');
+  player.play(); clock.advance(250); player.pause();
+  assert.equal(player.remaining, 750); clock.advance(5000);
+  player.play(); clock.advance(749); assert.equal(messages(player).length, 1);
+  clock.advance(1); assert.equal(messages(player).length, 2);
+});
+test('ticks off by default, viewer messages only, delivered then read after 600 active ms', () => {
+  const { player, clock } = setup('@viewer A\n@ticks on\n@delay 0ms\nA: Hi\n@delay 0ms\nB: Yes');
+  player.play(); clock.advance(0); assert.equal(messages(player)[0].status, 'delivered');
+  clock.advance(300); player.pause(); clock.advance(5000); player.play();
+  clock.advance(299); assert.equal(messages(player)[0].status, 'delivered');
+  clock.advance(1); assert.deepEqual(messages(player).map(m => m.status), ['read', null]);
+  const plain = setup('@delay 0ms\nA: Hello'); plain.player.play(); plain.clock.advance(0);
+  assert.equal(messages(plain.player)[0].status, null);
+});
+test('replay clears messages, prose after chat, ticks and all old callbacks', () => {
+  const { player, clock } = setup('@viewer A\n@ticks on\n@delay 0ms\nA: Hi');
+  player.play(); clock.advance(0); player.replay();
+  assert.equal(messages(player).length, 0); assert.equal(player.visibleBlocks.length, 1);
+  for (const stale of clock.retired) stale();
+  assert.equal(messages(player).length, 0);
+  clock.advance(600); assert.equal(messages(player)[0].status, 'read');
+  player.replay(); assert.equal(messages(player).length, 0);
+});
+test('navigation, edits, restart and disposal cancel pending timers and reject stale work', () => {
+  for (const action of ['next', 'previous', 'restart', 'update', 'dispose']) {
+    const { player, clock, scene } = setup('A: Hi', '\n---\nOther');
+    player.play(); clock.advance(200);
+    if (action === 'update') player.update(scene); else player[action]();
+    assert.equal(clock.jobs.size, 0, action);
+    for (const callback of clock.retired) callback();
+    clock.advance(10000); assert.equal(messages(player).length, 0, action);
+    assert.equal(player.phase, action === 'dispose' ? 'disposed' : 'ready');
+  }
+});
+test('all mixed components preserve order, including multiple chats and intervening prose', () => {
+  const clock = new Clock();
+  const player = new StoryPlayer(parseScene('First\n\n```chat\n@delay 10ms\nA: One\n```\n\nMiddle\n\n```chat\n@delay 20ms\nB: Two\n```\n\nLast'), { scheduler: clock });
+  player.play(); clock.advance(10);
+  assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose', 'chat', 'prose']);
+  clock.advance(19); assert.equal(messages(player).length, 1);
+  clock.advance(1); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose', 'chat', 'prose', 'chat', 'prose']);
+});
+test('invalid directives retain the entire chat as readable code and diagnose cause', () => {
+  for (const line of ['@delay -1ms', '@delay 1.5ms', '@delay 60001ms', '@delay NaNms', '@pause 0ms', '@pause 1s', '@ticks yes', '@unknown 1ms', '@delay 2ms\n@delay 3ms']) {
+    const scene = parseScene('```chat\n' + line + '\nA: Hello\n```');
+    assert.equal(scene.beats[0].blocks[0].type, 'prose', line);
+    assert.equal(scene.diagnostics.length, 1, line);
+    assert.match(scene.diagnostics[0], /Line .*showing the code block/);
+  }
+  for (const chat of ['@delay 2ms', '@ticks on\nA: Hi', '@viewer B\n@ticks on\nA: Hi', 'A: Hi\n@viewer A', '@viewer A\n@viewer B\nA: Hi']) {
+    assert.equal(parseScene('```chat\n' + chat + '\n```').diagnostics.length, 1, chat);
+  }
+});
+test('trailing pause gates following prose and completion; edits during read reset statuses', () => {
+  const { player, clock, scene } = setup('@viewer A\n@ticks on\n@delay 0ms\nA: Hi\n@pause 100ms');
+  player.play(); clock.advance(600);
+  assert.equal(messages(player)[0].status, 'read');
+  assert.equal(player.visibleBlocks.some(b => b.html?.includes('After')), false);
+  clock.advance(100); assert.equal(player.phase, 'completed');
+  player.replay(); clock.advance(0); player.update(scene);
+  assert.equal(player.phase, 'ready'); assert.equal(messages(player).length, 0);
+  for (const stale of clock.retired) stale();
+  assert.equal(player.visibleBlocks.length, 1);
+});

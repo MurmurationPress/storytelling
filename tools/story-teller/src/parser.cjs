@@ -54,19 +54,53 @@ function parseScene(source) {
       // Only top-level fences are components; quoted/list-nested fences remain Markdown.
       if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];
-        let invalid = false;
-        for (const line of token.content.split('\n')) {
+        const events = [];
+        let delayMs;
+        let viewer = null;
+        let ticks = false;
+        let invalid = null;
+        const seen = new Set();
+        const chatLines = token.content.split('\n');
+        for (let i = 0; i < chatLines.length; i++) {
+          const line = chatLines[i];
           if (!line.trim()) continue;
           const match = line.match(/^([^:\n]+):\s+(.+)$/);
-          if (!match || !match[1].trim()) { invalid = true; break; }
-          messages.push({ speaker: match[1].trim(), text: match[2] });
+          if (match && match[1].trim()) {
+            const message = { speaker: match[1].trim(), text: match[2] };
+            if (delayMs !== undefined) message.delayMs = delayMs;
+            delayMs = undefined;
+            messages.push(message);
+            events.push({ type: 'message', message: messages.length - 1 });
+            continue;
+          }
+          const directive = line.trim().match(/^@(delay|pause|viewer|ticks)\s+(.+)$/);
+          if (!directive) { invalid = `invalid chat line or directive "${line}"`; break; }
+          const [, name, value] = directive;
+          if (name === 'viewer' || name === 'ticks') {
+            if (events.length || seen.has(name)) { invalid = `@${name} must appear once, before messages/pauses`; break; }
+            seen.add(name);
+            if (name === 'viewer') viewer = value.trim();
+            else if (value === 'on' || value === 'off') ticks = value === 'on';
+            else { invalid = '@ticks expects on or off'; break; }
+          } else {
+            const time = value.match(/^(0|[1-9][0-9]*)ms$/);
+            const amount = time ? Number(time[1]) : NaN;
+            if (!Number.isInteger(amount) || amount > 60000 || (name === 'pause' && amount === 0)) {
+              invalid = `@${name} expects integer milliseconds (${name === 'pause' ? '1' : '0'}–60000ms)`; break;
+            }
+            if (name === 'pause') events.push({ type: 'pause', delayMs: amount });
+            else if (delayMs !== undefined) { invalid = '@delay already waiting for a message'; break; }
+            else delayMs = amount;
+          }
         }
+        if (delayMs !== undefined && !invalid) invalid = '@delay needs a following message';
+        if (ticks && (!viewer || !messages.some(m => m.speaker === viewer)) && !invalid) invalid = '@ticks on needs @viewer matching a speaker';
         if (invalid || !messages.length) {
-          diagnostics.push(`Line ${first + token.map[0] + 1}: chat needs one "Speaker: message" per nonblank line; showing the code block.`);
+          diagnostics.push(`Line ${first + token.map[0] + 1}: ${invalid || 'chat needs at least one Speaker: message line'}; showing the code block.`);
           prose.push(token);
         } else {
           flush();
-          blocks.push({ type: 'chat', messages });
+          blocks.push({ type: 'chat', messages, events, viewer, ticks });
         }
       } else prose.push(token);
     }

@@ -10,7 +10,7 @@ Requires desktop VS Code 1.95+ and Node.js 22+ (Node 24 recommended).
 2. In its terminal, run `npm ci`, then `npm run build`.
 3. Press **F5** and select **Story Teller: Extension Development Host**. The launch configuration builds the browser player and opens the sample folder in a separate development window.
 4. In that new window, open `lantern.md`. Run **Story Teller: Preview Scene** from the Command Palette.
-5. Use **Next**, **Previous** and **Restart** alongside the source. Edit the Markdown without saving: the preview updates immediately.
+5. Use **Next** to reach a chat beat, then **Play**. **Pause/Resume** freezes/restores its remaining delay; **Replay Beat** resets the current beat and starts it again. **Previous**, **Next** and **Restart** remain manual. Edit the Markdown without saving: the current beat resets to ready-to-play.
 
 Alternatively, after building, from this directory:
 
@@ -56,12 +56,45 @@ Mara: I can see the light.
 The water held its reflection.
 ````
 
-**Manual progression only:** Next displays the entire next beat, including all its messages. No message timers, delivered/read ticks, beat cards, import/export or live generated dialogue. The syntax is a proposal to try, not a settled manuscript or publishing standard.
+## Timed chat (provisional directives)
+
+Original `Speaker: message` fences still work unchanged. Timing directives are lines **inside** a chat fence:
+
+````markdown
+```chat
+@viewer Mara
+@ticks on
+Mara: Are you there?
+@delay 1200ms
+Ivo: Yes. By the lantern.
+@pause 900ms
+Mara: I can see the light.
+```
+````
+
+- `@delay Nms`: replace the default delay **before the next message** (integer 0–60000ms). It applies once. A pause before that message is additional. Repeated pending overrides or an unused trailing override are errors.
+- `@pause Nms`: add silent active time at that position (integer 1–60000ms). It never appears as a message. A trailing pause delays following prose/completion too.
+- `@viewer Speaker`: exact speaker name of the viewing participant, scoped to this chat fence. Names may contain spaces. Header only, before any message/pause.
+- `@ticks on` / `@ticks off`: optional header, once, **off by default**. On requires a viewer matching a speaker in the fence. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
+
+No other directives, units, fractions or negative values are accepted. Invalid blocks stay readable code with a diagnostic explaining why; they never partly execute. Timing is editorial metadata, separate from dialogue wording.
+
+**Default before-message delay:** `clamp(400 + 35 × Unicode code-point count, 800, 4000)` milliseconds. The minimum avoids an unreadable rush of short messages; length adds a restrained composition delay; the maximum avoids making long messages feel stalled. This is a starting editorial heuristic, not a reading-speed or delivery estimate. There is no automatic progression to another beat.
+
+With ticks enabled, a revealed outgoing message immediately receives one tick (`delivered`), then two (`read`) after **600ms of active playback**. This is an authored presentation effect, not network delivery, actual reader attention or telemetry. The status phase is part of the linear sequence: the following message's own delay starts afterwards, and following prose waits for all status/pause phases. Replay resets both ticks and messages. These deliberately simple effects do not model a messaging service.
+
+A new beat is **ready**, with only its leading prose readable. Play starts sequential whole-message reveals. All components retain source order: prose after a chat waits for that chat's last message, status and authored pause. Pause retains the exact remaining active delay. Resume continues; Replay Beat clears all progress and immediately starts that beat again. Next/Previous/Restart cancel playback and prepare the selected beat without starting it. Completion stays on the current beat. Unsaved source edits cancel playback, retain the beat where possible and reset it to ready.
+
+A hidden preview pauses via VS Code panel visibility and document visibility; it does **not** resume automatically. If VS Code destroys/recreates the hidden webview, the beat is restored ready rather than restoring phase progress. Closing/disposal cancels its pending work. No session-level playback persistence is promised. Losing keyboard focus while the preview is still visible does not pause it.
+
+There are **no reveal animations in either motion preference**. Reduced motion retains the same discrete message sequencing and delays, without typing/fading/movement effects. No timing is removed just because reduced motion is enabled.
+
+The syntax remains a proposal, not a settled manuscript or publishing standard. Beat cards, import/export, typing effects and live generated dialogue remain outside this slice.
 
 ## Structure and safety
 
 - `src/parser.cjs`: pure Markdown → scene model, using pinned markdown-it. No VS Code or DOM imports.
-- `src/player.cjs`: pure manual navigation and source-update reconciliation. No host or rendering dependency.
+- `src/player.cjs`: manual navigation, timed beat sequencing and source-update reconciliation. The monotonic clock/scheduler and change callback are injectable; no host or rendering dependency.
 - `src/webview.cjs`: browser renderer and small host-message adapter. Bundled with esbuild into ignored `dist/player.js`.
 - `src/extension.cjs`: command, editor/document binding, webview lifetime and resource policy only.
 
