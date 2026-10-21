@@ -42,6 +42,13 @@ function render() {
         list.append(item);
       }
       content.append(list);
+      if (block.responding) {
+        const indicator = document.createElement('p');
+        indicator.className = 'responding';
+        indicator.setAttribute('role', 'status');
+        indicator.textContent = `${block.responding} is responding…`;
+        content.append(indicator);
+      }
     }
   }
   status.textContent = beat ? `Beat ${player.index + 1} of ${player.scene.beats.length} · ${player.phase}` : 'No beats';

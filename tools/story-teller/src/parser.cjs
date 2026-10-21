@@ -56,6 +56,7 @@ function parseScene(source) {
         const messages = [];
         const events = [];
         let delayMs;
+        let responding = false;
         let viewer = null;
         let ticks = false;
         let invalid = null;
@@ -68,9 +69,16 @@ function parseScene(source) {
           if (match && match[1].trim()) {
             const message = { speaker: match[1].trim(), text: match[2] };
             if (delayMs !== undefined) message.delayMs = delayMs;
+            if (responding) message.responding = true;
+            responding = false;
             delayMs = undefined;
             messages.push(message);
             events.push({ type: 'message', message: messages.length - 1 });
+            continue;
+          }
+          if (line.trim() === '@responding') {
+            if (responding) { invalid = '@responding already waiting for a message'; break; }
+            responding = true;
             continue;
           }
           const directive = line.trim().match(/^@(delay|pause|viewer|ticks)\s+(.+)$/);
@@ -93,6 +101,7 @@ function parseScene(source) {
             else delayMs = amount;
           }
         }
+        if (responding && !invalid) invalid = '@responding needs a following message';
         if (delayMs !== undefined && !invalid) invalid = '@delay needs a following message';
         if (ticks && (!viewer || !messages.some(m => m.speaker === viewer)) && !invalid) invalid = '@ticks on needs @viewer matching a speaker';
         if (invalid || !messages.length) {

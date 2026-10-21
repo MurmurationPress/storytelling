@@ -42,6 +42,12 @@ class StoryPlayer {
       this.visible.add(this.steps[this.cursor].blockIndex); this.cursor++;
     }
   }
+  get responding() {
+    const step = this.steps[this.cursor];
+    if (this.phase !== 'playing' || step?.type !== 'message' || !(this.remaining > 0)) return null;
+    const message = this.current.blocks[step.blockIndex].messages[step.message];
+    return message.responding ? { blockIndex: step.blockIndex, speaker: message.speaker } : null;
+  }
   get visibleBlocks() {
     return (this.current?.blocks || []).flatMap((block, index) => {
       if (block.type === 'prose') return this.visible.has(index) ? [block] : [];
@@ -49,7 +55,8 @@ class StoryPlayer {
         ...message,
         status: block.ticks && message.speaker === block.viewer ? (this.read.has(`${index}:${i}`) ? 'read' : 'delivered') : null
       }));
-      return messages.length ? [{ ...block, messages }] : [];
+      const responding = this.responding?.blockIndex === index ? this.responding.speaker : null;
+      return messages.length || responding ? [{ ...block, messages, responding }] : [];
     });
   }
   play() {

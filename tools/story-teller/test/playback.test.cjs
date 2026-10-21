@@ -126,3 +126,36 @@ test('trailing pause gates following prose and completion; edits during read res
   for (const stale of clock.retired) stale();
   assert.equal(player.visibleBlocks.length, 1);
 });
+test('responding is opt-in, speaker-derived, delay-only and adds no timing', () => {
+  const { player, clock } = setup('@pause 100ms\n@responding\n@delay 200ms\nIvo: Hello');
+  assert.equal(player.responding, null);
+  player.play(); assert.equal(player.responding, null);
+  clock.advance(100); assert.equal(player.responding.speaker, 'Ivo');
+  assert.equal(player.visibleBlocks.at(-1).responding, 'Ivo');
+  clock.advance(199); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player).length, 1);
+  assert.equal(player.responding, null); assert.equal(player.phase, 'completed');
+  const plain = setup('Ivo: Hello'); plain.player.play(); assert.equal(plain.player.responding, null);
+});
+test('responding follows pause/resume, replay, source edits and navigation without stale cues', () => {
+  const { player, clock, scene } = setup('@responding\nIvo: Hello', '\n---\nOther');
+  player.play(); clock.advance(200); player.pause();
+  assert.equal(player.responding, null); clock.advance(2000);
+  player.play(); assert.equal(player.responding.speaker, 'Ivo');
+  player.replay(); assert.equal(player.responding.speaker, 'Ivo');
+  player.update(scene); assert.equal(player.responding, null);
+  for (const callback of clock.retired) callback();
+  assert.equal(player.responding, null);
+  player.play(); player.next(); assert.equal(player.responding, null);
+});
+test('responding excludes zero delay and authored status phase; malformed directives diagnose', () => {
+  const { player, clock } = setup('@viewer Ivo\n@ticks on\n@responding\n@delay 0ms\nIvo: Hello');
+  player.play(); assert.equal(player.responding, null);
+  clock.advance(0); assert.equal(player.responding, null);
+  assert.equal(messages(player)[0].status, 'delivered');
+  for (const chat of ['@responding', '@responding on\nIvo: Hi', '@responding\n@responding\nIvo: Hi']) {
+    const parsed = parseScene('```chat\n' + chat + '\n```');
+    assert.equal(parsed.diagnostics.length, 1);
+    assert.equal(parsed.beats[0].blocks[0].type, 'prose');
+  }
+});

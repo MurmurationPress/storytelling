@@ -66,6 +66,7 @@ Original `Speaker: message` fences still work unchanged. Timing directives are l
 @ticks on
 Mara: Are you there?
 @delay 1200ms
+@responding
 Ivo: Yes. By the lantern.
 @pause 900ms
 Mara: I can see the light.
@@ -73,6 +74,7 @@ Mara: I can see the light.
 ````
 
 - `@delay Nms`: replace the default delay **before the next message** (integer 0–60000ms). It applies once. A pause before that message is additional. Repeated pending overrides or an unused trailing override are errors.
+- `@responding`: show “Speaker is responding…” during the **next message’s delay**, using that message’s speaker. Applies once, with either the default delay or `@delay`; adds no time. It disappears when the message arrives or playback is paused/cancelled, and returns on Resume. It is absent in ready/completed state, during explicit pauses/status phases and for zero delays. Duplicate/unconsumed directives are diagnosed. This is an authored cue, not real typing activity; there is no animation under either motion preference.
 - `@pause Nms`: add silent active time at that position (integer 1–60000ms). It never appears as a message. A trailing pause delays following prose/completion too.
 - `@viewer Speaker`: exact speaker name of the viewing participant, scoped to this chat fence. Names may contain spaces. Header only, before any message/pause.
 - `@ticks on` / `@ticks off`: optional header, once, **off by default**. On requires a viewer matching a speaker in the fence. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
@@ -89,7 +91,7 @@ A hidden preview pauses via VS Code panel visibility and document visibility; it
 
 There are **no reveal animations in either motion preference**. Reduced motion retains the same discrete message sequencing and delays, without typing/fading/movement effects. No timing is removed just because reduced motion is enabled.
 
-The syntax remains a proposal, not a settled manuscript or publishing standard. Beat cards, import/export, typing effects and live generated dialogue remain outside this slice.
+The syntax remains a proposal, not a settled manuscript or publishing standard. Beat cards, import/export, animated typing effects and live generated dialogue remain outside this slice.
 
 ## Structure and safety
 

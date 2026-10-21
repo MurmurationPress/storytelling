@@ -14,6 +14,7 @@ Mara found the old radio beneath the ferry seat. Its dial glowed despite the mis
 @ticks on
 Mara: Is anyone still at the lighthouse?
 @delay 1200ms
+@responding
 Ivo: Only me. The stairs have gone quiet.
 @pause 900ms
 Mara: Keep the lantern lit. I'm coming across.

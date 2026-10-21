@@ -85,12 +85,16 @@ async function until(fn, timeout = 60000) {
     await frame.locator('#play').click();
     await until(async () => await frame.locator('.chat li').count() === 1);
     await capture('first message');
+    await until(async () => (await locator('.responding').textContent()) === 'Ivo is responding…');
     await frame.locator('#pause').click();
+    assert.equal(await locator('.responding').count(), 0);
     await sleep(900); assert.equal(await frame.locator('.chat li').count(), 1);
     await capture('paused');
     await frame.locator('#pause').click();
+    assert.equal(await locator('.responding').textContent(), 'Ivo is responding…');
     await until(async () => await frame.locator('.chat li').count() === 2);
     await capture('second message');
+    assert.equal(await locator('.responding').count(), 0);
     await until(async () => (await frame.locator('#status').textContent()).includes('completed'));
     assert.equal(await frame.locator('.chat li').count(), 3);
     assert.equal(await frame.locator('.ticks.read').count(), 2);
