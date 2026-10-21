@@ -101,3 +101,8 @@ This authorises implementation of the extract experiment only. The earlier think
 **Notes preserved:** Ted's local [[Component Types]] was brought into main byte-for-byte without switching/resetting his authoring worktree. Future drawing/line invitation/JANUS/previews/video/apps/footnotes/sound ideas remain in the vault, outside the milestone.
 
 **Planned, not implemented:** [Managed EPUB foundation: reusable PRIME and chat](https://github.com/MurmurationPress/storytelling/milestone/1); contract #3, reader #4, reusable PRIME #5, authored chat #6, packaging/fallback #7. See [[Managed EPUB Foundation]] for issue links, proposed order, evidence and security/dependency constraints.
+
+
+## 2026-10-21 — Story Teller manual scene-preview slice
+
+**Ted's explicit direction:** implement a small VS Code extension for adapting completed books, with independent parser/player, prose and chat within beat boundaries, manual progression and live preview. This supersedes earlier no-scaffolding guidance for this specific slice only. The Markdown syntax remains provisional. Existing EPUB work and author-authored notes are preserved; no publication, release or merge is authorised. See [[Story Teller]].

@@ -32,3 +32,5 @@ This vault develops that question and records evidence before broader product co
 - [[Conversation Record - 2026-10-20]] — the initial discussion and its provenance.
 
 Add new ideas where they belong, link them, and retain unresolved alternatives. A note can remain a question.
+
+- [[Story Teller]] — provisional VS Code manual scene-preview experiment; separate from EPUB delivery.

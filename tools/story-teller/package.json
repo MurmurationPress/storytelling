@@ -1,0 +1,36 @@
+{
+  "name": "story-teller",
+  "displayName": "Story Teller",
+  "description": "Provisional prose and authored-chat scene preview.",
+  "version": "0.0.1",
+  "private": true,
+  "publisher": "murmurationpress",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./src/extension.cjs",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "storyTeller.previewScene",
+        "title": "Story Teller: Preview Scene"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
+    "test": "node --test test/*.test.cjs",
+    "check": "node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs",
+    "test:host": "node test/run-host.cjs"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.3"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

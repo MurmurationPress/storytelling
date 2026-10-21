@@ -1,0 +1,17 @@
+:root { color-scheme: light dark; }
+body { margin: 0; color: var(--vscode-editor-foreground, #ddd); background: var(--vscode-editor-background, #222); font: 17px/1.65 var(--vscode-font-family, sans-serif); }
+nav { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .8rem 1rem; border-bottom: 1px solid var(--vscode-panel-border, #888); }
+button { font: inherit; padding: .25rem .7rem; color: var(--vscode-button-foreground, white); background: var(--vscode-button-background, #275e87); border: 1px solid transparent; cursor: pointer; }
+button:disabled { opacity: .45; cursor: default; }
+:focus-visible { outline: 2px solid var(--vscode-focusBorder, #6bf); outline-offset: 2px; }
+#status { font-size: .85rem; margin-left: auto; }
+#beat { max-width: 44rem; margin: 0 auto; padding: 1rem 1.5rem 3rem; overflow-wrap: anywhere; }
+#warnings { white-space: pre-wrap; padding: 0 1rem; color: var(--vscode-editorWarning-foreground, #da8); font-size: .85rem; }
+#warnings:empty { display: none; }
+.chat { list-style: none; padding: 0; margin: 1.5rem 0; }
+.chat li { border-left: 3px solid var(--vscode-textLink-foreground, #6bf); background: var(--vscode-textBlockQuote-background, #333); padding: .5rem 1rem; margin: .6rem 0; }
+.chat strong { font-size: .85rem; }
+.chat p { margin: .2rem 0; white-space: pre-wrap; }
+pre { overflow: auto; padding: .6rem; background: var(--vscode-textCodeBlock-background, #333); }
+.link-text { text-decoration: underline; }
+.image-alt { font-style: italic; }
