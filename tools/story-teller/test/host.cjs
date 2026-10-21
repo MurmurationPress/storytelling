@@ -22,7 +22,23 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'edit') {
+      if (request.action === 'start-conversion') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await fs.rm(path.join(directory, 'conversion-result.json'), { force: true });
+        vscode.commands.executeCommand('storyTeller.convertChats').then(result => fs.writeFile(path.join(directory, 'conversion-result.json'), JSON.stringify(result)));
+      } else if (request.action === 'preview-current') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('storyTeller.previewScene');
+      } else if (request.action === 'snapshot') {
+        await fs.writeFile(path.join(directory, 'snapshot.json'), JSON.stringify({
+          text: document.getText(), version: document.version, dirty: document.isDirty,
+          disk: await fs.readFile(file, 'utf8'),
+          snapshots: vscode.workspace.textDocuments.filter(d => d.uri.scheme === 'story-teller-conversion').map(d => ({ uri: d.uri.toString(), text: d.getText() }))
+        }));
+      } else if (request.action === 'undo') {
+        await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('undo');
+      } else if (request.action === 'edit') {
         const edit = new vscode.WorkspaceEdit();
         edit.replace(document.uri, new vscode.Range(document.positionAt(0), document.positionAt(document.getText().length)), request.source);
         if (!await vscode.workspace.applyEdit(edit)) throw new Error('Edit was rejected');

@@ -184,7 +184,83 @@ async function until(fn, timeout = 60000) {
     await locator('#play').click();
     await request('close-preview');
     await until(async () => !(await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).some(t => t.type === 'iframe' && t.url.includes('murmurationpress.story-teller')));
-    console.log('PASS: actual VS Code Extension Development Host — timed chat, pause/resume, replay, ready-on-edit, mixed prose gating, ticks, manual navigation and safe rendering.');
+    // Switch the test-only CDP inspection to the actual workbench for native
+    // diff/notification buttons; extension code never sees this connection.
+    const mainTarget = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t => t.type === 'page');
+    const receiveWorkbench = socket.onmessage;
+    socket.close(); socket = new WebSocket(mainTarget.webSocketDebuggerUrl);
+    await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+    socket.onmessage = receiveWorkbench;
+    async function workbench(expression) {
+      const response = await send('Runtime.evaluate', { expression, returnByValue: true });
+      if (response.exceptionDetails) throw new Error(response.exceptionDetails.text);
+      return response.result.value;
+    }
+    const action = async text => {
+      const expression = `Array.from(document.querySelectorAll('.notification-toast .monaco-button')).find(b => b.textContent.trim() === ${JSON.stringify(text)})`;
+      await until(async () => await workbench(`Boolean(${expression})`));
+      await workbench(`${expression}.click()`);
+    };
+    const snapshot = async () => {
+      await request('snapshot'); return JSON.parse(await fs.readFile(path.join(directory, 'snapshot.json'), 'utf8'));
+    };
+    const result = () => until(async () => JSON.parse(await fs.readFile(path.join(directory, 'conversion-result.json'), 'utf8')));
+    const fixture = await fs.readFile(path.join(root, 'samples/conversion-example.md'), 'utf8');
+    await request('edit', fixture); const initial = await snapshot();
+    await request('start-conversion');
+    await until(async () => (await snapshot()).snapshots.some(s => s.text.includes('Bo: First line.')));
+    const prepared = await snapshot();
+    assert.equal(prepared.text, fixture); assert.equal(prepared.disk, initial.disk);
+    assert.ok(prepared.snapshots.some(s => s.text === fixture));
+    assert.ok(await workbench("document.body.innerText.includes('2 chat(s) to convert; 1 review warning(s).')"));
+    await action('Review Warnings');
+    await until(async () => await workbench("document.body.innerText.includes('subtext')"));
+    await action('Cancel'); assert.equal((await result()).status, 'cancelled');
+    assert.equal((await snapshot()).text, fixture);
+
+    await request('start-conversion');
+    await request('edit', fixture + '\nAn unsaved edit after preview.');
+    await action('Apply');
+    await until(async () => await workbench("document.body.innerText.includes('Nothing was applied.')"));
+    assert.equal((await snapshot()).text, fixture + '\nAn unsaved edit after preview.');
+    await action('Regenerate');
+    await until(async () => (await snapshot()).snapshots.some(s => s.text.includes('Bo: First line.') && s.text.endsWith('An unsaved edit after preview.')));
+    await action('Cancel'); assert.equal((await result()).status, 'cancelled');
+    const unsaved = (await snapshot()).text;
+
+    await request('start-conversion'); await action('Apply');
+    const applied = await result(); assert.equal(applied.status, 'applied'); assert.equal(applied.count, 2);
+    const after = await snapshot();
+    assert.ok(after.text.includes('# Harbour link\n@viewer Ari\nAri: Is the lamp still lit?'));
+    assert.ok(after.text.includes('  | Second line, with a colon: keep this together.'));
+    assert.ok(after.text.endsWith('An unsaved edit after preview.'));
+    assert.ok(after.dirty); assert.equal(after.disk, initial.disk);
+    await request('preview-current');
+    const convertedTarget = await until(async () => (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t => t.type === 'iframe' && t.url.includes('murmurationpress.story-teller')));
+    async function inspectConverted(expression) {
+      const connection = new WebSocket(convertedTarget.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { connection.onopen = resolve; connection.onerror = reject; });
+      try {
+        return await new Promise((resolve, reject) => {
+          connection.onmessage = event => {
+            const message = JSON.parse(event.data);
+            if (message.id !== 1) return;
+            if (message.result?.exceptionDetails || message.error) reject(new Error(JSON.stringify(message)));
+            else resolve(message.result.result.value);
+          };
+          connection.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: { expression: `(() => { const doc = document.getElementById('active-frame')?.contentDocument; return (${expression}); })()`, returnByValue: true } }));
+        });
+      } finally { connection.close(); }
+    }
+    await until(async () => await inspectConverted("Boolean(doc?.getElementById('play'))"));
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => (await inspectConverted("doc.querySelector('.chat-title')?.textContent")) === 'Harbour link');
+    await until(async () => (await inspectConverted("doc.querySelectorAll('.chat li').length")) >= 2);
+    const multiline = await inspectConverted("doc.querySelectorAll('.chat li p')[1].textContent");
+    assert.ok(multiline.includes('Second line, with a colon: keep this together.\n\n@pause 500ms is part of this message, not a setting.'));
+    await request('undo'); const undone = await snapshot();
+    assert.equal(undone.text, unsaved); assert.equal(undone.disk, initial.disk);
+    console.log('PASS: actual VS Code Extension Development Host — playback regressions; native conversion diff/count/warnings, cancellation, stale refusal/regeneration, unsaved Apply and single Undo.');
     console.log(`Isolated test profile/log: ${directory}`);
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
   } finally {

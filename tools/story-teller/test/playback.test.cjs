@@ -292,3 +292,13 @@ test('title enters with its chat before the first message, adds no time and resp
   assert.equal(player.phase, 'completed'); assert.equal(messages(player).length, 1);
   player.update(player.scene); assert.equal(chats().length, 0);
 });
+test('converted multiline messages reveal atomically without changing timing or interpreting their contents', () => {
+  const { convertChats } = require('../src/convert.cjs');
+  const converted = convertChats('```chat\n# Link\n@delay 100ms\n{{Ari|One\n\n@pause 900ms\nBo: still Ari|}}\n@delay 200ms\n{{Bo|Reply|}}\n```');
+  assert.equal(converted.count, 1);
+  const { player, clock } = cross(converted.text);
+  player.play(); clock.advance(99); assert.equal(messages(player).length, 0);
+  clock.advance(1); assert.equal(messages(player)[0].text, 'One\n\n@pause 900ms\nBo: still Ari');
+  clock.advance(199); assert.equal(messages(player).length, 1);
+  clock.advance(1); assert.equal(player.phase, 'completed'); assert.equal(messages(player).length, 2);
+});

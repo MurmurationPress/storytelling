@@ -104,6 +104,7 @@ function parseScene(source) {
         const events = [];
         let delayMs;
         let responding = false;
+        let canContinue = false;
         let title = null;
         let viewer = null;
         let ticks = false;
@@ -113,15 +114,22 @@ function parseScene(source) {
         const chatLines = token.content.split('\n');
         for (let i = 0; i < chatLines.length; i++) {
           const line = chatLines[i];
-          if (!line.trim()) continue;
           invalidLine = first + token.map[0] + i + 2;
-          const titleHeader = line.trim().match(/^@title(?:\s+(.*))?$/);
+          const continuation = line.match(/^ {2}\|(?: (.*))?$/);
+          if (continuation) {
+            if (!canContinue) { invalid = 'message continuation needs an immediately preceding message'; break; }
+            messages[messages.length - 1].text += '\n' + (continuation[1] ?? '');
+            continue;
+          }
+          if (!line.trim()) continue;
+          canContinue = false;
+          const titleHeader = line.trim().match(/^(?:@title(?:\s+(.*))?|#(?:\s+(.*))?)$/);
           if (titleHeader) {
             if (events.length || seen.has('title')) { invalid = '@title must appear once, before messages/pauses'; break; }
-            if (!titleHeader[1]?.trim()) { invalid = '@title needs a nonempty title'; break; }
-            title = titleHeader[1].trim(); seen.add('title'); continue;
+            if (!(titleHeader[1] ?? titleHeader[2])?.trim()) { invalid = '@title needs a nonempty title'; break; }
+            title = (titleHeader[1] ?? titleHeader[2]).trim(); seen.add('title'); continue;
           }
-          const match = line.match(/^([^:\n]+):\s+(.+)$/);
+          const match = line.match(/^([^:\n]+):[ \t]+(.*)$/);
           if (match && match[1].trim()) {
             const message = { speaker: match[1].trim(), text: match[2] };
             if (delayMs !== undefined) message.delayMs = delayMs;
@@ -129,6 +137,7 @@ function parseScene(source) {
             responding = false;
             delayMs = undefined;
             messages.push(message);
+            canContinue = true;
             events.push({ type: 'message', message: messages.length - 1 });
             continue;
           }

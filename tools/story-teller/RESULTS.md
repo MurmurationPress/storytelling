@@ -1,3 +1,28 @@
+# Current-document chat conversion — 2026-10-21
+
+## Evidence and implemented scope
+
+The inspected authoritative Art source is pinned to `79edd0e365e3ae6ab5f5e19413d6fe12d679a518` (`Books/CONSTRAINT/COLLISION/Art.md`, SHA-256 `2625789554f7c743e56ca114b08c80992a84d6e298e95414d3d1785f85594497`). Source definitions were read from writing-companion revision `08ec248d6bdd1cef33cd1eab255df24430a8e9fa`; exact paths and conversion rules are in README. Current local Component Types and author-edited Art were also inspected. No guessed speaker-name recognition is used.
+
+A read-only in-memory audit converted **30 authoritative Art containers / 71 messages**. Their speaker/text/order, titles and explicit right-aligned participant declarations match the inspected companion parser's results; an independent temporary execution of that TypeScript parser supplied the comparison. The second conversion pass made **zero changes**. This audit is separate from committed fictional fixture tests. No manuscript passage or converted manuscript output is committed, saved back or published.
+
+## Executed validation
+
+- Build and JavaScript syntax checks pass; **53 deterministic parser/player/conversion tests pass**. Dependency audit: zero vulnerabilities; no dependency added.
+- Fictional/minimal fixtures cover multiline content, titles, inherited speakers, escaped literal pipes, explicit settings, no invented settings, ambiguity/subtext/artwork retention, current valid blocks, literal examples, quotes/lists/code/frontmatter, BOM/CRLF, surrounding byte preservation, idempotence and source-line warnings. New heading/continuation parsing is additive; playback timing, viewer ticks/offset and non-viewer responding regressions remain covered.
+- **Actual VS Code 1.142.0 Extension Development Host automation passes:** native read-only diff/count/warnings; Review Warnings output; Cancel with no source edit; edits after preparation causing stale Apply refusal; Regenerate using the latest buffer; explicit Apply of two containers; no file save; one Undo restoring the exact prior unsaved buffer. Host testing uses temporary fictional documents and verifies the on-disk file stays unchanged.
+- The host also previews the converted fictional scene through the real player, observes the `# Harbour link` title and verifies a multiline message retains its colon, blank line and literal directive-looking text. Existing timed playback/safety regressions run in the same suite.
+
+These are **automated API/DOM observations in a real Extension Development Host**, not a human pointer/reading review or cross-platform validation. Temporary profile/logs are printed by `npm run test:host`. No VS Code API is mocked. Unit clock tests establish exact timing; real UI tests allow asynchronous renderer latency.
+
+## Material limitations
+
+Only the inspected plain wrapper subset in top-level chat fences is convertible. Unknown historical formats, nonempty subtext, dividers, assets, complex alignment/identity markup and ambiguous blocks are unchanged with line warnings. Current invalid manually adapted chats (for example a missing space in `Speaker: message`) are flagged rather than guessed/repaired. Canonical `# Title` and explicit `  | ` continuation support were necessary additive parser changes; existing `@title` and bare `@ticks` remain supported. Older tick aliases were not introduced or expanded by this task.
+
+Conversion does not editorially remove redundant narration, insert beats, change timing or construct image/drawing components. Windows/macOS, VS Code Web/remote, actual screen-reader operation and the prior hidden/reopening behaviour remain unverified. The manuscript source, local authoring worktree/Art file, Component Types and EPUB work are preserved. No push, release, deployment or merge.
+
+---
+
 # Consistent tick flag — 2026-10-21
 
 `@ticks` now enables optional authored status marks, matching the bare `@responding` flag style. Omission leaves ticks disabled. Viewer requirements, header placement, duplicate detection and timing are unchanged. Older `@ticks on` / `@ticks off` drafts remain readable for compatibility; the sample/docs and main playback fixtures use `@ticks`.

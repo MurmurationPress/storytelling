@@ -25,7 +25,7 @@ The preview stays attached to the document used to open it, even when another ed
 - Ordinary Markdown is prose (headings, emphasis, lists, quotations and code supported).
 - A standalone `---` line separates beats, even without surrounding blank lines. It takes priority over Markdown's setext-heading interpretation. Use `***` for a horizontal rule. Up to three leading spaces are permitted; indented code is literal.
 - If the file starts with `---`, the next standalone `---` or `...` closes initial YAML frontmatter. Frontmatter is recognised and excluded, **not evaluated or used as configuration**. A BOM and CRLF are supported. An unclosed initial block warns and stays readable. Avoid starting a scene with a separator unless it is frontmatter.
-- A top-level fenced block with exactly `chat` as its language contains one `Speaker: message` per nonblank line. The first colon followed by whitespace divides speaker and message. Messages are literal text, not nested Markdown. Keep each message on one source line; editor word wrapping is fine.
+- A top-level fenced block with exactly `chat` as its language contains one `Speaker: message` per nonblank line. The first colon followed by whitespace divides speaker and message. Messages are literal text, not nested Markdown. Continue a message on the next line with `  | ` (two spaces, a pipe, a space); everything after that prefix is message text, including blank lines, `Speaker:` text or directive-looking examples. Continuations must follow a message, not a timing/control line. Editor word wrapping still needs no continuation syntax.
 - Prose and any number of chat blocks can share a beat, in source order.
 - Separators inside backtick/tilde fences stay literal. Quoted/list-nested fences remain prose code blocks. Empty beats are omitted.
 - Invalid/empty chat blocks keep their dialogue as readable code with a warning and do not partially execute; authoring-control lines are omitted from that fallback.
@@ -77,7 +77,7 @@ Mara: I can see the light.
 - `@delay Nms`: replace the default delay **before the next message** (integer 0–60000ms). It applies once. A pause before that message is additional. Repeated pending overrides or an unused trailing override are errors.
 - `@responding`: show “Speaker is responding…” during the **next message’s delay**, using that message’s speaker, **only when the speaker differs from `@viewer`**. Viewer messages never show it; without an explicit viewer, no responding cue is shown. Applies once, with either the default delay or `@delay`; adds no time. It disappears when the message arrives or playback is paused/cancelled, and returns on Resume. It is absent in ready/completed state, during explicit pauses/status phases and for zero delays. Duplicate/unconsumed directives are diagnosed. This is an authored cue, not real typing activity; there is no animation under either motion preference.
 - `@pause Nms`: add silent active time at that position (integer 1–60000ms). It never appears as a message. A trailing pause delays following prose/completion too.
-- `@title Title text`: optional plain-text chat heading, scoped to this fence. Put it once before messages/pauses. It appears when playback reaches the chat (before the first message), adds no time, and stays visible through Pause/completion. Titles may contain spaces and colons; Markdown/HTML is not executed or formatted. Untitled chats retain their previous appearance.
+- `# Title` (or existing `@title Title text`): optional plain-text chat heading, scoped to this fence. Put it once before messages/pauses. It appears when playback reaches the chat (before the first message), adds no time, and stays visible through Pause/completion. Titles may contain spaces and colons; Markdown/HTML is not executed or formatted. Untitled chats retain their previous appearance.
 - `@viewer Speaker`: exact speaker name of the viewing participant, scoped to this chat fence. Names may contain spaces. Header only, before any message/pause. The viewer’s messages are offset as outgoing messages independently of ticks.
 - `@ticks`: optional flag header, once, **off by default**. Requires a viewer matching a speaker in the fence. Omit the flag to disable ticks. The older `@ticks on` / `@ticks off` forms remain accepted for existing drafts; new examples use the bare flag. Only that participant's outgoing messages get marks, at their bottom right. Incoming messages get none.
 
@@ -167,3 +167,57 @@ VSCODE_EXECUTABLE=/path/to/VSCode/electron npm run test:host
 The host test launches an isolated Extension Development Host/profile with temporary documents. It uses the [documented extension test entry point](https://code.visualstudio.com/api/working-with-extensions/testing-extension) and test-only Electron CDP DOM inspection, with no installed-extension changes. CDP is a **test harness**, not part of the extension. Logs/profile remain in the printed temporary directory. It closes only its own process. Windows/macOS host-runner paths are not verified.
 
 See [RESULTS.md](RESULTS.md) for executed checks and limits. No publication, marketplace release, PR merge or deployment is part of this slice.
+
+## Convert manuscript chats in the current document
+
+**Try on a copied scene first.** In the Development Host, open `conversion-example.md` (fictional), or an editable copy of your manuscript scene. Run **Story Teller: Convert Chats in Current Document** from the Command Palette.
+
+1. The command captures the active Markdown buffer, **including unsaved edits**, and opens a native VS Code diff of two read-only snapshots. Its title/notification gives the conversion count and review-warning count.
+2. Inspect the diff. Choose **Review Warnings** to see every warning with source line in the **Story Teller Chat Conversion** output channel. The fictional example proposes two conversions and leaves one subtext-bearing block unchanged with a warning.
+3. Choose **Apply** explicitly, or **Cancel**/dismiss the notification to leave the source intact. Apply edits only that captured document in one undoable editor operation. It does not save the file. One **Ctrl+Z** restores the complete pre-conversion buffer, including earlier unsaved edits.
+4. If the source changed after preparation, Apply is refused. **Regenerate** prepares a new diff from that same document's current buffer; Cancel preserves it. A changed-and-undone document version is still stale. A closed document is never reopened/applied automatically.
+5. Run **Story Teller: Preview Scene** to inspect/play the result. Run conversion again to check the zero-change result. No beat separators or surrounding prose are inserted/reordered.
+
+Only explicit, top-level **`chat` fences** with the inspected manuscript wrapper format are converted. Ordinary speech, arbitrary `Label: text`, blockquoted/list-nested chats, indented code, unrelated/literal-example fences and initial YAML frontmatter are protected. Unclosed frontmatter/fences and historical `chat-old` variants are left for review. Existing valid Story Teller blocks remain byte-for-byte unchanged, including their existing title spelling/settings.
+
+Supported manuscript subset:
+
+````markdown
+```chat
+# Harbour link
+> Ari
+{{Ari|Is the lamp still lit?|}}
+{{Bo|First line.
+Second line.|}}
+```
+````
+
+Becomes:
+
+````markdown
+```chat
+# Harbour link
+@viewer Ari
+Ari: Is the lamp still lit?
+Bo: First line.
+  | Second line.
+```
+````
+
+Rules derive from the actual manuscript and its companion renderer, **not a list of guessed speaker names**:
+
+- `{{speaker|body|subtext}}` / `{{speaker|body}}` supply explicit identities and message boundaries. An empty speaker inherits the preceding resolved speaker. Literal escaped separators `\|` become message text `|`; punctuation, Unicode, blank/indented message lines and order are retained.
+- A single leading `# Title` supplies the chat title, emitted inside the fence as `# Title`. Multiple or interleaved channel comments are ambiguous and remain unchanged.
+- A single leading `> Participant` is the manuscript's explicit right-aligned participant declaration and maps to `@viewer Participant`. No viewer is guessed from the first speaker. Multiple/changing/centred/formatted participant declarations are review-only.
+- Existing explicit Story Teller settings within a wrapper block can carry through: `@viewer`, bare `@ticks`, `@responding`, `@delay Nms`, `@pause Nms`. Generated settings use the current canonical vocabulary. The manuscript's viewer/title alone never causes ticks, responding or timing settings to be invented. The converter adds no old tick-form compatibility; the parser's pre-existing aliases remain as before.
+- **Nonempty subtext**, dividers, embedded artwork, nested/inline message wrappers, unresolved/formatted speaker identities, unknown settings and mixed/ambiguous container content leave the **entire container unchanged**, with a review warning. These may carry meaning that this player's supported syntax cannot safely express. Speaker names containing `:` cannot be losslessly represented by the current message grammar and are flagged.
+- Converted multiline messages use `  | ` continuation lines and reveal together as one message. The existing default-delay formula sees their full text; no extra timing or typing effect is added. A blank initial message line can be represented by `Speaker: ` followed by continuations.
+- No source dialogue or supporting narration is editorially adapted by this command. The converter preserves wording and content; it does not translate Markdown/Obsidian embeds into new visual components.
+
+The implementation is `src/convert.cjs` (pure function returning text, precise replacement ranges/count/warnings) plus `src/conversion-command.cjs` (VS Code review/apply integration). It uses the [documented read-only content-provider API](https://code.visualstudio.com/api/extension-guides/virtual-documents), native `vscode.diff`, document-version checks and one `TextEditor.edit` with undo stops. It does not write files or run manuscript code.
+
+### Source inspection and limits
+
+Read-only inspection used authoritative `tedwarddick/PrimeTrilogy` revision **`79edd0e365e3ae6ab5f5e19413d6fe12d679a518`**, `Books/CONSTRAINT/COLLISION/Art.md`, alongside Ted's local adaptation. A local Books-tree survey and `Books/CONSTRAINT/DECENTRALISATION/Flock.md` supplied additional same-format examples. The format definition/renderer was inspected at `MurmurationPress/murmuration-writing-companion` revision **`08ec248d6bdd1cef33cd1eab255df24430a8e9fa`**, `src/chat/ManuscriptChat.ts`, `src/chat/ManuscriptChatPlugin.ts` and `Help/Manuscript_Chat.md`. The inspected renderer distinguishes body/subtext, inherited speaker, channel comments, participant alignment and dividers. Unsupported meanings are flagged rather than discarded.
+
+Only fictional/minimal fixtures are committed. The original manuscript repository, local `Art.md`, Component Types notes and EPUB artifacts are not modified. This is not a whole-book importer, an Obsidian parser or a promise that every historical chat dialect is supported. Review the diff and warnings before Apply.
