@@ -31,8 +31,8 @@ function render() {
         const text = document.createElement('p');
         text.textContent = message.text;
         item.append(speaker, text);
+        if (message.speaker === block.viewer) item.className = 'outgoing';
         if (message.status) {
-          item.className = 'outgoing';
           const ticks = document.createElement('span');
           ticks.className = `ticks ${message.status}`;
           ticks.textContent = message.status === 'read' ? '✓✓' : '✓';

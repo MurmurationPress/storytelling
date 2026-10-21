@@ -102,7 +102,9 @@ async function until(fn, timeout = 60000) {
     await frame.locator('#replay').click();
     assert.equal(await frame.locator('.chat li').count(), 0);
     await frame.locator('#pause').click();
-    const sample = await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8');
+    // Configure the test's final beat explicitly; do not depend on local sample edits.
+    const sample = (await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8'))
+      .replace('```chat\nIvo:', '```chat\n@viewer Mara\nIvo:');
     await request('edit', sample.replace('# The Last Lantern', 'Inserted first beat\n---\n# The Last Lantern'));
     await until(async () => (await frame.locator('#status').textContent()).includes('Beat 3 of 4 · ready'));
     assert.equal(await frame.locator('.chat li').count(), 0);
@@ -119,6 +121,9 @@ async function until(fn, timeout = 60000) {
     assert.equal(await frame.locator('.prose').count(), 2);
     assert.equal(await frame.locator('.chat li').count(), 3);
     assert.equal(await frame.locator('.ticks').count(), 0);
+    assert.equal(await frame.locator('.chat li.outgoing').count(), 1);
+    assert.equal(await evaluate("doc.querySelector('.chat li.outgoing strong').textContent"), 'Mara');
+    assert.ok(await evaluate("doc.querySelector('.chat li.outgoing').getBoundingClientRect().left - doc.querySelector('.chat li:not(.outgoing)').getBoundingClientRect().left") >= 10);
     assert.equal(await frame.locator('#next').isDisabled(), true);
     await fs.writeFile(path.join(directory, 'temporal.json'), JSON.stringify(temporal, null, 2));
     await frame.locator('#previous').click();
