@@ -4,8 +4,8 @@ const { parseScene } = require('./parser.cjs');
 const choices = [
   { id: 'chat', label: 'Chat block', description: 'Title, viewer and two messages; optional features off.' },
   { id: 'boundary', label: 'Beat boundary', description: 'A standalone ---; progression stays manual.' },
-  { id: 'delay', label: 'Delay', description: 'Replace the next item’s normal delay.' },
-  { id: 'pause', label: 'Pause', description: 'Add silence; the next item keeps its normal delay.' },
+  { id: 'delay', label: 'Delay', description: 'Replaces the next item’s normal delay.' },
+  { id: 'pause', label: 'Pause', description: 'Adds silence; the next item keeps its normal delay.' },
   { id: 'responding', label: 'Responding', description: 'Non-viewer cue during message delays; chat only.' },
   { id: 'pace', label: 'Pace', description: 'Chat automatic timing: Normal, Brisk or Deliberate.' },
   { id: 'image', label: 'Image', description: 'Choose a local PNG, JPEG or WebP; insert a standalone image.' },

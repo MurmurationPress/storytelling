@@ -1,6 +1,7 @@
 'use strict';
 const vscode = require('vscode');
 const { registerInsert } = require('./insert-command.cjs');
+const { registerIntelliSense } = require('./intellisense-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
 const { randomBytes } = require('node:crypto');
 const { parseScene } = require('./parser.cjs');
@@ -17,6 +18,7 @@ function currentEditor() {
 function activate(context) {
   registerConversion(vscode, context);
   registerInsert(vscode, context);
+  registerIntelliSense(vscode, context);
   const previews = new Map();
   let preferredMute = Boolean(context.globalState.get('storyTeller.muted', false));
   let preferredAutoplay = context.globalState.get('storyTeller.autoplayOnTurn', true) !== false;

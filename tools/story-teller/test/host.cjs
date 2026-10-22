@@ -83,6 +83,21 @@ exports.run = async function () {
         const position = document.positionAt(request.start);
         editor.selection = new vscode.Selection(position, position);
         await vscode.commands.executeCommand('storyTeller.previewThisBeat');
+      } else if (request.action === 'focus-at') {
+        const editor = await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+        const position = document.positionAt(request.start);
+        editor.selection = new vscode.Selection(position, position);
+        await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+        await fs.writeFile(path.join(directory, 'intellisense-settings.json'), JSON.stringify({
+          quickSuggestions: vscode.workspace.getConfiguration('editor', document.uri).get('quickSuggestions'),
+          suggestOnTriggerCharacters: vscode.workspace.getConfiguration('editor', document.uri).get('suggestOnTriggerCharacters')
+        }));
+      } else if (request.action === 'hover-at') {
+        const hovers = await vscode.commands.executeCommand('vscode.executeHoverProvider', document.uri, document.positionAt(request.start));
+        await fs.writeFile(path.join(directory, 'intellisense-hover.json'), JSON.stringify(hovers.map(hover => hover.contents.map(item => typeof item === 'string' ? item : item.value).join('\n'))));
+      } else if (request.action === 'completion-at') {
+        const completions = await vscode.commands.executeCommand('vscode.executeCompletionItemProvider', document.uri, document.positionAt(request.start));
+        await fs.writeFile(path.join(directory, 'intellisense-completion.json'), JSON.stringify(completions.items.map(item => item.label)));
       } else if (request.action === 'fold-all-test') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('editor.foldAll');
