@@ -1,3 +1,17 @@
+# Markdown manuscript import trial — 2026-10-22
+
+Ted has accepted IntelliSense and State metadata conversion; their earlier awaiting-acceptance records below are historical. The ordered manuscript importer awaits Ted's acceptance.
+
+**Source inspection:** current local CONSTRAINT revision `5bbe44d242a2f2db56ff75ab1ef864e8b564fb20`; MWC revision `08ec248d6bdd1cef33cd1eab255df24430a8e9fa`. Six structural parts, 38 ordered scenes and three unprepared drafts were identified. A read-only planning pass gives no order errors, 15 review warnings (three excluded drafts, 11 unsupported SVG embeds and one pending cover-image metadata reference), and two copyable shared PNG assets. `manuscript_order_key` is the complete source order; old `manuscript_sequence` values do not order parts. Two PNGs resolve from the vault root, while SVG visualisations are currently unsupported and receive review warnings. Original manuscript and artwork were inspected read-only.
+
+**Implementation:** explicit order-key selection and review precede any write. Manifest version 1 is the shared outline/assembly order; book/part metadata and scene frontmatter are copied. Source and asset hashes are checked again at import, and output is staged then renamed. Import does not alter source or run converters. A temporary, uncommitted CONSTRAINT import produced six parts, 38 scenes and two relocated PNGs, then was removed.
+
+**Automated checks:** syntax/build/package and 144 unit tests pass. Fictional tests cover numeric/structured ordering past nine, hierarchy and part introductions, malformed/duplicate metadata, media relocation and collision-safe names, literal references, cancellation, stale source/asset abort and manifest order. The full VS Code 1.143.0 Linux Extension Development Host regression and full installed-VSIX regression pass. A focused native host run displays the Part–Scene outline, opens the target scene and opens its existing beat preview. The import command invokes VS Code's native system folder chooser; the test harness cannot operate that OS dialog, so the entire picker/review/confirm flow remains a manual editor check. Mocked command tests cover the remaining prompts and cancellation, and the pure import was exercised on real CONSTRAINT in a temporary destination. The installed package contains the importer, outline icon, runtime assets and dependency licences, with no manuscript, test fixtures or private adaptation.
+
+**Packaging:** local version 0.7.0 VSIX only; not published. `vsce` still warns that the extension has no extension-level licence, which Ted must decide. Its broad bundle-size suggestion is inherited from the existing packaging. VSCodium is untested.
+
+**Limitations:** imported SVG embeds remain in copied source but cannot display as Story Teller image components. No automatic reimport/reconciliation, export, or EPUB import is included. The importer has not yet been accepted by Ted. Full native manual selection/review/confirmation and opening the resulting CONSTRAINT project remain to be checked by Ted or in a supervised editor session.
+
 # Authoring milestone review — 2026-10-22
 
 Ted has accepted formatted annotation reveal and the previously recorded Markdown preview, chat pacing, timing controls, imagery, named beats/navigation, type-out and sounds, conversion workflows and Insert helpers. The State metadata converter and keyboard IntelliSense are implemented and tested, but Ted has not explicitly accepted them. This review does not imply publication readiness.

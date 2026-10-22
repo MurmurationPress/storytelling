@@ -3,6 +3,7 @@ const vscode = require('vscode');
 const { registerInsert } = require('./insert-command.cjs');
 const { registerIntelliSense } = require('./intellisense-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
+const { registerImport } = require('./import-command.cjs');
 const { randomBytes } = require('node:crypto');
 const { parseScene } = require('./parser.cjs');
 const { inspectStructure, beatRanges, beatAtOffset, beatFoldRanges } = require('./structure.cjs');
@@ -17,6 +18,7 @@ function currentEditor() {
 }
 function activate(context) {
   registerConversion(vscode, context);
+  registerImport(vscode, context);
   registerInsert(vscode, context);
   registerIntelliSense(vscode, context);
   const previews = new Map();

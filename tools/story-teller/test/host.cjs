@@ -33,7 +33,21 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'start-insert') {
+      if (request.action === 'open-outline') {
+        await vscode.commands.executeCommand('workbench.view.extension.storyTeller');
+      } else if (request.action === 'open-project-scene') {
+        await vscode.commands.executeCommand('storyTeller.openProjectScene', request.projectRoot, { file: 'scenes/The Signal.md' });
+        await fs.writeFile(path.join(directory, 'project-navigation.json'), JSON.stringify({ active: vscode.window.activeTextEditor?.document.uri.fsPath }));
+      } else if (request.action === 'preview-project-scene') {
+        const editor = vscode.window.activeTextEditor;
+        const position = editor.document.positionAt(editor.document.getText().indexOf('Fictional prose.'));
+        editor.selection = new vscode.Selection(position, position);
+        await vscode.commands.executeCommand('storyTeller.previewThisBeat');
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await fs.writeFile(path.join(directory, 'project-preview.json'), JSON.stringify({ active: vscode.window.activeTextEditor?.document.uri.toString(), selection: editor.selection.active.line, titles: vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.input?.viewType?.endsWith('storyTeller.scene')).map(tab => tab.label) }));
+      } else if (request.action === 'start-import') {
+        vscode.commands.executeCommand('storyTeller.importManuscript').then(result => fs.writeFile(path.join(directory, 'import-result.json'), JSON.stringify(result)));
+      } else if (request.action === 'start-insert') {
         await focusSource();
         const editor = vscode.window.activeTextEditor;
         const start = request.start ?? document.getText().length;

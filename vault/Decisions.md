@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Accept IntelliSense and State metadata conversion; trial manuscript import
+
+**Ted's acceptance:** keyboard IntelliSense and the State metadata converter are accepted as part of Story Teller authoring. This supersedes their earlier awaiting-acceptance status. The acceptance concerns the tested authoring workflow, not every future manuscript shape or publication export.
+
+**Authorised experiment, awaiting Ted's acceptance:** issue #10 imports a prepared Markdown book into a separate adaptation project. It reads existing type, parent and selected order metadata, previews the ordered Part–Scene sequence and copies source content/assets without modifying the vault. MWC remains responsible for source preparation. Import does not automatically convert chats, callouts or State metadata, and does not implement EPUB import or export.
+
 ## 2026-10-22 — Accept formatted annotation reveal; review Story Teller authoring milestone
 
 **Ted's acceptance:** formatted Markdown reveal for annotation type-outs is accepted alongside the previously accepted Story Teller authoring and playback behaviour. YAML state type-outs remain literal. This acceptance concerns the local authoring/preview experience, not EPUB export, release readiness, VSCodium compatibility or every implementation detail.

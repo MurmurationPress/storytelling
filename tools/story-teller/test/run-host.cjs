@@ -22,6 +22,17 @@ async function until(fn, timeout = 60000) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const port = server.address().port;
   await new Promise(resolve => server.close(resolve));
+  let importProject;
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'import') {
+    importProject = path.join(directory, 'fictional-project');
+    await fs.mkdir(path.join(importProject, 'scenes'), { recursive: true });
+    await fs.writeFile(path.join(importProject, 'scenes', 'The Signal.md'), '---\ntitle: Lantern\n---\nFictional prose.\n');
+    await fs.writeFile(path.join(importProject, 'story-teller.project.json'), JSON.stringify({
+      schema: 'story-teller-project', version: 1, title: 'Lantern',
+      parts: [{ id: 'p', title: 'First', scenes: ['s'] }],
+      scenes: [{ id: 's', partId: 'p', label: '1.1', title: 'The Signal', file: 'scenes/The Signal.md' }]
+    }));
+  }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
   const vsix = process.env.STORY_TELLER_VSIX;
@@ -45,7 +56,7 @@ async function until(fn, timeout = 60000) {
   const code = spawn(executable, [
     `--user-data-dir=${path.join(directory, 'profile')}`, `--extensions-dir=${path.join(directory, 'extensions')}`,
     `--extensionDevelopmentPath=${developmentPath}`, `--extensionTestsPath=${path.join(__dirname, 'host.cjs')}`,
-    `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window'
+    `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window', ...(importProject ? [importProject] : [])
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
   let id = 0;
@@ -92,6 +103,30 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'import') {
+      await request('open-outline');
+      const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+      const main = targets.find(item => item.type === 'page');
+      const ws = new WebSocket(main.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+      await sleep(1300);
+      const snapshot = await new Promise((resolve, reject) => { const id = 999; ws.onmessage = e => { const r=JSON.parse(e.data); if(r.id===id) r.error ? reject(Error(JSON.stringify(r.error))) : resolve(r.result.result.value); }; ws.send(JSON.stringify({ id, method:'Runtime.evaluate', params:{ expression:'document.body.innerText.slice(0,6000)', returnByValue:true }})); });
+      assert.match(snapshot, /Part–Scene Outline/);
+      assert.match(snapshot, /FirstPart 1/);
+      assert.match(snapshot, /1\.1 The Signal/);
+      await request('open-project-scene', undefined, { projectRoot: importProject });
+      const opened = JSON.parse(await fs.readFile(path.join(directory, 'project-navigation.json'), 'utf8'));
+      assert.equal(opened.active, path.join(importProject, 'scenes', 'The Signal.md'));
+      await request('preview-project-scene');
+      const previewed = JSON.parse(await fs.readFile(path.join(directory, 'project-preview.json'), 'utf8'));
+      assert.ok(previewed.titles.some(title => title.includes('The%20Signal.md') || title.includes('The Signal.md')), JSON.stringify(previewed));
+      await request('start-import');
+      await sleep(1300);
+      console.log(`PASS: actual VS Code ${vsix ? 'installed VSIX' : 'Extension Development Host'} outline and scene navigation; system folder chooser invoked (picker interaction remains manual). Profile: ${directory}`);
+      ws.close();
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'annotation') {
       const source = [
         'Before [[place|the inlet]].', '---',
