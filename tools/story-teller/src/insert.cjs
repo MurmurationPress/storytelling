@@ -102,7 +102,7 @@ function planImageInsertion(source, selection, relative) {
 }
 const typeoutPresets = [
   { value: 'yaml', label: 'PRIME / Divergent YAML', description: 'Monospaced output with restrained modem sound.' },
-  { value: 'annotation', label: 'Annotation', description: 'Readable note with keyboard sound.' }
+  { value: 'annotation', label: 'Annotation', description: 'Formatted Markdown note with keyboard sound.' }
 ];
 function planTypeoutInsertion(source, selection, preset) {
   if (!typeoutPresets.some(option => option.value === preset)) return { error: 'Choose a type-out preset.' };
@@ -110,7 +110,7 @@ function planTypeoutInsertion(source, selection, preset) {
   if (plan.error) return plan;
   const eol = inspectStructure(source).lines.find(line => line.eol)?.eol || '\n';
   const sound = preset === 'yaml' ? 'modem' : 'keyboard';
-  const body = preset === 'yaml' ? '${1:status: observing}' : '${1:There was another light beyond the harbour wall.}';
+  const body = preset === 'yaml' ? '${1:status: observing}' : '${1:There was **another light** beyond the harbour wall.}';
   const fence = ['```typeout', `@format ${preset}`, `@sound ${sound}`, '', body, '```', '$0'].join(eol);
   return { snippet: plan.snippet.replace('__STORY_TYPEOUT__', fence) };
 }

@@ -12,7 +12,7 @@ const help = Object.freeze({
   pace: { scope: 'Chat header before the first message', detail: `${settingText('chat', 'pace')} Normal (default), brisk (0.7×) or deliberate (1.3×); explicit delay and pause do not scale.` },
   ticks: { scope: 'Chat header', detail: `Bare flag. ${settingText('chat', 'ticks')} Off by default.` },
   responding: { scope: 'Chat header or between messages', detail: `Bare flag. ${settingText('chat', 'responding')} Header: throughout this chat. Between messages: next incoming message only. Adds no wait; needs @viewer.` },
-  format: { scope: 'Type-out header', detail: `${settingText('typeout', 'format')} Required: yaml or annotation. Independent of sound.` },
+  format: { scope: 'Type-out header', detail: `${settingText('typeout', 'format')} Required: yaml or annotation. Annotations render safe Markdown and inert wiki-link labels; YAML remains literal. Independent of sound.` },
   sound: { scope: 'Type-out header', detail: `${settingText('typeout', 'sound')} Choices: modem, keyboard, typewriter or none (default). Only during active reveal after a playback gesture.` },
   speed: { scope: 'Type-out header', detail: `${settingText('typeout', 'speed')} Default ${DEFAULT_SPEED}. Independent of chat pace.` },
   border: { scope: 'Type-out header', detail: `${settingText('typeout', 'border')} Omission retains the format’s existing border.` },

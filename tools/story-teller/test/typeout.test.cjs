@@ -75,7 +75,7 @@ test('pause preserves remaining delay; reveal skips only output and retains late
   clock.advance(5000); assert.equal(output(player).visibleText, ''); assert.equal(player.phase, 'paused');
   player.play(); clock.advance(299); assert.equal(output(player).visibleText, '');
   clock.advance(1); assert.equal(output(player).visibleText, 'A');
-  assert.equal(player.revealImmediately(), true); assert.equal(output(player).visibleText, 'AB\n');
+  assert.equal(player.revealImmediately(), true); assert.equal(output(player).visibleText, 'AB');
   assert.equal(player.visibleBlocks.some(block => block.html?.includes('After.')), false);
   clock.advance(699); assert.equal(player.visibleBlocks.some(block => block.html?.includes('After.')), false);
   clock.advance(1); assert.equal(player.visibleBlocks.at(-1).html, '<p>After.</p>\n');

@@ -33,7 +33,8 @@ class StoryPlayer {
       const block = this.current.blocks[blockIndex];
       if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
       else if (block.type === 'typeout') {
-        const parts = graphemes(block.text);
+        const parts = block.format === 'annotation'
+          ? block.annotation.segments.flatMap(graphemes) : graphemes(block.text);
         this.typeoutParts.set(blockIndex, parts);
         this.steps.push({ type: 'typeout-start', blockIndex, delayMs: block.delayMs ?? 0 });
         for (let index = 0; index < parts.length; index++)
@@ -72,7 +73,8 @@ class StoryPlayer {
     return (this.current?.blocks || []).flatMap((block, index) => {
       if (block.type === 'prose' || block.type === 'image') return this.visible.has(index) ? [block] : [];
       if (block.type === 'typeout') return this.enteredTypeouts.has(index)
-        ? [{ ...block, visibleText: this.typeoutParts.get(index).slice(0, this.typeoutCounts.get(index) || 0).join(''),
+        ? [{ ...block, revealCount: this.typeoutCounts.get(index) || 0,
+          visibleText: this.typeoutParts.get(index).slice(0, this.typeoutCounts.get(index) || 0).join(''),
           complete: (this.typeoutCounts.get(index) || 0) >= this.typeoutParts.get(index).length }] : [];
       const messages = block.messages.slice(0, this.counts.get(index) || 0).map((message, i) => ({
         ...message,

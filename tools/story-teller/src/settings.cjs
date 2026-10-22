@@ -13,7 +13,7 @@ const choices = {
     { id: 'responding', label: 'Responding', description: 'Show incoming responding cues throughout this chat.' }
   ],
   typeout: [
-    { id: 'format', label: 'Format', description: 'YAML state or annotation appearance.' },
+    { id: 'format', label: 'Format', description: 'Literal YAML or safely formatted Markdown annotation.' },
     { id: 'sound', label: 'Sound', description: 'Modem, keyboard, typewriter or silent.' },
     { id: 'speed', label: 'Speed', description: `${MIN_SPEED}–${MAX_SPEED} Unicode grapheme clusters per second.` },
     { id: 'border', label: 'Border', description: 'Default, none or grey.' },

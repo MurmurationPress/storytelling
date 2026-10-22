@@ -3,6 +3,7 @@ const { parseScene } = require('./parser.cjs');
 const { beatAtOffset } = require('./structure.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
+const { graphemes } = require('./typeout.cjs');
 const api = acquireVsCodeApi();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches });
@@ -66,12 +67,29 @@ function imageOrPlaceholder(src, alt, inline = false) {
   placeholder.textContent = `[Image unavailable: ${alt || src || 'missing path'}${entry?.error ? ` — ${entry.error}` : ''}]`;
   return placeholder;
 }
+function revealAnnotation(progress, count) {
+  let remaining = count;
+  for (const segment of progress.querySelectorAll('[data-story-segment]')) {
+    const parts = progress.storyParts[Number(segment.dataset.storySegment)];
+    const shown = Math.min(remaining, parts.length);
+    remaining -= shown;
+    segment.firstChild.textContent = parts.slice(0, shown).join('');
+    segment.lastChild.textContent = parts.slice(shown).join('');
+    segment.dataset.revealed = shown ? 'true' : 'false';
+  }
+  // Hidden future list items must not show bullets; the same rule hides
+  // empty future paragraphs and quote borders without changing their layout.
+  for (const block of progress.querySelectorAll('p, li, blockquote, pre'))
+    block.style.visibility = block.querySelector('[data-revealed="true"]') ? '' : 'hidden';
+}
 function render() {
   const active = player.activeTypeout;
   if (active && lastTypeoutRender?.scene === player.scene && lastTypeoutRender.index === player.index && lastTypeoutRender.blockIndex === active.blockIndex) {
     const progress = content.querySelector('.typeout-progress');
     if (progress) {
-      progress.textContent = player.visibleBlocks.find(block => block.type === 'typeout' && block.line === active.block.line)?.visibleText || '';
+      const shown = player.visibleBlocks.find(block => block.type === 'typeout' && block.line === active.block.line);
+      if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
+      else progress.textContent = shown?.visibleText || '';
       progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
       controls(); return;
     }
@@ -104,13 +122,31 @@ function render() {
       const section = document.createElement('section');
       section.className = `typeout typeout-${block.format}${block.border === null ? '' : ` typeout-border-${block.border}`}${block.fill === null ? '' : ` typeout-fill-${block.fill}`}`;
       section.setAttribute('aria-label', block.format === 'yaml' ? 'PRIME state output' : 'Annotation');
-      const accessible = document.createElement('span');
-      accessible.className = 'visually-hidden'; accessible.textContent = block.text;
+      const accessible = document.createElement(block.format === 'annotation' ? 'div' : 'span');
+      accessible.className = 'visually-hidden';
+      if (block.format === 'annotation') {
+        accessible.innerHTML = block.annotation.html;
+        for (const segment of accessible.querySelectorAll('[data-story-segment]')) segment.removeAttribute('data-story-segment');
+      } else accessible.textContent = block.text;
       const surface = document.createElement('div'); surface.className = 'typeout-surface';
-      const reserve = document.createElement('pre'); reserve.className = 'typeout-reserve'; reserve.setAttribute('aria-hidden', 'true'); reserve.textContent = block.text;
-      const progress = document.createElement('pre'); progress.className = 'typeout-progress'; progress.setAttribute('aria-hidden', 'true'); progress.textContent = block.visibleText;
+      const progress = document.createElement(block.format === 'annotation' ? 'div' : 'pre');
+      progress.className = 'typeout-progress'; progress.setAttribute('aria-hidden', 'true');
+      if (block.format === 'annotation') {
+        progress.innerHTML = block.annotation.html;
+        progress.storyParts = block.annotation.segments.map(graphemes);
+        for (const segment of progress.querySelectorAll('[data-story-segment]')) {
+          const shown = document.createElement('span');
+          const hidden = document.createElement('span'); hidden.className = 'typeout-unrevealed';
+          segment.replaceChildren(shown, hidden);
+        }
+        revealAnnotation(progress, block.revealCount);
+      } else progress.textContent = block.visibleText;
       progress.classList.toggle('active', Boolean(active) && player.phase === 'playing' && !player.reducedMotion);
-      surface.append(reserve, progress); section.append(accessible, surface); content.append(section);
+      if (block.format === 'yaml') {
+        const reserve = document.createElement('pre'); reserve.className = 'typeout-reserve'; reserve.setAttribute('aria-hidden', 'true'); reserve.textContent = block.text;
+        surface.append(reserve);
+      }
+      surface.append(progress); section.append(accessible, surface); content.append(section);
       if (active && active.block.line === block.line) lastTypeoutRender = { scene: player.scene, index: player.index, blockIndex: active.blockIndex };
     } else {
       if (block.title) {

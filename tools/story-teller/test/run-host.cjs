@@ -92,6 +92,58 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'annotation') {
+      const source = [
+        'Before [[place|the inlet]].', '---',
+        '```typeout', '@format annotation', '@speed 5', '',
+        '**A🛰️** *B*', '', '- First', '- Second', '', '> Quote `code`', '```',
+        '---', '```typeout', '@format yaml', '', '**literal** [[target|label]]', '```'
+      ].join('\n');
+      await request('edit', source);
+      await locator('#restart').click();
+      await until(async () => (await beat.textContent()).includes('the inlet'));
+      assert.doesNotMatch(await beat.textContent(), /\[\[place\|/);
+      await locator('#next').click();
+      await until(async () => (await locator('#status').textContent()).includes('Beat 2 of 3'));
+      const progress = () => evaluate("Array.from(doc.querySelectorAll('.typeout-progress [data-story-segment]')).map(s => s.firstChild.textContent).join('')");
+      await until(async () => await evaluate("Boolean(doc.querySelector('.typeout-annotation .typeout-progress'))"));
+      const samples = [];
+      const capture = async label => samples.push({ label, at: Date.now(), text: await progress(),
+        visible: await evaluate("doc.querySelector('.typeout-progress').innerText"),
+        firstListVisibility: await evaluate("doc.defaultView.getComputedStyle(doc.querySelector('.typeout-progress li')).visibility") });
+      await capture('arrival');
+      assert.equal(samples[0].text, '');
+      assert.equal(samples[0].firstListVisibility, 'hidden');
+      await until(async () => (await progress()).length >= 1);
+      await capture('early');
+      await sleep(550); await capture('middle');
+      assert.ok(samples[2].text.length > samples[1].text.length, JSON.stringify(samples));
+      assert.match(await evaluate("doc.querySelector('.typeout-progress').innerHTML"), /<strong>|<em>|<ul>|<blockquote>|<code>/);
+      assert.doesNotMatch(samples[2].visible, /\*|\[\[/);
+      assert.equal(await evaluate("doc.defaultView.getComputedStyle(doc.querySelector('.typeout-progress li')).visibility"), 'hidden');
+      assert.equal(await evaluate("doc.defaultView.getComputedStyle(doc.querySelector('.typeout-progress .typeout-unrevealed')).visibility"), 'hidden');
+      await evaluate("doc.documentElement.style.width = '320px'");
+      const bounds = await evaluate("(() => { const area=doc.getElementById('beat'); return {width:area.clientWidth, overflow:area.scrollWidth-area.clientWidth}; })()");
+      assert.ok(bounds.width <= 320 && bounds.overflow <= 1, JSON.stringify(bounds));
+      await evaluate("doc.documentElement.style.width = ''");
+      await locator('#pause').click(); const stopped = await progress(); await sleep(450); assert.equal(await progress(), stopped);
+      await locator('#pause').click(); await until(async () => (await progress()).length > stopped.length);
+      await locator('#reveal').click(); await capture('revealed');
+      assert.equal(samples.at(-1).text, 'A🛰️ BFirstSecondQuote code');
+      assert.equal(samples.at(-1).firstListVisibility, 'visible');
+      await locator('#replay').click(); await until(async () => (await progress()).length < samples.at(-1).text.length);
+      await locator('#next').click();
+      await until(async () => (await locator('#status').textContent()).includes('Beat 3 of 3'));
+      await until(async () => (await locator('#status').textContent()).includes('completed'));
+      assert.equal(await evaluate("doc.querySelector('.typeout-yaml .typeout-progress').textContent"), '**literal** [[target|label]]\n');
+      await locator('#previous').click();
+      assert.equal(await progress(), 'A🛰️ BFirstSecondQuote code');
+      assert.match(await locator('#status').textContent(), /completed/);
+      await fs.writeFile(path.join(directory, 'annotation-temporal.json'), JSON.stringify({ samples, bounds }, null, 2));
+      console.log(`PASS: ${vsix ? 'installed VSIX' : 'Extension Development Host'} formatted annotation temporal DOM in VS Code; isolated profile/log: ${directory}`);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'metadata') {
       const fixture = await fs.readFile(path.join(root, 'samples/state-conversion.md'), 'utf8');
       await request('edit', fixture);

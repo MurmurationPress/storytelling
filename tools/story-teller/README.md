@@ -94,7 +94,7 @@ Images preserve aspect ratio and fit the preview without horizontal overflow. Th
 
 ### Literal type-out and sound
 
-A top-level typeout fence has a configuration header, one blank line, then literal body text. The body is never parsed as YAML, Markdown, HTML or directives:
+A top-level typeout fence has a configuration header, one blank line, then its body. YAML bodies remain entirely literal; annotation bodies render safe Markdown. Directive-looking body text is content in both formats:
 
 ~~~~markdown
 ~~~typeout
@@ -109,7 +109,11 @@ confidence: unresolved
 ~~~
 ~~~~
 
-@format yaml uses monospaced state styling; @format annotation uses a distinct note styling. Sound is independent: @sound modem, keyboard, typewriter or none. Omission means none. @speed is 1–120 Unicode grapheme clusters per second, default 30. Optional @border none|grey and @fill none|grey|yellow change only the panel treatment; each can be set independently of format, sound and speed. Omit them to retain the format's original appearance. Border none removes the panel border (and annotation accent border); fill none makes the panel and its preformatted text background transparent. Values are fixed choices, never CSS. Put all configuration before the blank line: directive-like text after it is literal body content. Whitespace and line breaks are revealed; indentation and Unicode remain intact. Outside delay/pause apply before entry; following components wait for the reveal. Add an explicit pause afterward if a viewing hold is wanted.
+@format yaml uses monospaced, byte-literal state styling: indentation, punctuation, Markdown markers, wiki syntax and line breaks reveal as written. @format annotation renders paragraphs, bold, italic, lists, blockquotes and inline code in a note style. The complete annotation is parsed once; its text appears within stable formatting, without exposing Markdown delimiters. For annotations, @speed counts rendered text grapheme clusters, including spaces and Unicode sequences, but excludes Markdown markers, list bullets and structural paragraph/list boundaries. A line break inside a code block is text and consumes one step; Markdown's soft/hard line break and the gap between blocks add no timed step. To hold a paragraph or image for reading, author an outside @pause. Wiki links display their label (`[[target|label]]` → `label`) or target (`[[target]]` → `target`) in both prose and annotations, without navigation. Escaped examples and code remain literal; `![[...]]` embeds remain unsupported literal text. Annotation links are inert, remote content is never fetched, and annotation images display an omission placeholder.
+
+Sound is independent: @sound modem, keyboard, typewriter or none. Omission means none. @speed is 1–120 Unicode grapheme clusters per second, default 30. Optional @border none|grey and @fill none|grey|yellow change only the panel treatment; each can be set independently of format, sound and speed. Omit them to retain the format's original appearance. Border none removes the panel border (and annotation accent border); fill none makes the panel background transparent. Values are fixed choices, never CSS. Put all configuration before the blank line. Outside delay/pause apply before entry; following components wait for the reveal.
+
+For example, a formatted annotation can contain `**emphasis**`, `*contrast*`, a list and an inert `[[chapter|chapter label]]` link. Invalid Markdown follows the existing Markdown renderer's ordinary rules; Story Teller does not repair it.
 
 **Reveal Immediately** is shown while type-out is active. It completes that passage, stops sound and continues later authored waits/components. **Mute sound** applies across passages and is remembered outside Markdown. Sound is locally synthesised, starts after a playback gesture, and stops on Pause, reveal, navigation, edit, hiding or disposal. Reduced motion shows the complete passage at entry and suppresses sound. Assistive technology receives the complete passage without character-by-character announcements. If audio fails, visual reveal continues with an explicit warning. Ted has verified audible modem, keyboard and typewriter playback; richer texture is a possible later refinement.
 

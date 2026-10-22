@@ -3,7 +3,9 @@ const MarkdownIt = require('markdown-it');
 const { PACE_MULTIPLIERS } = require('./pace.cjs');
 const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS, BORDERS, FILLS } = require('./typeout.cjs');
 const { inspectStructure, beatRanges } = require('./structure.cjs');
+const { wikiLinks, renderAnnotation } = require('./annotation.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
+wikiLinks(md);
 // Image URLs are inert data here; only the VS Code host may resolve local files.
 md.renderer.rules.link_open = () => '<span class="link-text">';
 md.renderer.rules.link_close = () => '</span>';
@@ -153,7 +155,8 @@ function parseScene(source) {
           prose.push(token);
         } else {
           flush();
-          add({ type: 'typeout', ...settings, text: body, line: openLine + 1 });
+          add({ type: 'typeout', ...settings, text: body,
+            ...(settings.format === 'annotation' ? { annotation: renderAnnotation(body) } : {}), line: openLine + 1 });
         }
       } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];

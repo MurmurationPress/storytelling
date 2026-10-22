@@ -35,7 +35,12 @@ The light beyond the wall remained still.
 @border none
 @fill yellow
 
-The mark was not a star. She had seen its shape on the old chart.
+The mark was **not a star**. She had seen its shape on the old chart.
+
+- The line crossed [[Old chart|the old chart]].
+- *A second mark* lay beneath it.
+
+> The margin read: `observe again`.
 ```
 
 The paper was cold against her hand.
