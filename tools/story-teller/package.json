@@ -1,0 +1,96 @@
+{
+  "name": "story-teller",
+  "displayName": "Story Teller",
+  "description": "Provisional prose, chat, image and type-out scene preview.",
+  "version": "0.6.1",
+  "private": true,
+  "publisher": "murmurationpress",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MurmurationPress/storytelling.git",
+    "directory": "tools/story-teller"
+  },
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./src/extension.cjs",
+  "activationEvents": ["onLanguage:markdown"],
+  "contributes": {
+    "commands": [
+      {
+        "command": "storyTeller.previewScene",
+        "title": "Story Teller: Preview Scene"
+      },
+      {
+        "command": "storyTeller.previewThisBeat",
+        "title": "Story Teller: Preview This Beat"
+      },
+      {
+        "command": "storyTeller.collapseBeats",
+        "title": "Story Teller: Collapse All Beats"
+      },
+      {
+        "command": "storyTeller.expandBeats",
+        "title": "Story Teller: Expand All Beats"
+      },
+      {
+        "command": "storyTeller.convertChats",
+        "title": "Story Teller: Convert Chats in Current Document"
+      },
+      {
+        "command": "storyTeller.convertCallouts",
+        "title": "Story Teller: Convert Callouts to Type-out"
+      },
+      {
+        "command": "storyTeller.convertSceneMetadata",
+        "title": "Story Teller: Convert Scene Metadata"
+      },
+      {
+        "command": "storyTeller.insert",
+        "title": "Story Teller: Insert…"
+      },
+      {
+        "command": "storyTeller.wrapSelectionAsChat",
+        "title": "Story Teller: Wrap Selection as Chat"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "storyTeller.previewThisBeat",
+          "when": "editorLangId == markdown",
+          "group": "storyTeller@0"
+        },
+        {
+          "command": "storyTeller.insert",
+          "when": "editorLangId == markdown",
+          "group": "storyTeller@1"
+        },
+        {
+          "command": "storyTeller.wrapSelectionAsChat",
+          "when": "editorLangId == markdown && editorHasSelection",
+          "group": "storyTeller@2"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
+    "test": "node --test test/*.test.cjs",
+    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs",
+    "test:host": "node test/run-host.cjs",
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package"
+  },
+  "dependencies": {
+    "markdown-it": "15.0.3",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "4.0.0",
+    "esbuild": "0.28.2"
+  }
+}

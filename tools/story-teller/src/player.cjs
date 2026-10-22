@@ -1,0 +1,194 @@
+'use strict';
+// No DOM/editor dependencies. Scheduler is injected for deterministic active-time tests.
+const defaultScheduler = {
+  now: () => performance.now(),
+  setTimeout: (callback, delay) => setTimeout(callback, delay),
+  clearTimeout: handle => clearTimeout(handle)
+};
+const { defaultDelay, automaticDelay } = require('./pace.cjs');
+const { graphemes, graphemeDelay } = require('./typeout.cjs');
+class StoryPlayer {
+  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false } = {}) {
+    this.scene = scene; this.index = 0; this.scheduler = scheduler; this.onChange = onChange;
+    this.reducedMotion = reducedMotion;
+    this.generation = 0; this.timer = null; this.disposed = false;
+    this.reset();
+  }
+  get current() { return this.scene.beats[this.index] || null; }
+  cancelTimer() {
+    this.generation++;
+    if (this.timer !== null) this.scheduler.clearTimeout(this.timer);
+    this.timer = null;
+  }
+  reset() {
+    this.cancelTimer();
+    this.phase = 'ready'; this.cursor = 0; this.remaining = null;
+    this.visible = new Set(); this.enteredChats = new Set(); this.enteredTypeouts = new Set();
+    this.typeoutCounts = new Map(); this.typeoutParts = new Map(); this.counts = new Map(); this.read = new Set();
+    this.steps = [];
+    const sequence = this.current?.sequence || (this.current?.blocks || []).map((block, blockIndex) => ({ type: 'component', blockIndex }));
+    for (const entry of sequence) {
+      if (entry.type === 'pause') { this.steps.push(entry); continue; }
+      const blockIndex = entry.blockIndex;
+      const block = this.current.blocks[blockIndex];
+      if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
+      else if (block.type === 'typeout') {
+        const parts = block.format === 'annotation'
+          ? block.annotation.segments.flatMap(graphemes) : graphemes(block.text);
+        this.typeoutParts.set(blockIndex, parts);
+        this.steps.push({ type: 'typeout-start', blockIndex, delayMs: block.delayMs ?? 0 });
+        for (let index = 0; index < parts.length; index++)
+          this.steps.push({ type: 'typeout-grapheme', blockIndex, delayMs: graphemeDelay(index, block.speed) });
+      }
+      else for (const event of block.events) {
+        if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
+        else {
+          const message = block.messages[event.message];
+          this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? automaticDelay(message.text, block.pace) });
+          if (block.ticks && message.speaker === block.viewer) this.steps.push({ type: 'read', blockIndex, message: event.message, delayMs: 600 });
+        }
+      }
+    }
+    // Leading untimed prose and images appear without starting playback.
+    this.showProse();
+  }
+  showProse() {
+    while (['prose', 'image'].includes(this.steps[this.cursor]?.type) && this.steps[this.cursor].delayMs === 0) {
+      this.visible.add(this.steps[this.cursor].blockIndex); this.cursor++;
+    }
+  }
+  get responding() {
+    const step = this.steps[this.cursor];
+    if (this.phase !== 'playing' || step?.type !== 'message' || !(this.remaining > 0)) return null;
+    const block = this.current.blocks[step.blockIndex];
+    const message = block.messages[step.message];
+    return message.responding && block.viewer && message.speaker !== block.viewer ? { blockIndex: step.blockIndex, speaker: message.speaker } : null;
+  }
+  get activeTypeout() {
+    const step = this.steps[this.cursor];
+    return step?.type === 'typeout-grapheme' && ['playing', 'paused'].includes(this.phase)
+      ? { blockIndex: step.blockIndex, block: this.current.blocks[step.blockIndex] } : null;
+  }
+  get visibleBlocks() {
+    return (this.current?.blocks || []).flatMap((block, index) => {
+      if (block.type === 'prose' || block.type === 'image') return this.visible.has(index) ? [block] : [];
+      if (block.type === 'typeout') return this.enteredTypeouts.has(index)
+        ? [{ ...block, revealCount: this.typeoutCounts.get(index) || 0,
+          visibleText: this.typeoutParts.get(index).slice(0, this.typeoutCounts.get(index) || 0).join(''),
+          complete: (this.typeoutCounts.get(index) || 0) >= this.typeoutParts.get(index).length }] : [];
+      const messages = block.messages.slice(0, this.counts.get(index) || 0).map((message, i) => ({
+        ...message,
+        status: block.ticks && message.speaker === block.viewer ? (this.read.has(`${index}:${i}`) ? 'read' : 'delivered') : null
+      }));
+      const responding = this.responding?.blockIndex === index ? this.responding.speaker : null;
+      return messages.length || responding || (block.title && this.enteredChats.has(index)) ? [{ ...block, messages, responding }] : [];
+    });
+  }
+  play() {
+    if (this.disposed || !this.current || !['ready', 'paused'].includes(this.phase)) return;
+    this.phase = 'playing'; this.schedule(); this.onChange();
+  }
+  schedule() {
+    this.showProse();
+    const step = this.steps[this.cursor];
+    if (!step) { this.phase = 'completed'; return; }
+    if (step.blockIndex !== undefined && this.current.blocks[step.blockIndex].type === 'chat') this.enteredChats.add(step.blockIndex);
+    const delay = this.remaining ?? step.delayMs;
+    this.remaining = delay; this.deadline = this.scheduler.now() + delay;
+    const generation = this.generation;
+    const cursor = this.cursor;
+    this.timer = this.scheduler.setTimeout(() => {
+      if (this.disposed || this.phase !== 'playing' || generation !== this.generation || cursor !== this.cursor) return;
+      this.timer = null; this.remaining = null;
+      if (step.type === 'prose' || step.type === 'image') this.visible.add(step.blockIndex);
+      if (step.type === 'typeout-start') {
+        this.enteredTypeouts.add(step.blockIndex);
+        if (this.reducedMotion) {
+          this.typeoutCounts.set(step.blockIndex, this.typeoutParts.get(step.blockIndex).length);
+          while (this.steps[this.cursor + 1]?.type === 'typeout-grapheme' && this.steps[this.cursor + 1].blockIndex === step.blockIndex) this.cursor++;
+        }
+      }
+      if (step.type === 'typeout-grapheme') this.typeoutCounts.set(step.blockIndex, (this.typeoutCounts.get(step.blockIndex) || 0) + 1);
+      if (step.type === 'message') this.counts.set(step.blockIndex, step.message + 1);
+      if (step.type === 'read') this.read.add(`${step.blockIndex}:${step.message}`);
+      this.cursor++;
+      this.schedule(); this.onChange();
+    }, delay);
+  }
+  pause() {
+    if (this.phase !== 'playing') return;
+    this.remaining = Math.max(0, this.deadline - this.scheduler.now());
+    this.cancelTimer(); this.phase = 'paused'; this.onChange();
+  }
+  revealImmediately() {
+    const active = this.activeTypeout;
+    if (!active) return false;
+    this.cancelTimer(); this.remaining = null;
+    this.typeoutCounts.set(active.blockIndex, this.typeoutParts.get(active.blockIndex).length);
+    while (this.steps[this.cursor]?.type === 'typeout-grapheme' && this.steps[this.cursor].blockIndex === active.blockIndex) this.cursor++;
+    if (this.phase === 'playing') this.schedule();
+    this.onChange();
+    return true;
+  }
+  setReducedMotion(value) {
+    this.reducedMotion = Boolean(value);
+    if (this.reducedMotion) this.revealImmediately();
+    this.onChange();
+  }
+  replay() { if (!this.disposed) { this.reset(); this.play(); } }
+  // Reader navigation policy is independent of the host's preference store.
+  next({ autoplay = false } = {}) {
+    if (this.disposed || this.index >= this.scene.beats.length - 1) return;
+    this.index++; this.reset();
+    if (autoplay) this.play();
+  }
+  revealBeat() {
+    this.cancelTimer();
+    this.remaining = null; this.cursor = this.steps.length;
+    for (const [index, block] of (this.current?.blocks || []).entries()) {
+      if (block.type === 'prose' || block.type === 'image') this.visible.add(index);
+      else if (block.type === 'typeout') {
+        this.enteredTypeouts.add(index);
+        this.typeoutCounts.set(index, this.typeoutParts.get(index).length);
+      } else if (block.type === 'chat') {
+        this.enteredChats.add(index);
+        this.counts.set(index, block.messages.length);
+        if (block.ticks) for (const [messageIndex, message] of block.messages.entries())
+          if (message.speaker === block.viewer) this.read.add(`${index}:${messageIndex}`);
+      }
+    }
+    this.phase = 'completed';
+    this.onChange();
+  }
+  previous() {
+    if (this.disposed || this.index === 0) return;
+    this.index--; this.reset(); this.revealBeat();
+  }
+  restart() { this.index = 0; this.reset(); }
+  update(scene) {
+    const old = this.current;
+    const previous = this.scene;
+    let target = -1;
+    if (old) {
+      const matches = scene.beats.map((beat, i) => beat.raw === old.raw ? i : -1).filter(i => i >= 0);
+      if (matches.length) target = matches.reduce((a, b) => Math.abs(a - this.index) <= Math.abs(b - this.index) ? a : b);
+      if (target < 0) {
+        for (let i = this.index - 1; i >= 0; i--) {
+          const hits = scene.beats.map((beat, j) => beat.raw === previous.beats[i].raw ? j : -1).filter(j => j >= 0);
+          if (hits.length === 1) { target = hits[0] + (this.index - i); break; }
+        }
+      }
+      if (target < 0) {
+        for (let i = this.index + 1; i < previous.beats.length; i++) {
+          const hits = scene.beats.map((beat, j) => beat.raw === previous.beats[i].raw ? j : -1).filter(j => j >= 0);
+          if (hits.length === 1) { target = hits[0] - (i - this.index); break; }
+        }
+      }
+    }
+    this.scene = scene;
+    this.index = Math.max(0, Math.min(target < 0 ? this.index : target, scene.beats.length - 1));
+    this.reset();
+  }
+  dispose() { this.cancelTimer(); this.disposed = true; this.phase = 'disposed'; }
+}
+module.exports = { StoryPlayer, defaultDelay };

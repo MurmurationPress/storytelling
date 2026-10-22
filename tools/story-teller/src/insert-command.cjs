@@ -1,0 +1,122 @@
+'use strict';
+const path = require('node:path');
+const { choices, typeoutPresets, planInsertion, planPace, planImageInsertion, planTypeoutInsertion, planBeatInsertion, planCaption, markdownPath } = require('./insert.cjs');
+const { paceChoices } = require('./pace.cjs');
+const { inspectImage, baseFor } = require('./media.cjs');
+const { choices: settingChoices, values: settingValues, defaults: settingDefaults, locateSettingContext, currentSetting, planSetting, DEFAULT_SPEED, MIN_SPEED, MAX_SPEED } = require('./settings.cjs');
+function registerInsert(vscode, context) {
+  const run = async wrap => {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor || editor.document.languageId !== 'markdown' || editor.document.uri.scheme === 'story-teller-conversion') {
+      vscode.window.showInformationMessage('Open an editable source Markdown document first.'); return;
+    }
+    if (editor.selections.length !== 1) { vscode.window.showWarningMessage('Use one caret or one contiguous selection.'); return; }
+    const document = editor.document;
+    const version = document.version;
+    const selection = editor.selection;
+    const source = document.getText();
+    const choice = wrap ? { id: 'wrap' } : await vscode.window.showQuickPick(choices, { title: 'Story Teller: Insert…', placeHolder: 'Insert story syntax at the caret', matchOnDescription: true });
+    if (!choice) return { status: 'cancelled' };
+    let setting = null;
+    if (choice.id === 'settings') {
+      const at = { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) };
+      const located = locateSettingContext(source, at);
+      if (located.error) { vscode.window.showInformationMessage(located.error); return { status: 'refused' }; }
+      const chosen = await vscode.window.showQuickPick(settingChoices[located.kind], { title: `${located.kind === 'chat' ? 'Chat' : 'Type-out'} settings`, placeHolder: 'Edit this component header', matchOnDescription: true });
+      if (!chosen) return { status: 'cancelled' };
+      const key = chosen.id;
+      const existing = currentSetting(located, key).map(line => located.lines[line].text.trim());
+      if (existing.length > 1) { vscode.window.showWarningMessage(`Duplicate ${key} declarations need direct review first.`); return { status: 'refused' }; }
+      let value;
+      if (key === 'title' || key === 'viewer') {
+        const picked = await vscode.window.showQuickPick([
+          { label: 'Edit…', value: 'edit', description: `Set this ${key}` },
+          { label: 'Default', value: null, description: `Remove explicit ${key}` }
+        ], { title: `${chosen.label} setting` });
+        if (!picked) return { status: 'cancelled' };
+        if (picked.value === null) value = null;
+        else {
+          const current = existing[0]?.replace(key === 'title' ? /^(?:#|@title)\s*/ : /^@viewer\s*/, '') || '';
+          value = await vscode.window.showInputBox({ title: `Chat ${key}`, value: current,
+            prompt: `Single-line ${key}; this edits only the chat header.`,
+            validateInput: input => !input.trim() || /[\r\n]/.test(input) ? 'Enter nonempty text on one line.' : null });
+          if (value === undefined) return { status: 'cancelled' };
+        }
+      } else if (key === 'speed') {
+        const picked = await vscode.window.showQuickPick([
+          { label: 'Set speed…', value: 'set', description: `${MIN_SPEED}–${MAX_SPEED} Unicode grapheme clusters per second` },
+          { label: 'Default', value: null, description: `Remove @speed; use ${DEFAULT_SPEED} graphemes per second` }
+        ], { title: 'Type-out speed' });
+        if (!picked) return { status: 'cancelled' };
+        value = picked.value === null ? null : await vscode.window.showInputBox({ title: 'Type-out speed',
+          prompt: `${MIN_SPEED}–${MAX_SPEED} Unicode grapheme clusters per second`,
+          value: existing[0]?.replace(/^@speed\s*/, '') || String(DEFAULT_SPEED),
+          validateInput: input => /^[1-9][0-9]*$/.test(input) && Number(input) >= MIN_SPEED && Number(input) <= MAX_SPEED ? null : `Enter a whole number from ${MIN_SPEED} to ${MAX_SPEED}.` });
+        if (value === undefined) return { status: 'cancelled' };
+      } else {
+        const options = settingValues[key].map(entry => ({ label: entry[0].toUpperCase() + entry.slice(1), value: entry }));
+        if (settingDefaults.has(key)) options.unshift({ label: 'Default', value: null, description: 'Remove this explicit override' });
+        const picked = await vscode.window.showQuickPick(options, { title: `${chosen.label} setting`, placeHolder: `Current: ${existing[0] || 'default'}` });
+        if (!picked) return { status: 'cancelled' };
+        value = picked.value;
+      }
+      setting = { key, value };
+    }
+    const beatTitle = choice.id === 'boundary' ? await vscode.window.showInputBox({ title: 'Beat title', prompt: 'Optional. Leave empty for an untitled beat.', value: '' }) : null;
+    if (choice.id === 'boundary' && beatTitle === undefined) return { status: 'cancelled' };
+    const pace = choice.id === 'pace' ? await vscode.window.showQuickPick(paceChoices, { title: 'Chat pace', placeHolder: 'Explicit delays and pauses stay unchanged' }) : null;
+    if (choice.id === 'pace' && !pace) return { status: 'cancelled' };
+    const typeout = choice.id === 'typeout' ? await vscode.window.showQuickPick(typeoutPresets, { title: 'Type-out preset', placeHolder: 'Format and sound can be edited independently afterward' }) : null;
+    if (choice.id === 'typeout' && !typeout) return { status: 'cancelled' };
+    let relativeImage = null;
+    if (choice.id === 'image') {
+      const preliminary = planInsertion(source, { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) }, 'image');
+      if (preliminary.error) { vscode.window.showWarningMessage(preliminary.error); return { status: 'refused' }; }
+      const base = baseFor(vscode, document);
+      if (!base) { vscode.window.showInformationMessage('Save this Markdown document first so image paths have a known directory.'); return { status: 'refused' }; }
+      for (;;) {
+        const picked = await vscode.window.showOpenDialog({ canSelectFiles: true, canSelectMany: false, canSelectFolders: false,
+          defaultUri: vscode.Uri.file(base.directory), openLabel: 'Use image', filters: { Images: ['png', 'jpg', 'jpeg', 'webp'] } });
+        if (!picked?.length) return { status: 'cancelled' };
+        if (picked[0].scheme !== 'file') {
+          const another = await vscode.window.showWarningMessage('Choose a local file in this document’s workspace.', 'Choose another');
+          if (another !== 'Choose another') return { status: 'cancelled' };
+          continue;
+        }
+        relativeImage = path.relative(base.directory, picked[0].fsPath).split(path.sep).join('/');
+        try { await inspectImage(vscode, document, markdownPath(relativeImage)); break; }
+        catch (error) {
+          const another = await vscode.window.showWarningMessage(`${error.message}. The image must be in this document's workspace (or its directory when no workspace is open).`, 'Choose another');
+          if (another !== 'Choose another') return { status: 'cancelled' };
+        }
+      }
+    }
+    if (document.isClosed || document.version !== version || vscode.window.activeTextEditor !== editor || !editor.selection.isEqual(selection)) {
+      vscode.window.showWarningMessage('The document or selection changed while choosing. Run Insert again.'); return { status: 'stale' };
+    }
+    const offsets = { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) };
+    const plan = choice.id === 'settings' ? planSetting(source, offsets, setting.key, setting.value)
+      : choice.id === 'pace' ? planPace(source, offsets, pace.value)
+      : choice.id === 'image' ? planImageInsertion(source, offsets, relativeImage)
+      : choice.id === 'typeout' ? planTypeoutInsertion(source, offsets, typeout.value)
+      : choice.id === 'boundary' ? planBeatInsertion(source, offsets, beatTitle)
+      : choice.id === 'caption' ? planCaption(source, offsets) : planInsertion(source, offsets, choice.id);
+    if (plan.error) { vscode.window.showWarningMessage(plan.error); return { status: 'refused' }; }
+    let applied;
+    if (plan.select) {
+      editor.selection = new vscode.Selection(document.positionAt(plan.select.start), document.positionAt(plan.select.end));
+      editor.revealRange(editor.selection);
+      return { status: 'selected', kind: choice.id };
+    }
+    if (plan.edits) {
+      if (!plan.edits.length) return { status: 'unchanged', kind: choice.id };
+      applied = await editor.edit(edit => { for (const item of plan.edits) edit.replace(new vscode.Range(document.positionAt(item.start), document.positionAt(item.end)), item.text); }, { undoStopBefore: true, undoStopAfter: true });
+    } else if (plan.wrap) {
+      applied = await editor.edit(edit => { edit.insert(selection.start, plan.prefix); edit.insert(selection.end, plan.suffix); }, { undoStopBefore: true, undoStopAfter: true });
+      if (applied) vscode.window.showInformationMessage('Wrapped verbatim. Message syntax is unchanged: review it or run Convert Chats for supported manuscript wrappers.');
+    } else applied = await editor.insertSnippet(new vscode.SnippetString(plan.snippet), document.positionAt(plan.at ?? offsets.start), { undoStopBefore: true, undoStopAfter: true, keepWhitespace: true });
+    return { status: applied ? 'inserted' : 'stale', kind: choice.id };
+  };
+  context.subscriptions.push(vscode.commands.registerCommand('storyTeller.insert', () => run(false)), vscode.commands.registerCommand('storyTeller.wrapSelectionAsChat', () => run(true)));
+}
+module.exports = { registerInsert };

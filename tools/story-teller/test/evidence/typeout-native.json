@@ -1,0 +1,166 @@
+{
+  "environment": "VS Code 1.142.0 Linux Extension Development Host, isolated profile; CDP DOM/WebAudio observations",
+  "sample": "samples/typeout.md (fictional)",
+  "previousFailure": "voice: TypeError: Illegal invocation; context running",
+  "temporal": [
+    {
+      "phase": "early",
+      "text": "statu",
+      "at": 1792596595190
+    },
+    {
+      "phase": "later",
+      "text": "status: liste",
+      "at": 1792596595545
+    },
+    {
+      "phase": "complete",
+      "text": "status: listening\nsource:\n  direction: beyond the harbour\n  confidence: unresolved\n",
+      "at": 1792596597859
+    }
+  ],
+  "hideReturn": {
+    "hidden": false,
+    "pauseDisabled": true,
+    "status": "Beat 1 of 4 · A distant receiver · paused"
+  },
+  "audio": {
+    "tracing": true,
+    "events": [
+      {
+        "method": "WebAudio.contextCreated",
+        "contextState": "suspended"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioListenerCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.contextChanged",
+        "contextState": "running"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.nodesConnected"
+      },
+      {
+        "method": "WebAudio.nodesConnected"
+      },
+      {
+        "method": "WebAudio.nodesDisconnected"
+      },
+      {
+        "method": "WebAudio.nodesDisconnected"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.nodesConnected"
+      },
+      {
+        "method": "WebAudio.nodesConnected"
+      },
+      {
+        "method": "WebAudio.nodesDisconnected"
+      },
+      {
+        "method": "WebAudio.nodesDisconnected"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.audioNodeCreated"
+      },
+      {
+        "method": "WebAudio.audioParamCreated"
+      },
+      {
+        "method": "WebAudio.nodesConnected"
+      },
+      {
+        "method": "WebAudio.nodesConnected"
+      },
+      {
+        "method": "WebAudio.nodesDisconnected"
+      },
+      {
+        "method": "WebAudio.nodesDisconnected"
+      }
+    ],
+    "keyboardAudioState": {
+      "warning": "",
+      "mute": "false",
+      "reduced": false
+    },
+    "typewriterAudioState": {
+      "warning": "",
+      "mute": "false",
+      "reduced": false
+    },
+    "nodesBeforeSilent": 7,
+    "audibility": "not verified; live Web Audio context and node lifecycle observed"
+  }
+}

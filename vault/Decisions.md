@@ -5,6 +5,46 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Accept formatted annotation reveal; review Story Teller authoring milestone
+
+**Ted's acceptance:** formatted Markdown reveal for annotation type-outs is accepted alongside the previously accepted Story Teller authoring and playback behaviour. YAML state type-outs remain literal. This acceptance concerns the local authoring/preview experience, not EPUB export, release readiness, VSCodium compatibility or every implementation detail.
+
+**Review boundary:** finish the existing PR with correctness, native regression and package checks. Keyboard IntelliSense and State metadata conversion are implemented and tested, but Ted has not explicitly accepted either. Keep those statuses distinct; leave publication and other components for later decisions. Native folding initially failed intermittently during source/preview switching; the preview reveal and presentation exchange were corrected, followed by four full passing clean-profile runs. The tab-switch race is a likely cause rather than an isolated proof.
+
+## 2026-10-22 — Accept Story Teller navigation and settings; trial State conversion
+
+**Ted's acceptance:** page-turn autoplay, type-out border/fill choices and the component settings helper are accepted. This supersedes their earlier awaiting-acceptance entries below. The acceptance concerns the local Story Teller authoring/preview experience, not EPUB export or general reader compatibility.
+
+**Authorised experiment:** convert recognised `[!State]` callouts in an active copied Markdown adaptation by resolving direct top-level `=this.field` references from its own YAML frontmatter. The converter proposes a diff and leaves unclear material for review. It does not execute Dataview, alter beat boundaries or change original vault/manuscript sources. This new conversion awaits Ted's assessment.
+
+## 2026-10-22 — Trial page-turn autoplay in Story Teller
+
+**Authorised experiment, awaiting Ted's acceptance:** add a reader preference (on by default) so a manual Next turn starts the destination beat without another Play press. This does not turn pages automatically. Opening/Preview This Beat and Restart remain ready; Previous reveals the preceding beat silently for rereading; Replay starts the current beat again. The preference is stored outside manuscript Markdown. Existing accepted components, conversion and authoring behaviour remain accepted; this new navigation policy needs Ted's review on an installed VSIX.
+
+## 2026-10-21 — Accept the current Story Teller authoring experience; stabilise a local installable milestone
+
+**Ted's acceptance:** Markdown editing with live preview; prose/chat sequencing, automatic chat timing and chat-local pace; explicit delays, pauses, responding indicators and ticks; static images, captions and image insertion; named beats, folding and source/preview navigation; type-out formats and audible modem/keyboard/typewriter sounds; chat conversion, callout-to-type-out conversion and the existing Insert helpers. Synthesised sounds are sufficient for this milestone. Richer texture is a possible later refinement.
+
+**Authorised work:** review and correct material defects, consolidate the guide and evidence, package and verify a local VSIX, and commit only intended Story Teller changes on the existing feature branch. This is acceptance of the tested authoring/playback behaviour, not approval of EPUB export, publication readiness, general editor compatibility or a public release. The original manuscript, private adaptations and unrelated EPUB work remain separate.
+
+## 2026-10-21 — Accept Story Teller type-out; test callout conversion
+
+**Ted's acceptance:** type-out playback and audible modem, keyboard and typewriter sounds are verified by Ted. Richer sound texture is a possible later refinement, not a requirement for this conversion task. This supersedes the earlier awaiting-acceptance status for the current type-out mechanism.
+
+**Authorised experiment:** a conservative current-document conversion of recognised manuscript machine-output and annotation callouts into titled type-out beats. The original manuscript stays unchanged. Diff review, explicit Apply and source-located warnings are part of this authoring workflow; conversion rules await Ted's assessment on a copied chapter.
+
+## 2026-10-21 — Accept Story Teller beat helpers; test performed type-out
+
+**Ted's acceptance:** named beats, beat folding, explicit source/preview navigation and Caption insertion are accepted. This supersedes their earlier awaiting-review status; it does not approve unrelated publishing or conversion work.
+
+**Authorised next experiment:** one literal type-out component for PRIME/Divergent YAML-style output and annotations, with independent format and sound settings, grapheme-based reveal and optional local sound. This is a Story Teller preview capability awaiting Ted's assessment, not an adaptation of manuscript passages or an EPUB packaging decision.
+
+## 2026-10-21 — Accept Story Teller static imagery; test beat authoring helpers
+
+**Ted's acceptance:** the first static-imagery presentation in Story Teller is accepted. This does not decide publication packaging or treatment of manuscript artwork.
+
+**Authorised next experiment:** optional beat-title metadata, native beat folding, explicit source/preview navigation and a Caption insert helper. These new authoring controls await Ted's assessment. They keep standalone `---` as the beat boundary and preserve accepted chat and imagery behaviour; no manuscript adaptation is changed by this authorisation.
+
 ## 2026-10-20 — Record ideas before opening tickets
 
 **Ted's explicit direction:** create a repository, include the vault in it and use the vault to develop ideas before launching into tickets. The purpose is buying thinking time.
@@ -101,3 +141,8 @@ This authorises implementation of the extract experiment only. The earlier think
 **Notes preserved:** Ted's local [[Component Types]] was brought into main byte-for-byte without switching/resetting his authoring worktree. Future drawing/line invitation/JANUS/previews/video/apps/footnotes/sound ideas remain in the vault, outside the milestone.
 
 **Planned, not implemented:** [Managed EPUB foundation: reusable PRIME and chat](https://github.com/MurmurationPress/storytelling/milestone/1); contract #3, reader #4, reusable PRIME #5, authored chat #6, packaging/fallback #7. See [[Managed EPUB Foundation]] for issue links, proposed order, evidence and security/dependency constraints.
+
+
+## 2026-10-21 — Story Teller manual scene-preview slice
+
+**Ted's explicit direction:** implement a small VS Code extension for adapting completed books, with independent parser/player, prose and chat within beat boundaries, manual progression and live preview. This supersedes earlier no-scaffolding guidance for this specific slice only. The Markdown syntax remains provisional. Existing EPUB work and author-authored notes are preserved; no publication, release or merge is authorised. See [[Story Teller]].

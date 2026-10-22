@@ -1,0 +1,20 @@
+[
+  {
+    "pace": "normal",
+    "expectedFirstMs": 800,
+    "observedFirstMs": 839,
+    "observedCompleteMs": 2303
+  },
+  {
+    "pace": "brisk",
+    "expectedFirstMs": 560,
+    "observedFirstMs": 633,
+    "observedCompleteMs": 2124
+  },
+  {
+    "pace": "deliberate",
+    "expectedFirstMs": 1040,
+    "observedFirstMs": 1057,
+    "observedCompleteMs": 2638
+  }
+]
