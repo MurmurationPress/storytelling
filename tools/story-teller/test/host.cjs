@@ -71,6 +71,10 @@ exports.run = async function () {
         await focusSource();
         await fs.rm(path.join(directory, 'callout-conversion-result.json'), { force: true });
         vscode.commands.executeCommand('storyTeller.convertCallouts').then(result => fs.writeFile(path.join(directory, 'callout-conversion-result.json'), JSON.stringify(result)));
+      } else if (request.action === 'start-state-conversion') {
+        await focusSource();
+        await fs.rm(path.join(directory, 'state-conversion-result.json'), { force: true });
+        vscode.commands.executeCommand('storyTeller.convertSceneMetadata').then(result => fs.writeFile(path.join(directory, 'state-conversion-result.json'), JSON.stringify(result)));
       } else if (request.action === 'preview-current') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');
@@ -105,6 +109,7 @@ exports.run = async function () {
       } else if (request.action === 'undo') {
         await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
         await new Promise(resolve => setTimeout(resolve, 120));
+        await focusSource();
         await vscode.commands.executeCommand('undo');
       } else if (request.action === 'edit') {
         const edit = new vscode.WorkspaceEdit();

@@ -2,6 +2,7 @@
 const { randomBytes } = require('node:crypto');
 const { convertChats } = require('./convert.cjs');
 const { convertCallouts } = require('./convert-callouts.cjs');
+const { convertSceneMetadata } = require('./convert-scene-metadata.cjs');
 function registerConversion(vscode, context) {
   const snapshots = new Map();
   const busy = new Set();
@@ -12,7 +13,8 @@ function registerConversion(vscode, context) {
   );
   for (const task of [
     { command: 'storyTeller.convertChats', name: 'chat', plural: 'chat(s)', convert: convertChats, channel: 'Story Teller Chat Conversion' },
-    { command: 'storyTeller.convertCallouts', name: 'callout', plural: 'callout(s)', convert: convertCallouts, channel: 'Story Teller Callout Conversion' }
+    { command: 'storyTeller.convertCallouts', name: 'callout', plural: 'callout(s)', convert: convertCallouts, channel: 'Story Teller Callout Conversion' },
+    { command: 'storyTeller.convertSceneMetadata', name: 'State callout', plural: 'State callout(s)', convert: convertSceneMetadata, channel: 'Story Teller Scene Metadata Conversion' }
   ]) {
     const report = vscode.window.createOutputChannel(task.channel);
     context.subscriptions.push(report, vscode.commands.registerCommand(task.command, async () => {

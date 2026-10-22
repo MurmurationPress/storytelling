@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Accept Story Teller navigation and settings; trial State conversion
+
+**Ted's acceptance:** page-turn autoplay, type-out border/fill choices and the component settings helper are accepted. This supersedes their earlier awaiting-acceptance entries below. The acceptance concerns the local Story Teller authoring/preview experience, not EPUB export or general reader compatibility.
+
+**Authorised experiment:** convert recognised `[!State]` callouts in an active copied Markdown adaptation by resolving direct top-level `=this.field` references from its own YAML frontmatter. The converter proposes a diff and leaves unclear material for review. It does not execute Dataview, alter beat boundaries or change original vault/manuscript sources. This new conversion awaits Ted's assessment.
+
 ## 2026-10-22 — Trial page-turn autoplay in Story Teller
 
 **Authorised experiment, awaiting Ted's acceptance:** add a reader preference (on by default) so a manual Next turn starts the destination beat without another Play press. This does not turn pages automatically. Opening/Preview This Beat and Restart remain ready; Previous reveals the preceding beat silently for rereading; Replay starts the current beat again. The preference is stored outside manuscript Markdown. Existing accepted components, conversion and authoring behaviour remain accepted; this new navigation policy needs Ted's review on an installed VSIX.
