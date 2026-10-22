@@ -5,6 +5,10 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Trial reader scroll-follow in Story Teller
+
+**Proposed reading behaviour under test:** the managed preview follows newly revealed content only when it extends below the reading viewport. Upward reader scrolling suspends following without pausing performance; Follow story or a manual return to the bottom resumes it. Beat turns start at the top; silent Previous stays there for rereading. This is a reader preference and does not alter manuscript syntax. Ted has not yet accepted this behaviour. Existing acceptance of automatic prose pacing remains separate.
+
 ## 2026-10-22 — Accept prose pacing; trial end-of-beat navigation
 
 **Ted’s acceptance:** automatic prose pacing is accepted. The former awaiting-acceptance wording below is historical. This does not establish acceptance of the import review/outline refinements.

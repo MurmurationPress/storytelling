@@ -65,7 +65,7 @@ function activate(context) {
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src ${panel.webview.cspSource}; img-src ${panel.webview.cspSource}; connect-src 'none'; font-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none';">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Story Teller</title><link rel="stylesheet" href="${style}"></head><body>
 <nav aria-label="Story controls"><button id="previous" type="button">Previous</button><button id="next" type="button">Next</button><button id="restart" type="button">Restart</button><button id="play" type="button">Play</button><button id="pause" type="button">Pause</button><button id="replay" type="button">Replay Beat</button><button id="reveal" type="button" hidden>Reveal Immediately</button><label class="reader-preference"><input id="autoplay" type="checkbox" checked>Autoplay on page turn</label><button id="mute" type="button" aria-pressed="false">Mute sound</button><button id="show-source" type="button">Show Beat in Source</button><span id="status" role="status"></span></nav>
-<p id="warnings" role="status"></p><main id="beat" aria-label="Current story beat" tabindex="0"></main><script nonce="${nonce}" src="${script}"></script></body></html>`;
+<p id="warnings" role="status"></p><main id="beat" aria-label="Current story beat" tabindex="0"></main><button id="follow-story" type="button" hidden>Follow story ↓</button><script nonce="${nonce}" src="${script}"></script></body></html>`;
     entry.send = async (changed = document, requestedOffset) => {
       const current = ++entry.revision;
       const source = changed.getText();

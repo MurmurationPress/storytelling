@@ -4,6 +4,7 @@ const { beatAtOffset } = require('./structure.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
 const { graphemes } = require('./typeout.cjs');
+const { ScrollFollower } = require('./follow.cjs');
 const api = acquireVsCodeApi();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches });
@@ -25,6 +26,8 @@ let lastEndTurnAt = -Infinity;
 const content = document.getElementById('beat');
 const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
+const follower = new ScrollFollower({ window, document, content, nav: document.querySelector('nav'),
+  button: document.getElementById('follow-story'), reducedMotion: () => motion.matches });
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
@@ -95,7 +98,7 @@ function render() {
       if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
       else progress.textContent = shown?.visibleText || '';
       progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
-      controls(); return;
+      controls(); follower.changed(); return;
     }
   }
   lastTypeoutRender = null;
@@ -213,6 +216,7 @@ function render() {
     content.append(ending);
   }
   controls();
+  follower.changed();
 }
 function preload(url) {
   return new Promise(resolve => {
@@ -236,25 +240,26 @@ const unlockSound = (beat = player.current) => {
 };
 function turnNext() {
   if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
+  follower.beginTurn();
   sound.stop();
   if (autoplayOnTurn) unlockSound(player.scene.beats[player.index + 1]);
-  player.next({ autoplay: autoplayOnTurn }); render(); content.scrollTop = 0;
+  player.next({ autoplay: autoplayOnTurn }); render(); follower.endTurn();
 }
 document.getElementById('next').addEventListener('click', turnNext);
 document.getElementById('previous').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  sound.stop(); player.previous(); render(); content.scrollTop = 0;
+  follower.beginTurn({ silent: true }); sound.stop(); player.previous(); render(); follower.endTurn();
 });
 document.getElementById('restart').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  sound.stop(); player.restart(); render(); content.scrollTop = 0;
+  follower.beginTurn(); sound.stop(); player.restart(); render(); follower.endTurn();
 });
 document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.play(); } });
 document.getElementById('pause').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
   if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
-document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { sound.stop(); unlockSound(); player.replay(); } });
+document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
 document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
 document.getElementById('mute').addEventListener('click', () => {
   muted = !muted; api.postMessage({ type: 'mute-preference', muted });
@@ -269,16 +274,17 @@ motion.addEventListener('change', event => player.setReducedMotion(event.matches
 document.getElementById('show-source').addEventListener('click', () => {
   if (preparing || !player.current) return;
   const range = player.current.sourceRange;
-  player.reset(); render();
+  follower.beginTurn(); player.reset(); render(); follower.endTurn();
   api.postMessage({ type: 'show-source', uri: sourceUri, revision, index: player.index, startOffset: range.startOffset, endOffset: range.endOffset });
 });
-document.addEventListener('visibilitychange', () => { if (document.hidden) player.pause(); render(); });
-window.addEventListener('pagehide', () => { player.dispose(); sound.dispose(); });
+document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) player.pause(); render(); });
+window.addEventListener('pagehide', () => { follower.dispose(); player.dispose(); sound.dispose(); });
 window.addEventListener('beforeunload', () => sound.dispose());
 window.addEventListener('message', async event => {
   const message = event.data;
   if (message?.type === 'source-pending' && Number.isInteger(message.revision) && message.revision > incomingRevision) {
     incomingRevision = message.revision;
+    follower.beginTurn();
     player.reset(); // Stop current timers before the host reads and validates local files.
     preparing = true; render(); return;
   }
@@ -287,6 +293,7 @@ window.addEventListener('message', async event => {
       if (message.epoch > presentationEpoch) {
         presentationEpoch = message.epoch;
         presented = message.visible;
+        follower.setActive(presented && !document.hidden);
         if (!presented) player.pause();
         render();
       }
@@ -302,6 +309,7 @@ window.addEventListener('message', async event => {
   }
   if (message?.type !== 'source' || typeof message.source !== 'string' || !Number.isInteger(message.revision) || message.revision < incomingRevision || message.revision <= revision) return;
   incomingRevision = message.revision;
+  follower.beginTurn();
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
   preparing = true; render();
   const prepared = Object.create(null);
@@ -334,5 +342,6 @@ window.addEventListener('message', async event => {
   }
   preparing = false;
   render();
+  follower.endTurn();
 });
 api.postMessage({ type: 'ready' });

@@ -6,6 +6,8 @@ created: 2026-10-21
 
 # Story Teller
 
+**2026-10-22 scroll-follow trial:** the local preview now tests automatic following of visible prose, chat, image and type-out content, with reader-controlled suspension/resumption and top-of-beat navigation. It is implemented for Ted's assessment, not yet accepted or a claim about EPUB readers. The prior accepted playback and automatic prose pacing remain as recorded below.
+
 **2026-10-22 acceptance and navigation trial:** Ted accepts automatic prose pacing in the imported adaptation. The 0.8.1 preview adds a bottom Next button after completed beats, after trailing authored silence; it uses the existing manual turn and Autoplay preference. A completed final beat displays “End of scene.” This new placement awaits Ted's acceptance. Cross-scene playback and publication export are not implied.
 
 **Current acceptance (2026-10-22):** Ted has accepted the formatted annotation reveal. Its earlier awaiting-assessment note below is historical. Keyboard IntelliSense and State metadata conversion are now accepted by Ted; their earlier pending status below is historical. The final authoring milestone remains a local preview and installable VSIX, separate from EPUB delivery and manuscript originals. Native review found an intermittent folding failure during source/preview switching; after correcting the preview reveal and presentation exchange, four full clean-profile native runs passed. The tab-switch race is a likely explanation, not an isolated proof. See [results](../tools/story-teller/RESULTS.md).
