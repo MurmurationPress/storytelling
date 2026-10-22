@@ -9,7 +9,7 @@ status: active
 
 **Ted's acceptance:** formatted Markdown reveal for annotation type-outs is accepted alongside the previously accepted Story Teller authoring and playback behaviour. YAML state type-outs remain literal. This acceptance concerns the local authoring/preview experience, not EPUB export, release readiness, VSCodium compatibility or every implementation detail.
 
-**Review boundary:** finish the existing PR with correctness, native regression and package checks. Keyboard IntelliSense and State metadata conversion are implemented and tested, but Ted has not explicitly accepted either. Keep those statuses distinct; leave publication and other components for later decisions.
+**Review boundary:** finish the existing PR with correctness, native regression and package checks. Keyboard IntelliSense and State metadata conversion are implemented and tested, but Ted has not explicitly accepted either. Keep those statuses distinct; leave publication and other components for later decisions. Native folding initially failed intermittently during source/preview switching; the preview reveal and presentation exchange were corrected, followed by four full passing clean-profile runs. The tab-switch race is a likely cause rather than an isolated proof.
 
 ## 2026-10-22 — Accept Story Teller navigation and settings; trial State conversion
 
