@@ -4,27 +4,34 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
-const { registerImport } = require('../src/import-command.cjs');
+const { registerImport, pendingOutlineMatches } = require('../src/import-command.cjs');
 function fakeHost(answers) {
-  const commands = new Map(), views = new Map(), messages = [], disposables = []; let picks = 0;
+  const commands = new Map(), views = new Map(), messages = [], disposables = [], reviews = [], executed = [], updates = [];
   const d = { dispose() {} };
   const vscode = {
     EventEmitter: class { constructor() { this.event = () => d; } fire() {} },
-    TreeItemCollapsibleState: { None: 0, Expanded: 2 },
+    TreeItemCollapsibleState: { None: 0, Collapsed: 1, Expanded: 2 }, ViewColumn: { Active: 1 },
     Uri: { file: fsPath => ({ fsPath }) },
-    workspace: { workspaceFolders: [], onDidChangeWorkspaceFolders: () => d,
+    workspace: { workspaceFolders: answers.folders || [], onDidChangeWorkspaceFolders: () => d,
       createFileSystemWatcher: () => ({ onDidChange() {}, onDidCreate() {}, onDidDelete() {}, dispose() {} }) },
     window: { registerTreeDataProvider: (name, provider) => { views.set(name, provider); return d; },
       showOpenDialog: async () => answers.dialogs.shift(),
-      showQuickPick: async (rows) => { if (answers.quick === 'cancel') return undefined; return picks++ === 0 ? rows.find(r => r.label === answers.quick) : rows.find(r => r.action === 'continue'); },
+      showQuickPick: async rows => answers.quick === 'cancel' ? undefined : rows.find(r => r.label === answers.quick),
+      createWebviewPanel: () => {
+        let disposed = () => {};
+        const panel = { webview: { html: '', onDidReceiveMessage: fn => { queueMicrotask(() => fn(answers.review || 'continue')); return d; } },
+          onDidDispose: fn => { disposed = fn; return d; }, dispose: () => disposed() };
+        reviews.push(panel.webview);
+        return panel;
+      },
       showInputBox: async () => answers.name,
       showInformationMessage: async (message, options, ...choices) => { messages.push(message); return choices.includes('Import') ? answers.confirm : undefined; },
       showErrorMessage: async message => { messages.push(message); },
       showWarningMessage: async () => answers.assetChoice },
-    commands: { registerCommand: (name, fn) => { commands.set(name, fn); return d; }, executeCommand: async () => {} }
+    commands: { registerCommand: (name, fn) => { commands.set(name, fn); return d; }, executeCommand: async name => { executed.push(name); } }
   };
-  registerImport(vscode, { subscriptions: disposables });
-  return { commands, views, messages };
+  registerImport(vscode, { subscriptions: disposables, globalState: { get: () => answers.pending, update: async (key, value) => { updates.push([key, value]); } } });
+  return { commands, views, messages, reviews, executed, updates };
 }
 async function fixture(t) {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'story-command-'));
@@ -36,11 +43,15 @@ async function fixture(t) {
   await fs.writeFile(path.join(book, 'First', 'One.md'), '---\ntype: scene\ntitle: One\nparent: "[[Books/Lantern/First]]"\nmanuscript_order_key: "8000000000"\n---\nOpening.\n');
   return { root, book, dest };
 }
-test('cancelled mocked review writes nothing', async t => {
+test('cancelled review writes nothing and retains fixed keyboard controls', async t => {
   const f = await fixture(t);
-  const host = fakeHost({ dialogs: [[{ fsPath: f.book }]], quick: 'cancel' });
+  const host = fakeHost({ dialogs: [[{ fsPath: f.book }]], quick: 'manuscript_order_key', review: 'cancel' });
   await host.commands.get('storyTeller.importManuscript')();
   assert.deepEqual(await fs.readdir(f.dest), []);
+  assert.match(host.reviews[0].html, /position:sticky/);
+  assert.match(host.reviews[0].html, /id="back"/);
+  assert.match(host.reviews[0].html, /id="continue"/);
+  assert.match(host.reviews[0].html, /id="cancel"/);
 });
 test('explicit review, destination and confirmation create project; outline uses manifest order', async t => {
   const f = await fixture(t);
@@ -50,6 +61,33 @@ test('explicit review, destination and confirmation create project; outline uses
   const manifest = JSON.parse(await fs.readFile(path.join(project, 'story-teller.project.json'), 'utf8'));
   assert.deepEqual(manifest.parts[0].scenes, [manifest.scenes[0].id]);
   assert.equal(manifest.scenes[0].label, '1.1');
+  assert.match(host.reviews[0].html, /1\.1 One/);
   assert.match(host.messages.join('\n'), /Create 1-scene adaptation/);
   assert.match(await fs.readFile(path.join(project, manifest.scenes[0].file), 'utf8'), /Opening\./);
+});
+test('outline auto-open marker targets only the exact destination project', () => {
+  const folders = [{ uri: { fsPath: '/tmp/other' } }, { uri: { fsPath: '/tmp/lantern' } }];
+  assert.equal(pendingOutlineMatches('/tmp/lantern', folders), true);
+  assert.equal(pendingOutlineMatches('/tmp/lantern-copy', folders), false);
+  assert.equal(pendingOutlineMatches(undefined, folders), false);
+});
+test('matching destination consumes one-shot marker and opens outline, unrelated workspace does not', async () => {
+  const destination = '/tmp/story-import-target';
+  const match = fakeHost({ dialogs: [], folders: [{ uri: { fsPath: destination } }], pending: destination });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(match.updates, [['storyTeller.pendingOutline', undefined]]);
+  assert.ok(match.executed.includes('workbench.view.extension.storyTeller'));
+  const other = fakeHost({ dialogs: [], folders: [{ uri: { fsPath: '/tmp/another-project' } }], pending: destination });
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(other.updates, []);
+  assert.deepEqual(other.executed, []);
+});
+test('project outline initially expands only the first part', async t => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'story-outline-'));
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await fs.writeFile(path.join(root, 'story-teller.project.json'), JSON.stringify({ schema: 'story-teller-project', version: 1,
+    parts: [{ id: 'one', title: 'First', scenes: [] }, { id: 'two', title: 'Second', scenes: [] }], scenes: [] }));
+  const host = fakeHost({ dialogs: [], folders: [{ uri: { fsPath: root } }] });
+  const items = await host.views.get('storyTeller.outline').getChildren();
+  assert.deepEqual(items.map(item => item.collapsibleState), [2, 1]);
 });

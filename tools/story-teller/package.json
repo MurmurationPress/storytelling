@@ -2,7 +2,7 @@
   "name": "story-teller",
   "displayName": "Story Teller",
   "description": "Provisional prose, chat, image and type-out scene preview.",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "private": true,
   "publisher": "murmurationpress",
   "repository": {
@@ -20,6 +20,9 @@
   "activationEvents": [
     "onLanguage:markdown",
     "onCommand:storyTeller.importManuscript",
+    "onCommand:storyTeller.setBookProsePacing",
+    "onCommand:storyTeller.setSceneProsePacing",
+    "workspaceContains:story-teller.project.json",
     "onView:storyTeller.outline"
   ],
   "contributes": {
@@ -63,6 +66,14 @@
       {
         "command": "storyTeller.importManuscript",
         "title": "Story Teller: Import Markdown Manuscript"
+      },
+      {
+        "command": "storyTeller.setBookProsePacing",
+        "title": "Story Teller: Set Book Prose Pacing"
+      },
+      {
+        "command": "storyTeller.setSceneProsePacing",
+        "title": "Story Teller: Set Scene Prose Pacing"
       }
     ],
     "menus": {
@@ -81,6 +92,11 @@
           "command": "storyTeller.wrapSelectionAsChat",
           "when": "editorLangId == markdown && editorHasSelection",
           "group": "storyTeller@2"
+        },
+        {
+          "command": "storyTeller.setSceneProsePacing",
+          "when": "editorLangId == markdown",
+          "group": "storyTeller@3"
         }
       ]
     },
@@ -105,7 +121,7 @@
   "scripts": {
     "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs && node --check src/manuscript-import.cjs && node --check src/import-command.cjs",
+    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs && node --check src/manuscript-import.cjs && node --check src/import-command.cjs && node --check src/prose-pacing.cjs && node --check src/pacing-settings.cjs && node --check src/pacing-command.cjs",
     "test:host": "node test/run-host.cjs",
     "vscode:prepublish": "npm run build",
     "package": "vsce package"

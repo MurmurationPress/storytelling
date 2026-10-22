@@ -27,10 +27,16 @@ class StoryPlayer {
     this.typeoutCounts = new Map(); this.typeoutParts = new Map(); this.counts = new Map(); this.read = new Set();
     this.steps = [];
     const sequence = this.current?.sequence || (this.current?.blocks || []).map((block, blockIndex) => ({ type: 'component', blockIndex }));
+    let precedingComponent = null;
     for (const entry of sequence) {
       if (entry.type === 'pause') { this.steps.push(entry); continue; }
       const blockIndex = entry.blockIndex;
       const block = this.current.blocks[blockIndex];
+      // A reading interval belongs to the preceding paragraph and exists only
+      // when another component follows. Explicit boundary delay replaces it.
+      if (precedingComponent?.pacedParagraph)
+        this.steps.push({ type: 'pause', delayMs: block.boundaryDelayMs ?? precedingComponent.proseIntervalMs });
+      precedingComponent = block;
       if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
       else if (block.type === 'typeout') {
         const parts = block.format === 'annotation'

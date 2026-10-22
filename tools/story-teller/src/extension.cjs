@@ -4,6 +4,8 @@ const { registerInsert } = require('./insert-command.cjs');
 const { registerIntelliSense } = require('./intellisense-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
 const { registerImport } = require('./import-command.cjs');
+const { registerPacing, projectFor, projectFile } = require('./pacing-command.cjs');
+const { resolveSettings } = require('./pacing-settings.cjs');
 const { randomBytes } = require('node:crypto');
 const { parseScene } = require('./parser.cjs');
 const { inspectStructure, beatRanges, beatAtOffset, beatFoldRanges } = require('./structure.cjs');
@@ -19,6 +21,7 @@ function currentEditor() {
 function activate(context) {
   registerConversion(vscode, context);
   registerImport(vscode, context);
+  registerPacing(vscode, context);
   registerInsert(vscode, context);
   registerIntelliSense(vscode, context);
   const previews = new Map();
@@ -67,10 +70,14 @@ function activate(context) {
       const current = ++entry.revision;
       const source = changed.getText();
       panel.webview.postMessage({ type: 'source-pending', revision: current });
-      const prepared = await resolveMedia(vscode, changed, panel.webview, parseScene(source));
+      let pacing, pacingWarning = null;
+      try { pacing = resolveSettings(source, (await projectFor(vscode, changed.uri))?.manifest); }
+      catch (error) { pacing = resolveSettings(source, null); pacingWarning = `Project pacing unavailable: ${error.message}`; }
+      const prepared = await resolveMedia(vscode, changed, panel.webview, parseScene(source, { prosePacing: pacing.enabled }));
       if (!entry.disposed && current === entry.revision) {
         entry.sentSource = source;
-        panel.webview.postMessage({ type: 'source', source, uri: key, revision: current, targetOffset: requestedOffset, muted: preferredMute, autoplayOnTurn: preferredAutoplay, ...prepared });
+        panel.webview.postMessage({ type: 'source', source, uri: key, revision: current, targetOffset: requestedOffset, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
+          prosePacing: pacing.enabled, pacingSource: pacing.source, pacingWarning: pacingWarning || pacing.warning || null, ...prepared });
       }
     };
     entry.sendPresentation = visible => {
@@ -143,6 +150,14 @@ function activate(context) {
       }
     })
   );
+  const pacingWatcher = vscode.workspace.createFileSystemWatcher('**/story-teller.project.json');
+  const refreshPacing = uri => {
+    for (const [key, entry] of previews) if (projectFile(vscode, vscode.Uri.parse(key)) === uri.fsPath && !entry.disposed) {
+      const doc = vscode.workspace.textDocuments.find(item => item.uri.toString() === key && !item.isClosed);
+      if (doc) void entry.send(doc);
+    }
+  };
+  context.subscriptions.push(pacingWatcher, pacingWatcher.onDidChange(refreshPacing), pacingWatcher.onDidCreate(refreshPacing), pacingWatcher.onDidDelete(refreshPacing));
   for (const [id, action] of [['collapseBeats', 'fold'], ['expandBeats', 'unfold']]) {
     context.subscriptions.push(vscode.commands.registerCommand(`storyTeller.${id}`, async () => {
       const editor = currentEditor(); if (!editor) return;

@@ -23,12 +23,14 @@ async function until(fn, timeout = 60000) {
   const port = server.address().port;
   await new Promise(resolve => server.close(resolve));
   let importProject;
-  if (process.env.STORY_TELLER_HOST_SCOPE === 'import') {
+  if (['import', 'prose'].includes(process.env.STORY_TELLER_HOST_SCOPE)) {
     importProject = path.join(directory, 'fictional-project');
     await fs.mkdir(path.join(importProject, 'scenes'), { recursive: true });
-    await fs.writeFile(path.join(importProject, 'scenes', 'The Signal.md'), '---\ntitle: Lantern\n---\nFictional prose.\n');
+    await fs.writeFile(path.join(importProject, 'scenes', 'The Signal.md'), process.env.STORY_TELLER_HOST_SCOPE === 'prose'
+      ? '---\ntitle: Lantern\n---\nFirst paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n---\nLast beat.\n'
+      : '---\ntitle: Lantern\n---\nFictional prose.\n');
     await fs.writeFile(path.join(importProject, 'story-teller.project.json'), JSON.stringify({
-      schema: 'story-teller-project', version: 1, title: 'Lantern',
+      schema: 'story-teller-project', version: 1, title: 'Lantern', ...(process.env.STORY_TELLER_HOST_SCOPE === 'prose' ? { settings: { prosePacing: 'on' } } : {}),
       parts: [{ id: 'p', title: 'First', scenes: ['s'] }],
       scenes: [{ id: 's', partId: 'p', label: '1.1', title: 'The Signal', file: 'scenes/The Signal.md' }]
     }));
@@ -103,6 +105,78 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'review') {
+      await request('show-import-review');
+      const reviewTarget = await until(async () => (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json())
+        .find(item => item.type === 'iframe' && item.url.includes('murmurationpress.story-teller') && item.id !== target.id));
+      const receive = socket.onmessage;
+      socket.close(); socket = new WebSocket(reviewTarget.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; }); socket.onmessage = receive;
+      const state = () => evaluate("(() => { const body=doc.body; const main=doc.querySelector('main'); const foot=doc.querySelector('footer'); return { text:body.innerText, focus:doc.activeElement?.id, buttons:[...foot.querySelectorAll('button')].map(b=>({id:b.id,disabled:b.disabled})), flex:doc.defaultView.getComputedStyle(body).display, overflow:doc.defaultView.getComputedStyle(main).overflowY, footer:doc.defaultView.getComputedStyle(foot).position }; })()");
+      const snapshot = await until(async () => { const value = await state(); return value?.text?.includes('The signal') && value; });
+      assert.equal(snapshot.focus, 'back'); assert.equal(snapshot.flex, 'flex'); assert.equal(snapshot.overflow, 'auto'); assert.equal(snapshot.footer, 'sticky');
+      assert.deepEqual(snapshot.buttons.map(item => item.id), ['back', 'continue', 'cancel']);
+      assert.match(snapshot.text, /Excluded draft/); assert.match(snapshot.text, /Unsupported SVG/);
+      await send('Input.dispatchKeyEvent', { type:'keyDown', key:'Tab', code:'Tab' });
+      await send('Input.dispatchKeyEvent', { type:'keyUp', key:'Tab', code:'Tab' });
+      assert.equal((await state()).focus, 'continue');
+      await evaluate("doc.getElementById('cancel').click()");
+      await until(async () => { try { return JSON.parse(await fs.readFile(path.join(directory, 'review-result.json'), 'utf8')).result === 'cancel'; } catch { return false; } });
+      console.log(`PASS: native import review panel keyboard/fixed controls; isolated profile/log: ${directory}`);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'prose') {
+      await request('open-project-scene', undefined, { projectRoot: importProject });
+      await request('preview-project-scene');
+      const newer = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(item => item.type === 'iframe' && item.url.includes('murmurationpress.story-teller')).find(item => item.id !== target.id);
+      assert.ok(newer, 'The imported scene must have its own preview frame');
+      const receive = socket.onmessage;
+      socket.close(); socket = new WebSocket(newer.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+      socket.onmessage = receive;
+      await until(async () => (await beat.textContent())?.includes('First paragraph.'));
+      assert.doesNotMatch(await beat.textContent(), /Second paragraph/);
+      assert.match(await locator('#status').textContent(), /prose pacing On \(book\)/);
+      const captures = [{ at: Date.now(), text: await beat.textContent() }];
+      await locator('#play').click();
+      await sleep(420); captures.push({ at: Date.now(), text: await beat.textContent() });
+      assert.doesNotMatch(captures[1].text, /Second paragraph/);
+      await until(async () => (await beat.textContent()).includes('Second paragraph.'));
+      captures.push({ at: Date.now(), text: await beat.textContent() });
+      assert.doesNotMatch(captures[2].text, /Third paragraph/);
+      await until(async () => (await beat.textContent()).includes('Third paragraph.'));
+      captures.push({ at: Date.now(), text: await beat.textContent() });
+      assert.ok(captures[2].at - captures[0].at >= 800, JSON.stringify(captures));
+      assert.ok(captures[3].at - captures[2].at >= 800, JSON.stringify(captures));
+      await request('start-scene-pacing');
+      const main = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item => item.type === 'page');
+      const ws = new WebSocket(main.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+      const run = (expression, id) => new Promise((resolve, reject) => { ws.onmessage = event => { const value = JSON.parse(event.data); if (value.id === id) value.error ? reject(Error(JSON.stringify(value.error))) : resolve(value.result?.result?.value); }; ws.send(JSON.stringify({ id, method: 'Runtime.evaluate', params: { expression, returnByValue: true } })); });
+      await until(async () => (await run("document.body.innerText.includes('Scene prose pacing')", 1001)));
+      const pickerText = await run("document.body.innerText.slice(-1800)", 1002);
+      assert.match(pickerText, /Inherit/); assert.match(pickerText, /Off/);
+      await run("Array.from(document.querySelectorAll('.quick-input-list .monaco-list-row')).find(row=>row.textContent.includes('Off'))?.click()", 1003);
+      await until(async () => {
+        await request('snapshot-active');
+        const snapshot = JSON.parse(await fs.readFile(path.join(directory, 'active-snapshot.json'), 'utf8'));
+        return snapshot.text?.includes('story_teller_prose_pacing: off') && snapshot.dirty;
+      }, 10000);
+      await until(async () => (await locator('#status').textContent())?.includes('prose pacing Off (scene)'));
+      assert.match(await beat.textContent(), /Third paragraph/);
+      await request('start-book-pacing');
+      await until(async () => (await run("document.body.innerText.includes('Book prose pacing')", 1011)));
+      const bookPickerText = await run("document.body.innerText.slice(-1800)", 1012);
+      assert.match(bookPickerText, /effective off from scene/);
+      await run("Array.from(document.querySelectorAll('.quick-input-list .monaco-list-row')).find(row=>row.textContent.includes('Off'))?.click()", 1013);
+      await until(async () => JSON.parse(await fs.readFile(path.join(importProject, 'story-teller.project.json'), 'utf8')).settings.prosePacing === 'off');
+      await until(async () => (await locator('#status').textContent())?.includes('prose pacing Off (scene)'));
+      await fs.writeFile(path.join(directory, 'prose-temporal.json'), JSON.stringify({ captures, pickerText, bookPickerText }, null, 2));
+      console.log(`PASS: ${vsix ? 'installed VSIX' : 'Extension Development Host'} paragraph pacing and scene override in VS Code; isolated profile/log: ${directory}`);
+      ws.close(); await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'import') {
       await request('open-outline');
       const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
@@ -343,6 +417,7 @@ async function until(fn, timeout = 60000) {
               const editor = Array.from(document.querySelectorAll('.monaco-editor.focused'))
                 .find(candidate => candidate.getBoundingClientRect().width > 100);
               return editor ? Array.from(editor.querySelectorAll('.margin-view-overlays .line-numbers'))
+                .filter(line => { const rect=line.getBoundingClientRect(); return rect.height > 0 && rect.width > 0 && getComputedStyle(line).visibility !== 'hidden'; })
                 .map(line => Number(line.textContent)).filter(Number.isInteger) : [];
             })()`, returnByValue: true
           } }));

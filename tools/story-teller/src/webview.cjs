@@ -19,14 +19,16 @@ let sourceUri = '';
 let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
+let pacingWarning = null;
+let pacingLabel = 'Off (unchanged default)';
 const content = document.getElementById('beat');
 const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase}` : 'No beats';
-  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics,
+  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
+  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || player.index === 0;
   document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
@@ -292,7 +294,9 @@ window.addEventListener('message', async event => {
   for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Image ${src}: ${entry.error}`);
   const first = !sourceUri;
   sourceUri = message.uri;
-  player.update(parseScene(message.source));
+  pacingWarning = message.pacingWarning;
+  pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
+  player.update(parseScene(message.source, { prosePacing: message.prosePacing === true }));
   const saved = api.getState();
   if (Number.isInteger(message.targetOffset)) {
     const selected = beatAtOffset(player.scene.beats.map(beat => beat.sourceRange), message.targetOffset);

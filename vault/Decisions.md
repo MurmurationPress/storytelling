@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Use imported project; trial automatic prose pacing
+
+**Ted's observation:** he successfully imported and ran a Story Teller project. The corrupted screencast was a recording problem, not a product defect. This confirms the importer is usable for his current work; it does not establish publication export or acceptance of every imported scene.
+
+**Authorised enhancement, awaiting Ted's acceptance:** add optional book-wide paragraph pacing with an inheritable scene override, without changing copied manuscript wording or inserting pause directives. Improve the import review panel and reveal the outline after opening a new project. The 60ms-per-visible-word bounded formula is a starting editorial setting, subject to Ted's review in CONSTRAINT.
+
 ## 2026-10-22 — Accept IntelliSense and State metadata conversion; trial manuscript import
 
 **Ted's acceptance:** keyboard IntelliSense and the State metadata converter are accepted as part of Story Teller authoring. This supersedes their earlier awaiting-acceptance status. The acceptance concerns the tested authoring workflow, not every future manuscript shape or publication export.

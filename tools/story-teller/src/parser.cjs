@@ -4,6 +4,7 @@ const { PACE_MULTIPLIERS } = require('./pace.cjs');
 const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS, BORDERS, FILLS } = require('./typeout.cjs');
 const { inspectStructure, beatRanges } = require('./structure.cjs');
 const { wikiLinks, renderAnnotation } = require('./annotation.cjs');
+const { visibleWords, proseInterval } = require('./prose-pacing.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
 wikiLinks(md);
 // Image URLs are inert data here; only the VS Code host may resolve local files.
@@ -50,7 +51,7 @@ function timingValue(name, value) {
   return { delayMs: amount };
 }
 
-function parseScene(source) {
+function parseScene(source, { prosePacing = false } = {}) {
   const structure = inspectStructure(source);
   const lines = structure.lines.map((line, i) => i === 0 ? line.text.replace(/^\uFEFF/, '') : line.text);
   const diagnostics = [];
@@ -74,7 +75,8 @@ function parseScene(source) {
     const diagnostic = (line, message) => diagnostics.push(`Line ${line}: ${message}`);
     const add = block => {
       if (pendingDelay) {
-        if (block.type === 'chat') {
+        if (prosePacing && blocks.at(-1)?.pacedParagraph) block.boundaryDelayMs = pendingDelay.delayMs;
+        else if (block.type === 'chat') {
           if (block.messages[0].delayMs !== undefined) diagnostic(block.line, `multiple @delay overrides target the first chat message (outside override at line ${pendingDelay.line}); first override retained`);
           block.messages[0].delayMs = pendingDelay.delayMs;
         } else block.delayMs = pendingDelay.delayMs;
@@ -84,8 +86,9 @@ function parseScene(source) {
       blocks.push(block);
     };
     let prose = [];
-    const flush = () => {
-      if (prose.length) add({ type: 'prose', html: md.renderer.render(prose, md.options, {}) });
+    const flush = (pacedParagraph = false) => {
+      if (prose.length) add({ type: 'prose', html: md.renderer.render(prose, md.options, {}),
+        ...(pacedParagraph ? { pacedParagraph: true, proseIntervalMs: proseInterval(visibleWords(prose.find(t => t.type === 'inline'))) } : {}) });
       prose = [];
     };
     for (let i = 0; i < tokens.length; i++) {
@@ -253,7 +256,11 @@ function parseScene(source) {
           flush();
           add({ type: 'chat', messages, events, title, viewer, ticks, pace, line: first + token.map[0] + 1 });
         }
-      } else prose.push(token);
+      } else {
+        if (prosePacing && token.type === 'paragraph_open' && token.level === 0) flush();
+        prose.push(token);
+        if (prosePacing && token.type === 'paragraph_close' && token.level === 0) flush(true);
+      }
     }
     flush();
     if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose, image, chat or typeout component in this beat');

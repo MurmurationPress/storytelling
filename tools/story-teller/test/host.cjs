@@ -40,13 +40,28 @@ exports.run = async function () {
         await fs.writeFile(path.join(directory, 'project-navigation.json'), JSON.stringify({ active: vscode.window.activeTextEditor?.document.uri.fsPath }));
       } else if (request.action === 'preview-project-scene') {
         const editor = vscode.window.activeTextEditor;
-        const position = editor.document.positionAt(editor.document.getText().indexOf('Fictional prose.'));
+        const position = editor.document.positionAt(Math.max(0, editor.document.getText().indexOf(process.env.STORY_TELLER_HOST_SCOPE === 'prose' ? 'First paragraph.' : 'Fictional prose.')));
         editor.selection = new vscode.Selection(position, position);
         await vscode.commands.executeCommand('storyTeller.previewThisBeat');
         await new Promise(resolve => setTimeout(resolve, 500));
         await fs.writeFile(path.join(directory, 'project-preview.json'), JSON.stringify({ active: vscode.window.activeTextEditor?.document.uri.toString(), selection: editor.selection.active.line, titles: vscode.window.tabGroups.all.flatMap(group => group.tabs).filter(tab => tab.input?.viewType?.endsWith('storyTeller.scene')).map(tab => tab.label) }));
       } else if (request.action === 'start-import') {
         vscode.commands.executeCommand('storyTeller.importManuscript').then(result => fs.writeFile(path.join(directory, 'import-result.json'), JSON.stringify(result)));
+      } else if (request.action === 'start-scene-pacing') {
+        await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+        vscode.commands.executeCommand('storyTeller.setSceneProsePacing');
+      } else if (request.action === 'start-book-pacing') {
+        await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+        vscode.commands.executeCommand('storyTeller.setBookProsePacing');
+      } else if (request.action === 'show-import-review') {
+        const { showImportReview } = require('../src/import-command.cjs');
+        const prepared = { key: 'manuscript_order_key', book: { data: { title: 'Fictional Lantern' }, file: '/fictional/Lantern.md' },
+          parts: [{ id: 'p', title: 'The first part', orderValue: '8000000000', source: '/fictional/First.md', intro: false }],
+          scenes: [{ id: 's', partId: 'p', label: '1.1', title: 'The signal', orderValue: '8000000000', source: '/fictional/Signal.md' }],
+          assets: [{ name: 'lamp.png', source: '/fictional/lamp.png' }], warnings: ['Excluded draft: /fictional/Draft.md', 'Unsupported SVG example'], unresolved: [], errors: [] };
+        showImportReview(vscode, prepared).then(result => fs.writeFile(path.join(directory, 'review-result.json'), JSON.stringify({ result })));
+      } else if (request.action === 'snapshot-active') {
+        await fs.writeFile(path.join(directory, 'active-snapshot.json'), JSON.stringify({ text: vscode.window.activeTextEditor?.document.getText(), dirty: vscode.window.activeTextEditor?.document.isDirty }));
       } else if (request.action === 'start-insert') {
         await focusSource();
         const editor = vscode.window.activeTextEditor;
