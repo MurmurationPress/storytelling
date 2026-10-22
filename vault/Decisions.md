@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Accept prose pacing; trial end-of-beat navigation
+
+**Ted’s acceptance:** automatic prose pacing is accepted. The former awaiting-acceptance wording below is historical. This does not establish acceptance of the import review/outline refinements.
+
+**New trial:** show a bottom “Next →” control after each completed beat, after any trailing authored pause, using the existing page-turn action and reader Autoplay preference. A silent Previous has the completed control; the final beat shows “End of scene.” The top navigation remains available. This control awaits Ted’s acceptance and does not add cross-scene playback.
+
 ## 2026-10-22 — Use imported project; trial automatic prose pacing
 
 **Ted's observation:** he successfully imported and ran a Story Teller project. The corrupted screencast was a recording problem, not a product defect. This confirms the importer is usable for his current work; it does not establish publication export or acceptance of every imported scene.

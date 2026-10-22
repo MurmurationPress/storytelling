@@ -21,6 +21,7 @@ let mediaDiagnostics = [];
 let preparing = false;
 let pacingWarning = null;
 let pacingLabel = 'Off (unchanged default)';
+let lastEndTurnAt = -Infinity;
 const content = document.getElementById('beat');
 const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
@@ -188,6 +189,29 @@ function render() {
       }
     }
   }
+  if (!preparing && player.endAction) {
+    const ending = document.createElement('div');
+    ending.className = 'beat-ending';
+    if (player.endAction === 'next') {
+      const button = document.createElement('button');
+      button.type = 'button'; button.textContent = 'Next →';
+      button.setAttribute('aria-label', 'Next beat');
+      const sourceIndex = player.index;
+      button.addEventListener('click', () => {
+        // A double click may land on the new beat's end button if that beat
+        // completes immediately. Reject stale buttons and the second click.
+        if (sourceIndex !== player.index || player.endAction !== 'next' || performance.now() - lastEndTurnAt < 400) return;
+        lastEndTurnAt = performance.now();
+        turnNext();
+      });
+      ending.append(button);
+    } else {
+      const label = document.createElement('p');
+      label.className = 'end-of-scene'; label.textContent = 'End of scene';
+      ending.append(label);
+    }
+    content.append(ending);
+  }
   controls();
 }
 function preload(url) {
@@ -210,12 +234,13 @@ const unlockSound = (beat = player.current) => {
   if (player.reducedMotion !== motion.matches) player.setReducedMotion(motion.matches);
   if (!muted && !player.reducedMotion && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) sound.unlock();
 };
-document.getElementById('next').addEventListener('click', () => {
-  if (preparing || !presented || document.hidden) return;
+function turnNext() {
+  if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
   sound.stop();
   if (autoplayOnTurn) unlockSound(player.scene.beats[player.index + 1]);
   player.next({ autoplay: autoplayOnTurn }); render(); content.scrollTop = 0;
-});
+}
+document.getElementById('next').addEventListener('click', turnNext);
 document.getElementById('previous').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
   sound.stop(); player.previous(); render(); content.scrollTop = 0;

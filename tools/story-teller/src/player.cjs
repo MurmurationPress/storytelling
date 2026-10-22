@@ -15,6 +15,10 @@ class StoryPlayer {
     this.reset();
   }
   get current() { return this.scene.beats[this.index] || null; }
+  get endAction() {
+    if (!this.current || this.phase !== 'completed') return null;
+    return this.index < this.scene.beats.length - 1 ? 'next' : 'end';
+  }
   cancelTimer() {
     this.generation++;
     if (this.timer !== null) this.scheduler.clearTimeout(this.timer);

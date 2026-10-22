@@ -105,6 +105,77 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'end-button') {
+      const source = [
+        'Opening prose.', '', '@pause 400ms', '---',
+        '```chat', 'Mara: The lantern is lit.', '```', '---',
+        '![Harbour](assets/harbour-landscape.webp)', '---',
+        '```typeout', '@format yaml', '@sound none', '@speed 120', '', 'status: awake', '```', '---',
+        'Closing prose.'
+      ].join('\n');
+      await request('edit', source);
+      await until(async () => (await beat.textContent())?.includes('Opening prose.'));
+      const ending = () => evaluate("doc.querySelector('.beat-ending')?.textContent || ''");
+      const state = () => evaluate("({status:doc.getElementById('status').textContent, ending:doc.querySelector('.beat-ending')?.textContent || '', last:doc.getElementById('beat').lastElementChild?.className})");
+      assert.equal(await ending(), '');
+      await evaluate("(document.getElementById('active-frame').focus(), doc.getElementById('play').focus(), doc.getElementById('play').click())", true);
+      const focusBeforeCompletion = await evaluate("doc.activeElement?.id || ''");
+      await sleep(150); assert.equal(await ending(), '');
+      await until(async () => (await ending()).includes('Next'));
+      assert.equal(await evaluate("doc.activeElement?.id || ''"), focusBeforeCompletion, 'completion must not move focus');
+      assert.equal((await state()).last, 'beat-ending');
+      assert.equal(await evaluate("doc.getElementById('beat').children[0]?.className"), 'prose');
+      await evaluate("doc.getElementById('autoplay').click()");
+      await evaluate("doc.querySelector('.beat-ending button').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 2 of 5'));
+      assert.equal(await ending(), '', 'autoplay off leaves destination ready');
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await ending()).includes('Next'));
+      assert.equal(await evaluate("doc.getElementById('beat').children[0]?.className"), 'chat');
+      await evaluate("(document.getElementById('active-frame').focus(), doc.querySelector('.beat-ending button').focus())", true);
+      await send('Input.dispatchKeyEvent', { type:'keyDown', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, nativeVirtualKeyCode:13, text:'\r' });
+      await send('Input.dispatchKeyEvent', { type:'keyUp', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, nativeVirtualKeyCode:13 });
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 3 of 5'));
+      assert.equal(await ending(), '');
+      await evaluate("doc.getElementById('autoplay').click()");
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await ending()).includes('Next'));
+      assert.equal(await evaluate("doc.getElementById('beat').children[0]?.className"), 'story-figure');
+      await evaluate("doc.documentElement.style.width='320px'");
+      const bounds = await evaluate("(() => { const area=doc.getElementById('beat'), button=doc.querySelector('.beat-ending button'); return { overflow:area.scrollWidth-area.clientWidth, buttonRight:button.getBoundingClientRect().right-area.getBoundingClientRect().right, last:area.lastElementChild?.className }; })()");
+      assert.ok(bounds.overflow <= 1 && bounds.buttonRight <= 1 && bounds.last === 'beat-ending', JSON.stringify(bounds));
+      await sleep(420); // A separate deliberate turn after the keyboard activation.
+      await evaluate("doc.querySelector('.beat-ending button').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 4 of 5'));
+      await until(async () => (await ending()).includes('Next'));
+      assert.match(await beat.textContent(), /status: awake/);
+      assert.match(await evaluate("doc.getElementById('beat').children[0]?.className"), /typeout/);
+      await evaluate("doc.getElementById('replay').click()");
+      assert.equal(await ending(), '', 'Replay hides button until completion');
+      await until(async () => (await ending()).includes('Next'));
+      await evaluate("doc.getElementById('previous').click()");
+      assert.equal(await ending(), 'Next →', 'silent Previous exposes completed state');
+      await sleep(420);
+      await evaluate("(() => { const button=doc.querySelector('.beat-ending button'); button.click(); button.click(); })()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 4 of 5'));
+      assert.ok((await locator('#status').textContent()).includes('Beat 4 of 5'), 'double activation of one button cannot skip a beat');
+      await until(async () => (await ending()).includes('Next'));
+      await sleep(420);
+      await evaluate("doc.querySelector('.beat-ending button').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 5 of 5'));
+      await until(async () => (await ending()) === 'End of scene');
+      assert.equal(await evaluate("doc.querySelectorAll('.beat-ending button').length"), 0);
+      await evaluate("doc.getElementById('restart').click()");
+      assert.equal(await ending(), '');
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await ending()).includes('Next'));
+      await request('edit', source.replace('Opening prose.', 'Edited opening prose.'));
+      await until(async () => (await beat.textContent())?.includes('Edited opening prose.'));
+      assert.equal(await ending(), '', 'source edit resets button');
+      console.log(`PASS: ${vsix ? 'installed VSIX' : 'Development Host'} end-of-beat flow, keyboard, silent return, replay, source edit, narrow image and rapid click; isolated profile/log: ${directory}`);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'review') {
       await request('show-import-review');
       const reviewTarget = await until(async () => (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json())
