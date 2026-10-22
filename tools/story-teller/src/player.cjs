@@ -134,8 +134,34 @@ class StoryPlayer {
     this.onChange();
   }
   replay() { if (!this.disposed) { this.reset(); this.play(); } }
-  next() { this.index = Math.min(this.index + 1, Math.max(0, this.scene.beats.length - 1)); this.reset(); }
-  previous() { this.index = Math.max(0, this.index - 1); this.reset(); }
+  // Reader navigation policy is independent of the host's preference store.
+  next({ autoplay = false } = {}) {
+    if (this.disposed || this.index >= this.scene.beats.length - 1) return;
+    this.index++; this.reset();
+    if (autoplay) this.play();
+  }
+  revealBeat() {
+    this.cancelTimer();
+    this.remaining = null; this.cursor = this.steps.length;
+    for (const [index, block] of (this.current?.blocks || []).entries()) {
+      if (block.type === 'prose' || block.type === 'image') this.visible.add(index);
+      else if (block.type === 'typeout') {
+        this.enteredTypeouts.add(index);
+        this.typeoutCounts.set(index, this.typeoutParts.get(index).length);
+      } else if (block.type === 'chat') {
+        this.enteredChats.add(index);
+        this.counts.set(index, block.messages.length);
+        if (block.ticks) for (const [messageIndex, message] of block.messages.entries())
+          if (message.speaker === block.viewer) this.read.add(`${index}:${messageIndex}`);
+      }
+    }
+    this.phase = 'completed';
+    this.onChange();
+  }
+  previous() {
+    if (this.disposed || this.index === 0) return;
+    this.index--; this.reset(); this.revealBeat();
+  }
   restart() { this.index = 0; this.reset(); }
   update(scene) {
     const old = this.current;

@@ -13,9 +13,13 @@ exports.run = async function () {
   await fs.writeFile(file, sample);
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
   const focusSource = async () => {
+    await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
     await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
-    for (let attempt = 0; attempt < 40 && vscode.window.activeTextEditor?.document !== document; attempt++)
-      await new Promise(resolve => setTimeout(resolve, 50));
+    for (let attempt = 0; attempt < 4 && vscode.window.activeTextEditor?.document !== document; attempt++) {
+      await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+      await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
     if (vscode.window.activeTextEditor?.document !== document) throw new Error('Test source editor did not become active');
   };
   await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
@@ -42,7 +46,9 @@ exports.run = async function () {
         await vscode.commands.executeCommand('editor.action.showContextMenu');
       } else if (request.action === 'hide-preview') {
         const temporary = await vscode.workspace.openTextDocument({ language: 'markdown', content: '# Temporary preview cover' });
-        await vscode.window.showTextDocument(temporary, vscode.ViewColumn.Two);
+        const previewGroup = vscode.window.tabGroups.all.find(group => group.tabs.some(tab => tab.input?.viewType?.endsWith('storyTeller.scene')));
+        if (!previewGroup) throw new Error('Story Teller preview tab was not found');
+        await vscode.window.showTextDocument(temporary, { viewColumn: previewGroup.viewColumn, preserveFocus: false });
       } else if (request.action === 'show-preview') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');

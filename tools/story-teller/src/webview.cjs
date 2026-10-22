@@ -8,6 +8,7 @@ const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches });
 const sound = new TypeoutSound();
 let muted = Boolean(api.getState()?.muted);
+let autoplayOnTurn = api.getState()?.autoplayOnTurn !== false;
 let lastTypeoutRender = null;
 let presented = true;
 let revision = -1;
@@ -36,9 +37,10 @@ function controls() {
   reveal.hidden = !active; reveal.disabled = preparing || !active || !presented || document.hidden;
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
+  document.getElementById('autoplay').checked = autoplayOnTurn;
   document.getElementById('show-source').disabled = preparing || !beat;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
-  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted });
+  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn });
 }
 function imageElement(src, alt, inline = false) {
   const image = document.createElement('img');
@@ -165,25 +167,39 @@ function preload(url) {
     image.src = url;
   });
 }
-for (const action of ['previous', 'next', 'restart']) {
-  document.getElementById(action).addEventListener('click', () => {
-    player[action](); render(); content.scrollTop = 0;
-  });
-}
-const unlockSound = () => {
+const unlockSound = (beat = player.current) => {
   if (player.reducedMotion !== motion.matches) player.setReducedMotion(motion.matches);
-  if (!muted && !player.reducedMotion && player.current?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) sound.unlock();
+  if (!muted && !player.reducedMotion && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) sound.unlock();
 };
+document.getElementById('next').addEventListener('click', () => {
+  if (preparing || !presented || document.hidden) return;
+  sound.stop();
+  if (autoplayOnTurn) unlockSound(player.scene.beats[player.index + 1]);
+  player.next({ autoplay: autoplayOnTurn }); render(); content.scrollTop = 0;
+});
+document.getElementById('previous').addEventListener('click', () => {
+  if (preparing || !presented || document.hidden) return;
+  sound.stop(); player.previous(); render(); content.scrollTop = 0;
+});
+document.getElementById('restart').addEventListener('click', () => {
+  if (preparing || !presented || document.hidden) return;
+  sound.stop(); player.restart(); render(); content.scrollTop = 0;
+});
 document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.play(); } });
 document.getElementById('pause').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
   if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
-document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.replay(); } });
+document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { sound.stop(); unlockSound(); player.replay(); } });
 document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
 document.getElementById('mute').addEventListener('click', () => {
   muted = !muted; api.postMessage({ type: 'mute-preference', muted });
   if (!muted && player.phase === 'playing') unlockSound(); render();
+});
+document.getElementById('autoplay').addEventListener('change', event => {
+  autoplayOnTurn = event.target.checked;
+  api.postMessage({ type: 'autoplay-preference', autoplayOnTurn });
+  render();
 });
 motion.addEventListener('change', event => player.setReducedMotion(event.matches));
 document.getElementById('show-source').addEventListener('click', () => {
@@ -210,6 +226,9 @@ window.addEventListener('message', async event => {
   if (message?.type === 'mute-preference' && typeof message.muted === 'boolean') {
     muted = message.muted; render(); return;
   }
+  if (message?.type === 'autoplay-preference' && typeof message.autoplayOnTurn === 'boolean') {
+    autoplayOnTurn = message.autoplayOnTurn; render(); return;
+  }
   if (message?.type !== 'source' || typeof message.source !== 'string' || !Number.isInteger(message.revision) || message.revision < incomingRevision || message.revision <= revision) return;
   incomingRevision = message.revision;
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
@@ -223,6 +242,7 @@ window.addEventListener('message', async event => {
   if (message.revision !== incomingRevision || player.disposed) return;
   revision = message.revision;
   if (typeof message.muted === 'boolean') muted = message.muted;
+  if (typeof message.autoplayOnTurn === 'boolean') autoplayOnTurn = message.autoplayOnTurn;
   media = prepared;
   mediaDiagnostics = [...(message.mediaDiagnostics || [])];
   for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Image ${src}: ${entry.error}`);

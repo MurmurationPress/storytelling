@@ -5,6 +5,10 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Trial page-turn autoplay in Story Teller
+
+**Authorised experiment, awaiting Ted's acceptance:** add a reader preference (on by default) so a manual Next turn starts the destination beat without another Play press. This does not turn pages automatically. Opening/Preview This Beat and Restart remain ready; Previous reveals the preceding beat silently for rereading; Replay starts the current beat again. The preference is stored outside manuscript Markdown. Existing accepted components, conversion and authoring behaviour remain accepted; this new navigation policy needs Ted's review on an installed VSIX.
+
 ## 2026-10-21 — Accept the current Story Teller authoring experience; stabilise a local installable milestone
 
 **Ted's acceptance:** Markdown editing with live preview; prose/chat sequencing, automatic chat timing and chat-local pace; explicit delays, pauses, responding indicators and ticks; static images, captions and image insertion; named beats, folding and source/preview navigation; type-out formats and audible modem/keyboard/typewriter sounds; chat conversion, callout-to-type-out conversion and the existing Insert helpers. Synthesised sounds are sufficient for this milestone. Richer texture is a possible later refinement.

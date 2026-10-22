@@ -6,6 +6,8 @@ created: 2026-10-21
 
 # Story Teller
 
+**Page-turn autoplay trial (2026-10-22, awaiting Ted's acceptance):** a visible, default-on reader toggle governs whether a manual Next turn performs the next beat immediately. Previous presents its predecessor complete and silent; Restart returns to the first beat ready; explicit source/preview navigation stays ready. This is preview/player navigation policy and a saved reader preference, not manuscript timing metadata or automatic progression to another beat. The accepted component and conversion experience below is unchanged. See the extension README and RESULTS for checks and limits.
+
 **Current acceptance (2026-10-21):** Ted accepts the Markdown/live-preview workflow and the accumulated prose, chat, pace, timing, responding, ticks, imagery/caption, named-beat/folding/navigation, type-out/audio, conversion and Insert helper behaviour. Synthesised modem, keyboard and typewriter sound is sufficient; a richer texture is only a possible later refinement. The historical “awaiting acceptance” notes below record earlier states and are superseded for these features. This remains a local authoring tool, not an EPUB exporter or a general publishing platform. The stabilisation milestone prepares a VSIX for local installation without touching the separate manuscript adaptation.
 
 **Ted's current direction:** start a VS Code extension for adapting completed books into sequences of presented story beats. This authorises a small manual-preview implementation, not a general editor or publishing platform. It is a separate authoring experiment alongside [[Managed EPUB Foundation]]; the earlier EPUB artifacts and Art work are preserved, not restructured or migrated.

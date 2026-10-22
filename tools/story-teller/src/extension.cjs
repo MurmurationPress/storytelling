@@ -19,6 +19,7 @@ function activate(context) {
   registerInsert(vscode, context);
   const previews = new Map();
   let preferredMute = Boolean(context.globalState.get('storyTeller.muted', false));
+  let preferredAutoplay = context.globalState.get('storyTeller.autoplayOnTurn', true) !== false;
   const openPreview = async (thisBeat = false) => {
     const editor = currentEditor();
     if (!editor) return;
@@ -31,8 +32,12 @@ function activate(context) {
     const existing = previews.get(key);
     if (existing) {
       existing.sourceColumn = editor.viewColumn;
-      existing.panel.reveal(vscode.ViewColumn.Beside, true);
-      existing.panel.webview.postMessage({ type: 'presentation', visible: existing.panel.visible });
+      // Reveal the existing tab in its own group. Moving it "beside" the
+      // current editor can leave the retained webview reporting inactive.
+      existing.panel.reveal(undefined, false);
+      setTimeout(() => {
+        if (!existing.disposed) existing.panel.webview.postMessage({ type: 'presentation', visible: existing.panel.visible });
+      }, 0);
       if (thisBeat) await existing.send(document, targetOffset);
       return;
     }
@@ -49,7 +54,7 @@ function activate(context) {
     panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src ${panel.webview.cspSource}; img-src ${panel.webview.cspSource}; connect-src 'none'; font-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none';">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Story Teller</title><link rel="stylesheet" href="${style}"></head><body>
-<nav aria-label="Story controls"><button id="previous" type="button">Previous</button><button id="next" type="button">Next</button><button id="restart" type="button">Restart</button><button id="play" type="button">Play</button><button id="pause" type="button">Pause</button><button id="replay" type="button">Replay Beat</button><button id="reveal" type="button" hidden>Reveal Immediately</button><button id="mute" type="button" aria-pressed="false">Mute sound</button><button id="show-source" type="button">Show Beat in Source</button><span id="status" role="status"></span></nav>
+<nav aria-label="Story controls"><button id="previous" type="button">Previous</button><button id="next" type="button">Next</button><button id="restart" type="button">Restart</button><button id="play" type="button">Play</button><button id="pause" type="button">Pause</button><button id="replay" type="button">Replay Beat</button><button id="reveal" type="button" hidden>Reveal Immediately</button><label class="reader-preference"><input id="autoplay" type="checkbox" checked>Autoplay on page turn</label><button id="mute" type="button" aria-pressed="false">Mute sound</button><button id="show-source" type="button">Show Beat in Source</button><span id="status" role="status"></span></nav>
 <p id="warnings" role="status"></p><main id="beat" aria-label="Current story beat" tabindex="0"></main><script nonce="${nonce}" src="${script}"></script></body></html>`;
     entry.send = async (changed = document, requestedOffset) => {
       const current = ++entry.revision;
@@ -58,7 +63,7 @@ function activate(context) {
       const prepared = await resolveMedia(vscode, changed, panel.webview, parseScene(source));
       if (!entry.disposed && current === entry.revision) {
         entry.sentSource = source;
-        panel.webview.postMessage({ type: 'source', source, uri: key, revision: current, targetOffset: requestedOffset, muted: preferredMute, ...prepared });
+        panel.webview.postMessage({ type: 'source', source, uri: key, revision: current, targetOffset: requestedOffset, muted: preferredMute, autoplayOnTurn: preferredAutoplay, ...prepared });
       }
     };
     const presentation = () => panel.webview.postMessage({ type: 'presentation', visible: panel.visible });
@@ -76,6 +81,11 @@ function activate(context) {
         preferredMute = message.muted;
         void context.globalState.update('storyTeller.muted', preferredMute);
         for (const other of previews.values()) if (other !== entry) other.panel.webview.postMessage({ type: 'mute-preference', muted: preferredMute });
+      } else if (message?.type === 'autoplay-preference' && typeof message.autoplayOnTurn === 'boolean') {
+        preferredAutoplay = message.autoplayOnTurn;
+        await context.globalState.update('storyTeller.autoplayOnTurn', preferredAutoplay);
+        for (const other of previews.values()) if (other !== entry)
+          other.panel.webview.postMessage({ type: 'autoplay-preference', autoplayOnTurn: preferredAutoplay });
       } else if (message?.type === 'show-source') {
         if (entry.disposed || message.uri !== key || message.revision !== entry.revision) return;
         let source = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === key && !doc.isClosed);

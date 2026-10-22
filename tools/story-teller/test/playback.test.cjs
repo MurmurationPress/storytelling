@@ -86,7 +86,7 @@ test('replay clears messages, prose after chat, ticks and all old callbacks', ()
   player.replay(); assert.equal(messages(player).length, 0);
 });
 test('navigation, edits, restart and disposal cancel pending timers and reject stale work', () => {
-  for (const action of ['next', 'previous', 'restart', 'update', 'dispose']) {
+  for (const action of ['next', 'restart', 'update', 'dispose']) {
     const { player, clock, scene } = setup('A: Hi', '\n---\nOther');
     player.play(); clock.advance(200);
     if (action === 'update') player.update(scene); else player[action]();
@@ -266,7 +266,7 @@ test('cross-component timing cancels on navigation, edits, replay and disposal; 
   player.play(); clock.advance(150); player.pause(); assert.equal(player.remaining, 150);
   clock.advance(5000); player.play(); clock.advance(149); assert.doesNotMatch(proseText(player), /After/);
   clock.advance(1); assert.match(proseText(player), /After/);
-  for (const action of ['next', 'previous', 'restart', 'replay', 'update', 'dispose']) {
+  for (const action of ['next', 'restart', 'replay', 'update', 'dispose']) {
     const fixture = cross(source); fixture.player.play(); fixture.clock.advance(150);
     if (action === 'update') fixture.player.update(fixture.parsed); else fixture.player[action]();
     for (const callback of fixture.clock.retired) callback();
@@ -390,7 +390,7 @@ test('delayed image, authored viewing pause and chat retain exact source order a
   clock.advance(1); assert.equal(messages(player).length, 0);
   clock.advance(800); assert.equal(messages(player).length, 1);
   player.replay(); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
-  player.next(); clock.advance(10000); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
+  player.restart(); clock.advance(10000); assert.deepEqual(player.visibleBlocks.map(b => b.type), ['prose']);
 });
 test('untimed image appears with leading prose and inline image remains inside its prose component', () => {
   const scene = parseScene('First\n\n![Alt](x.png)\n\n*Caption: View.*\n\nLater ![inline](i.jpg) prose.');

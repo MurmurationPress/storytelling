@@ -89,7 +89,8 @@ test('replay, navigation, edits and disposal reject stale callbacks', () => {
   player.replay(); for (const stale of clock.retired) stale(); assert.equal(output(player), undefined);
   clock.advance(500); assert.equal(output(player).visibleText, 'A');
   player.next(); for (const stale of clock.retired) stale(); assert.equal(output(player), undefined);
-  player.previous(); player.play(); clock.advance(500); assert.equal(output(player).visibleText, 'A');
+  player.previous(); assert.equal(player.phase, 'completed'); assert.equal(output(player).visibleText, 'ABC\n');
+  player.replay(); clock.advance(500); assert.equal(output(player).visibleText, 'A');
   player.update(parseScene(source.replace('ABC', 'XYZ'))); for (const stale of clock.retired) stale();
   assert.equal(output(player), undefined); assert.equal(player.phase, 'ready');
   player.play(); clock.advance(500); assert.equal(output(player).visibleText, 'X');

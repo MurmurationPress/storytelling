@@ -95,6 +95,11 @@ async function until(fn, timeout = 60000) {
     await until(async () => (await beat.textContent()).includes('old radio'));
     assert.equal(await frame.locator('#previous').isDisabled(), true);
     assert.match(await locator('#status').textContent(), /Beat 1 of 7 · The old radio · ready/);
+    assert.equal(await evaluate("doc.getElementById('autoplay').checked"), true);
+    // Existing regression cases exercise explicit Play. The new page-turn
+    // policy is exercised separately below before closing the preview.
+    await evaluate("doc.getElementById('autoplay').click()");
+    assert.equal(await evaluate("doc.getElementById('autoplay').checked"), false);
     const authoredSample = await fs.readFile(path.join(root, 'samples/lantern.md'), 'utf8');
     const chatOffset = authoredSample.indexOf('Lighthouse contact');
     await request('preview-this', undefined, { start: chatOffset });
@@ -126,11 +131,18 @@ async function until(fn, timeout = 60000) {
     await request('beat-folds');
     const nativeFolds = JSON.parse(await fs.readFile(path.join(directory, 'beat-folds.json'), 'utf8'));
     assert.ok(nativeFolds.some(range => range.start === 12 && range.end > range.start));
-    const foldedLines = await until(async () => {
-      const value = await sourceLines();
-      await fs.writeFile(path.join(directory, 'last-fold-lines.txt'), value);
-      return value.includes('Lighthouse contact') && !value.includes('Ivo: Only me.') && value;
-    }, 3000);
+    let foldedLines;
+    for (let attempt = 0; attempt < 3 && !foldedLines; attempt++) {
+      if (attempt) await request('beat-folds'); // Native folding can settle after the first provider result.
+      try {
+        foldedLines = await until(async () => {
+          const value = await sourceLines();
+          await fs.writeFile(path.join(directory, 'last-fold-lines.txt'), value);
+          return value.includes('Lighthouse contact') && !value.includes('Ivo: Only me.') && value;
+        }, 3000);
+      } catch { /* Retry this command against the now ready editor. */ }
+    }
+    assert.ok(foldedLines, 'Beat fold did not hide its content after three native attempts');
     await fs.writeFile(path.join(directory, 'folded-lines.txt'), foldedLines);
     assert.match(foldedLines, /Lighthouse contact/);
     assert.doesNotMatch(foldedLines, /Ivo: Only me\./);
@@ -362,6 +374,56 @@ async function until(fn, timeout = 60000) {
     await locator('#next').click();
     await until(async () => (await locator('#status').textContent()).includes('ready'));
     assert.equal(await evaluate("doc.activeElement.id"), 'next');
+    const autoplaySource = 'First page.\n---\n<!-- beat: Performed state -->\n@delay 100ms\n\n```typeout\n@format yaml\n@sound modem\n@speed 2\n\nstatus: still observing\n```\n\n![Wide harbour](assets/harbour-landscape.webp)\n\n*Caption: The wall.*\n\nAfter the output.\n---\n<!-- beat: The reply -->\n```chat\n@viewer Mara\n@responding\nIvo: I am here.\n```';
+    await request('edit', autoplaySource);
+    await until(async () => (await locator('#status').textContent()).includes('of 3'));
+    await locator('#restart').click();
+    await until(async () => (await locator('#status').textContent()).includes('Beat 1 of 3 · ready'));
+    await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'no-preference' }] });
+    await until(async () => !(await evaluate("doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches")));
+    assert.equal(await evaluate("doc.getElementById('autoplay').checked"), false);
+    await evaluate("doc.getElementById('autoplay').click()");
+    assert.equal(await evaluate("doc.getElementById('autoplay').checked"), true);
+    if (await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')") === 'true') await locator('#mute').click();
+    const connectedBeforeTurn = webAudioEvents.filter(event => event.method === 'WebAudio.nodesConnected').length;
+    const disconnectedBeforeTurn = webAudioEvents.filter(event => event.method === 'WebAudio.nodesDisconnected').length;
+    await evaluate("doc.getElementById('next').click()", true);
+    await until(async () => (await locator('#status').textContent()).includes('Beat 2 of 3 · Performed state · playing'));
+    assert.equal(await evaluate("doc.querySelector('.typeout-progress')?.textContent || ''"), '');
+    await until(async () => (await evaluate("doc.querySelector('.typeout-progress')?.textContent.length || 0")) >= 2);
+    const autoplayEarly = { at: Date.now(), text: await evaluate("doc.querySelector('.typeout-progress').textContent") };
+    await until(async () => (await evaluate("doc.querySelector('.typeout-progress').textContent.length")) > autoplayEarly.text.length);
+    const autoplayLater = { at: Date.now(), text: await evaluate("doc.querySelector('.typeout-progress').textContent") };
+    if (webAudioTracing) await until(() => webAudioEvents.filter(event => event.method === 'WebAudio.nodesConnected').length >= connectedBeforeTurn + 2, 5000)
+      .catch(async error => { throw new Error(`Autoplay audio graph missing: ${JSON.stringify(await evaluate("({status:doc.getElementById('status').textContent,mute:doc.getElementById('mute').getAttribute('aria-pressed'),reduced:doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches,progress:doc.querySelector('.typeout-progress')?.textContent,warning:doc.getElementById('warnings').textContent})"))}`, { cause: error }); });
+    await evaluate("doc.getElementById('next').click()", true);
+    await until(async () => (await locator('#status').textContent()).includes('Beat 3 of 3 · The reply · playing'));
+    if (webAudioTracing) await until(() => webAudioEvents.filter(event => event.method === 'WebAudio.nodesDisconnected').length >= disconnectedBeforeTurn + 2);
+    assert.equal(await locator('.typeout-progress').count(), 0);
+    await locator('#previous').click();
+    await until(async () => (await locator('#status').textContent()).includes('Beat 2 of 3 · Performed state · completed'));
+    assert.equal(await evaluate("doc.querySelector('.typeout-progress').textContent"), 'status: still observing\n');
+    await fs.writeFile(path.join(directory, 'autoplay-temporal.json'), JSON.stringify({ early: autoplayEarly, later: autoplayLater,
+      previous: { at: Date.now(), text: await evaluate("doc.querySelector('.typeout-progress').textContent") },
+      audioConnectionsBefore: connectedBeforeTurn, audioDisconnectionsBefore: disconnectedBeforeTurn,
+      audioDisconnectionsAfter: webAudioEvents.filter(event => event.method === 'WebAudio.nodesDisconnected').length }, null, 2));
+    assert.equal(await evaluate("doc.querySelector('.story-figure img')?.alt"), 'Wide harbour');
+    assert.equal(await evaluate("doc.querySelector('figcaption')?.textContent"), 'The wall.');
+    assert.ok((await beat.textContent()).includes('After the output.'));
+    assert.equal(await evaluate("doc.querySelector('.typeout-progress.active') !== null"), false);
+    await sleep(650);
+    assert.equal(await evaluate("doc.querySelector('.typeout-progress').textContent"), 'status: still observing\n');
+    await evaluate("doc.getElementById('replay').click()", true);
+    assert.equal(await locator('.typeout-progress').count(), 0);
+    await until(async () => (await evaluate("doc.querySelector('.typeout-progress')?.textContent.length || 0")) > 0);
+    await evaluate("doc.getElementById('autoplay').click()");
+    await locator('#next').click();
+    await until(async () => (await locator('#status').textContent()).includes('Beat 3 of 3 · The reply · ready'));
+    await locator('#restart').click();
+    await until(async () => (await locator('#status').textContent()).includes('Beat 1 of 3 · ready'));
+    if (await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')") === 'false') await locator('#mute').click();
+    await request('edit', authoredSample);
+    await until(async () => (await locator('#status').textContent()).includes('of 7'));
     await locator('#play').click();
     await request('close-preview');
     await until(async () => !(await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).some(t => t.type === 'iframe' && t.url.includes('murmurationpress.story-teller')));
@@ -443,6 +505,7 @@ async function until(fn, timeout = 60000) {
     }
     await until(async () => (await inspectConverted("doc?.getElementById('status')?.textContent || ''")).includes('· ready'));
     assert.equal(await inspectConverted("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
+    assert.equal(await inspectConverted("doc.getElementById('autoplay').checked"), false);
     await inspectConverted("doc.getElementById('play').click()");
     await until(async () => (await inspectConverted("doc.querySelector('.chat-title')?.textContent")) === 'Harbour link');
     await until(async () => (await inspectConverted("doc.querySelectorAll('.chat li').length")) >= 2);
@@ -482,8 +545,7 @@ async function until(fn, timeout = 60000) {
     await inspectConverted("doc.getElementById('play').click()");
     await until(async () => (await inspectConverted("doc.querySelector('.typeout-progress')?.textContent.length || 0")) >= 4);
     const firstOutput = await inspectConverted("doc.querySelector('.typeout-progress').textContent.length");
-    await sleep(300);
-    assert.ok((await inspectConverted("doc.querySelector('.typeout-progress').textContent.length")) > firstOutput);
+    await until(async () => (await inspectConverted("doc.querySelector('.typeout-progress').textContent.length")) > firstOutput, 2000);
     await inspectConverted("doc.getElementById('next').click()");
     await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('Mara — Margin note'));
     await inspectConverted("doc.getElementById('play').click()");
