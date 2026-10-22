@@ -637,6 +637,72 @@ async function until(fn, timeout = 60000) {
     assert.equal((await insertResult()).status, 'refused');
     assert.equal((await snapshot()).text, 'Before\n\nAfter');
 
+    const settingSource = 'Setting probe\n\n```typeout\n@format yaml\n@sound none\n\nstatus: observing\n```';
+    await request('edit', settingSource);
+    await request('start-insert', undefined, { start: settingSource.indexOf('status:') });
+    await pick('Component settings'); await pick('Speed'); await pick('Set speed');
+    await until(async () => await workbench("document.querySelector('.quick-input-widget input')?.value === '30'"));
+    await workbench("document.querySelector('.quick-input-widget input')?.focus()");
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'a', code: 'KeyA', windowsVirtualKeyCode: 65, modifiers: 2 });
+    await send('Input.insertText', { text: '15' });
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 });
+    assert.equal((await insertResult()).status, 'inserted');
+    assert.ok((await snapshot()).text.includes('@speed 15\n'));
+    await request('undo'); assert.equal((await snapshot()).text, settingSource);
+    await request('start-insert', undefined, { start: settingSource.indexOf('status:') });
+    await pick('Component settings'); await pick('Fill');
+    await request('edit', settingSource + '\nLater source edit.');
+    await pick('Yellow');
+    assert.equal((await insertResult()).status, 'stale');
+    assert.equal((await snapshot()).text, settingSource + '\nLater source edit.');
+    await request('start-insert', undefined, { start: settingSource.indexOf('status:') });
+    await pick('Component settings');
+    await until(async () => await workbench("document.querySelector('.quick-input-widget')?.innerText.includes('Format')"));
+    await send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    await send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Escape', code: 'Escape', windowsVirtualKeyCode: 27 });
+    assert.equal((await insertResult()).status, 'cancelled');
+
+    const styleSource = 'Style probe\n\n```typeout\n@format yaml\n@sound none\n@border none\n@fill none\n\nstatus: observing\n```';
+    await request('edit', styleSource);
+    await until(async () => (await inspectConverted("doc.querySelector('#beat')?.textContent"))?.includes('Style probe'));
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => await inspectConverted("Boolean(doc.querySelector('.typeout-border-none.typeout-fill-none'))"));
+    const noPanel = await inspectConverted("(() => { const el=doc.querySelector('.typeout-surface'); const pre=el.querySelector('pre'); return {border:doc.defaultView.getComputedStyle(el).borderTopWidth,fill:doc.defaultView.getComputedStyle(el).backgroundColor,preFill:doc.defaultView.getComputedStyle(pre).backgroundColor}; })()");
+    assert.deepEqual(noPanel, { border: '0px', fill: 'rgba(0, 0, 0, 0)', preFill: 'rgba(0, 0, 0, 0)' });
+    const colouredSource = styleSource.replace('@border none', '@border grey').replace('@fill none', '@fill yellow');
+    await request('edit', colouredSource);
+    await until(async () => (await inspectConverted("doc.getElementById('status')?.textContent"))?.includes('· ready'));
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => await inspectConverted("Boolean(doc.querySelector('.typeout-border-grey.typeout-fill-yellow'))"));
+    const styleEvidence = {};
+    for (const [theme, klass] of [['Light Modern', 'vscode-light'], ['Dark Modern', 'vscode-dark'], ['Default High Contrast', 'vscode-high-contrast'], ['Default High Contrast Light', 'vscode-high-contrast-light']]) {
+      await request('set-theme', undefined, { theme });
+      await until(async () => await inspectConverted(`doc.body.classList.contains(${JSON.stringify(klass)})`));
+      styleEvidence[theme] = await inspectConverted("(() => { const el=doc.querySelector('.typeout-surface'); const pre=el.querySelector('pre'); const style=doc.defaultView.getComputedStyle(el); const preStyle=doc.defaultView.getComputedStyle(pre); return {border:style.borderTopWidth,fill:style.backgroundColor,text:preStyle.color,preFill:preStyle.backgroundColor}; })()");
+      assert.ok(parseFloat(styleEvidence[theme].border) > 0);
+      assert.notEqual(styleEvidence[theme].fill, styleEvidence[theme].text);
+      assert.equal(styleEvidence[theme].fill, styleEvidence[theme].preFill);
+    }
+    await request('set-theme', undefined, { theme: 'Dark Modern' });
+    const greySource = colouredSource.replace('@fill yellow', '@fill grey');
+    await request('edit', greySource);
+    await until(async () => (await inspectConverted("doc.getElementById('status')?.textContent"))?.includes('· ready'));
+    await inspectConverted("doc.getElementById('play').click()");
+    await until(async () => await inspectConverted("Boolean(doc.querySelector('.typeout-fill-grey'))"));
+    styleEvidence.grey = {};
+    for (const [theme, klass] of [['Light Modern', 'vscode-light'], ['Dark Modern', 'vscode-dark'], ['Default High Contrast', 'vscode-high-contrast']]) {
+      await request('set-theme', undefined, { theme });
+      await until(async () => await inspectConverted(`doc.body.classList.contains(${JSON.stringify(klass)})`));
+      styleEvidence.grey[theme] = await inspectConverted("(() => { const el=doc.querySelector('.typeout-surface'); const pre=el.querySelector('pre'); const style=doc.defaultView.getComputedStyle(el); return {fill:style.backgroundColor,text:doc.defaultView.getComputedStyle(pre).color}; })()");
+      assert.notEqual(styleEvidence.grey[theme].fill, styleEvidence.grey[theme].text);
+      assert.notEqual(styleEvidence.grey[theme].fill, 'rgba(0, 0, 0, 0)');
+    }
+    await request('set-theme', undefined, { theme: 'Dark Modern' });
+    await fs.writeFile(path.join(directory, 'typeout-style.json'), JSON.stringify({ noPanel, styleEvidence }, null, 2));
+
+    await request('edit', 'Before\n\nAfter');
     await request('start-insert', undefined, { start: 8 }); await pick('Responding');
     assert.equal((await insertResult()).status, 'refused'); assert.equal((await snapshot()).text, 'Before\n\nAfter');
     await request('start-insert', undefined, { start: 0, end: 6 }); await pick('Chat block');

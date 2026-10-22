@@ -52,6 +52,8 @@ exports.run = async function () {
       } else if (request.action === 'show-preview') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');
+      } else if (request.action === 'set-theme') {
+        await vscode.workspace.getConfiguration('workbench').update('colorTheme', request.theme, vscode.ConfigurationTarget.Global);
       } else if (request.action === 'show-notifications') {
         await vscode.commands.executeCommand('notifications.showList');
       } else if (request.action === 'hide-notifications') {

@@ -6,7 +6,7 @@ Story Teller previews a separate Markdown adaptation as manually selected story 
 
 Requires desktop VS Code 1.95 or later. Node.js is needed only to build the extension from source.
 
-To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select the supplied story-teller-0.2.0.vsix. Reload the window if asked. The VSIX includes its runtime JavaScript, stylesheet and production Markdown parser; it does not include manuscript material or fictional development samples.
+To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select the supplied story-teller-0.3.0.vsix. Reload the window if asked. The VSIX includes its runtime JavaScript, stylesheet and production Markdown parser; it does not include manuscript material or fictional development samples.
 
 Make a *separate* Markdown adaptation of a completed chapter. Keep the original manuscript unchanged. Save the adaptation before linking images so relative paths have a base directory. Open it in VS Code, then run **Story Teller: Preview Scene**. The preview opens beside that document, with the first beat ready. **Play** starts it. **Next** turns one beat; with **Autoplay on page turn** enabled (the default), that next beat starts performing immediately. Turn the toggle off to make Next leave it ready for Play. The preference is remembered in VS Code, separately from Markdown. **Previous** shows the preceding beat fully revealed and silent for rereading, with no simulated waiting. **Replay Beat** resets and starts the current beat again. **Restart** returns to beat one in its ready state, showing only untimed leading content; it never autoplays. **Pause/Resume** preserves the remaining wait. Beat turns remain reader-controlled: completion never advances to another beat. Source edits and closing the preview cancel pending playback; unsaved edits reset the current beat to ready. Hiding the preview pauses it, and returning never resumes automatically.
 
@@ -101,17 +101,19 @@ A top-level typeout fence has a configuration header, one blank line, then liter
 @format yaml
 @sound modem
 @speed 24
+@border grey
+@fill yellow
 
 status: observing
 confidence: unresolved
 ~~~
 ~~~~
 
-@format yaml uses monospaced state styling; @format annotation uses a distinct note styling. Sound is independent: @sound modem, keyboard, typewriter or none. Omission means none. @speed is 1–120 Unicode grapheme clusters per second, default 30. Whitespace and line breaks are revealed; indentation and Unicode remain intact. Outside delay/pause apply before entry; following components wait for the reveal. Add an explicit pause afterward if a viewing hold is wanted.
+@format yaml uses monospaced state styling; @format annotation uses a distinct note styling. Sound is independent: @sound modem, keyboard, typewriter or none. Omission means none. @speed is 1–120 Unicode grapheme clusters per second, default 30. Optional @border none|grey and @fill none|grey|yellow change only the panel treatment; each can be set independently of format, sound and speed. Omit them to retain the format's original appearance. Border none removes the panel border (and annotation accent border); fill none makes the panel and its preformatted text background transparent. Values are fixed choices, never CSS. Put all configuration before the blank line: directive-like text after it is literal body content. Whitespace and line breaks are revealed; indentation and Unicode remain intact. Outside delay/pause apply before entry; following components wait for the reveal. Add an explicit pause afterward if a viewing hold is wanted.
 
 **Reveal Immediately** is shown while type-out is active. It completes that passage, stops sound and continues later authored waits/components. **Mute sound** applies across passages and is remembered outside Markdown. Sound is locally synthesised, starts after a playback gesture, and stops on Pause, reveal, navigation, edit, hiding or disposal. Reduced motion shows the complete passage at entry and suppresses sound. Assistive technology receives the complete passage without character-by-character announcements. If audio fails, visual reveal continues with an explicit warning. Ted has verified audible modem, keyboard and typewriter playback; richer texture is a possible later refinement.
 
-**Insert… → Type-out** offers fictional PRIME/Divergent YAML and Annotation presets with editable body placeholders. Change format, sound and speed in the header as needed. Ordinary yaml fences and existing manuscript annotation syntax are not converted just by previewing.
+**Insert… → Type-out** offers fictional PRIME/Divergent YAML and Annotation presets with editable body placeholders. The presets add only their format and sound; optional speed, border and fill remain absent. To edit any setting, put the caret anywhere inside that chat or type-out fence and choose **Insert… → Component settings…**. Choose a setting, then a fixed value or **Default** to remove an optional override. Speed uses a validated whole-number prompt in grapheme clusters per second. The helper edits only the header in one Undo step, refuses ambiguous/invalid configuration, and aborts if the document or caret changes while a picker is open. An ordinary yaml fence and existing manuscript annotation syntax are not converted just by previewing.
 
 ## Converting a copied chapter
 
@@ -125,7 +127,16 @@ The rules came from read-only inspection of CONSTRAINT at revision 341923a917a84
 
 ## Insert helpers and development
 
-**Story Teller: Insert…** is available from the Command Palette and Markdown context menu. It offers Chat block, Beat boundary, Delay, Pause, Responding, Ticks, Pace, Image, Caption and Type-out. Native snippets provide editable placeholders. Responding/Ticks require chat context; Pace inserts or updates chat configuration without duplicates; no optional chat effect is enabled by a new chat snippet. **Wrap Selection as Chat** is a separate explicit action that preserves selected content verbatim; wrapping alone does not convert message syntax. Helpers reject unsafe structural positions and stale source/selection, do not overwrite selected prose silently, and leave saving to the author.
+**Story Teller: Insert…** is available from the Command Palette and Markdown context menu. It offers Chat block, Beat boundary, Delay, Pause, Responding, Ticks, Pace, Image, Caption, Type-out and Component settings. Native snippets provide editable placeholders. Responding/Ticks require chat context; Pace remains a direct shortcut, while Component settings can edit or remove its header override. No optional chat effect is enabled by a new chat snippet. **Wrap Selection as Chat** is a separate explicit action that preserves selected content verbatim; wrapping alone does not convert message syntax. Helpers reject unsafe structural positions and stale source/selection, do not overwrite selected prose silently, and leave saving to the author.
+
+| Authored setting | Insert helper coverage |
+| --- | --- |
+| Chat `# Title`, `@viewer`, `@pace`, header `@ticks`, header `@responding` | Component settings; Pace and Ticks also retain their existing shortcuts. |
+| Per-message `@delay`, `@pause`, `@responding`; outside `@delay`, `@pause` | Delay, Pause and Responding snippets in valid structural positions. |
+| Type-out `@format`, `@sound`, `@speed`, `@border`, `@fill` | Type-out presets for initial format/sound; Component settings for each header value and optional Default. |
+| `---` and optional beat title; local image and caption | Beat boundary, Image and Caption helpers. |
+
+Message text, literal type-out body and image alt text remain ordinary Markdown/snippet editing, not hidden settings. Per-message timing and responding placement remain contextual; Component settings edits the chat-wide header only.
 
 For development, open tools/story-teller as the VS Code folder, run:
 

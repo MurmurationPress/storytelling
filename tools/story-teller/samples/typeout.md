@@ -32,6 +32,8 @@ The light beyond the wall remained still.
 ```typeout
 @format annotation
 @sound keyboard
+@border none
+@fill yellow
 
 The mark was not a star. She had seen its shape on the old chart.
 ```
@@ -55,6 +57,8 @@ A second note appeared beneath the first.
 ```typeout
 @format yaml
 @sound none
+@border grey
+@fill none
 
 status: quiet
 next_action: observe

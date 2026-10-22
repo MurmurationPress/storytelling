@@ -102,7 +102,7 @@ function render() {
       content.append(figure);
     } else if (block.type === 'typeout') {
       const section = document.createElement('section');
-      section.className = `typeout typeout-${block.format}`;
+      section.className = `typeout typeout-${block.format}${block.border === null ? '' : ` typeout-border-${block.border}`}${block.fill === null ? '' : ` typeout-fill-${block.fill}`}`;
       section.setAttribute('aria-label', block.format === 'yaml' ? 'PRIME state output' : 'Annotation');
       const accessible = document.createElement('span');
       accessible.className = 'visually-hidden'; accessible.textContent = block.text;

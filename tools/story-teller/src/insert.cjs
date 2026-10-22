@@ -11,6 +11,7 @@ const choices = [
   { id: 'image', label: 'Image', description: 'Choose a local PNG, JPEG or WebP; insert a standalone image.' },
   { id: 'caption', label: 'Caption', description: 'Add or edit the caption of a standalone image.' },
   { id: 'typeout', label: 'Type-out', description: 'Perform literal YAML-style output or an annotation.' },
+  { id: 'settings', label: 'Component settings…', description: 'Edit the enclosing chat or type-out header.' },
   { id: 'ticks', label: 'Ticks', description: 'Authored outgoing delivered/read marks; chat header only.' },
   { id: 'wrap', label: 'Wrap Selection as Chat', description: 'Keep selected text verbatim; does not convert its syntax.' }
 ];

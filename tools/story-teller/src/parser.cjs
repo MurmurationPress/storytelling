@@ -1,7 +1,7 @@
 'use strict';
 const MarkdownIt = require('markdown-it');
 const { PACE_MULTIPLIERS } = require('./pace.cjs');
-const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS } = require('./typeout.cjs');
+const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS, BORDERS, FILLS } = require('./typeout.cjs');
 const { inspectStructure, beatRanges } = require('./structure.cjs');
 const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
 // Image URLs are inert data here; only the VS Code host may resolve local files.
@@ -118,7 +118,7 @@ function parseScene(source) {
         const openLine = first + token.map[0];
         const contentLines = token.content.split('\n');
         const separator = contentLines.findIndex(line => !line.trim());
-        const settings = { format: null, sound: 'none', speed: DEFAULT_SPEED };
+        const settings = { format: null, sound: 'none', speed: DEFAULT_SPEED, border: null, fill: null };
         const seen = new Set();
         let error = null;
         let errorLine = openLine + 1;
@@ -126,14 +126,16 @@ function parseScene(source) {
         else for (let header = 0; header < separator; header++) {
           const line = contentLines[header].trim();
           errorLine = openLine + header + 2;
-          const setting = line.match(/^@(format|sound|speed)\s+(.+)$/);
-          if (!setting) { error = 'typeout header accepts only @format, @sound and @speed before the blank line'; break; }
+          const setting = line.match(/^@(format|sound|speed|border|fill)\s+(.+)$/);
+          if (!setting) { error = 'typeout header accepts only @format, @sound, @speed, @border and @fill before the blank line'; break; }
           const [, name, value] = setting;
           if (seen.has(name)) { error = `duplicate @${name} in typeout header`; break; }
           seen.add(name);
           if (name === 'format' && !FORMATS.includes(value)) error = '@format requires yaml or annotation';
           else if (name === 'sound' && !SOUNDS.includes(value)) error = '@sound requires modem, keyboard, typewriter or none';
           else if (name === 'speed' && (!/^[1-9][0-9]*$/.test(value) || Number(value) < MIN_SPEED || Number(value) > MAX_SPEED)) error = `@speed requires ${MIN_SPEED}–${MAX_SPEED} graphemes per second`;
+          else if (name === 'border' && !BORDERS.includes(value)) error = '@border requires none or grey';
+          else if (name === 'fill' && !FILLS.includes(value)) error = '@fill requires none, grey or yellow';
           if (error) break;
           settings[name] = name === 'speed' ? Number(value) : value;
         }

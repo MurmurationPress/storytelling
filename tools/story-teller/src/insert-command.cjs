@@ -3,6 +3,7 @@ const path = require('node:path');
 const { choices, typeoutPresets, planInsertion, planPace, planImageInsertion, planTypeoutInsertion, planBeatInsertion, planCaption, markdownPath } = require('./insert.cjs');
 const { paceChoices } = require('./pace.cjs');
 const { inspectImage, baseFor } = require('./media.cjs');
+const { choices: settingChoices, values: settingValues, defaults: settingDefaults, locateSettingContext, currentSetting, planSetting, DEFAULT_SPEED, MIN_SPEED, MAX_SPEED } = require('./settings.cjs');
 function registerInsert(vscode, context) {
   const run = async wrap => {
     const editor = vscode.window.activeTextEditor;
@@ -16,6 +17,51 @@ function registerInsert(vscode, context) {
     const source = document.getText();
     const choice = wrap ? { id: 'wrap' } : await vscode.window.showQuickPick(choices, { title: 'Story Teller: Insert…', placeHolder: 'Insert story syntax at the caret', matchOnDescription: true });
     if (!choice) return { status: 'cancelled' };
+    let setting = null;
+    if (choice.id === 'settings') {
+      const at = { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) };
+      const located = locateSettingContext(source, at);
+      if (located.error) { vscode.window.showInformationMessage(located.error); return { status: 'refused' }; }
+      const chosen = await vscode.window.showQuickPick(settingChoices[located.kind], { title: `${located.kind === 'chat' ? 'Chat' : 'Type-out'} settings`, placeHolder: 'Edit this component header', matchOnDescription: true });
+      if (!chosen) return { status: 'cancelled' };
+      const key = chosen.id;
+      const existing = currentSetting(located, key).map(line => located.lines[line].text.trim());
+      if (existing.length > 1) { vscode.window.showWarningMessage(`Duplicate ${key} declarations need direct review first.`); return { status: 'refused' }; }
+      let value;
+      if (key === 'title' || key === 'viewer') {
+        const picked = await vscode.window.showQuickPick([
+          { label: 'Edit…', value: 'edit', description: `Set this ${key}` },
+          { label: 'Default', value: null, description: `Remove explicit ${key}` }
+        ], { title: `${chosen.label} setting` });
+        if (!picked) return { status: 'cancelled' };
+        if (picked.value === null) value = null;
+        else {
+          const current = existing[0]?.replace(key === 'title' ? /^(?:#|@title)\s*/ : /^@viewer\s*/, '') || '';
+          value = await vscode.window.showInputBox({ title: `Chat ${key}`, value: current,
+            prompt: `Single-line ${key}; this edits only the chat header.`,
+            validateInput: input => !input.trim() || /[\r\n]/.test(input) ? 'Enter nonempty text on one line.' : null });
+          if (value === undefined) return { status: 'cancelled' };
+        }
+      } else if (key === 'speed') {
+        const picked = await vscode.window.showQuickPick([
+          { label: 'Set speed…', value: 'set', description: `${MIN_SPEED}–${MAX_SPEED} Unicode grapheme clusters per second` },
+          { label: 'Default', value: null, description: `Remove @speed; use ${DEFAULT_SPEED} graphemes per second` }
+        ], { title: 'Type-out speed' });
+        if (!picked) return { status: 'cancelled' };
+        value = picked.value === null ? null : await vscode.window.showInputBox({ title: 'Type-out speed',
+          prompt: `${MIN_SPEED}–${MAX_SPEED} Unicode grapheme clusters per second`,
+          value: existing[0]?.replace(/^@speed\s*/, '') || String(DEFAULT_SPEED),
+          validateInput: input => /^[1-9][0-9]*$/.test(input) && Number(input) >= MIN_SPEED && Number(input) <= MAX_SPEED ? null : `Enter a whole number from ${MIN_SPEED} to ${MAX_SPEED}.` });
+        if (value === undefined) return { status: 'cancelled' };
+      } else {
+        const options = settingValues[key].map(entry => ({ label: entry[0].toUpperCase() + entry.slice(1), value: entry }));
+        if (settingDefaults.has(key)) options.unshift({ label: 'Default', value: null, description: 'Remove this explicit override' });
+        const picked = await vscode.window.showQuickPick(options, { title: `${chosen.label} setting`, placeHolder: `Current: ${existing[0] || 'default'}` });
+        if (!picked) return { status: 'cancelled' };
+        value = picked.value;
+      }
+      setting = { key, value };
+    }
     const beatTitle = choice.id === 'boundary' ? await vscode.window.showInputBox({ title: 'Beat title', prompt: 'Optional. Leave empty for an untitled beat.', value: '' }) : null;
     if (choice.id === 'boundary' && beatTitle === undefined) return { status: 'cancelled' };
     const pace = choice.id === 'pace' ? await vscode.window.showQuickPick(paceChoices, { title: 'Chat pace', placeHolder: 'Explicit delays and pauses stay unchanged' }) : null;
@@ -49,7 +95,8 @@ function registerInsert(vscode, context) {
       vscode.window.showWarningMessage('The document or selection changed while choosing. Run Insert again.'); return { status: 'stale' };
     }
     const offsets = { start: document.offsetAt(selection.start), end: document.offsetAt(selection.end) };
-    const plan = choice.id === 'pace' ? planPace(source, offsets, pace.value)
+    const plan = choice.id === 'settings' ? planSetting(source, offsets, setting.key, setting.value)
+      : choice.id === 'pace' ? planPace(source, offsets, pace.value)
       : choice.id === 'image' ? planImageInsertion(source, offsets, relativeImage)
       : choice.id === 'typeout' ? planTypeoutInsertion(source, offsets, typeout.value)
       : choice.id === 'boundary' ? planBeatInsertion(source, offsets, beatTitle)
@@ -62,6 +109,7 @@ function registerInsert(vscode, context) {
       return { status: 'selected', kind: choice.id };
     }
     if (plan.edits) {
+      if (!plan.edits.length) return { status: 'unchanged', kind: choice.id };
       applied = await editor.edit(edit => { for (const item of plan.edits) edit.replace(new vscode.Range(document.positionAt(item.start), document.positionAt(item.end)), item.text); }, { undoStopBefore: true, undoStopAfter: true });
     } else if (plan.wrap) {
       applied = await editor.edit(edit => { edit.insert(selection.start, plan.prefix); edit.insert(selection.end, plan.suffix); }, { undoStopBefore: true, undoStopAfter: true });
