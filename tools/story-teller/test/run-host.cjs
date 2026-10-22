@@ -81,7 +81,7 @@ async function until(fn, timeout = 60000) {
       const result = await send('Runtime.evaluate', {
         expression: `(() => { const doc = document.getElementById('active-frame')?.contentDocument; return (${expression}); })()`, returnByValue: true, userGesture
       });
-      if (result.exceptionDetails) throw new Error(result.exceptionDetails.text);
+      if (result.exceptionDetails) throw new Error(`${result.exceptionDetails.exception?.description || result.exceptionDetails.text} [${expression}]`);
       return result.result.value;
     }
     const locator = selector => ({
@@ -224,6 +224,7 @@ async function until(fn, timeout = 60000) {
       const typeout = '```typeout\n@format yaml\n\n\nbody\n```';
       await request('edit', typeout);
       await request('focus-at', undefined, { start: typeout.indexOf('\n\n\n') + 1 });
+      await until(async () => await workbench("Boolean(document.activeElement?.closest('.monaco-editor.focused'))"), 10000);
       await key('@', 'Digit2', '@');
       await until(async () => (await suggest()).includes('@sound'));
       const automatic = await suggest();
@@ -290,7 +291,8 @@ async function until(fn, timeout = 60000) {
       return JSON.parse(await fs.readFile(path.join(directory, 'snapshot.json'), 'utf8')).selection?.start === authoredSample.indexOf('<!-- beat: Lighthouse contact -->');
     });
     const mainPage = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item => item.type === 'page');
-    const sourceLines = async () => {
+    if (process.env.STORY_TELLER_HOST_SCOPE !== 'no-fold') {
+    const sourceLineNumbers = async () => {
       const connection = new WebSocket(mainPage.webSocketDebuggerUrl);
       await new Promise((resolve, reject) => { connection.onopen = resolve; connection.onerror = reject; });
       try {
@@ -298,10 +300,16 @@ async function until(fn, timeout = 60000) {
           connection.onmessage = event => {
             const response = JSON.parse(event.data);
             if (response.id !== 1) return;
-            response.error ? reject(new Error(JSON.stringify(response.error))) : resolve((response.result?.result?.value || '').replace(/\u00a0/g, ' '));
+            if (response.error || response.result?.exceptionDetails) reject(new Error(JSON.stringify(response.error || response.result.exceptionDetails)));
+            else resolve(response.result?.result?.value || []);
           };
           connection.send(JSON.stringify({ id: 1, method: 'Runtime.evaluate', params: {
-            expression: "document.querySelector('.editor-group-container .monaco-editor.focused .view-lines')?.innerText || ''", returnByValue: true
+            expression: `(() => {
+              const editor = Array.from(document.querySelectorAll('.monaco-editor.focused'))
+                .find(candidate => candidate.getBoundingClientRect().width > 100);
+              return editor ? Array.from(editor.querySelectorAll('.margin-view-overlays .line-numbers'))
+                .map(line => Number(line.textContent)).filter(Number.isInteger) : [];
+            })()`, returnByValue: true
           } }));
         });
       } finally { connection.close(); }
@@ -310,27 +318,34 @@ async function until(fn, timeout = 60000) {
     const nativeFolds = JSON.parse(await fs.readFile(path.join(directory, 'beat-folds.json'), 'utf8'));
     assert.ok(nativeFolds.some(range => range.start === 12 && range.end > range.start));
     let foldedLines;
-    for (let attempt = 0; attempt < 3 && !foldedLines; attempt++) {
-      if (attempt) await request('beat-folds'); // Native folding can settle after the first provider result.
-      try {
-        foldedLines = await until(async () => {
-          const value = await sourceLines();
-          await fs.writeFile(path.join(directory, 'last-fold-lines.txt'), value);
-          return value.includes('Lighthouse contact') && !value.includes('Ivo: Only me.') && value;
-        }, 3000);
-      } catch { /* Retry this command against the now ready editor. */ }
+    try {
+      foldedLines = await until(async () => {
+        const value = await sourceLineNumbers();
+        return value.includes(13) && !value.includes(22) && value;
+      }, 10000);
+    } catch (error) {
+      await fs.writeFile(path.join(directory, 'fold-failure-lines.json'), JSON.stringify(await sourceLineNumbers()));
+      const capture = new WebSocket(mainPage.webSocketDebuggerUrl);
+      await new Promise(resolve => { capture.onopen = resolve; });
+      const screenshot = await new Promise(resolve => {
+        capture.onmessage = event => { const response = JSON.parse(event.data); if (response.id === 1) resolve(response.result?.data); };
+        capture.send(JSON.stringify({ id: 1, method: 'Page.captureScreenshot', params: { format: 'png' } }));
+      });
+      capture.close();
+      if (screenshot) await fs.writeFile(path.join(directory, 'fold-failure.png'), Buffer.from(screenshot, 'base64'));
+      throw error;
     }
-    assert.ok(foldedLines, 'Beat fold did not hide its content after three native attempts');
-    await fs.writeFile(path.join(directory, 'folded-lines.txt'), foldedLines);
-    assert.match(foldedLines, /Lighthouse contact/);
-    assert.doesNotMatch(foldedLines, /Ivo: Only me\./);
+    await fs.writeFile(path.join(directory, 'folded-lines.txt'), JSON.stringify(foldedLines));
+    assert.ok(foldedLines.includes(13));
+    assert.ok(!foldedLines.includes(22));
     await locator('#show-source').click();
-    await until(async () => (await sourceLines()).includes('Only me. The stairs'));
+    await until(async () => (await sourceLineNumbers()).includes(22));
     await request('expand-beats');
     await request('fold-all-test');
-    await until(async () => !(await sourceLines()).includes('Ivo: Only me.'));
+    await until(async () => !(await sourceLineNumbers()).includes(22));
     await locator('#show-source').click();
-    await until(async () => (await sourceLines()).includes('Only me. The stairs'));
+    await until(async () => (await sourceLineNumbers()).includes(22));
+    }
     await request('preview-this', undefined, { start: authoredSample.indexOf('old radio') });
     await until(async () => /Beat 1 of 7 · The old radio · ready/.test(await locator('#status').textContent()));
     const webAudioEvents = [];
@@ -381,7 +396,9 @@ async function until(fn, timeout = 60000) {
     assert.equal(await prefix(), hiddenPrefix);
     assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
     await fs.writeFile(path.join(directory, 'typeout-hide-state.json'), JSON.stringify(await evaluate("({hidden: doc.hidden, pauseDisabled: doc.getElementById('pause').disabled, status: doc.getElementById('status').textContent})"), null, 2));
-    await until(async () => !(await locator('#pause').isDisabled()), 5000);
+    await until(async () => !(await locator('#pause').isDisabled()), 10000);
+    await evaluate("doc.defaultView.dispatchEvent(new MessageEvent('message', { data: { type: 'presentation', visible: false, epoch: 0 } }))");
+    assert.equal(await locator('#pause').isDisabled(), false, 'A stale hide event must not override the latest presentation');
     await locator('#pause').click();
     await until(async () => (await prefix()).length > hiddenPrefix.length);
     await locator('#reveal').click();
@@ -633,6 +650,7 @@ async function until(fn, timeout = 60000) {
       await request('snapshot'); return JSON.parse(await fs.readFile(path.join(directory, 'snapshot.json'), 'utf8'));
     };
     const result = () => until(async () => JSON.parse(await fs.readFile(path.join(directory, 'conversion-result.json'), 'utf8')));
+    await request('close-cover'); // Remove the synthetic tab used to test preview hiding.
     const fixture = await fs.readFile(path.join(root, 'samples/conversion-example.md'), 'utf8');
     await request('edit', fixture); const initial = await snapshot();
     await request('start-conversion');

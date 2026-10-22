@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-22 — Accept formatted annotation reveal; review Story Teller authoring milestone
+
+**Ted's acceptance:** formatted Markdown reveal for annotation type-outs is accepted alongside the previously accepted Story Teller authoring and playback behaviour. YAML state type-outs remain literal. This acceptance concerns the local authoring/preview experience, not EPUB export, release readiness, VSCodium compatibility or every implementation detail.
+
+**Review boundary:** finish the existing PR with correctness, native regression and package checks. Keyboard IntelliSense and State metadata conversion are implemented and tested, but Ted has not explicitly accepted either. Keep those statuses distinct; leave publication and other components for later decisions.
+
 ## 2026-10-22 — Accept Story Teller navigation and settings; trial State conversion
 
 **Ted's acceptance:** page-turn autoplay, type-out border/fill choices and the component settings helper are accepted. This supersedes their earlier awaiting-acceptance entries below. The acceptance concerns the local Story Teller authoring/preview experience, not EPUB export or general reader compatibility.

@@ -6,7 +6,7 @@ Story Teller previews a separate Markdown adaptation as manually selected story 
 
 Requires desktop VS Code 1.95 or later. Node.js is needed only to build the extension from source.
 
-To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select the supplied story-teller-0.5.0.vsix. Reload the window if asked. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
+To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.6.1.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.6.1** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
 
 Make a *separate* Markdown adaptation of a completed chapter. Keep the original manuscript unchanged. Save the adaptation before linking images so relative paths have a base directory. Open it in VS Code, then run **Story Teller: Preview Scene**. The preview opens beside that document, with the first beat ready. **Play** starts it. **Next** turns one beat; with **Autoplay on page turn** enabled (the default), that next beat starts performing immediately. Turn the toggle off to make Next leave it ready for Play. The preference is remembered in VS Code, separately from Markdown. **Previous** shows the preceding beat fully revealed and silent for rereading, with no simulated waiting. **Replay Beat** resets and starts the current beat again. **Restart** returns to beat one in its ready state, showing only untimed leading content; it never autoplays. **Pause/Resume** preserves the remaining wait. Beat turns remain reader-controlled: completion never advances to another beat. Source edits and closing the preview cancel pending playback; unsaved edits reset the current beat to ready. Hiding the preview pauses it, and returning never resumes automatically.
 
@@ -92,7 +92,7 @@ Images preserve aspect ratio and fit the preview without horizontal overflow. Th
 
 **Insert… → Image** selects an existing local file, inserts a relative Markdown reference with an editable alt-text placeholder, and leaves the file in place. **Insert… → Caption** adds a caption below a standalone image or selects its existing caption text for editing. These helpers do not replace selected prose or create orphan captions. A saved source file is needed to resolve media.
 
-### Literal type-out and sound
+### Type-out, formatted annotations and sound
 
 A top-level typeout fence has a configuration header, one blank line, then its body. YAML bodies remain entirely literal; annotation bodies render safe Markdown. Directive-looking body text is content in both formats:
 
@@ -165,6 +165,8 @@ npm run test:host
 npm run package
 ~~~
 
-For focused native checks, run `STORY_TELLER_HOST_SCOPE=intellisense npm run test:host` or use `STORY_TELLER_HOST_SCOPE=metadata` for State conversion; prepend `STORY_TELLER_VSIX=/absolute/path/story-teller-0.5.0.vsix` to test the installed package in a disposable profile. Press F5 using **Story Teller: Extension Development Host** to open the fictional samples folder, then preview lantern.md. The native host suite requires a graphical Linux session and installed VS Code; it uses temporary files and test-only CDP inspection. The npm build needs Node.js 22 or later. RESULTS.md records validation separately from Ted's acceptance.
+For focused native checks, run `STORY_TELLER_HOST_SCOPE=intellisense npm run test:host`, `STORY_TELLER_HOST_SCOPE=annotation npm run test:host`, or use `STORY_TELLER_HOST_SCOPE=metadata` for State conversion; prepend `STORY_TELLER_VSIX=/absolute/path/story-teller-0.6.1.vsix` to test the installed package in a disposable profile. Press F5 using **Story Teller: Extension Development Host** to open the fictional samples folder, then preview lantern.md. The native host suite requires a graphical Linux session and installed VS Code; it uses temporary files and test-only CDP inspection. The npm build needs Node.js 22 or later. RESULTS.md records validation separately from Ted's acceptance.
+
+The full native suite currently has an unresolved folding check: some isolated VS Code 1.142.0 runs return the expected beat ranges but leave the source editor expanded after Collapse All Beats. `STORY_TELLER_HOST_SCOPE=no-fold npm run test:host` isolates the remaining native regressions for diagnosis; it does **not** establish that folding passes. See RESULTS.md before treating this VSIX as a completed milestone.
 
 Known limits: no automatic beat turns, visual beat-card editor, full-book importer, EPUB export, image animation, video or live chat generation. Beat preservation after substantial edits is best effort; duplicate/rewritten beats can change which ordinal is retained. Hidden webview recreation restores a beat ready rather than restoring its exact timer. Only desktop Linux VS Code has been exercised natively; VSCodium, iPad/Safari, remote workspaces and other operating systems remain unverified. The VSIX is a local milestone, not a marketplace release or general manuscript-format promise.

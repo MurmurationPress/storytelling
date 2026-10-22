@@ -36,10 +36,12 @@ function activate(context) {
       existing.sourceColumn = editor.viewColumn;
       // Reveal the existing tab in its own group. Moving it "beside" the
       // current editor can leave the retained webview reporting inactive.
-      existing.panel.reveal(undefined, false);
+      existing.panel.reveal(existing.panel.viewColumn, false);
       setTimeout(() => {
-        if (!existing.disposed) existing.panel.webview.postMessage({ type: 'presentation', visible: existing.panel.visible });
-      }, 0);
+        if (existing.disposed) return;
+        if (!existing.panel.visible) existing.panel.reveal(existing.panel.viewColumn, false);
+        existing.sendPresentation(existing.panel.visible);
+      }, 100);
       if (thisBeat) await existing.send(document, targetOffset);
       return;
     }
@@ -48,7 +50,8 @@ function activate(context) {
       enableScripts: true, enableCommandUris: false, retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist'), vscode.Uri.joinPath(context.extensionUri, 'media'), ...(base ? [vscode.Uri.file(base.root)] : [])]
     });
-    const entry = { panel, sourceColumn: editor.viewColumn, requestedOffset: targetOffset, revision: 0, sentSource: null, disposed: false, send: null };
+    const entry = { panel, sourceColumn: editor.viewColumn, requestedOffset: targetOffset, revision: 0, presentationEpoch: 0,
+      presentationRetry: null, sentSource: null, disposed: false, send: null, sendPresentation: null };
     previews.set(key, entry);
     const nonce = randomBytes(24).toString('hex');
     const script = panel.webview.asWebviewUri(vscode.Uri.joinPath(context.extensionUri, 'dist', 'player.js'));
@@ -68,13 +71,29 @@ function activate(context) {
         panel.webview.postMessage({ type: 'source', source, uri: key, revision: current, targetOffset: requestedOffset, muted: preferredMute, autoplayOnTurn: preferredAutoplay, ...prepared });
       }
     };
-    const presentation = () => panel.webview.postMessage({ type: 'presentation', visible: panel.visible });
+    entry.sendPresentation = visible => {
+      if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);
+      entry.presentationRetry = null;
+      const epoch = ++entry.presentationEpoch;
+      const deliver = () => {
+        if (entry.disposed || epoch !== entry.presentationEpoch || panel.visible !== visible) return;
+        void panel.webview.postMessage({ type: 'presentation', visible, epoch });
+        // A retained webview may miss a message while it is becoming visible.
+        // Keep the newest state pending until the component acknowledges it.
+        if (visible) entry.presentationRetry = setTimeout(deliver, 250);
+      };
+      deliver();
+    };
+    const presentation = () => entry.sendPresentation(panel.visible);
     const visibility = panel.onDidChangeViewState(presentation);
     const listener = vscode.workspace.onDidChangeTextDocument(event => {
       if (event.document.uri.toString() === key) { entry.requestedOffset = undefined; entry.send(event.document); }
     });
     const ready = panel.webview.onDidReceiveMessage(async message => {
-      if (message?.type === 'ready') {
+      if (message?.type === 'presentation-ack' && message.epoch === entry.presentationEpoch) {
+        if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);
+        entry.presentationRetry = null;
+      } else if (message?.type === 'ready') {
         presentation();
         const target = entry.requestedOffset;
         entry.requestedOffset = undefined;
@@ -107,6 +126,7 @@ function activate(context) {
     });
     panel.onDidDispose(() => {
       entry.disposed = true; entry.revision++; previews.delete(key);
+      if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);
       listener.dispose(); ready.dispose(); visibility.dispose();
     });
     context.subscriptions.push(panel);

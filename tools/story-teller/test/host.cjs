@@ -13,14 +13,13 @@ exports.run = async function () {
   await fs.writeFile(file, sample);
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
   const focusSource = async () => {
-    await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
     await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
-    for (let attempt = 0; attempt < 4 && vscode.window.activeTextEditor?.document !== document; attempt++) {
-      await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
-      await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+    await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+    const deadline = Date.now() + 5000;
+    while (vscode.window.activeTextEditor?.document !== document && Date.now() < deadline)
       await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    if (vscode.window.activeTextEditor?.document !== document) throw new Error('Test source editor did not become active');
+    if (vscode.window.activeTextEditor?.document !== document)
+      throw new Error(`Test source editor did not become active; current=${vscode.window.activeTextEditor?.document.uri.toString() || 'none'}, tab=${vscode.window.tabGroups.activeTabGroup.activeTab?.label || 'none'}`);
   };
   await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
   await vscode.commands.executeCommand('storyTeller.previewScene');
@@ -52,6 +51,9 @@ exports.run = async function () {
       } else if (request.action === 'show-preview') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');
+      } else if (request.action === 'close-cover') {
+        const cover = vscode.window.tabGroups.all.flatMap(group => group.tabs).find(tab => tab.input?.uri?.scheme === 'untitled' && tab.label === '# Temporary preview cover');
+        if (cover) await vscode.window.tabGroups.close(cover);
       } else if (request.action === 'set-theme') {
         await vscode.workspace.getConfiguration('workbench').update('colorTheme', request.theme, vscode.ConfigurationTarget.Global);
       } else if (request.action === 'show-notifications') {
@@ -84,10 +86,10 @@ exports.run = async function () {
         editor.selection = new vscode.Selection(position, position);
         await vscode.commands.executeCommand('storyTeller.previewThisBeat');
       } else if (request.action === 'focus-at') {
-        const editor = await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
+        await focusSource();
+        const editor = vscode.window.activeTextEditor;
         const position = document.positionAt(request.start);
         editor.selection = new vscode.Selection(position, position);
-        await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
         await fs.writeFile(path.join(directory, 'intellisense-settings.json'), JSON.stringify({
           quickSuggestions: vscode.workspace.getConfiguration('editor', document.uri).get('quickSuggestions'),
           suggestOnTriggerCharacters: vscode.workspace.getConfiguration('editor', document.uri).get('suggestOnTriggerCharacters')

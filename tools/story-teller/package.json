@@ -2,7 +2,7 @@
   "name": "story-teller",
   "displayName": "Story Teller",
   "description": "Provisional prose, chat, image and type-out scene preview.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "publisher": "murmurationpress",
   "repository": {
@@ -17,7 +17,7 @@
     "Other"
   ],
   "main": "./src/extension.cjs",
-  "activationEvents": [],
+  "activationEvents": ["onLanguage:markdown"],
   "contributes": {
     "commands": [
       {

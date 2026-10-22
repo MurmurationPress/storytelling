@@ -11,7 +11,8 @@ const sound = new TypeoutSound();
 let muted = Boolean(api.getState()?.muted);
 let autoplayOnTurn = api.getState()?.autoplayOnTurn !== false;
 let lastTypeoutRender = null;
-let presented = true;
+let presented = false;
+let presentationEpoch = -1;
 let revision = -1;
 let incomingRevision = -1;
 let sourceUri = '';
@@ -30,12 +31,12 @@ function controls() {
   document.getElementById('previous').disabled = preparing || player.index === 0;
   document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
   document.getElementById('restart').disabled = preparing || !beat;
-  document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented || document.hidden;
-  document.getElementById('pause').disabled = preparing || !['playing', 'paused'].includes(player.phase) || !presented || document.hidden;
+  document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented;
+  document.getElementById('pause').disabled = preparing || !['playing', 'paused'].includes(player.phase) || !presented;
   document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
-  document.getElementById('replay').disabled = preparing || !beat || !presented || document.hidden;
+  document.getElementById('replay').disabled = preparing || !beat || !presented;
   const reveal = document.getElementById('reveal');
-  reveal.hidden = !active; reveal.disabled = preparing || !active || !presented || document.hidden;
+  reveal.hidden = !active; reveal.disabled = preparing || !active || !presented;
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
   document.getElementById('autoplay').checked = autoplayOnTurn;
@@ -254,10 +255,17 @@ window.addEventListener('message', async event => {
     player.reset(); // Stop current timers before the host reads and validates local files.
     preparing = true; render(); return;
   }
-  if (message?.type === 'presentation' && typeof message.visible === 'boolean') {
-    presented = message.visible;
-    if (!presented) player.pause();
-    render(); return;
+  if (message?.type === 'presentation' && typeof message.visible === 'boolean' && Number.isInteger(message.epoch)) {
+    if (message.epoch >= presentationEpoch) {
+      if (message.epoch > presentationEpoch) {
+        presentationEpoch = message.epoch;
+        presented = message.visible;
+        if (!presented) player.pause();
+        render();
+      }
+      api.postMessage({ type: 'presentation-ack', epoch: message.epoch });
+    }
+    return;
   }
   if (message?.type === 'mute-preference' && typeof message.muted === 'boolean') {
     muted = message.muted; render(); return;
