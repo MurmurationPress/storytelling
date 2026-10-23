@@ -4,6 +4,10 @@ const { beatAtOffset } = require('./structure.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
 const { graphemes } = require('./typeout.cjs');
+const { SceneAutoplay, currentReaderMessage } = require('./scene-navigation.cjs');
+const sceneAutoplay = new SceneAutoplay();
+let needsAudioGesture = false;
+const { ScrollFollower } = require('./follow.cjs');
 const api = acquireVsCodeApi();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
 const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches });
@@ -15,18 +19,24 @@ let presented = false;
 let presentationEpoch = -1;
 let revision = -1;
 let incomingRevision = -1;
+let pendingDeparture = 0;
 let sourceUri = '';
 let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
+let pacingWarning = null;
+let pacingLabel = 'Off (unchanged default)';
+let lastEndTurnAt = -Infinity;
 const content = document.getElementById('beat');
 const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
+const follower = new ScrollFollower({ window, document, content, nav: document.querySelector('nav'),
+  button: document.getElementById('follow-story'), reducedMotion: () => motion.matches });
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase}` : 'No beats';
-  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics,
+  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
+  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || player.index === 0;
   document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
@@ -39,6 +49,7 @@ function controls() {
   reveal.hidden = !active; reveal.disabled = preparing || !active || !presented;
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
+  document.getElementById('enable-sound').hidden = !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
   document.getElementById('autoplay').checked = autoplayOnTurn;
   document.getElementById('show-source').disabled = preparing || !beat;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
@@ -92,7 +103,7 @@ function render() {
       if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
       else progress.textContent = shown?.visibleText || '';
       progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
-      controls(); return;
+      controls(); follower.changed(); return;
     }
   }
   lastTypeoutRender = null;
@@ -186,7 +197,31 @@ function render() {
       }
     }
   }
+  if (!preparing && player.endAction) {
+    const ending = document.createElement('div');
+    ending.className = 'beat-ending';
+    if (player.endAction === 'next') {
+      const button = document.createElement('button');
+      button.type = 'button'; button.textContent = 'Next →';
+      button.setAttribute('aria-label', 'Next beat');
+      const sourceIndex = player.index;
+      button.addEventListener('click', () => {
+        // A double click may land on the new beat's end button if that beat
+        // completes immediately. Reject stale buttons and the second click.
+        if (sourceIndex !== player.index || player.endAction !== 'next' || performance.now() - lastEndTurnAt < 400) return;
+        lastEndTurnAt = performance.now();
+        turnNext();
+      });
+      ending.append(button);
+    } else {
+      const label = document.createElement('p');
+      label.className = 'end-of-scene'; label.textContent = 'End of scene';
+      ending.append(label);
+    }
+    content.append(ending);
+  }
   controls();
+  follower.changed();
 }
 function preload(url) {
   return new Promise(resolve => {
@@ -206,52 +241,71 @@ function preload(url) {
 }
 const unlockSound = (beat = player.current) => {
   if (player.reducedMotion !== motion.matches) player.setReducedMotion(motion.matches);
-  if (!muted && !player.reducedMotion && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) sound.unlock();
+  if (!muted && !player.reducedMotion && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) {
+    const unlocked = sound.unlock();
+    if (unlocked) unlocked.then(() => render());
+  }
 };
-document.getElementById('next').addEventListener('click', () => {
-  if (preparing || !presented || document.hidden) return;
+function startSelectedScene() {
+  if (sceneAutoplay.take(revision, !preparing && presented && !document.hidden)) player.play();
+}
+function turnNext() {
+  if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
+  follower.beginTurn();
   sound.stop();
   if (autoplayOnTurn) unlockSound(player.scene.beats[player.index + 1]);
-  player.next({ autoplay: autoplayOnTurn }); render(); content.scrollTop = 0;
-});
+  player.next({ autoplay: autoplayOnTurn }); render(); follower.endTurn();
+}
+document.getElementById('next').addEventListener('click', turnNext);
 document.getElementById('previous').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  sound.stop(); player.previous(); render(); content.scrollTop = 0;
+  follower.beginTurn({ silent: true }); sound.stop(); player.previous(); render(); follower.endTurn();
 });
 document.getElementById('restart').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  sound.stop(); player.restart(); render(); content.scrollTop = 0;
+  follower.beginTurn(); sound.stop(); player.restart(); render(); follower.endTurn();
 });
 document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.play(); } });
 document.getElementById('pause').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
   if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
-document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { sound.stop(); unlockSound(); player.replay(); } });
+document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
 document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
+document.getElementById('enable-sound').addEventListener('click', () => {
+  if (!preparing && presented && !document.hidden) { unlockSound(player.scene.beats.find(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'))); render(); }
+});
 document.getElementById('mute').addEventListener('click', () => {
   muted = !muted; api.postMessage({ type: 'mute-preference', muted });
   if (!muted && player.phase === 'playing') unlockSound(); render();
 });
 document.getElementById('autoplay').addEventListener('change', event => {
   autoplayOnTurn = event.target.checked;
+  if (!autoplayOnTurn) sceneAutoplay.cancel();
   api.postMessage({ type: 'autoplay-preference', autoplayOnTurn });
   render();
 });
 motion.addEventListener('change', event => player.setReducedMotion(event.matches));
-document.getElementById('show-source').addEventListener('click', () => {
+function showSource() {
   if (preparing || !player.current) return;
+  sceneAutoplay.cancel();
   const range = player.current.sourceRange;
-  player.reset(); render();
+  follower.beginTurn(); player.reset(); render(); follower.endTurn();
   api.postMessage({ type: 'show-source', uri: sourceUri, revision, index: player.index, startOffset: range.startOffset, endOffset: range.endOffset });
-});
-document.addEventListener('visibilitychange', () => { if (document.hidden) player.pause(); render(); });
-window.addEventListener('pagehide', () => { player.dispose(); sound.dispose(); });
+}
+document.getElementById('show-source').addEventListener('click', showSource);
+document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) { sceneAutoplay.leave(); player.pause(); } render(); startSelectedScene(); });
+window.addEventListener('pagehide', () => { follower.dispose(); player.dispose(); sound.dispose(); });
 window.addEventListener('beforeunload', () => sound.dispose());
 window.addEventListener('message', async event => {
   const message = event.data;
+  if (!currentReaderMessage(document.body.dataset.readerInstance, message)) return;
+  if (message?.type === 'show-source-request') { showSource(); return; }
   if (message?.type === 'source-pending' && Number.isInteger(message.revision) && message.revision > incomingRevision) {
     incomingRevision = message.revision;
+    pendingDeparture = sceneAutoplay.departure;
+    sceneAutoplay.cancel(); sound.stop();
+    follower.beginTurn();
     player.reset(); // Stop current timers before the host reads and validates local files.
     preparing = true; render(); return;
   }
@@ -260,8 +314,9 @@ window.addEventListener('message', async event => {
       if (message.epoch > presentationEpoch) {
         presentationEpoch = message.epoch;
         presented = message.visible;
-        if (!presented) player.pause();
-        render();
+        follower.setActive(presented && !document.hidden);
+        if (!presented) { sceneAutoplay.leave(); player.pause(); }
+        render(); startSelectedScene();
       }
       api.postMessage({ type: 'presentation-ack', epoch: message.epoch });
     }
@@ -271,10 +326,13 @@ window.addEventListener('message', async event => {
     muted = message.muted; render(); return;
   }
   if (message?.type === 'autoplay-preference' && typeof message.autoplayOnTurn === 'boolean') {
-    autoplayOnTurn = message.autoplayOnTurn; render(); return;
+    autoplayOnTurn = message.autoplayOnTurn; if (!autoplayOnTurn) sceneAutoplay.cancel(); render(); return;
   }
   if (message?.type !== 'source' || typeof message.source !== 'string' || !Number.isInteger(message.revision) || message.revision < incomingRevision || message.revision <= revision) return;
+  const departure = message.revision === incomingRevision ? pendingDeparture : sceneAutoplay.departure;
   incomingRevision = message.revision;
+  sceneAutoplay.cancel();
+  follower.beginTurn();
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
   preparing = true; render();
   const prepared = Object.create(null);
@@ -292,9 +350,15 @@ window.addEventListener('message', async event => {
   for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Image ${src}: ${entry.error}`);
   const first = !sourceUri;
   sourceUri = message.uri;
-  player.update(parseScene(message.source));
+  pacingWarning = message.pacingWarning;
+  pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
+  player.update(parseScene(message.source, { prosePacing: message.prosePacing === true }));
   const saved = api.getState();
-  if (Number.isInteger(message.targetOffset)) {
+  if (message.sceneStart === true) {
+    player.index = 0; player.reset();
+    needsAudioGesture = player.scene.beats.some(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'));
+    sceneAutoplay.arm(revision, autoplayOnTurn && message.sceneAutoplay === true, departure);
+  } else if (Number.isInteger(message.targetOffset)) {
     const selected = beatAtOffset(player.scene.beats.map(beat => beat.sourceRange), message.targetOffset);
     if (selected >= 0) { player.index = selected; player.reset(); }
   } else if (first && saved?.sourceUri === sourceUri && Number.isInteger(saved.index)) {
@@ -305,5 +369,7 @@ window.addEventListener('message', async event => {
   }
   preparing = false;
   render();
+  follower.endTurn();
+  startSelectedScene();
 });
-api.postMessage({ type: 'ready' });
+api.postMessage({ type: 'ready', instance: document.body.dataset.readerInstance });

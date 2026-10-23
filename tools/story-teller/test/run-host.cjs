@@ -22,6 +22,25 @@ async function until(fn, timeout = 60000) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const port = server.address().port;
   await new Promise(resolve => server.close(resolve));
+  let importProject;
+  if (['import', 'prose', 'navigation'].includes(process.env.STORY_TELLER_HOST_SCOPE)) {
+    importProject = path.join(directory, 'fictional-project');
+    await fs.mkdir(path.join(importProject, 'scenes'), { recursive: true });
+    await fs.writeFile(path.join(importProject, 'scenes', 'The Signal.md'), process.env.STORY_TELLER_HOST_SCOPE === 'prose'
+      ? '---\ntitle: Lantern\n---\nFirst paragraph.\n\nSecond paragraph.\n\nThird paragraph.\n---\nLast beat.\n'
+      : '---\ntitle: Lantern\n---\nFictional prose.\n');
+    await fs.writeFile(path.join(importProject, 'story-teller.project.json'), JSON.stringify({
+      schema: 'story-teller-project', version: 1, title: 'Lantern', ...(process.env.STORY_TELLER_HOST_SCOPE === 'prose' ? { settings: { prosePacing: 'on' } } : {}),
+      parts: [{ id: 'p', title: 'First', scenes: ['s'] }],
+      scenes: [{ id: 's', partId: 'p', label: '1.1', title: 'The Signal', file: 'scenes/The Signal.md' }]
+    }));
+  }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'navigation') {
+    await fs.cp(path.join(root,'samples/assets'),path.join(importProject,'assets'),{recursive:true});
+    await fs.writeFile(path.join(importProject,'scenes/The Signal.md'), 'Signal opening.\n\n```typeout\n@format yaml\n@sound modem\n@speed 10\n\nstatus: ' + 'observing the fictional harbour '.repeat(10) + '\n```\n---\nSignal last beat.');
+    await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
+    await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
+  }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
   const vsix = process.env.STORY_TELLER_VSIX;
@@ -45,7 +64,7 @@ async function until(fn, timeout = 60000) {
   const code = spawn(executable, [
     `--user-data-dir=${path.join(directory, 'profile')}`, `--extensions-dir=${path.join(directory, 'extensions')}`,
     `--extensionDevelopmentPath=${developmentPath}`, `--extensionTestsPath=${path.join(__dirname, 'host.cjs')}`,
-    `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window'
+    `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window', ...(importProject ? [importProject] : [])
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
   let id = 0;
@@ -92,6 +111,326 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'navigation') {
+      const main = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item=>item.type==='page');
+      const ws=new WebSocket(main.webSocketDebuggerUrl); await new Promise(resolve=>{ws.onopen=resolve;});
+      let mainId=0; const replies=new Map();
+      ws.onmessage=event=>{const m=JSON.parse(event.data), done=replies.get(m.id);if(done){replies.delete(m.id);m.error?done.reject(Error(JSON.stringify(m.error))):done.resolve(m.result);}};
+      const mainSend=(method,params)=>new Promise((resolve,reject)=>{const id=++mainId;replies.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});
+      const workbench=async expression=>{const result=await mainSend('Runtime.evaluate',{expression,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.text);return result.result.value;};
+      const key=async(name,modifiers=0,text)=>{const code=name.length===1?'Key'+name.toUpperCase():name;const virtual=name.length===1?name.toUpperCase().charCodeAt(0):({Enter:13,Escape:27,Tab:9}[name]);for(const type of ['keyDown','keyUp'])await mainSend('Input.dispatchKeyEvent',{type,key:name,code,modifiers,windowsVirtualKeyCode:virtual,nativeVirtualKeyCode:virtual,...(text&&type==='keyDown'?{text}:{})});};
+      const chord=async letter=>{await mainSend('Page.bringToFront',{});await sleep(150);await key('k',2);await sleep(120);await key(letter.toUpperCase(),8);};
+      const snapshot=async()=>{await request('snapshot');return JSON.parse(await fs.readFile(path.join(directory,'snapshot.json'),'utf8'));};
+      const source='<!-- beat: Opening -->\nOpening paragraph.\n\nMore opening prose.\n---\n<!-- beat: Turn -->\nA second beat.\n\nLast paragraph.';
+      await request('edit',source);await request('focus-at',undefined,{start:source.length});
+      await chord('b');await until(()=>workbench("document.querySelector('.quick-input-widget')?.checkVisibility() && document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));
+      await mainSend('Input.insertText',{text:'Keyboard turn'});await key('Enter',0,'\r');
+      await until(async()=>(await snapshot()).text.includes('<!-- beat: Keyboard turn -->'));
+      await key('z',2);assert.equal((await snapshot()).text,source,'one Undo reverses the insertion');
+      await request('focus-at',undefined,{start:source.length});await chord('b');await until(()=>workbench("document.querySelector('.quick-input-widget')?.checkVisibility() && document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));await key('Escape');assert.equal((await snapshot()).text,source);
+      await until(()=>workbench("!document.querySelector('.quick-input-widget')?.checkVisibility()"));
+      await mainSend('Input.insertText',{text:'x'});await until(async()=>(await snapshot()).text===source+'x');assert.equal((await snapshot()).text,source+'x','cancelling returns to writing');await key('z',2);assert.equal((await snapshot()).text,source);
+      await request('focus-at',undefined,{start:source.indexOf('A second')});await chord('p');
+      await until(async()=>/Beat 2 of 2.*ready/.test(await locator('#status').textContent()));
+      await chord('s');await until(async()=>{await request('active-source-state');const state=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));return state.uri===path.join(directory,'scene.md')&&state.line===5;});
+      await chord('c');
+      const lineNumbers=()=>workbench("[...document.querySelectorAll('.editor-group-container:first-child .line-numbers')].filter(e=>e.checkVisibility()).map(e=>Number(e.textContent))");
+      await until(async()=>!(await lineNumbers()).includes(9));await chord('e');await until(async()=>(await lineNumbers()).includes(9));
+      await request('open-outline');
+      const select=async title=>{
+        const rect=await until(()=>workbench(`(()=>{const row=[...document.querySelectorAll('.monaco-list-row')].find(e=>e.innerText.includes(${JSON.stringify(title)}));if(!row)return null;const r=row.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`));
+        for(const type of ['mousePressed','mouseReleased'])await mainSend('Input.dispatchMouseEvent',{type,x:rect.x,y:rect.y,button:'left',clickCount:1});
+      };
+      const events=[];const receive=socket.onmessage;socket.onmessage=event=>{const m=JSON.parse(event.data);if(m.method?.startsWith('WebAudio.'))events.push({method:m.method,params:m.params});receive(event);};await send('WebAudio.enable',{});
+      await select('1.1 The Signal');
+      await until(async()=>(await beat.textContent())?.includes('Signal opening.'));
+      console.log('scene arrival',await evaluate("({status:doc.getElementById('status').textContent,hidden:doc.hidden,autoplay:doc.getElementById('autoplay').checked,replayDisabled:doc.getElementById('replay').disabled})"));
+      await until(async()=>await evaluate("doc.querySelector('.typeout-progress')?.textContent.length>2"),10000);
+      assert.equal(await evaluate('doc.scrollingElement.scrollTop'),0);assert.match(await locator('#status').textContent(),/Beat 1 of 2.*playing/);
+      assert.equal(await evaluate("doc.getElementById('enable-sound').hidden"),false,'outline autoplay needs an explicit webview audio gesture');
+      assert.equal(events.filter(event=>event.method==='WebAudio.contextCreated').length,0,'outline autoplay does not create an audio context without a reader gesture');
+      await evaluate("doc.getElementById('enable-sound').click()",true);
+      await until(()=>events.some(e=>e.method==='WebAudio.nodesConnected'));
+      const progress=await locator('.typeout-progress').textContent();await sleep(300);assert.ok((await locator('.typeout-progress').textContent()).length>progress.length);
+      const disconnected=events.filter(e=>e.method==='WebAudio.nodesDisconnected').length;
+      await select('1.2 The Answer');
+      await until(async()=>(await beat.textContent())?.includes('Answer opening.'));
+      await until(()=>events.filter(e=>e.method==='WebAudio.nodesDisconnected').length>disconnected);
+      assert.equal(await evaluate('doc.scrollingElement.scrollTop'),0);assert.match(await locator('#status').textContent(),/Beat 1 of 2.*playing/);
+      await evaluate("doc.getElementById('next').click()");
+      await until(async()=>await evaluate("doc.querySelector('.story-image')?.naturalWidth===360"));
+      await evaluate("doc.getElementById('previous').click()");assert.match(await locator('#status').textContent(),/completed/);assert.equal(await evaluate('doc.scrollingElement.scrollTop'),0);
+      await request('active-source-state');let state=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));assert.equal(state.previews.length,1);assert.match(state.uri,/The Answer.md$/);
+      await evaluate("(doc.getElementById('autoplay').checked=false,doc.getElementById('autoplay').dispatchEvent(new Event('change')))");await sleep(150);
+      await select('1.1 The Signal');await until(async()=>(await beat.textContent())?.includes('Signal opening.'));assert.match(await locator('#status').textContent(),/ready/);assert.equal(await locator('.typeout-progress').count(),0);
+      await evaluate("(doc.getElementById('autoplay').checked=true,doc.getElementById('autoplay').dispatchEvent(new Event('change')))");await sleep(150);
+      await request('rapid-scenes',undefined,{projectRoot:importProject});await until(async()=>(await beat.textContent())?.includes('Answer opening.'));await sleep(400);assert.doesNotMatch(await beat.textContent(),/Signal opening/);
+      await request('hide-preview');await until(async()=>/paused/.test(await locator('#status').textContent()));
+      await request('return-preview-tab');
+      await until(async()=>!(await locator('#pause').isDisabled()));assert.match(await locator('#status').textContent(),/paused/);
+      const held=await beat.textContent();await sleep(300);assert.equal(await beat.textContent(),held);
+      assert.equal((await snapshot()).text,source,'outline reading preserves the unsaved authoring buffer');
+      await request('default-bindings');
+      const bindings=await fs.readFile(path.join(directory,'default-bindings.txt'),'utf8');
+      // VS Code's generated defaults include extension contributions: confirm
+      // these chords resolve to Story Teller rather than another installed command.
+      const conflicts=bindings.split('\n').filter(line=>/ctrl\+k shift\+[bpcse]"/.test(line));
+      assert.equal(conflicts.length,5,JSON.stringify(conflicts));assert.ok(conflicts.every(line=>line.includes('storyTeller.')));
+      await fs.writeFile(path.join(directory,'navigation-evidence.json'),JSON.stringify({conflicts,progress,events:events.map(e=>e.method),state},null,2));
+      ws.close();console.log(`PASS: native keyboard chords/title/cancel/Undo/folding/source, outline autoplay/on-off/latest scene, local asset, audio graph cleanup; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'follow') {
+      const prose = Array.from({ length: 5 }, (_, i) => `Paragraph ${i + 1}. The fictional harbour wall stretched past the lamps, past the ferry, and into the dark water where Mara waited for an answer.`).join('\n\n');
+      const chat = ['```chat', '@viewer Mara', 'Mara: I can see the lantern from here.', 'Ivo: Follow the light along the wall.', 'Mara: The path is narrow.', 'Ivo: There is room beside the steps.', 'Mara: I am nearly there.', 'Ivo: I will wait by the gate.', '```'].join('\n');
+      const note = ['```typeout', '@format annotation', '@sound none', '@speed 40', '', '**A note at the gate.** The painted letters had worn thin, but the message remained legible.', '', '- Keep the lantern low.', '- Wait for the tide.', '', '> The last line crossed the whole page and ended beyond the crease. ' + 'The lamps marked each turn along the wall. '.repeat(8), '```'].join('\n');
+      const source = `---\nstory_teller_prose_pacing: on\n---\n${prose}\n\n${chat}\n\n![Harbour portrait](assets/harbour-portrait.png)\n\n*Caption: The landing.*\n\n${note}\n\n@pause 250ms\n---\nA short second beat.`;
+      await request('edit', source);
+      await until(async () => (await beat.textContent())?.includes('Paragraph 1.'));
+      const metrics = () => evaluate("(() => { const d=doc, w=d.defaultView, r=d.scrollingElement, last=d.querySelector('#beat').lastElementChild; return {top:r.scrollTop, height:w.innerHeight, latest:last?.getBoundingClientRect().bottom, follow:!d.getElementById('follow-story').hidden, phase:d.getElementById('status').textContent}; })()");
+      assert.equal((await metrics()).top, 0);
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await beat.textContent())?.includes('Paragraph 3.'));
+      const proseProgress = await metrics();
+      await until(async () => (await evaluate("doc.querySelectorAll('.chat li').length")) >= 2);
+      await until(async () => (await metrics()).top > 30);
+      await until(async () => { const m=await metrics(); return m.latest <= m.height + 20; });
+      const firstFollow = await metrics();
+      assert.ok(firstFollow.latest <= firstFollow.height + 20, JSON.stringify(firstFollow));
+      console.log('follow native: first overflow visible');
+      await send('Input.dispatchMouseEvent', { type:'mouseWheel', x:180, y:350, deltaY:-350, deltaX:0 });
+      // CDP targets the outer webview iframe; ensure the inner reading document
+      // receives the wheel intent and movement before asserting its state.
+      await evaluate("(doc.dispatchEvent(new WheelEvent('wheel',{deltaY:-350,bubbles:true})), doc.defaultView.scrollBy({top:-350,behavior:'instant'}))");
+      await until(async () => (await metrics()).top < firstFollow.top - 20);
+      await until(async () => (await metrics()).follow);
+      const reread = await metrics();
+      const before = await beat.textContent();
+      await sleep(1400);
+      const after = await beat.textContent();
+      assert.notEqual(after, before, 'playback continues during rereading');
+      assert.ok((await metrics()).top <= reread.top + 2, 'following must not drag a rereading reader');
+      console.log('follow native: rereading remains stationary');
+      const focused = await evaluate("(document.getElementById('active-frame').focus(), doc.getElementById('follow-story').focus(), doc.activeElement?.id)", true);
+      assert.equal(focused, 'follow-story');
+      await send('Input.dispatchKeyEvent', { type:'keyDown', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, nativeVirtualKeyCode:13, text:'\r' });
+      await send('Input.dispatchKeyEvent', { type:'keyUp', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, nativeVirtualKeyCode:13 });
+      await until(async () => !(await metrics()).follow);
+      await until(async () => { const m = await metrics(); return m.latest <= m.height + 20 && m.top > reread.top + 20; });
+      console.log('follow native: resumed to latest');
+      const chatProgress = await metrics();
+      await until(async () => (await evaluate("doc.querySelector('.beat-ending button')?.textContent")) === 'Next →');
+      await until(async () => { const m=await metrics(); return m.latest <= m.height + 20; });
+      const completed = await metrics();
+      console.log('follow native: completed control visible');
+      await request('hide-preview');
+      await sleep(180);
+      await request('show-preview');
+      await until(async () => (await locator('#status').textContent())?.includes('completed'));
+      await until(async () => !(await locator('#replay').isDisabled()));
+      console.log('follow native: hide/return positions', completed.top, (await metrics()).top);
+      assert.ok(Math.abs((await metrics()).top - completed.top) <= 2, 'hide/return preserves reading position');
+      await evaluate("doc.getElementById('replay').click()");
+      assert.equal((await metrics()).top, 0, 'Replay starts at the top');
+      const partialState = () => evaluate("(() => { const d=doc, p=d.querySelector('.typeout-progress'), s=d.querySelector('.typeout-surface'), r=d.scrollingElement; if (!p) return null; const shown=[...p.querySelectorAll('[data-story-segment] > span:first-child')], last=shown.filter(e=>e.firstChild?.length).at(-1)?.firstChild; let visibleBottom=null; if(last){ const range=d.createRange();range.setStart(last,last.length-1);range.setEnd(last,last.length);visibleBottom=range.getBoundingClientRect().bottom; } return {count:shown.reduce((n,e)=>n+e.textContent.length,0), top:r.scrollTop, visibleBottom, reserveBottom:s.getBoundingClientRect().bottom, height:d.defaultView.innerHeight}; })()");
+      const partial = await until(async () => { const p=await partialState(); return p?.count > 12 && p.count < 200 && p.visibleBottom <= p.height + 20 && p; });
+      assert.ok(partial.reserveBottom > partial.height, JSON.stringify(partial));
+      console.log('follow native: partial type-out captured without following its reserve');
+      await evaluate("doc.getElementById('reveal').click()");
+      await until(async () => (await evaluate("doc.querySelector('.beat-ending button')?.textContent")) === 'Next →');
+      await evaluate("doc.documentElement.style.width='320px'");
+      const narrow = await evaluate("(() => { const d=doc, a=d.getElementById('beat'); return {width:a.clientWidth, overflow:a.scrollWidth-a.clientWidth}; })()");
+      assert.ok(narrow.width <= 320 && narrow.overflow <= 1, JSON.stringify(narrow));
+      await evaluate("doc.getElementById('next').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 2 of 2'));
+      console.log('follow native: next beat selected');
+      assert.equal((await metrics()).top, 0);
+      await evaluate("doc.getElementById('previous').click()");
+      const previous = await metrics();
+      assert.equal(previous.top, 0); assert.match(previous.phase, /completed/);
+      assert.equal(previous.follow, true, 'silent Previous offers Follow without jumping');
+      await evaluate("doc.scrollingElement.scrollTop=doc.scrollingElement.scrollHeight");
+      await until(async () => !(await metrics()).follow);
+      assert.ok((await metrics()).top > 0, 'manual return to the bottom resumes following');
+      await evaluate("doc.getElementById('next').click()");
+      await evaluate("doc.getElementById('previous').click()");
+      assert.equal((await metrics()).top, 0);
+      await sleep(180);
+      assert.equal((await metrics()).top, 0, 'rapid navigation leaves no stale follow work');
+      await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });
+      await until(async () => await evaluate("doc.defaultView.matchMedia('(prefers-reduced-motion: reduce)').matches"));
+      await evaluate("doc.getElementById('follow-story').click()");
+      await until(async () => { const m=await metrics(); return m.top > 0 && m.latest <= m.height + 20; });
+      await send('Emulation.setEmulatedMedia', { features: [] });
+      await evaluate("doc.getElementById('restart').click()");
+      assert.equal((await metrics()).top, 0); assert.match((await metrics()).phase, /ready/);
+      await fs.writeFile(path.join(directory, 'follow-temporal.json'), JSON.stringify({ proseProgress, firstFollow, reread, chatProgress, partial, completed, previous, narrow }, null, 2));
+      console.log(`PASS: ${vsix ? 'installed VSIX' : 'Development Host'} scroll-follow temporal prose/chat/image/type-out, rereading, keyboard Follow, narrow view and silent Previous; isolated profile/log: ${directory}`);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'end-button') {
+      const source = [
+        'Opening prose.', '', '@pause 400ms', '---',
+        '```chat', 'Mara: The lantern is lit.', '```', '---',
+        '![Harbour](assets/harbour-landscape.webp)', '---',
+        '```typeout', '@format yaml', '@sound none', '@speed 120', '', 'status: awake', '```', '---',
+        'Closing prose.'
+      ].join('\n');
+      await request('edit', source);
+      await until(async () => (await beat.textContent())?.includes('Opening prose.'));
+      const ending = () => evaluate("doc.querySelector('.beat-ending')?.textContent || ''");
+      const state = () => evaluate("({status:doc.getElementById('status').textContent, ending:doc.querySelector('.beat-ending')?.textContent || '', last:doc.getElementById('beat').lastElementChild?.className})");
+      assert.equal(await ending(), '');
+      await evaluate("(document.getElementById('active-frame').focus(), doc.getElementById('play').focus(), doc.getElementById('play').click())", true);
+      const focusBeforeCompletion = await evaluate("doc.activeElement?.id || ''");
+      await sleep(150); assert.equal(await ending(), '');
+      await until(async () => (await ending()).includes('Next'));
+      assert.equal(await evaluate("doc.activeElement?.id || ''"), focusBeforeCompletion, 'completion must not move focus');
+      assert.equal((await state()).last, 'beat-ending');
+      assert.equal(await evaluate("doc.getElementById('beat').children[0]?.className"), 'prose');
+      await evaluate("doc.getElementById('autoplay').click()");
+      await evaluate("doc.querySelector('.beat-ending button').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 2 of 5'));
+      assert.equal(await ending(), '', 'autoplay off leaves destination ready');
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await ending()).includes('Next'));
+      assert.equal(await evaluate("doc.getElementById('beat').children[0]?.className"), 'chat');
+      await evaluate("(document.getElementById('active-frame').focus(), doc.querySelector('.beat-ending button').focus())", true);
+      await send('Input.dispatchKeyEvent', { type:'keyDown', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, nativeVirtualKeyCode:13, text:'\r' });
+      await send('Input.dispatchKeyEvent', { type:'keyUp', key:'Enter', code:'Enter', windowsVirtualKeyCode:13, nativeVirtualKeyCode:13 });
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 3 of 5'));
+      assert.equal(await ending(), '');
+      await evaluate("doc.getElementById('autoplay').click()");
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await ending()).includes('Next'));
+      assert.equal(await evaluate("doc.getElementById('beat').children[0]?.className"), 'story-figure');
+      await evaluate("doc.documentElement.style.width='320px'");
+      const bounds = await evaluate("(() => { const area=doc.getElementById('beat'), button=doc.querySelector('.beat-ending button'); return { overflow:area.scrollWidth-area.clientWidth, buttonRight:button.getBoundingClientRect().right-area.getBoundingClientRect().right, last:area.lastElementChild?.className }; })()");
+      assert.ok(bounds.overflow <= 1 && bounds.buttonRight <= 1 && bounds.last === 'beat-ending', JSON.stringify(bounds));
+      await sleep(420); // A separate deliberate turn after the keyboard activation.
+      await evaluate("doc.querySelector('.beat-ending button').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 4 of 5'));
+      await until(async () => (await ending()).includes('Next'));
+      assert.match(await beat.textContent(), /status: awake/);
+      assert.match(await evaluate("doc.getElementById('beat').children[0]?.className"), /typeout/);
+      await evaluate("doc.getElementById('replay').click()");
+      assert.equal(await ending(), '', 'Replay hides button until completion');
+      await until(async () => (await ending()).includes('Next'));
+      await evaluate("doc.getElementById('previous').click()");
+      assert.equal(await ending(), 'Next →', 'silent Previous exposes completed state');
+      await sleep(420);
+      await evaluate("(() => { const button=doc.querySelector('.beat-ending button'); button.click(); button.click(); })()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 4 of 5'));
+      assert.ok((await locator('#status').textContent()).includes('Beat 4 of 5'), 'double activation of one button cannot skip a beat');
+      await until(async () => (await ending()).includes('Next'));
+      await sleep(420);
+      await evaluate("doc.querySelector('.beat-ending button').click()");
+      await until(async () => (await locator('#status').textContent())?.includes('Beat 5 of 5'));
+      await until(async () => (await ending()) === 'End of scene');
+      assert.equal(await evaluate("doc.querySelectorAll('.beat-ending button').length"), 0);
+      await evaluate("doc.getElementById('restart').click()");
+      assert.equal(await ending(), '');
+      await evaluate("doc.getElementById('play').click()");
+      await until(async () => (await ending()).includes('Next'));
+      await request('edit', source.replace('Opening prose.', 'Edited opening prose.'));
+      await until(async () => (await beat.textContent())?.includes('Edited opening prose.'));
+      assert.equal(await ending(), '', 'source edit resets button');
+      console.log(`PASS: ${vsix ? 'installed VSIX' : 'Development Host'} end-of-beat flow, keyboard, silent return, replay, source edit, narrow image and rapid click; isolated profile/log: ${directory}`);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'review') {
+      await request('show-import-review');
+      const reviewTarget = await until(async () => (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json())
+        .find(item => item.type === 'iframe' && item.url.includes('murmurationpress.story-teller') && item.id !== target.id));
+      const receive = socket.onmessage;
+      socket.close(); socket = new WebSocket(reviewTarget.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; }); socket.onmessage = receive;
+      const state = () => evaluate("(() => { const body=doc.body; const main=doc.querySelector('main'); const foot=doc.querySelector('footer'); return { text:body.innerText, focus:doc.activeElement?.id, buttons:[...foot.querySelectorAll('button')].map(b=>({id:b.id,disabled:b.disabled})), flex:doc.defaultView.getComputedStyle(body).display, overflow:doc.defaultView.getComputedStyle(main).overflowY, footer:doc.defaultView.getComputedStyle(foot).position }; })()");
+      const snapshot = await until(async () => { const value = await state(); return value?.text?.includes('The signal') && value; });
+      assert.equal(snapshot.focus, 'back'); assert.equal(snapshot.flex, 'flex'); assert.equal(snapshot.overflow, 'auto'); assert.equal(snapshot.footer, 'sticky');
+      assert.deepEqual(snapshot.buttons.map(item => item.id), ['back', 'continue', 'cancel']);
+      assert.match(snapshot.text, /Excluded draft/); assert.match(snapshot.text, /Unsupported SVG/);
+      await send('Input.dispatchKeyEvent', { type:'keyDown', key:'Tab', code:'Tab' });
+      await send('Input.dispatchKeyEvent', { type:'keyUp', key:'Tab', code:'Tab' });
+      assert.equal((await state()).focus, 'continue');
+      await evaluate("doc.getElementById('cancel').click()");
+      await until(async () => { try { return JSON.parse(await fs.readFile(path.join(directory, 'review-result.json'), 'utf8')).result === 'cancel'; } catch { return false; } });
+      console.log(`PASS: native import review panel keyboard/fixed controls; isolated profile/log: ${directory}`);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'prose') {
+      await request('open-project-scene', undefined, { projectRoot: importProject });
+      await request('preview-project-scene');
+      assert.equal((await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(item=>item.type==='iframe' && item.url.includes('murmurationpress.story-teller')).length, 1, 'outline navigation reuses the reader');
+      await until(async () => (await beat.textContent())?.includes('First paragraph.'));
+      assert.doesNotMatch(await beat.textContent(), /Second paragraph/);
+      assert.match(await locator('#status').textContent(), /prose pacing On \(book\)/);
+      const captures = [{ at: Date.now(), text: await beat.textContent() }];
+      await locator('#play').click();
+      await sleep(420); captures.push({ at: Date.now(), text: await beat.textContent() });
+      assert.doesNotMatch(captures[1].text, /Second paragraph/);
+      await until(async () => (await beat.textContent()).includes('Second paragraph.'));
+      captures.push({ at: Date.now(), text: await beat.textContent() });
+      assert.doesNotMatch(captures[2].text, /Third paragraph/);
+      await until(async () => (await beat.textContent()).includes('Third paragraph.'));
+      captures.push({ at: Date.now(), text: await beat.textContent() });
+      assert.ok(captures[2].at - captures[0].at >= 800, JSON.stringify(captures));
+      assert.ok(captures[3].at - captures[2].at >= 800, JSON.stringify(captures));
+      await request('start-scene-pacing');
+      const main = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item => item.type === 'page');
+      const ws = new WebSocket(main.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+      const run = (expression, id) => new Promise((resolve, reject) => { ws.onmessage = event => { const value = JSON.parse(event.data); if (value.id === id) value.error ? reject(Error(JSON.stringify(value.error))) : resolve(value.result?.result?.value); }; ws.send(JSON.stringify({ id, method: 'Runtime.evaluate', params: { expression, returnByValue: true } })); });
+      await until(async () => (await run("document.body.innerText.includes('Scene prose pacing')", 1001)));
+      const pickerText = await run("document.body.innerText.slice(-1800)", 1002);
+      assert.match(pickerText, /Inherit/); assert.match(pickerText, /Off/);
+      await run("Array.from(document.querySelectorAll('.quick-input-list .monaco-list-row')).find(row=>row.textContent.includes('Off'))?.click()", 1003);
+      await until(async () => {
+        await request('snapshot-active');
+        const snapshot = JSON.parse(await fs.readFile(path.join(directory, 'active-snapshot.json'), 'utf8'));
+        return snapshot.text?.includes('story_teller_prose_pacing: off') && snapshot.dirty;
+      }, 10000);
+      await until(async () => (await locator('#status').textContent())?.includes('prose pacing Off (scene)'));
+      assert.match(await beat.textContent(), /Third paragraph/);
+      await request('start-book-pacing');
+      await until(async () => (await run("document.body.innerText.includes('Book prose pacing')", 1011)));
+      const bookPickerText = await run("document.body.innerText.slice(-1800)", 1012);
+      assert.match(bookPickerText, /effective off from scene/);
+      await run("Array.from(document.querySelectorAll('.quick-input-list .monaco-list-row')).find(row=>row.textContent.includes('Off'))?.click()", 1013);
+      await until(async () => JSON.parse(await fs.readFile(path.join(importProject, 'story-teller.project.json'), 'utf8')).settings.prosePacing === 'off');
+      await until(async () => (await locator('#status').textContent())?.includes('prose pacing Off (scene)'));
+      await fs.writeFile(path.join(directory, 'prose-temporal.json'), JSON.stringify({ captures, pickerText, bookPickerText }, null, 2));
+      console.log(`PASS: ${vsix ? 'installed VSIX' : 'Extension Development Host'} paragraph pacing and scene override in VS Code; isolated profile/log: ${directory}`);
+      ws.close(); await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'import') {
+      await request('open-outline');
+      const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+      const main = targets.find(item => item.type === 'page');
+      const ws = new WebSocket(main.webSocketDebuggerUrl);
+      await new Promise((resolve, reject) => { ws.onopen = resolve; ws.onerror = reject; });
+      await sleep(1300);
+      const snapshot = await new Promise((resolve, reject) => { const id = 999; ws.onmessage = e => { const r=JSON.parse(e.data); if(r.id===id) r.error ? reject(Error(JSON.stringify(r.error))) : resolve(r.result.result.value); }; ws.send(JSON.stringify({ id, method:'Runtime.evaluate', params:{ expression:'document.body.innerText.slice(0,6000)', returnByValue:true }})); });
+      assert.match(snapshot, /Part–Scene Outline/);
+      assert.match(snapshot, /FirstPart 1/);
+      assert.match(snapshot, /1\.1 The Signal/);
+      await request('open-project-scene', undefined, { projectRoot: importProject });
+      const opened = JSON.parse(await fs.readFile(path.join(directory, 'project-navigation.json'), 'utf8'));
+      assert.equal(opened.active, path.join(importProject, 'scenes', 'The Signal.md'));
+      await request('preview-project-scene');
+      const previewed = JSON.parse(await fs.readFile(path.join(directory, 'project-preview.json'), 'utf8'));
+      assert.ok(previewed.titles.some(title => title.includes('The%20Signal.md') || title.includes('The Signal.md')), JSON.stringify(previewed));
+      await request('start-import');
+      await sleep(1300);
+      console.log(`PASS: actual VS Code ${vsix ? 'installed VSIX' : 'Extension Development Host'} outline and scene navigation; system folder chooser invoked (picker interaction remains manual). Profile: ${directory}`);
+      ws.close();
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
+      return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'annotation') {
       const source = [
         'Before [[place|the inlet]].', '---',
@@ -308,6 +647,7 @@ async function until(fn, timeout = 60000) {
               const editor = Array.from(document.querySelectorAll('.monaco-editor.focused'))
                 .find(candidate => candidate.getBoundingClientRect().width > 100);
               return editor ? Array.from(editor.querySelectorAll('.margin-view-overlays .line-numbers'))
+                .filter(line => { const rect=line.getBoundingClientRect(); return rect.height > 0 && rect.width > 0 && getComputedStyle(line).visibility !== 'hidden'; })
                 .map(line => Number(line.textContent)).filter(Number.isInteger) : [];
             })()`, returnByValue: true
           } }));

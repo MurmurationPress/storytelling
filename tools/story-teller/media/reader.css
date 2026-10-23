@@ -8,6 +8,11 @@ button:disabled { opacity: .45; cursor: default; }
 :focus-visible { outline: 2px solid var(--vscode-focusBorder, #6bf); outline-offset: 2px; }
 #status { font-size: .85rem; margin-left: auto; }
 #beat { box-sizing: border-box; width: 100%; max-width: 44rem; margin: 0 auto; padding: 1rem 1.5rem 3rem; overflow-wrap: anywhere; }
+.beat-ending { display: flex; justify-content: flex-end; align-items: center; margin-top: 2rem; padding-top: .8rem; border-top: 1px solid var(--vscode-panel-border, #888); }
+.beat-ending button { max-width: 100%; }
+.end-of-scene { margin: 0; color: var(--vscode-descriptionForeground, #aaa); font-size: .9rem; }
+#follow-story { position: fixed; z-index: 2; right: 1rem; bottom: 1rem; box-shadow: 0 2px 8px #0005; }
+#follow-story[hidden] { display: none; }
 #warnings { white-space: pre-wrap; padding: 0 1rem; color: var(--vscode-editorWarning-foreground, #da8); font-size: .85rem; }
 #warnings:empty { display: none; }
 .chat { list-style: none; padding: 0; margin: 1.5rem 0; }

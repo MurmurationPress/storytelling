@@ -1,0 +1,230 @@
+'use strict';
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const YAML = require('yaml');
+const { inspectStructure } = require('./structure.cjs');
+const { inside, FORMATS } = require('./media.cjs');
+const VERSION = 1;
+const sha = value => crypto.createHash('sha256').update(value).digest('hex');
+const slash = value => value.split(path.sep).join('/');
+const titleOf = (data, file) => typeof data.title === 'string' && data.title.trim() ? data.title.trim() : path.basename(file, '.md');
+const normLink = value => typeof value === 'string' ? value.replace(/^\[\[|\]\]$/g, '').replace(/\\/g, '/').replace(/\.md$/i, '') : null;
+const matchesParent = (link, file) => { const target = normLink(link); const stem = slash(file).replace(/\.md$/i, ''); return Boolean(target) && (stem === target || stem.endsWith(`/${target}`)); };
+const cleanName = value => value.normalize('NFKC').replace(/[\\/:*?"<>|\x00-\x1f]/g, '-').replace(/^\.+/, '').trim().slice(0, 70) || 'untitled';
+function parseMeta(source, file) {
+  const s = inspectStructure(source);
+  if (!s.frontmatter?.closed) throw Error(`${file}: missing or unclosed YAML frontmatter`);
+  const raw = source.slice(s.lines[1].start, s.lines[s.frontmatter.end - 1].start);
+  const doc = YAML.parseDocument(raw, { schema: 'core', customTags: [], resolveKnownTags: false, uniqueKeys: true, merge: false, maxAliasCount: 0 });
+  if (doc.errors.length || doc.warnings.length || !YAML.isMap(doc.contents)) throw Error(`${file}: malformed or unsupported YAML frontmatter: ${doc.errors[0]?.message || doc.warnings[0]?.message || 'expected mapping'}`);
+  return { data: doc.toJS({ maxAliasCount: 0 }), body: source.slice(s.lines[s.frontmatter.end]?.start ?? source.length), source };
+}
+async function scan(folder) {
+  const result = [];
+  async function walk(dir) {
+    for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
+      if (entry.name.startsWith('.')) continue;
+      const file = path.join(dir, entry.name);
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory()) await walk(file);
+      else if (entry.isFile() && entry.name.toLowerCase().endsWith('.md')) {
+        const source = await fs.readFile(file, 'utf8');
+        try { result.push({ file, ...parseMeta(source, file) }); }
+        catch (error) { result.push({ file, error: error.message }); }
+      }
+    }
+  }
+  await walk(folder);
+  const sibling = `${folder}.md`;
+  try {
+    if ((await fs.lstat(sibling)).isSymbolicLink()) throw Error('sibling book note is a symlink and needs review');
+    const source = await fs.readFile(sibling, 'utf8'); result.push({ file: sibling, ...parseMeta(source, sibling) });
+  } catch (error) { if (error.code !== 'ENOENT') result.push({ file: sibling, error: error.message }); }
+  return result;
+}
+function compareValue(a, b) {
+  if (typeof a !== typeof b) throw Error('mixed order value types');
+  if (typeof a === 'number' && Number.isFinite(a) && Number.isFinite(b)) return a - b;
+  if (typeof a !== 'string' || !a.trim() || !b.trim()) throw Error('order values must be nonempty strings or finite numbers');
+  if (/^[0-9A-Z]{10}$/.test(a) && /^[0-9A-Z]{10}$/.test(b)) return a < b ? -1 : a > b ? 1 : 0;
+  const chunks = text => text.match(/\d+|\D+/g) || [];
+  const left = chunks(a), right = chunks(b);
+  for (let i = 0; i < Math.min(left.length, right.length); i++) {
+    const ln = /^\d+$/.test(left[i]), rn = /^\d+$/.test(right[i]);
+    if (ln !== rn) throw Error('conflicting structured order values');
+    if (ln) { const d = BigInt(left[i]) - BigInt(right[i]); if (d) return d < 0n ? -1 : 1; }
+    else if (left[i] !== right[i]) return left[i] < right[i] ? -1 : 1;
+  }
+  return left.length - right.length;
+}
+function orderGroup(items, key, errors, group) {
+  const values = new Map();
+  for (const item of items) {
+    const value = item.data[key];
+    if (value === undefined || value === null || value === '') { errors.push(`${group}: ${item.file} has no ${key}`); continue; }
+    if (key === 'manuscript_order_key' && (typeof value !== 'string' || !/^[0-9A-Z]{10}$/.test(value))) errors.push(`${group}: ${item.file} has invalid 10-character base-36 ${key}`);
+    const signature = `${typeof value}:${String(value)}`;
+    if (values.has(signature)) errors.push(`${group}: duplicate ${key} ${value} in ${item.file} and ${values.get(signature)}`);
+    values.set(signature, item.file);
+  }
+  try { return [...items].sort((a, b) => compareValue(a.data[key], b.data[key])); }
+  catch (error) { errors.push(`${group}: ${error.message}`); return [...items]; }
+}
+function discover(items, folder) {
+  const warnings = [], errors = [];
+  const bookStem = slash(path.resolve(folder)).replace(/\/$/, '');
+  const book = items.find(x => x.data?.type === 'book' && path.join(path.dirname(x.file), path.basename(x.file, '.md')) === bookStem);
+  if (!book) errors.push(`No sibling book note of type book found for ${folder}. Select its companion manuscript folder.`);
+  const candidates = items.filter(x => x.data && ['part', 'scene'].includes(x.data.type));
+  for (const item of items) if (item.error) errors.push(`Cannot classify Markdown note: ${item.error}`);
+  for (const item of items.filter(x => x.data && !['part', 'scene', 'book'].includes(x.data.type))) warnings.push(`Excluded ${item.data.type || 'untyped'} note: ${item.file}`);
+  const fields = [...new Set(candidates.flatMap(x => Object.keys(x.data).filter(key => /order|sequence/i.test(key))))].map(key => ({ key, samples: candidates.filter(x => x.data[key] !== undefined).slice(0, 4).map(x => String(x.data[key])), count: candidates.filter(x => x.data[key] !== undefined).length }));
+  return { book, items, folder, fields, warnings, errors };
+}
+function plan(discovery, key) {
+  const errors = [...discovery.errors], warnings = [...discovery.warnings];
+  const book = discovery.book;
+  if (book?.data?.cover_image) warnings.push(`Book cover_image frontmatter is preserved but not collected as scene media: ${book.data.cover_image}`);
+  if (!book) return { errors, warnings, parts: [], scenes: [], assets: [], key };
+  const parts = discovery.items.filter(x => x.data?.type === 'part' && matchesParent(x.data.parent, book.file));
+  const otherParts = discovery.items.filter(x => x.data?.type === 'part' && !matchesParent(x.data.parent, book.file));
+  for (const x of otherParts) warnings.push(`Excluded part with different parent: ${x.file}`);
+  const orderedParts = orderGroup(parts, key, errors, 'Parts');
+  const sceneCandidates = discovery.items.filter(x => x.data?.type === 'scene');
+  const scenes = [], resultParts = [];
+  for (let pi = 0; pi < orderedParts.length; pi++) {
+    const part = orderedParts[pi];
+    const members = orderGroup(sceneCandidates.filter(x => matchesParent(x.data.parent, part.file)), key, errors, titleOf(part.data, part.file));
+    const bearing = part.body.trim().length > 0;
+    const partId = crypto.randomUUID();
+    const record = { id: partId, title: titleOf(part.data, part.file), orderValue: part.data[key], source: part.file, original: part.source, intro: bearing, scenes: [] };
+    const files = bearing ? [part, ...members] : members;
+    for (const item of files) {
+      const label = `${pi + 1}.${record.scenes.length + 1}`;
+      const scene = { id: crypto.randomUUID(), partId, label, title: bearing && item === part ? `${record.title} introduction` : titleOf(item.data, item.file), source: item.file, orderValue: item.data[key], kind: item === part ? 'part-content' : 'scene', content: item.source };
+      record.scenes.push(scene.id); scenes.push(scene);
+    }
+    resultParts.push(record);
+  }
+  const included = new Set(scenes.map(s => s.source));
+  if (included.size !== scenes.length) errors.push('A manuscript note belongs to more than one part; parent metadata is ambiguous');
+  for (const scene of sceneCandidates) if (!included.has(scene.file)) warnings.push(`Excluded scene with missing/unmatched parent: ${scene.file}`);
+  if (!parts.length) errors.push('No ordered part notes found under the book parent');
+  if (!scenes.length) errors.push('No manuscript-bearing scenes found');
+  return { book, key, parts: resultParts, scenes, warnings, errors, assets: [] };
+}
+function isLiteralAt(line, offset) {
+  if (offset > 0 && line[offset - 1] === '\\') return true;
+  let insideCode = false, ticks = 0;
+  for (let i = 0; i < offset; i++) {
+    if (line[i] === '\\') { i++; continue; }
+    if (line[i] !== '`') continue;
+    let j = i; while (line[j] === '`') j++;
+    const count = j - i;
+    if (!insideCode) { insideCode = true; ticks = count; }
+    else if (ticks === count) insideCode = false;
+    i = j - 1;
+  }
+  return insideCode;
+}
+function mediaReferences(source) {
+  const structure = inspectStructure(source), refs = [];
+  for (const line of structure.lines) {
+    const n = structure.lines.indexOf(line);
+    if (structure.frontmatter && n < structure.frontmatter.end) continue;
+    if (structure.spans.some(s => ['fence', 'code_block'].includes(s.type) && n >= s.start && n < s.end)) continue;
+    const re = /!\[\[([^\]\n]+)\]\]|!\[([^\]\n]*)\]\((<[^>]+>|(?:\\.|[^)])+)\)/g;
+    for (const m of line.text.matchAll(re)) {
+      if (isLiteralAt(line.text, m.index)) continue;
+      const wikimedia = Boolean(m[1]);
+      const bits = wikimedia ? m[1].split('|') : [];
+      const target = wikimedia ? bits[0] : m[3].replace(/^<|>$/g, '');
+      refs.push({ start: line.start + m.index, end: line.start + m.index + m[0].length, raw: m[0], target: target.replace(/\\([ ()])/g, '$1'), ambiguous: wikimedia && bits.length > 2, wikimedia, alt: wikimedia ? (bits[1] && !/^\d+$/.test(bits[1]) ? bits[1] : path.basename(bits[0], path.extname(bits[0]))) : m[2], line: n + 1 });
+    }
+  }
+  return refs;
+}
+async function resolveAssets(planData, scope) {
+  const root = await fs.realpath(scope), map = new Map(), warnings = [...planData.warnings], unresolved = [];
+  for (const scene of planData.scenes) {
+    scene.references = [];
+    for (const ref of mediaReferences(scene.content)) {
+      if (ref.ambiguous) { warnings.push(`${scene.source}:${ref.line}: ambiguous media embed ${ref.raw}`); continue; }
+      let decoded;
+      try { decoded = decodeURIComponent(ref.target); } catch { warnings.push(`${scene.source}:${ref.line}: invalid media path`); continue; }
+      const format = FORMATS[path.extname(decoded).toLowerCase()];
+      if (!format) { warnings.push(`${scene.source}:${ref.line}: unsupported media format ${path.extname(decoded) || '(none)'}`); continue; }
+      if (/^[a-z][\w+.-]*:/i.test(decoded) || path.isAbsolute(decoded)) { warnings.push(`${scene.source}:${ref.line}: remote or absolute media is not imported`); continue; }
+      const choices = [path.resolve(path.dirname(scene.source), decoded), path.resolve(root, decoded)];
+      let found;
+      for (const candidate of choices) {
+        try { const canonical = await fs.realpath(candidate); if (inside(root, canonical) && (await fs.stat(canonical)).isFile()) { found = canonical; break; } } catch { /* try next */ }
+      }
+      if (!found) { unresolved.push(`${scene.source}:${ref.line}: ${decoded}`); continue; }
+      const bytes = await fs.readFile(found);
+      const valid = format === 'PNG' ? bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))
+        : format === 'JPEG' ? bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255
+          : bytes.subarray(0, 4).toString() === 'RIFF' && bytes.subarray(8, 12).toString() === 'WEBP';
+      if (!valid) { warnings.push(`${scene.source}:${ref.line}: unreadable ${format} media`); continue; }
+      const hash = sha(bytes), ext = path.extname(found).toLowerCase();
+      const name = `${cleanName(path.basename(found, ext))}-${hash}${ext}`;
+      map.set(name, { source: found, name, hash });
+      scene.references.push({ ...ref, asset: found, name });
+    }
+  }
+  return { ...planData, warnings, unresolved, assets: [...map.values()], assetRoot: root };
+}
+function rewriteScene(scene) {
+  let content = scene.content;
+  for (const ref of [...scene.references].sort((a,b) => b.start - a.start)) {
+    const relative = `../assets/${encodeURIComponent(ref.name).replace(/[!'()*]/g, c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}`;
+    const alt = ref.alt.replace(/\\/g, '\\\\').replace(/\]/g, '\\]');
+    content = content.slice(0, ref.start) + `![${alt}](${relative})` + content.slice(ref.end);
+  }
+  return content;
+}
+async function writeProject(planData, destination) {
+  if (planData.errors.length || planData.unresolved.length) throw Error('Resolve order errors and missing assets before importing');
+  try { await fs.lstat(destination); throw Error('Destination already exists'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  const parent = path.dirname(destination), temp = await fs.mkdtemp(path.join(parent, '.story-teller-import-'));
+  try {
+    await fs.mkdir(path.join(temp, 'scenes')); await fs.mkdir(path.join(temp, 'assets')); await fs.mkdir(path.join(temp, 'metadata'));
+    const manifest = { schema: 'story-teller-project', version: VERSION, title: titleOf(planData.book.data, planData.book.file), orderField: planData.key,
+      provenance: { book: planData.book.file, sourceScope: planData.assetRoot, sourceRevision: await gitRevision(planData.book.file) }, bookFile: 'metadata/book.md',
+      parts: planData.parts.map(p => ({ id: p.id, title: p.title, orderValue: p.orderValue, metadataFile: `metadata/${p.id}.md`, scenes: p.scenes })), scenes: [] };
+    if (sha(await fs.readFile(planData.book.file)) !== sha(planData.book.source)) throw Error(`Book note changed after review: ${planData.book.file}`);
+    await fs.writeFile(path.join(temp, 'metadata', 'book.md'), planData.book.source);
+    for (const part of planData.parts) {
+      if (sha(await fs.readFile(part.source)) !== sha(part.original)) throw Error(`Part note changed after review: ${part.source}`);
+      await fs.writeFile(path.join(temp, 'metadata', `${part.id}.md`), part.original);
+    }
+    for (const scene of planData.scenes) {
+      if (sha(await fs.readFile(scene.source)) !== sha(scene.content)) throw Error(`Source changed after review: ${scene.source}`);
+      const filename = `${scene.id}.md`;
+      await fs.writeFile(path.join(temp, 'scenes', filename), rewriteScene(scene));
+      manifest.scenes.push({ id: scene.id, partId: scene.partId, kind: scene.kind, label: scene.label, title: scene.title, orderValue: scene.orderValue,
+        file: `scenes/${filename}`, provenance: { source: scene.source, sha256: sha(scene.content) } });
+    }
+    for (const asset of planData.assets) {
+      const bytes = await fs.readFile(asset.source);
+      if (sha(bytes) !== asset.hash) throw Error(`Asset changed after review: ${asset.source}`);
+      await fs.writeFile(path.join(temp, 'assets', asset.name), bytes);
+    }
+    await fs.writeFile(path.join(temp, 'story-teller.project.json'), JSON.stringify(manifest, null, 2) + '\n');
+    await fs.mkdir(destination); // exclusive reservation: never replace another project's folder
+    try { await fs.rename(temp, destination); } catch (error) { await fs.rm(destination, { recursive: true, force: true }); throw error; }
+    return manifest;
+  } catch (error) { await fs.rm(temp, { recursive: true, force: true }); throw error; }
+}
+async function gitRevision(file) {
+  try { const { execFileSync } = require('node:child_process'); return execFileSync('git', ['-C', path.dirname(file), 'rev-parse', 'HEAD'], { encoding: 'utf8', timeout: 2000, stdio: ['ignore', 'pipe', 'ignore'] }).trim(); } catch { return null; }
+}
+function orderedScenes(manifest) {
+  if (manifest?.schema !== 'story-teller-project' || manifest.version !== VERSION || !Array.isArray(manifest.parts) || !Array.isArray(manifest.scenes)) throw Error('Unsupported Story Teller project manifest');
+  const byId = new Map(manifest.scenes.map(s => [s.id, s]));
+  const ordered = manifest.parts.flatMap(p => p.scenes.map(id => { const scene = byId.get(id); if (!scene || scene.partId !== p.id) throw Error(`Invalid scene reference ${id}`); return scene; }));
+  if (ordered.length !== manifest.scenes.length || new Set(ordered.map(s => s.id)).size !== ordered.length) throw Error('Project sequence is inconsistent');
+  return ordered;
+}
+module.exports = { VERSION, parseMeta, scan, discover, plan, resolveAssets, mediaReferences, rewriteScene, writeProject, orderedScenes, compareValue };

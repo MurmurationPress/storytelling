@@ -23,7 +23,7 @@ class TypeoutSound {
     try {
       if (this.context?.state === 'closed') this.context = null;
       this.context ||= new this.AudioContext();
-      Promise.resolve(this.context.resume()).catch(error => {
+      return Promise.resolve(this.context.resume()).catch(error => {
         if (generation !== this.unlockGeneration || this.disposed) return;
         this.fail('resume', error);
       });

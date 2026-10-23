@@ -2,7 +2,7 @@
   "name": "story-teller",
   "displayName": "Story Teller",
   "description": "Provisional prose, chat, image and type-out scene preview.",
-  "version": "0.6.1",
+  "version": "0.8.3",
   "private": true,
   "publisher": "murmurationpress",
   "repository": {
@@ -17,7 +17,14 @@
     "Other"
   ],
   "main": "./src/extension.cjs",
-  "activationEvents": ["onLanguage:markdown"],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onCommand:storyTeller.importManuscript",
+    "onCommand:storyTeller.setBookProsePacing",
+    "onCommand:storyTeller.setSceneProsePacing",
+    "workspaceContains:story-teller.project.json",
+    "onView:storyTeller.outline"
+  ],
   "contributes": {
     "commands": [
       {
@@ -50,11 +57,32 @@
       },
       {
         "command": "storyTeller.insert",
-        "title": "Story Teller: Insert…"
+        "title": "Story Teller: Insert\u2026"
       },
       {
         "command": "storyTeller.wrapSelectionAsChat",
         "title": "Story Teller: Wrap Selection as Chat"
+      },
+      {
+        "command": "storyTeller.importManuscript",
+        "title": "Story Teller: Import Markdown Manuscript"
+      },
+      {
+        "command": "storyTeller.setBookProsePacing",
+        "title": "Story Teller: Set Book Prose Pacing"
+      },
+      {
+        "command": "storyTeller.setSceneProsePacing",
+        "title": "Story Teller: Set Scene Prose Pacing"
+      },
+      {
+        "command": "storyTeller.insertBeat",
+        "title": "Story Teller: Insert Beat"
+      },
+      {
+        "command": "storyTeller.showBeatInSource",
+        "title": "Story Teller: Show Beat in Source",
+        "enablement": "storyTeller.previewActive"
       }
     ],
     "menus": {
@@ -73,14 +101,68 @@
           "command": "storyTeller.wrapSelectionAsChat",
           "when": "editorLangId == markdown && editorHasSelection",
           "group": "storyTeller@2"
+        },
+        {
+          "command": "storyTeller.setSceneProsePacing",
+          "when": "editorLangId == markdown",
+          "group": "storyTeller@3"
         }
       ]
-    }
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "storyTeller",
+          "title": "Story Teller",
+          "icon": "media/story-teller.svg"
+        }
+      ]
+    },
+    "views": {
+      "storyTeller": [
+        {
+          "id": "storyTeller.outline",
+          "name": "Part\u2013Scene Outline"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "storyTeller.insertBeat",
+        "key": "ctrl+k shift+b",
+        "mac": "cmd+k shift+b",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "storyTeller.previewThisBeat",
+        "key": "ctrl+k shift+p",
+        "mac": "cmd+k shift+p",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "storyTeller.showBeatInSource",
+        "key": "ctrl+k shift+s",
+        "mac": "cmd+k shift+s",
+        "when": "storyTeller.previewActive && !inputFocus"
+      },
+      {
+        "command": "storyTeller.collapseBeats",
+        "key": "ctrl+k shift+c",
+        "mac": "cmd+k shift+c",
+        "when": "editorTextFocus && editorLangId == markdown"
+      },
+      {
+        "command": "storyTeller.expandBeats",
+        "key": "ctrl+k shift+e",
+        "mac": "cmd+k shift+e",
+        "when": "editorTextFocus && editorLangId == markdown"
+      }
+    ]
   },
   "scripts": {
     "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs",
+    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/follow.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs && node --check src/manuscript-import.cjs && node --check src/import-command.cjs && node --check src/prose-pacing.cjs && node --check src/pacing-settings.cjs && node --check src/pacing-command.cjs && node --check src/scene-navigation.cjs",
     "test:host": "node test/run-host.cjs",
     "vscode:prepublish": "npm run build",
     "package": "vsce package"

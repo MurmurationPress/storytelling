@@ -5,6 +5,34 @@ status: active
 
 # Decisions
 
+## 2026-10-23 — Accept scroll-follow; trial keyboard conveniences and outline autoplay
+
+**Ted's acceptance:** automatic scroll-follow is tested and accepted. The earlier pending entry below is historical. This does not establish acceptance of every new navigation enhancement.
+
+**Authorised trial, awaiting acceptance:** expose existing beat authoring/navigation through scoped keyboard chords, and make a Part–Scene Outline selection reuse the reader at its first beat under the existing Autoplay preference. Ordinary source opening and Preview This Beat stay ready. Scene selection cancels outgoing work and rejects stale loads; a direct reader sound-enable gesture is offered where outline activation cannot unlock audio. This remains local Story Teller authoring/reading, without publication or export implications.
+
+## 2026-10-22 — Trial reader scroll-follow in Story Teller
+
+**Proposed reading behaviour under test:** the managed preview follows newly revealed content only when it extends below the reading viewport. Upward reader scrolling suspends following without pausing performance; Follow story or a manual return to the bottom resumes it. Beat turns start at the top; silent Previous stays there for rereading. This is a reader preference and does not alter manuscript syntax. Ted has not yet accepted this behaviour. Existing acceptance of automatic prose pacing remains separate.
+
+## 2026-10-22 — Accept prose pacing; trial end-of-beat navigation
+
+**Ted’s acceptance:** automatic prose pacing is accepted. The former awaiting-acceptance wording below is historical. This does not establish acceptance of the import review/outline refinements.
+
+**New trial:** show a bottom “Next →” control after each completed beat, after any trailing authored pause, using the existing page-turn action and reader Autoplay preference. A silent Previous has the completed control; the final beat shows “End of scene.” The top navigation remains available. This control awaits Ted’s acceptance and does not add cross-scene playback.
+
+## 2026-10-22 — Use imported project; trial automatic prose pacing
+
+**Ted's observation:** he successfully imported and ran a Story Teller project. The corrupted screencast was a recording problem, not a product defect. This confirms the importer is usable for his current work; it does not establish publication export or acceptance of every imported scene.
+
+**Authorised enhancement, awaiting Ted's acceptance:** add optional book-wide paragraph pacing with an inheritable scene override, without changing copied manuscript wording or inserting pause directives. Improve the import review panel and reveal the outline after opening a new project. The 60ms-per-visible-word bounded formula is a starting editorial setting, subject to Ted's review in CONSTRAINT.
+
+## 2026-10-22 — Accept IntelliSense and State metadata conversion; trial manuscript import
+
+**Ted's acceptance:** keyboard IntelliSense and the State metadata converter are accepted as part of Story Teller authoring. This supersedes their earlier awaiting-acceptance status. The acceptance concerns the tested authoring workflow, not every future manuscript shape or publication export.
+
+**Authorised experiment, awaiting Ted's acceptance:** issue #10 imports a prepared Markdown book into a separate adaptation project. It reads existing type, parent and selected order metadata, previews the ordered Part–Scene sequence and copies source content/assets without modifying the vault. MWC remains responsible for source preparation. Import does not automatically convert chats, callouts or State metadata, and does not implement EPUB import or export.
+
 ## 2026-10-22 — Accept formatted annotation reveal; review Story Teller authoring milestone
 
 **Ted's acceptance:** formatted Markdown reveal for annotation type-outs is accepted alongside the previously accepted Story Teller authoring and playback behaviour. YAML state type-outs remain literal. This acceptance concerns the local authoring/preview experience, not EPUB export, release readiness, VSCodium compatibility or every implementation detail.
