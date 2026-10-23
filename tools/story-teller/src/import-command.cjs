@@ -3,6 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { randomBytes } = require('node:crypto');
 const { scan, discover, plan, resolveAssets, writeProject, orderedScenes } = require('./manuscript-import.cjs');
+const { SceneSelection } = require('./scene-navigation.cjs');
 const { inside } = require('./media.cjs');
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const pendingOutlineMatches = (pending, folders) => Boolean(pending) && folders.some(folder => path.resolve(folder.uri.fsPath) === path.resolve(pending));
@@ -23,7 +24,8 @@ function showImportReview(vscode, prepared) {
     panel.onDidDispose(() => { listener.dispose(); if (!settled) { settled = true; resolve('cancel'); } });
   });
 }
-function registerImport(vscode, context) {
+function registerImport(vscode, context, { onScenePending = () => {}, onSceneFailed = () => {}, openScene } = {}) {
+  const selection = new SceneSelection(onScenePending);
   const tree = new ProjectTree(vscode);
   context.subscriptions.push(vscode.window.registerTreeDataProvider('storyTeller.outline', tree));
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders(() => tree.refresh()));
@@ -31,12 +33,17 @@ function registerImport(vscode, context) {
   watcher.onDidChange(() => tree.refresh()); watcher.onDidCreate(() => tree.refresh()); watcher.onDidDelete(() => tree.refresh());
   context.subscriptions.push(watcher);
   context.subscriptions.push(vscode.commands.registerCommand('storyTeller.openProjectScene', async (projectRoot, scene) => {
+    const token = selection.begin();
     try {
       const root = await fs.realpath(projectRoot);
       const candidate = path.resolve(root, scene.file);
       if (!inside(root, candidate) || !inside(path.join(root, 'scenes'), candidate) || !candidate.endsWith('.md') || !inside(root, await fs.realpath(candidate))) throw Error('Scene path is outside the imported project');
-      await vscode.window.showTextDocument(vscode.Uri.file(candidate), { preview: false });
-    } catch (error) { vscode.window.showErrorMessage(`Story Teller scene: ${error.message}`); }
+      if (!selection.isCurrent(token)) return;
+      await selection.commit(token, async current => {
+        const editor = await vscode.window.showTextDocument(vscode.Uri.file(candidate), { preview: false, preserveFocus: false });
+        if (current() && openScene) await openScene(editor, current);
+      });
+    } catch (error) { if (selection.isCurrent(token)) { onSceneFailed(); vscode.window.showErrorMessage(`Story Teller scene: ${error.message}`); } }
   }));
   context.subscriptions.push(vscode.commands.registerCommand('storyTeller.importManuscript', async () => {
     try {

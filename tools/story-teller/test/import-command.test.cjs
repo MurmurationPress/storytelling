@@ -5,7 +5,7 @@ const fs = require('node:fs/promises');
 const os = require('node:os');
 const path = require('node:path');
 const { registerImport, pendingOutlineMatches } = require('../src/import-command.cjs');
-function fakeHost(answers) {
+function fakeHost(answers, navigation) {
   const commands = new Map(), views = new Map(), messages = [], disposables = [], reviews = [], executed = [], updates = [];
   const d = { dispose() {} };
   const vscode = {
@@ -15,6 +15,7 @@ function fakeHost(answers) {
     workspace: { workspaceFolders: answers.folders || [], onDidChangeWorkspaceFolders: () => d,
       createFileSystemWatcher: () => ({ onDidChange() {}, onDidCreate() {}, onDidDelete() {}, dispose() {} }) },
     window: { registerTreeDataProvider: (name, provider) => { views.set(name, provider); return d; },
+      showTextDocument: async uri => { answers.opened ||= []; answers.opened.push(uri.fsPath); return { document: { uri } }; },
       showOpenDialog: async () => answers.dialogs.shift(),
       showQuickPick: async rows => answers.quick === 'cancel' ? undefined : rows.find(r => r.label === answers.quick),
       createWebviewPanel: () => {
@@ -30,7 +31,7 @@ function fakeHost(answers) {
       showWarningMessage: async () => answers.assetChoice },
     commands: { registerCommand: (name, fn) => { commands.set(name, fn); return d; }, executeCommand: async name => { executed.push(name); } }
   };
-  registerImport(vscode, { subscriptions: disposables, globalState: { get: () => answers.pending, update: async (key, value) => { updates.push([key, value]); } } });
+  registerImport(vscode, { subscriptions: disposables, globalState: { get: () => answers.pending, update: async (key, value) => { updates.push([key, value]); } } }, navigation);
   return { commands, views, messages, reviews, executed, updates };
 }
 async function fixture(t) {
@@ -90,4 +91,22 @@ test('project outline initially expands only the first part', async t => {
   const host = fakeHost({ dialogs: [], folders: [{ uri: { fsPath: root } }] });
   const items = await host.views.get('storyTeller.outline').getChildren();
   assert.deepEqual(items.map(item => item.collapsibleState), [2, 1]);
+});
+
+test('outline command cancels before validation and commits only the latest scene without altering sources', async t => {
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'story-scene-command-'));
+  t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  await fs.mkdir(path.join(root,'scenes'));for(const name of ['A','B'])await fs.writeFile(path.join(root,'scenes',name+'.md'),name+' unchanged.');
+  const answers={dialogs:[]},calls=[];
+  const host=fakeHost(answers,{onScenePending:()=>calls.push('stop'),openScene:editor=>calls.push(editor.document.uri.fsPath)});
+  const command=host.commands.get('storyTeller.openProjectScene');
+  const a=command(root,{file:'scenes/A.md'}),b=command(root,{file:'scenes/B.md'});
+  assert.deepEqual(calls,['stop','stop']);await Promise.all([a,b]);
+  assert.deepEqual(calls,['stop','stop',path.join(root,'scenes/B.md')]);
+  assert.equal(await fs.readFile(path.join(root,'scenes/A.md'),'utf8'),'A unchanged.');
+});
+test('a failed outline selection releases the outgoing reader to ready without opening another file', async () => {
+  const calls=[];const host=fakeHost({dialogs:[]},{onScenePending:()=>calls.push('stop'),onSceneFailed:()=>calls.push('ready')});
+  await host.commands.get('storyTeller.openProjectScene')('/not-a-project',{file:'../private.md'});
+  assert.deepEqual(calls,['stop','ready']);assert.match(host.messages[0],/Story Teller scene/);
 });

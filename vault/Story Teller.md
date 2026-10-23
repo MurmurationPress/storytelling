@@ -6,6 +6,8 @@ created: 2026-10-21
 
 # Story Teller
 
+**2026-10-23:** Ted has tested and accepted automatic scroll-follow. The 0.8.3 trial adds direct, rebindable beat commands and an outline-to-reader scene-opening action under the existing Autoplay preference. Those conveniences await his acceptance. The reader cancels outgoing playback on scene selection, reuses one preview, and requires an in-reader gesture where sound cannot start automatically. See the extension guide/results for keyboard bindings, evidence and limits.
+
 **2026-10-22 scroll-follow trial:** the local preview now tests automatic following of visible prose, chat, image and type-out content, with reader-controlled suspension/resumption and top-of-beat navigation. It is implemented for Ted's assessment, not yet accepted or a claim about EPUB readers. The prior accepted playback and automatic prose pacing remain as recorded below.
 
 **2026-10-22 acceptance and navigation trial:** Ted accepts automatic prose pacing in the imported adaptation. The 0.8.1 preview adds a bottom Next button after completed beats, after trailing authored silence; it uses the existing manual turn and Autoplay preference. A completed final beat displays “End of scene.” This new placement awaits Ted's acceptance. Cross-scene playback and publication export are not implied.

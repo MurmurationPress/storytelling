@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-23 — Accept scroll-follow; trial keyboard conveniences and outline autoplay
+
+**Ted's acceptance:** automatic scroll-follow is tested and accepted. The earlier pending entry below is historical. This does not establish acceptance of every new navigation enhancement.
+
+**Authorised trial, awaiting acceptance:** expose existing beat authoring/navigation through scoped keyboard chords, and make a Part–Scene Outline selection reuse the reader at its first beat under the existing Autoplay preference. Ordinary source opening and Preview This Beat stay ready. Scene selection cancels outgoing work and rejects stale loads; a direct reader sound-enable gesture is offered where outline activation cannot unlock audio. This remains local Story Teller authoring/reading, without publication or export implications.
+
 ## 2026-10-22 — Trial reader scroll-follow in Story Teller
 
 **Proposed reading behaviour under test:** the managed preview follows newly revealed content only when it extends below the reading viewport. Upward reader scrolling suspends following without pausing performance; Follow story or a manual return to the bottom resumes it. Beat turns start at the top; silent Previous stays there for rereading. This is a reader preference and does not alter manuscript syntax. Ted has not yet accepted this behaviour. Existing acceptance of automatic prose pacing remains separate.

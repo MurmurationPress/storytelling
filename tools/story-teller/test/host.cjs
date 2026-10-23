@@ -33,7 +33,17 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'open-outline') {
+      if (request.action === 'default-bindings') {
+        await vscode.commands.executeCommand('workbench.action.openDefaultKeybindingsFile');
+        await fs.writeFile(path.join(directory, 'default-bindings.txt'), vscode.window.activeTextEditor.document.getText());
+        await focusSource();
+      } else if (request.action === 'active-source-state') {
+        const editor = vscode.window.activeTextEditor;
+        await fs.writeFile(path.join(directory, 'active-source-state.json'), JSON.stringify({uri:editor?.document.uri.fsPath, text:editor?.document.getText(), line:editor?.selection.active.line, active: vscode.window.tabGroups.activeTabGroup.activeTab?.label,
+          previews:vscode.window.tabGroups.all.flatMap(group=>group.tabs).filter(tab=>tab.input?.viewType?.endsWith('storyTeller.scene')).map(tab=>tab.label)}));
+      } else if (request.action === 'rapid-scenes') {
+        await Promise.all(['The Signal.md','The Answer.md'].map(file=>vscode.commands.executeCommand('storyTeller.openProjectScene',request.projectRoot,{file:'scenes/'+file})));
+      } else if (request.action === 'open-outline') {
         await vscode.commands.executeCommand('workbench.view.extension.storyTeller');
       } else if (request.action === 'open-project-scene') {
         await vscode.commands.executeCommand('storyTeller.openProjectScene', request.projectRoot, { file: 'scenes/The Signal.md' });
@@ -77,6 +87,9 @@ exports.run = async function () {
         const previewGroup = vscode.window.tabGroups.all.find(group => group.tabs.some(tab => tab.input?.viewType?.endsWith('storyTeller.scene')));
         if (!previewGroup) throw new Error('Story Teller preview tab was not found');
         await vscode.window.showTextDocument(temporary, { viewColumn: previewGroup.viewColumn, preserveFocus: false });
+      } else if (request.action === 'return-preview-tab') {
+        await vscode.commands.executeCommand('workbench.action.focusSecondEditorGroup');
+        await vscode.commands.executeCommand('workbench.action.previousEditor');
       } else if (request.action === 'show-preview') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
         await vscode.commands.executeCommand('storyTeller.previewScene');

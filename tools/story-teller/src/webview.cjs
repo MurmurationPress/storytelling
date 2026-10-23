@@ -4,6 +4,9 @@ const { beatAtOffset } = require('./structure.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
 const { graphemes } = require('./typeout.cjs');
+const { SceneAutoplay, currentReaderMessage } = require('./scene-navigation.cjs');
+const sceneAutoplay = new SceneAutoplay();
+let needsAudioGesture = false;
 const { ScrollFollower } = require('./follow.cjs');
 const api = acquireVsCodeApi();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -16,6 +19,7 @@ let presented = false;
 let presentationEpoch = -1;
 let revision = -1;
 let incomingRevision = -1;
+let pendingDeparture = 0;
 let sourceUri = '';
 let media = Object.create(null);
 let mediaDiagnostics = [];
@@ -45,6 +49,7 @@ function controls() {
   reveal.hidden = !active; reveal.disabled = preparing || !active || !presented;
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
+  document.getElementById('enable-sound').hidden = !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
   document.getElementById('autoplay').checked = autoplayOnTurn;
   document.getElementById('show-source').disabled = preparing || !beat;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
@@ -236,8 +241,14 @@ function preload(url) {
 }
 const unlockSound = (beat = player.current) => {
   if (player.reducedMotion !== motion.matches) player.setReducedMotion(motion.matches);
-  if (!muted && !player.reducedMotion && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) sound.unlock();
+  if (!muted && !player.reducedMotion && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none')) {
+    const unlocked = sound.unlock();
+    if (unlocked) unlocked.then(() => render());
+  }
 };
+function startSelectedScene() {
+  if (sceneAutoplay.take(revision, !preparing && presented && !document.hidden)) player.play();
+}
 function turnNext() {
   if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
   follower.beginTurn();
@@ -261,29 +272,39 @@ document.getElementById('pause').addEventListener('click', () => {
 });
 document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
 document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
+document.getElementById('enable-sound').addEventListener('click', () => {
+  if (!preparing && presented && !document.hidden) { unlockSound(player.scene.beats.find(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'))); render(); }
+});
 document.getElementById('mute').addEventListener('click', () => {
   muted = !muted; api.postMessage({ type: 'mute-preference', muted });
   if (!muted && player.phase === 'playing') unlockSound(); render();
 });
 document.getElementById('autoplay').addEventListener('change', event => {
   autoplayOnTurn = event.target.checked;
+  if (!autoplayOnTurn) sceneAutoplay.cancel();
   api.postMessage({ type: 'autoplay-preference', autoplayOnTurn });
   render();
 });
 motion.addEventListener('change', event => player.setReducedMotion(event.matches));
-document.getElementById('show-source').addEventListener('click', () => {
+function showSource() {
   if (preparing || !player.current) return;
+  sceneAutoplay.cancel();
   const range = player.current.sourceRange;
   follower.beginTurn(); player.reset(); render(); follower.endTurn();
   api.postMessage({ type: 'show-source', uri: sourceUri, revision, index: player.index, startOffset: range.startOffset, endOffset: range.endOffset });
-});
-document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) player.pause(); render(); });
+}
+document.getElementById('show-source').addEventListener('click', showSource);
+document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) { sceneAutoplay.leave(); player.pause(); } render(); startSelectedScene(); });
 window.addEventListener('pagehide', () => { follower.dispose(); player.dispose(); sound.dispose(); });
 window.addEventListener('beforeunload', () => sound.dispose());
 window.addEventListener('message', async event => {
   const message = event.data;
+  if (!currentReaderMessage(document.body.dataset.readerInstance, message)) return;
+  if (message?.type === 'show-source-request') { showSource(); return; }
   if (message?.type === 'source-pending' && Number.isInteger(message.revision) && message.revision > incomingRevision) {
     incomingRevision = message.revision;
+    pendingDeparture = sceneAutoplay.departure;
+    sceneAutoplay.cancel(); sound.stop();
     follower.beginTurn();
     player.reset(); // Stop current timers before the host reads and validates local files.
     preparing = true; render(); return;
@@ -294,8 +315,8 @@ window.addEventListener('message', async event => {
         presentationEpoch = message.epoch;
         presented = message.visible;
         follower.setActive(presented && !document.hidden);
-        if (!presented) player.pause();
-        render();
+        if (!presented) { sceneAutoplay.leave(); player.pause(); }
+        render(); startSelectedScene();
       }
       api.postMessage({ type: 'presentation-ack', epoch: message.epoch });
     }
@@ -305,10 +326,12 @@ window.addEventListener('message', async event => {
     muted = message.muted; render(); return;
   }
   if (message?.type === 'autoplay-preference' && typeof message.autoplayOnTurn === 'boolean') {
-    autoplayOnTurn = message.autoplayOnTurn; render(); return;
+    autoplayOnTurn = message.autoplayOnTurn; if (!autoplayOnTurn) sceneAutoplay.cancel(); render(); return;
   }
   if (message?.type !== 'source' || typeof message.source !== 'string' || !Number.isInteger(message.revision) || message.revision < incomingRevision || message.revision <= revision) return;
+  const departure = message.revision === incomingRevision ? pendingDeparture : sceneAutoplay.departure;
   incomingRevision = message.revision;
+  sceneAutoplay.cancel();
   follower.beginTurn();
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
   preparing = true; render();
@@ -331,7 +354,11 @@ window.addEventListener('message', async event => {
   pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
   player.update(parseScene(message.source, { prosePacing: message.prosePacing === true }));
   const saved = api.getState();
-  if (Number.isInteger(message.targetOffset)) {
+  if (message.sceneStart === true) {
+    player.index = 0; player.reset();
+    needsAudioGesture = player.scene.beats.some(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'));
+    sceneAutoplay.arm(revision, autoplayOnTurn && message.sceneAutoplay === true, departure);
+  } else if (Number.isInteger(message.targetOffset)) {
     const selected = beatAtOffset(player.scene.beats.map(beat => beat.sourceRange), message.targetOffset);
     if (selected >= 0) { player.index = selected; player.reset(); }
   } else if (first && saved?.sourceUri === sourceUri && Number.isInteger(saved.index)) {
@@ -343,5 +370,6 @@ window.addEventListener('message', async event => {
   preparing = false;
   render();
   follower.endTurn();
+  startSelectedScene();
 });
-api.postMessage({ type: 'ready' });
+api.postMessage({ type: 'ready', instance: document.body.dataset.readerInstance });

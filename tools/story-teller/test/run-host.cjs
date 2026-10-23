@@ -23,7 +23,7 @@ async function until(fn, timeout = 60000) {
   const port = server.address().port;
   await new Promise(resolve => server.close(resolve));
   let importProject;
-  if (['import', 'prose'].includes(process.env.STORY_TELLER_HOST_SCOPE)) {
+  if (['import', 'prose', 'navigation'].includes(process.env.STORY_TELLER_HOST_SCOPE)) {
     importProject = path.join(directory, 'fictional-project');
     await fs.mkdir(path.join(importProject, 'scenes'), { recursive: true });
     await fs.writeFile(path.join(importProject, 'scenes', 'The Signal.md'), process.env.STORY_TELLER_HOST_SCOPE === 'prose'
@@ -34,6 +34,12 @@ async function until(fn, timeout = 60000) {
       parts: [{ id: 'p', title: 'First', scenes: ['s'] }],
       scenes: [{ id: 's', partId: 'p', label: '1.1', title: 'The Signal', file: 'scenes/The Signal.md' }]
     }));
+  }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'navigation') {
+    await fs.cp(path.join(root,'samples/assets'),path.join(importProject,'assets'),{recursive:true});
+    await fs.writeFile(path.join(importProject,'scenes/The Signal.md'), 'Signal opening.\n\n```typeout\n@format yaml\n@sound modem\n@speed 10\n\nstatus: ' + 'observing the fictional harbour '.repeat(10) + '\n```\n---\nSignal last beat.');
+    await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
+    await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
@@ -105,6 +111,75 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'navigation') {
+      const main = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item=>item.type==='page');
+      const ws=new WebSocket(main.webSocketDebuggerUrl); await new Promise(resolve=>{ws.onopen=resolve;});
+      let mainId=0; const replies=new Map();
+      ws.onmessage=event=>{const m=JSON.parse(event.data), done=replies.get(m.id);if(done){replies.delete(m.id);m.error?done.reject(Error(JSON.stringify(m.error))):done.resolve(m.result);}};
+      const mainSend=(method,params)=>new Promise((resolve,reject)=>{const id=++mainId;replies.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});
+      const workbench=async expression=>{const result=await mainSend('Runtime.evaluate',{expression,returnByValue:true});if(result.exceptionDetails)throw Error(result.exceptionDetails.text);return result.result.value;};
+      const key=async(name,modifiers=0,text)=>{const code=name.length===1?'Key'+name.toUpperCase():name;const virtual=name.length===1?name.toUpperCase().charCodeAt(0):({Enter:13,Escape:27,Tab:9}[name]);for(const type of ['keyDown','keyUp'])await mainSend('Input.dispatchKeyEvent',{type,key:name,code,modifiers,windowsVirtualKeyCode:virtual,nativeVirtualKeyCode:virtual,...(text&&type==='keyDown'?{text}:{})});};
+      const chord=async letter=>{await mainSend('Page.bringToFront',{});await sleep(150);await key('k',2);await sleep(120);await key(letter.toUpperCase(),8);};
+      const snapshot=async()=>{await request('snapshot');return JSON.parse(await fs.readFile(path.join(directory,'snapshot.json'),'utf8'));};
+      const source='<!-- beat: Opening -->\nOpening paragraph.\n\nMore opening prose.\n---\n<!-- beat: Turn -->\nA second beat.\n\nLast paragraph.';
+      await request('edit',source);await request('focus-at',undefined,{start:source.length});
+      await chord('b');await until(()=>workbench("document.querySelector('.quick-input-widget')?.checkVisibility() && document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));
+      await mainSend('Input.insertText',{text:'Keyboard turn'});await key('Enter',0,'\r');
+      await until(async()=>(await snapshot()).text.includes('<!-- beat: Keyboard turn -->'));
+      await key('z',2);assert.equal((await snapshot()).text,source,'one Undo reverses the insertion');
+      await request('focus-at',undefined,{start:source.length});await chord('b');await until(()=>workbench("document.querySelector('.quick-input-widget')?.checkVisibility() && document.querySelector('.quick-input-widget')?.innerText.includes('Beat title')"));await key('Escape');assert.equal((await snapshot()).text,source);
+      await until(()=>workbench("!document.querySelector('.quick-input-widget')?.checkVisibility()"));
+      await mainSend('Input.insertText',{text:'x'});await until(async()=>(await snapshot()).text===source+'x');assert.equal((await snapshot()).text,source+'x','cancelling returns to writing');await key('z',2);assert.equal((await snapshot()).text,source);
+      await request('focus-at',undefined,{start:source.indexOf('A second')});await chord('p');
+      await until(async()=>/Beat 2 of 2.*ready/.test(await locator('#status').textContent()));
+      await chord('s');await until(async()=>{await request('active-source-state');const state=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));return state.uri===path.join(directory,'scene.md')&&state.line===5;});
+      await chord('c');
+      const lineNumbers=()=>workbench("[...document.querySelectorAll('.editor-group-container:first-child .line-numbers')].filter(e=>e.checkVisibility()).map(e=>Number(e.textContent))");
+      await until(async()=>!(await lineNumbers()).includes(9));await chord('e');await until(async()=>(await lineNumbers()).includes(9));
+      await request('open-outline');
+      const select=async title=>{
+        const rect=await until(()=>workbench(`(()=>{const row=[...document.querySelectorAll('.monaco-list-row')].find(e=>e.innerText.includes(${JSON.stringify(title)}));if(!row)return null;const r=row.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};})()`));
+        for(const type of ['mousePressed','mouseReleased'])await mainSend('Input.dispatchMouseEvent',{type,x:rect.x,y:rect.y,button:'left',clickCount:1});
+      };
+      const events=[];const receive=socket.onmessage;socket.onmessage=event=>{const m=JSON.parse(event.data);if(m.method?.startsWith('WebAudio.'))events.push({method:m.method,params:m.params});receive(event);};await send('WebAudio.enable',{});
+      await select('1.1 The Signal');
+      await until(async()=>(await beat.textContent())?.includes('Signal opening.'));
+      console.log('scene arrival',await evaluate("({status:doc.getElementById('status').textContent,hidden:doc.hidden,autoplay:doc.getElementById('autoplay').checked,replayDisabled:doc.getElementById('replay').disabled})"));
+      await until(async()=>await evaluate("doc.querySelector('.typeout-progress')?.textContent.length>2"),10000);
+      assert.equal(await evaluate('doc.scrollingElement.scrollTop'),0);assert.match(await locator('#status').textContent(),/Beat 1 of 2.*playing/);
+      assert.equal(await evaluate("doc.getElementById('enable-sound').hidden"),false,'outline autoplay needs an explicit webview audio gesture');
+      assert.equal(events.filter(event=>event.method==='WebAudio.contextCreated').length,0,'outline autoplay does not create an audio context without a reader gesture');
+      await evaluate("doc.getElementById('enable-sound').click()",true);
+      await until(()=>events.some(e=>e.method==='WebAudio.nodesConnected'));
+      const progress=await locator('.typeout-progress').textContent();await sleep(300);assert.ok((await locator('.typeout-progress').textContent()).length>progress.length);
+      const disconnected=events.filter(e=>e.method==='WebAudio.nodesDisconnected').length;
+      await select('1.2 The Answer');
+      await until(async()=>(await beat.textContent())?.includes('Answer opening.'));
+      await until(()=>events.filter(e=>e.method==='WebAudio.nodesDisconnected').length>disconnected);
+      assert.equal(await evaluate('doc.scrollingElement.scrollTop'),0);assert.match(await locator('#status').textContent(),/Beat 1 of 2.*playing/);
+      await evaluate("doc.getElementById('next').click()");
+      await until(async()=>await evaluate("doc.querySelector('.story-image')?.naturalWidth===360"));
+      await evaluate("doc.getElementById('previous').click()");assert.match(await locator('#status').textContent(),/completed/);assert.equal(await evaluate('doc.scrollingElement.scrollTop'),0);
+      await request('active-source-state');let state=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));assert.equal(state.previews.length,1);assert.match(state.uri,/The Answer.md$/);
+      await evaluate("(doc.getElementById('autoplay').checked=false,doc.getElementById('autoplay').dispatchEvent(new Event('change')))");await sleep(150);
+      await select('1.1 The Signal');await until(async()=>(await beat.textContent())?.includes('Signal opening.'));assert.match(await locator('#status').textContent(),/ready/);assert.equal(await locator('.typeout-progress').count(),0);
+      await evaluate("(doc.getElementById('autoplay').checked=true,doc.getElementById('autoplay').dispatchEvent(new Event('change')))");await sleep(150);
+      await request('rapid-scenes',undefined,{projectRoot:importProject});await until(async()=>(await beat.textContent())?.includes('Answer opening.'));await sleep(400);assert.doesNotMatch(await beat.textContent(),/Signal opening/);
+      await request('hide-preview');await until(async()=>/paused/.test(await locator('#status').textContent()));
+      await request('return-preview-tab');
+      await until(async()=>!(await locator('#pause').isDisabled()));assert.match(await locator('#status').textContent(),/paused/);
+      const held=await beat.textContent();await sleep(300);assert.equal(await beat.textContent(),held);
+      assert.equal((await snapshot()).text,source,'outline reading preserves the unsaved authoring buffer');
+      await request('default-bindings');
+      const bindings=await fs.readFile(path.join(directory,'default-bindings.txt'),'utf8');
+      // VS Code's generated defaults include extension contributions: confirm
+      // these chords resolve to Story Teller rather than another installed command.
+      const conflicts=bindings.split('\n').filter(line=>/ctrl\+k shift\+[bpcse]"/.test(line));
+      assert.equal(conflicts.length,5,JSON.stringify(conflicts));assert.ok(conflicts.every(line=>line.includes('storyTeller.')));
+      await fs.writeFile(path.join(directory,'navigation-evidence.json'),JSON.stringify({conflicts,progress,events:events.map(e=>e.method),state},null,2));
+      ws.close();console.log(`PASS: native keyboard chords/title/cancel/Undo/folding/source, outline autoplay/on-off/latest scene, local asset, audio graph cleanup; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'follow') {
       const prose = Array.from({ length: 5 }, (_, i) => `Paragraph ${i + 1}. The fictional harbour wall stretched past the lamps, past the ferry, and into the dark water where Mara waited for an answer.`).join('\n\n');
       const chat = ['```chat', '@viewer Mara', 'Mara: I can see the lantern from here.', 'Ivo: Follow the light along the wall.', 'Mara: The path is narrow.', 'Ivo: There is room beside the steps.', 'Mara: I am nearly there.', 'Ivo: I will wait by the gate.', '```'].join('\n');
@@ -289,12 +364,7 @@ async function until(fn, timeout = 60000) {
     if (process.env.STORY_TELLER_HOST_SCOPE === 'prose') {
       await request('open-project-scene', undefined, { projectRoot: importProject });
       await request('preview-project-scene');
-      const newer = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(item => item.type === 'iframe' && item.url.includes('murmurationpress.story-teller')).find(item => item.id !== target.id);
-      assert.ok(newer, 'The imported scene must have its own preview frame');
-      const receive = socket.onmessage;
-      socket.close(); socket = new WebSocket(newer.webSocketDebuggerUrl);
-      await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
-      socket.onmessage = receive;
+      assert.equal((await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(item=>item.type==='iframe' && item.url.includes('murmurationpress.story-teller')).length, 1, 'outline navigation reuses the reader');
       await until(async () => (await beat.textContent())?.includes('First paragraph.'));
       assert.doesNotMatch(await beat.textContent(), /Second paragraph/);
       assert.match(await locator('#status').textContent(), /prose pacing On \(book\)/);

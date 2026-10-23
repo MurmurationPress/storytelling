@@ -5,7 +5,7 @@ const { paceChoices } = require('./pace.cjs');
 const { inspectImage, baseFor } = require('./media.cjs');
 const { choices: settingChoices, values: settingValues, defaults: settingDefaults, locateSettingContext, currentSetting, planSetting, DEFAULT_SPEED, MIN_SPEED, MAX_SPEED } = require('./settings.cjs');
 function registerInsert(vscode, context) {
-  const run = async wrap => {
+  const run = async (wrap, directChoice) => {
     const editor = vscode.window.activeTextEditor;
     if (!editor || editor.document.languageId !== 'markdown' || editor.document.uri.scheme === 'story-teller-conversion') {
       vscode.window.showInformationMessage('Open an editable source Markdown document first.'); return;
@@ -15,7 +15,7 @@ function registerInsert(vscode, context) {
     const version = document.version;
     const selection = editor.selection;
     const source = document.getText();
-    const choice = wrap ? { id: 'wrap' } : await vscode.window.showQuickPick(choices, { title: 'Story Teller: Insert…', placeHolder: 'Insert story syntax at the caret', matchOnDescription: true });
+    const choice = directChoice || (wrap ? { id: 'wrap' } : await vscode.window.showQuickPick(choices, { title: 'Story Teller: Insert…', placeHolder: 'Insert story syntax at the caret', matchOnDescription: true }));
     if (!choice) return { status: 'cancelled' };
     let setting = null;
     if (choice.id === 'settings') {
@@ -117,6 +117,6 @@ function registerInsert(vscode, context) {
     } else applied = await editor.insertSnippet(new vscode.SnippetString(plan.snippet), document.positionAt(plan.at ?? offsets.start), { undoStopBefore: true, undoStopAfter: true, keepWhitespace: true });
     return { status: applied ? 'inserted' : 'stale', kind: choice.id };
   };
-  context.subscriptions.push(vscode.commands.registerCommand('storyTeller.insert', () => run(false)), vscode.commands.registerCommand('storyTeller.wrapSelectionAsChat', () => run(true)));
+  context.subscriptions.push(vscode.commands.registerCommand('storyTeller.insert', () => run(false)), vscode.commands.registerCommand('storyTeller.wrapSelectionAsChat', () => run(true)), vscode.commands.registerCommand('storyTeller.insertBeat', () => run(false, { id: 'boundary' })));
 }
 module.exports = { registerInsert };
