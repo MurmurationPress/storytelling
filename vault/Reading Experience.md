@@ -91,3 +91,5 @@ Ted has tested and accepted prose → page turn → automatically performed PRIM
 ## 2026-10-23 — Explicit supporting-note trial
 
 Ted has authorised [[Supporting Content]] in Story Teller: authored wikilinks select a particular supporting file, including distinct files sharing one label. This tests the bounded-aside direction in the existing extension preview. Hover/focus leaves the performance alone; opening a longer panel pauses it, with a return to the same beat and explicit resume. For this trial the author controls spoilers through the chosen links; automatic availability, timeline and spoiler rules remain outside scope. No supporting note becomes a scene or an automatic narrative step.
+
+**2026-10-23 acceptance:** Ted accepts the managed extension's scroll-follow, scene-opening autoplay and explicit supporting-note panels. The panels pause performance and return without autoplay; hover/focus is non-disruptive. Animated WebP has been demonstrated by Ted through Image insert, without synchronisation guarantees. JANUS uses existing notes/directives. These are extension findings, not ordinary-EPUB or standalone-web compatibility claims.

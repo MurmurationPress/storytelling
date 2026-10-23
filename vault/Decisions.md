@@ -180,3 +180,10 @@ This authorises implementation of the extract experiment only. The earlier think
 ## 2026-10-21 — Story Teller manual scene-preview slice
 
 **Ted's explicit direction:** implement a small VS Code extension for adapting completed books, with independent parser/player, prose and chat within beat boundaries, manual progression and live preview. This supersedes earlier no-scaffolding guidance for this specific slice only. The Markdown syntax remains provisional. Existing EPUB work and author-authored notes are preserved; no publication, release or merge is authorised. See [[Story Teller]].
+
+
+## 2026-10-23 — Accept and integrate Story Teller authoring baseline
+
+Ted accepts PR #12's import, ordered outline, prose pacing, scroll-follow, keyboard shortcuts and scene-opening autoplay, and PR #14's explicit supporting-note links, aliases, previews, nested panels and refresh. He authorises review and dependency-order merging before a separate web-renderer task. Author acceptance does not resolve native-test intermittency, verify untested platforms or imply publication readiness. No web renderer is implemented here.
+
+Ted demonstrated animated WebP using the existing Image insert. Record this as his observation, without claiming playback synchronisation or adding his media. JANUS will use existing notes/directives, not a new component. Private work and Component Types edits remain outside the integration. Licence terms are unchanged.

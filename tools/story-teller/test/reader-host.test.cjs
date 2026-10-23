@@ -78,3 +78,20 @@ test('supporting Markdown cannot be opened as a performed scene by author previe
   assert.equal(h.panels.length,0);
   await h.integration.openScene(h.editor(h.doc('/project/scenes/old.md')),()=>false);assert.equal(h.panels.length,0,'a superseded scene selection cannot win during project lookup');
 });
+
+test('beat folding targets its source editor before the native action and rejects an intervening edit', async () => {
+  const h=host();
+  h.vscode.window.showTextDocument=async document=>{
+    h.contexts.push(['showTextDocument',document.uri.fsPath]);
+    const editor=h.editor(document);h.vscode.window.activeTextEditor=editor;return editor;
+  };
+  await h.commands.get('storyTeller.collapseBeats')();
+  const events=h.contexts.filter(args=>['showTextDocument','workbench.action.focusActiveEditorGroup','editor.fold'].includes(args[0]));
+  assert.deepEqual(events.map(args=>args[0]),['showTextDocument','workbench.action.focusActiveEditorGroup','editor.fold']);
+  assert.deepEqual(events.at(-1)[1].selectionLines,[1]);
+  h.vscode.window.showWarningMessage=()=>{};
+  h.vscode.window.showTextDocument=async document=>{document.version++;return h.editor(document);};
+  h.contexts.length=0;
+  await h.commands.get('storyTeller.expandBeats')();
+  assert.equal(h.contexts.some(args=>args[0]==='editor.unfold'),false);
+});

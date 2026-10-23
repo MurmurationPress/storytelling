@@ -36,3 +36,5 @@ Add new ideas where they belong, link them, and retain unresolved alternatives. 
 - [[Story Teller]] — provisional VS Code manual scene-preview experiment; separate from EPUB delivery.
 
 - [[Supporting Content]] — explicit supporting-note previews in the Story Teller adaptation; a separate extension trial.
+
+**Accepted authoring baseline (2026-10-23):** Ted accepts the import/outline/pacing/navigation work in PR #12 and supporting notes in PR #14. See [[Story Teller]] and [[Supporting Content]] for scope, historical evidence and platform limits. Their review/integration precedes the separate web-renderer task.

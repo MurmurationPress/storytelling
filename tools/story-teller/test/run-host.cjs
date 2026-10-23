@@ -106,7 +106,8 @@ async function until(fn, timeout = 60000) {
     };
     const send = (method, params) => new Promise((resolve, reject) => {
       const id = ++callId;
-      pending.set(id, { resolve, reject });
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Native CDP request timed out: ${method}`)); }, 15000);
+      pending.set(id, { resolve: value => { clearTimeout(timer); resolve(value); }, reject: error => { clearTimeout(timer); reject(error); } });
       socket.send(JSON.stringify({ id, method, params }));
     });
     async function evaluate(expression, userGesture = false) {

@@ -257,8 +257,17 @@ function activate(context) {
   for (const [id, action] of [['collapseBeats', 'fold'], ['expandBeats', 'unfold']]) {
     context.subscriptions.push(vscode.commands.registerCommand(`storyTeller.${id}`, async () => {
       const editor = currentEditor(); if (!editor) return;
-      const lines = beatFoldRanges(rangesFor(editor.document)).map(range => range.start);
-      if (lines.length) await vscode.commands.executeCommand(`editor.${action}`, { selectionLines: lines, levels: 1, direction: 'up' });
+      const document = editor.document, version = document.version;
+      const lines = beatFoldRanges(rangesFor(document)).map(range => range.start);
+      if (!lines.length) return;
+      // Editor actions follow keyboard focus, which may still be in a sidebar
+      // even when activeTextEditor identifies our Markdown source.
+      const target = await vscode.window.showTextDocument(document, { viewColumn: editor.viewColumn, preserveFocus: false });
+      await vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup');
+      if (document.isClosed || document.version !== version || vscode.window.activeTextEditor?.document !== document || target.document !== document) {
+        vscode.window.showWarningMessage('The source editor changed while preparing beat folding. Run the command again.'); return;
+      }
+      await vscode.commands.executeCommand(`editor.${action}`, { selectionLines: lines, levels: 1, direction: 'up' });
     }));
   }
 }
