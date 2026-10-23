@@ -66,3 +66,18 @@ body.vscode-high-contrast-light .typeout-fill-yellow .typeout-surface, body.vsco
 .typeout-progress.active::after { content: '▌'; opacity: .7; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (prefers-reduced-motion: reduce) { .typeout-progress.active::after { content: none; } }
+/* Explicit supporting-note controls, independent of manuscript styling. */
+button.wiki-link { display:inline; font:inherit; line-height:inherit; color:var(--vscode-textLink-foreground,#7bd); background:transparent; padding:0; border:0; text-decoration:underline; text-underline-offset:.15em; white-space:normal; }
+button.wiki-link.note-unavailable { text-decoration-style:dotted; }
+.supporting-preview { position:fixed; z-index:10; box-sizing:border-box; max-height:min(17rem,70vh); overflow:auto; overscroll-behavior:contain; padding:.7rem 1rem; border:1px solid var(--vscode-focusBorder,#7bd); border-radius:.25rem; background:var(--vscode-editorHoverWidget-background,#252525); color:var(--vscode-editorHoverWidget-foreground,var(--vscode-editor-foreground,#ddd)); box-shadow:0 3px 12px #0005; font-size:.9rem; }
+.supporting-preview[hidden] { display:none; }
+.supporting-preview > :first-child { margin-top:0; }
+.supporting-preview img { max-width:100%; max-height:8rem; object-fit:contain; }
+.supporting-panel { box-sizing:border-box; width:min(42rem,calc(100vw - 24px)); max-height:calc(100vh - 24px); padding:0; border:1px solid var(--vscode-focusBorder,#7bd); background:var(--vscode-editor-background,#222); color:var(--vscode-editor-foreground,#ddd); font:inherit; }
+.supporting-panel::backdrop { background:#0008; }
+.supporting-panel > header { display:flex; flex-wrap:wrap; align-items:center; gap:.7rem; padding:.6rem; border-bottom:1px solid var(--vscode-panel-border,#888); }
+.supporting-panel h2 { flex:1; min-width:0; margin:0; font-size:1.05rem; overflow-wrap:anywhere; }
+.supporting-panel > article { box-sizing:border-box; padding:.8rem 1.2rem; max-height:calc(100vh - 8rem); overflow:auto; overscroll-behavior:contain; overflow-wrap:anywhere; }
+.supporting-panel img { display:block; max-width:100%; max-height:65vh; height:auto; object-fit:contain; }
+.supporting-panel pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+.supporting-warning { white-space:pre-wrap; font-size:.85rem; color:var(--vscode-editorWarning-foreground,#da8); }

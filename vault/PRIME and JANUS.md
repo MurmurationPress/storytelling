@@ -37,3 +37,5 @@ See [[Chat Performance]] and [[Art Prototype]].
 ## Accepted PRIME reference — 2026-10-20
 
 Ted accepts the prototype typing as excellent, with good pace and the alien quality sought. Preserve its restrained printout and default burst timing as the reference for reusable PRIME. This does not select JANUS's presentation or require sound. Chat is the next new component to test the common lifecycle against real manuscript dialogue. See [[Managed EPUB Foundation]].
+
+**2026-10-23 direction:** JANUS will use existing supporting Markdown notes and directives; no separate JANUS component is required. Ted has accepted the explicit note-link/preview/panel experience.

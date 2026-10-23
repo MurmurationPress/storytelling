@@ -12,6 +12,10 @@ exports.run = async function () {
   await fs.cp(path.join(__dirname, '../samples/assets'), path.join(directory, 'assets'), { recursive: true });
   await fs.writeFile(file, sample);
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'notes') {
+    const watcher = vscode.workspace.createFileSystemWatcher('**/Supporting Content/**');
+    for (const [name,subscribe] of [['change',watcher.onDidChange],['create',watcher.onDidCreate],['delete',watcher.onDidDelete]]) subscribe(uri=>{void fs.appendFile(path.join(directory,'note-watch-events.jsonl'),JSON.stringify({name,path:uri.fsPath,at:Date.now()})+'\n');});
+  }
   const focusSource = async () => {
     await vscode.window.showTextDocument(document, { viewColumn: vscode.ViewColumn.One, preserveFocus: false });
     await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
@@ -33,7 +37,25 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'default-bindings') {
+      if (request.action === 'supporting-doc-state') {
+        const notes=vscode.workspace.textDocuments.filter(doc=>doc.uri.fsPath.startsWith(directory)&&doc.uri.fsPath.includes('/Supporting Content/')).map(doc=>({file:doc.uri.fsPath,dirty:doc.isDirty,version:doc.version,text:doc.getText()}));
+        await fs.writeFile(path.join(directory,'supporting-doc-state.json'),JSON.stringify(notes));
+      } else if (request.action === 'select-scene') {
+        await vscode.commands.executeCommand('storyTeller.openProjectScene',request.projectRoot,{file:request.file});
+      } else if (request.action === 'preview-supporting') {
+        const note=await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
+        await vscode.window.showTextDocument(note,vscode.ViewColumn.One);
+        await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+        const until=Date.now()+5000;while(vscode.window.activeTextEditor?.document!==note&&Date.now()<until)await new Promise(resolve=>setTimeout(resolve,100));
+        if(vscode.window.activeTextEditor?.document!==note)throw Error('Test note editor did not become active');
+        await vscode.commands.executeCommand('storyTeller.previewScene');
+      } else if (request.action === 'edit-supporting') {
+        const note = await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
+        const edit = new vscode.WorkspaceEdit();edit.replace(note.uri,new vscode.Range(note.positionAt(0),note.positionAt(note.getText().length)),request.source);
+        await vscode.workspace.applyEdit(edit);
+      } else if (request.action === 'narrow-reader') {
+        await vscode.commands.executeCommand('vscode.setEditorLayout',{orientation:0,groups:[{size:.75},{size:.25}]});
+      } else if (request.action === 'default-bindings') {
         await vscode.commands.executeCommand('workbench.action.openDefaultKeybindingsFile');
         await fs.writeFile(path.join(directory, 'default-bindings.txt'), vscode.window.activeTextEditor.document.getText());
         await focusSource();
@@ -92,6 +114,8 @@ exports.run = async function () {
         await vscode.commands.executeCommand('workbench.action.previousEditor');
       } else if (request.action === 'show-preview') {
         await vscode.window.showTextDocument(document, vscode.ViewColumn.One);
+        await fs.writeFile(path.join(directory,'return-source-handoff.json'),JSON.stringify({expected:document.uri.toString(),active:vscode.window.activeTextEditor?.document.uri.toString(),tabs:vscode.window.tabGroups.all.flatMap(group=>group.tabs).map(tab=>tab.label)}));
+        await focusSource();
         await vscode.commands.executeCommand('storyTeller.previewScene');
       } else if (request.action === 'close-cover') {
         const cover = vscode.window.tabGroups.all.flatMap(group => group.tabs).find(tab => tab.input?.uri?.scheme === 'untitled' && tab.label === '# Temporary preview cover');

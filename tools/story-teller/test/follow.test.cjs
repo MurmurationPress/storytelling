@@ -100,3 +100,11 @@ test('type-out target is revealed text, not the full hidden reserve', () => {
     querySelector: value => value === '.typeout-progress' ? progress : { getBoundingClientRect: () => ({ top: 100, bottom: 900 }) } } };
   assert.equal(latestRect(content, { createRange: () => range }).bottom, 140);
 });
+
+test('scrolling or keyboard reading inside an aside does not suspend story following', () => {
+  const h=fixture();h.follower.setActive(true);h.follower.beginTurn();h.follower.endTurn();
+  const target={closest:()=>({}),matches:()=>false};
+  h.emit('wheel',{deltaY:-200,target});h.emit('keydown',{key:'PageUp',target});
+  h.emit('touchstart',{touches:[{clientY:100}],target});h.emit('touchmove',{touches:[{clientY:200}],target});
+  assert.equal(h.follower.following,true);h.follower.dispose();
+});

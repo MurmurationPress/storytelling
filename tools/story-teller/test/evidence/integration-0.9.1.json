@@ -1,0 +1,97 @@
+{
+  "date": "2026-10-23",
+  "platform": "Linux x64",
+  "reader": "VS Code 1.143.1",
+  "version": "0.9.1",
+  "tests": {
+    "syntax": "pass",
+    "unit": {
+      "pass": 198,
+      "fail": 0
+    },
+    "build": "pass",
+    "package": "pass",
+    "initial_combined_development_full": "pass",
+    "final_development_full": "failed folding observation",
+    "final_installed_full": "failed folding observation",
+    "installed_shortcuts": "failed: title prompt not observed after initial chord",
+    "follow": "initial overflow observed; final bounded run failed Input.dispatchMouseEvent wheel injection (CDP timeout), before rereading assertions",
+    "installed_prose": "pass",
+    "development_supporting_notes": "pass",
+    "installed_supporting_notes": "pass"
+  },
+  "package": {
+    "entries": 372,
+    "sha256": "17889c8fb15e94103bbe868e37eb340b96fa97846039a93c9bb2c5bd5352349b",
+    "runtime_exact": true,
+    "readme_verbatim": true,
+    "dependency_licences": true,
+    "samples_tests_vault_excluded": true
+  },
+  "supporting_observations": {
+    "initial": {
+      "phase": "Beat 1 of 3 \u00b7 Two accounts \u00b7 playing \u00b7 prose pacing Off (unchanged default)",
+      "top": 0,
+      "dialog": false,
+      "preview": false,
+      "title": ""
+    },
+    "beforePanel": {
+      "phase": "Beat 1 of 3 \u00b7 Two accounts \u00b7 playing \u00b7 prose pacing Off (unchanged default)",
+      "top": 0,
+      "dialog": false,
+      "preview": true,
+      "title": ""
+    },
+    "noteScroll": 111.33333587646484,
+    "narrow": {
+      "viewport": 220,
+      "width": 164.6666717529297,
+      "overflow": 0,
+      "controls": true
+    },
+    "partial": {
+      "tag": "SPAN",
+      "label": "J",
+      "interactive": false
+    },
+    "audio": [
+      "WebAudio.contextCreated",
+      "WebAudio.audioNodeCreated",
+      "WebAudio.audioListenerCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.contextChanged",
+      "WebAudio.audioNodeCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioNodeCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.nodesConnected",
+      "WebAudio.nodesConnected",
+      "WebAudio.nodesDisconnected",
+      "WebAudio.nodesDisconnected"
+    ],
+    "final": {
+      "phase": "Beat 1 of 1 \u00b7 A new scene \u00b7 ready \u00b7 prose pacing Off (unchanged default)",
+      "top": 0,
+      "dialog": false,
+      "preview": false,
+      "title": ""
+    }
+  },
+  "limitations": [
+    "native folding/focus/input intermittency unresolved",
+    "no human listening in automated runs",
+    "touch and other platforms unverified",
+    "extension-level licence unresolved",
+    "no web renderer implemented"
+  ]
+}

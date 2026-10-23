@@ -41,6 +41,12 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'notes') {
+    importProject = path.join(directory, 'supporting-project');
+    await fs.cp(path.join(root, 'samples/supporting-project'), importProject, { recursive: true });
+    const file=path.join(importProject,'scenes/Two accounts.md');
+    await fs.writeFile(file,(await fs.readFile(file,'utf8')).replace('Mara: I read','@delay 6000ms\nMara: I read'));
+  }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
   const vsix = process.env.STORY_TELLER_VSIX;
@@ -68,7 +74,9 @@ async function until(fn, timeout = 60000) {
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
   let id = 0;
+  let bringFront = async () => {};
   async function request(action, source, options = {}) {
+    if (['show-preview','preview-supporting'].includes(action)) await bringFront();
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action, source, ...options }));
     const ack = await until(async () => {
       const value = JSON.parse(await fs.readFile(path.join(directory, 'ack.json'), 'utf8'));
@@ -84,6 +92,11 @@ async function until(fn, timeout = 60000) {
     });
     socket = new WebSocket(target.webSocketDebuggerUrl);
     await new Promise((resolve, reject) => { socket.onopen = resolve; socket.onerror = reject; });
+    bringFront = async () => {
+      const page=(await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item=>item.type==='page');
+      const front=new WebSocket(page.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{front.onopen=resolve;front.onerror=reject;});
+      try { await new Promise((resolve,reject)=>{front.onmessage=event=>{const result=JSON.parse(event.data);if(result.id===1)result.error?reject(Error(JSON.stringify(result.error))):resolve();};front.send(JSON.stringify({id:1,method:'Page.bringToFront',params:{}}));}); } finally { front.close(); }
+    };
     let callId = 0;
     const pending = new Map();
     socket.onmessage = event => {
@@ -93,7 +106,8 @@ async function until(fn, timeout = 60000) {
     };
     const send = (method, params) => new Promise((resolve, reject) => {
       const id = ++callId;
-      pending.set(id, { resolve, reject });
+      const timer = setTimeout(() => { pending.delete(id); reject(new Error(`Native CDP request timed out: ${method}`)); }, 15000);
+      pending.set(id, { resolve: value => { clearTimeout(timer); resolve(value); }, reject: error => { clearTimeout(timer); reject(error); } });
       socket.send(JSON.stringify({ id, method, params }));
     });
     async function evaluate(expression, userGesture = false) {
@@ -111,6 +125,80 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'notes') {
+      const key=async(name,virtual, text)=>{for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key:name,code:name,windowsVirtualKeyCode:virtual,nativeVirtualKeyCode:virtual,...(text&&type==='keyDown'?{text}:{})});};
+      const state=()=>evaluate("({phase:doc.getElementById('status').textContent,top:doc.scrollingElement.scrollTop,dialog:doc.querySelector('.supporting-panel').open,preview:!doc.querySelector('.supporting-preview').hidden,title:doc.querySelector('.supporting-panel h2').textContent})");
+      const move=async selector=>{const rect=await evaluate(`(()=>{const r=doc.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(), f=document.getElementById('active-frame').getBoundingClientRect();return {x:f.x+r.x+Math.min(10,r.width/2),y:f.y+r.y+Math.min(10,r.height/2)};})()`);await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:rect.x,y:rect.y});};
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Two accounts.md'});
+      await until(async()=>await evaluate("doc.querySelectorAll('#beat button.wiki-link').length>=3"));
+      const initial=await state();assert.match(initial.phase,/playing/);
+      assert.deepEqual(await evaluate("[...doc.querySelectorAll('#beat button.wiki-link')].slice(0,3).map(e=>[e.textContent,e.dataset.storyTarget])"),[['Edward','Ted'],['JANUS','JANUS early'],['JANUS','JANUS later']]);
+      await move('#beat button[data-story-target="JANUS early"]');
+      await until(async()=>await evaluate("!doc.querySelector('.supporting-preview').hidden && doc.querySelector('.supporting-preview').textContent.includes('unopened harbour ledger')"));
+      assert.match((await state()).phase,/playing/);await move('.supporting-preview');await sleep(350);assert.equal((await state()).preview,true,'pointer can move into the preview');
+      await fs.appendFile(path.join(importProject,'Supporting Content/JANUS early.md'),'\n\nRefreshed during playback.');
+      try { await until(async()=>await evaluate("!doc.querySelector('.supporting-preview').hidden && doc.querySelector('.supporting-preview').textContent.includes('Refreshed during playback')"),10000); }
+      catch(error) { await request('supporting-doc-state');await fs.writeFile(path.join(directory,'hover-refresh-failure.json'),JSON.stringify(await evaluate("({status:doc.getElementById('status').textContent,hidden:doc.querySelector('.supporting-preview').hidden,text:doc.querySelector('.supporting-preview').textContent,hover:doc.querySelector('.supporting-preview').matches(':hover')})")));throw error; }
+      assert.doesNotMatch((await state()).phase,/ready/);
+      await sleep(2500);assert.equal((await state()).preview,true);assert.equal(await evaluate("doc.querySelector('.supporting-preview').textContent.includes('unopened harbour ledger')"),true,'story progression must not switch the note under the pointer');
+      assert.ok(await evaluate("doc.querySelectorAll('#beat .chat li').length>0"),'chat progresses while hover remains pinned');
+      await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:2,y:2});
+      await evaluate("doc.querySelector('#beat button[data-story-target=\"JANUS later\"]').focus()");
+      await until(async()=>await evaluate("doc.querySelector('.supporting-preview').textContent.includes('public notice')"));
+      const beforePanel=await state();await key('Enter',13,'\r');
+      await until(async()=>(await state()).dialog);assert.match((await state()).phase,/paused/);
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel article').textContent.includes('public notice')"));
+      const held=await beat.textContent();await sleep(450);assert.equal(await beat.textContent(),held);
+      await key('Escape',27);await until(async()=>!(await state()).dialog);assert.match((await state()).phase,/paused/);assert.equal((await state()).top,beforePanel.top);
+      assert.equal(await evaluate("doc.activeElement.dataset.storyTarget"),'JANUS later');
+      await key('Tab',9);assert.equal(await evaluate("Boolean(doc.activeElement.closest('.supporting-panel'))"),false);
+      await evaluate("doc.querySelector('#beat button[data-story-target=\"Ted\"]').click()",true);
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel img')?.naturalWidth===360"));
+      await evaluate("doc.querySelector('.supporting-panel article').scrollTop=120");
+      const noteScroll=await evaluate("doc.querySelector('.supporting-panel article').scrollTop");
+      await evaluate("doc.querySelector('.supporting-panel button[data-story-target=\"definitions/Accounts\"]').click()",true);
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel h2').textContent==='Accounts'"));
+      assert.equal(await evaluate("doc.querySelector('.supporting-panel script')"),null);
+      await evaluate("doc.querySelector('.supporting-panel header button').click()");
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel h2').textContent==='Ted' && doc.querySelector('.supporting-panel article').scrollTop>0"));
+      assert.equal(await evaluate("doc.querySelector('.supporting-panel article').scrollTop"),noteScroll);
+      const old=await fs.readFile(path.join(importProject,'Supporting Content/Ted.md'),'utf8');
+      await request('edit-supporting',old+'\n\nAn unsaved supporting revision.',{file:path.join(importProject,'Supporting Content/Ted.md')});
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel article').textContent.includes('unsaved supporting revision')"));assert.equal(await fs.readFile(path.join(importProject,'Supporting Content/Ted.md'),'utf8'),old);assert.match((await state()).phase,/paused/);
+      await request('narrow-reader');
+      const narrow=await until(async()=>await evaluate("(()=>{const p=doc.querySelector('.supporting-panel'),a=p.querySelector('article');return doc.defaultView.innerWidth<450&&{viewport:doc.defaultView.innerWidth,width:p.getBoundingClientRect().width,overflow:a.scrollWidth-a.clientWidth,controls:[...p.querySelectorAll('header button')].every(b=>{const r=b.getBoundingClientRect();return r.left>=0&&r.right<=doc.defaultView.innerWidth;})};})()"));
+      assert.equal(narrow.controls,true);assert.ok(narrow.width<narrow.viewport && narrow.overflow<=1,JSON.stringify(narrow));
+      await evaluate("doc.querySelector('.supporting-panel header button:last-child').click()");await until(async()=>!(await state()).dialog);
+      await evaluate("doc.querySelector('#beat button[data-story-target=\"Ted\"]').click()",true);await until(async()=>(await state()).dialog);
+      await send('Input.dispatchMouseEvent',{type:'mousePressed',x:2,y:2,button:'left',clickCount:1});await send('Input.dispatchMouseEvent',{type:'mouseReleased',x:2,y:2,button:'left',clickCount:1});
+      await until(async()=>!(await state()).dialog);assert.match((await state()).phase,/paused/);
+      const audio=[];const receive=socket.onmessage;socket.onmessage=event=>{const m=JSON.parse(event.data);if(m.method?.startsWith('WebAudio.'))audio.push(m.method);receive(event);};await send('WebAudio.enable',{});
+      await evaluate("doc.getElementById('next').click()",true);await until(async()=>await evaluate("Boolean(doc.querySelector('.typeout-annotation'))"));
+      await until(()=>audio.includes('WebAudio.nodesConnected'));
+      const partial=await until(async()=>await evaluate("(()=>{const link=doc.querySelector('.typeout-progress [data-story-target=\"JANUS early\"]'),s=link?.querySelector('[data-story-segment] > span:first-child');return s?.textContent.length>0&&s.textContent.length<5&&{tag:link.tagName,label:s.textContent,interactive:link.matches('button')};})()"));assert.equal(partial.interactive,false);
+      await until(async()=>await evaluate("Boolean(doc.querySelector('.typeout-progress button[data-story-target=\"JANUS early\"]'))"));
+      assert.equal(await evaluate("Boolean(doc.querySelector('.typeout-progress button').closest('[aria-hidden=true]'))"),false);
+      const disconnects=audio.filter(event=>event==='WebAudio.nodesDisconnected').length;
+      await evaluate("doc.querySelector('.typeout-progress button').click()",true);await until(async()=>(await state()).dialog);assert.match((await state()).phase,/paused/);
+      await until(()=>audio.filter(event=>event==='WebAudio.nodesDisconnected').length>disconnects);
+      await evaluate("doc.querySelector('.supporting-panel header button:last-child').click()");
+      await evaluate("doc.getElementById('reveal').click()");await until(async()=>await evaluate("Boolean(doc.querySelector('#beat button[data-story-target=\"Missing definition\"]'))"));
+      assert.match(await locator('#warnings').textContent(),/Missing note/);
+      await evaluate("doc.querySelector('#beat button[data-story-target=\"Missing definition\"]').click()",true);
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel article').textContent.includes('Missing note')"));
+      await evaluate("doc.querySelector('.supporting-panel header button:last-child').click()");
+      await fs.writeFile(path.join(importProject,'Supporting Content/Missing definition.md'),'A newly created definition.');
+      await until(async()=>!(await locator('#warnings').textContent()).includes('Missing note'));
+      await evaluate("doc.querySelector('#beat button[data-story-target=\"Missing definition\"]').click()",true);
+      await until(async()=>await evaluate("doc.querySelector('.supporting-panel article').textContent.includes('newly created definition')"));
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Next.md'});
+      await until(async()=>(await beat.textContent())?.includes('A new scene begins.'));assert.equal((await state()).dialog,false);assert.equal((await state()).top,0);await sleep(300);assert.equal((await state()).preview,false);
+      await request('preview-supporting',undefined,{file:path.join(importProject,'Supporting Content/Ted.md')});
+      await request('active-source-state');const author=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));assert.equal(author.previews.length,1);assert.match(author.previews[0],/Next.md/);assert.match((await state()).phase,/A new scene/);
+      await fs.writeFile(path.join(directory,'supporting-evidence.json'),JSON.stringify({initial,beforePanel,noteScroll,narrow,partial,audio,final:await state()},null,2));
+      console.log(`PASS: ${vsix?'installed VSIX':'Development Host'} supporting notes: native pointer hover/focus/Enter, nested/back, Escape/close/outside, pause, unsaved/file refresh, narrow viewport, partial annotation and scene cleanup; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'navigation') {
       const main = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item=>item.type==='page');
       const ws=new WebSocket(main.webSocketDebuggerUrl); await new Promise(resolve=>{ws.onopen=resolve;});
@@ -736,7 +824,8 @@ async function until(fn, timeout = 60000) {
     assert.equal(await prefix(), hiddenPrefix);
     assert.equal(await evaluate("doc.getElementById('mute').getAttribute('aria-pressed')"), 'true');
     await fs.writeFile(path.join(directory, 'typeout-hide-state.json'), JSON.stringify(await evaluate("({hidden: doc.hidden, pauseDisabled: doc.getElementById('pause').disabled, status: doc.getElementById('status').textContent})"), null, 2));
-    await until(async () => !(await locator('#pause').isDisabled()), 10000);
+    try { await until(async () => !(await locator('#pause').isDisabled()), 10000); }
+    catch(error) { await request('active-source-state');await fs.writeFile(path.join(directory,'return-preview-failure.json'),JSON.stringify(await evaluate("({hidden:doc.hidden,status:doc.getElementById('status').textContent,frames:[...document.querySelectorAll('iframe')].map(e=>e.id)})")));throw error; }
     await evaluate("doc.defaultView.dispatchEvent(new MessageEvent('message', { data: { type: 'presentation', visible: false, epoch: 0 } }))");
     assert.equal(await locator('#pause').isDisabled(), false, 'A stale hide event must not override the latest presentation');
     await locator('#pause').click();

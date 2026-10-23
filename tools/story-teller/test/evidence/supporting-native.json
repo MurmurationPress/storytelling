@@ -1,0 +1,97 @@
+{
+  "reader": "VS Code",
+  "version": "1.143.1",
+  "platform": "Linux x64",
+  "artifact": "story-teller-0.9.0.vsix",
+  "method": "Automated native editor, CDP input/DOM/Web Audio events, synthetic local project",
+  "checks": {
+    "pointer_preview_stable_ms": 350,
+    "paused_content_stable_ms": 450,
+    "keyboard_focus_enter_escape": true,
+    "nested_note_back": true,
+    "unsaved_note_refresh_without_saving": true,
+    "hover_file_refresh_without_playback_reset": true,
+    "missing_note_creation_refresh": true,
+    "scene_switch_clears_asides": true,
+    "supporting_file_cannot_be_previewed_as_scene": true,
+    "same_preview_during_new_chat_message_ms": 2500
+  },
+  "observations": {
+    "initial": {
+      "phase": "Beat 1 of 3 \u00b7 Two accounts \u00b7 playing \u00b7 prose pacing Off (unchanged default)",
+      "top": 0,
+      "dialog": false,
+      "preview": false,
+      "title": ""
+    },
+    "beforePanel": {
+      "phase": "Beat 1 of 3 \u00b7 Two accounts \u00b7 playing \u00b7 prose pacing Off (unchanged default)",
+      "top": 0,
+      "dialog": false,
+      "preview": true,
+      "title": ""
+    },
+    "noteScroll": 110,
+    "narrow": {
+      "viewport": 220,
+      "width": 165,
+      "overflow": 0,
+      "controls": true
+    },
+    "partial": {
+      "tag": "SPAN",
+      "label": "J",
+      "interactive": false
+    },
+    "audio": [
+      "WebAudio.contextCreated",
+      "WebAudio.audioNodeCreated",
+      "WebAudio.audioListenerCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.contextChanged",
+      "WebAudio.audioNodeCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.audioNodeCreated",
+      "WebAudio.audioParamCreated",
+      "WebAudio.nodesConnected",
+      "WebAudio.nodesConnected",
+      "WebAudio.nodesDisconnected",
+      "WebAudio.nodesDisconnected"
+    ],
+    "final": {
+      "phase": "Beat 1 of 1 \u00b7 A new scene \u00b7 ready \u00b7 prose pacing Off (unchanged default)",
+      "top": 0,
+      "dialog": false,
+      "preview": false,
+      "title": ""
+    }
+  },
+  "unverified": [
+    "touch",
+    "Windows/macOS",
+    "iPad/Safari",
+    "VSCodium",
+    "human listening"
+  ],
+  "filesystem_events": [
+    {
+      "kind": "change",
+      "file": "Supporting Content/JANUS early.md",
+      "elapsed_ms": 0
+    },
+    {
+      "kind": "create",
+      "file": "Supporting Content/Missing definition.md",
+      "elapsed_ms": 5858
+    }
+  ]
+}

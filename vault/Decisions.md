@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-23 — Accept reader conveniences; trial explicit supporting notes
+
+**Ted's acceptance:** automatic scroll-follow, all five direct keyboard commands and Part–Scene Outline autoplay at `bf846888f0cbedc70328ff103eea12b9ea8b861e` are tested and accepted. This supersedes their earlier pending statuses. It is not a release, licence or general reader-compatibility decision.
+
+**Authorised trial, awaiting acceptance:** supporting Markdown notes in an adaptation project's fixed `Supporting Content/` folder, reached only through explicit authored wikilinks. Aliases and distinct files with one display name give the author control over the information offered at each point. No entity matching, timeline/spoiler engine, transclusion or story-sequence entries are introduced. Hover/focus previews leave playback alone; a longer reading panel pauses it and returns to the same beat, with explicit resume. This lives in the current VS Code preview, not a new web renderer. See [[Supporting Content]].
+
 ## 2026-10-23 — Accept scroll-follow; trial keyboard conveniences and outline autoplay
 
 **Ted's acceptance:** automatic scroll-follow is tested and accepted. The earlier pending entry below is historical. This does not establish acceptance of every new navigation enhancement.
@@ -174,3 +180,10 @@ This authorises implementation of the extract experiment only. The earlier think
 ## 2026-10-21 — Story Teller manual scene-preview slice
 
 **Ted's explicit direction:** implement a small VS Code extension for adapting completed books, with independent parser/player, prose and chat within beat boundaries, manual progression and live preview. This supersedes earlier no-scaffolding guidance for this specific slice only. The Markdown syntax remains provisional. Existing EPUB work and author-authored notes are preserved; no publication, release or merge is authorised. See [[Story Teller]].
+
+
+## 2026-10-23 — Accept and integrate Story Teller authoring baseline
+
+Ted accepts PR #12's import, ordered outline, prose pacing, scroll-follow, keyboard shortcuts and scene-opening autoplay, and PR #14's explicit supporting-note links, aliases, previews, nested panels and refresh. He authorises review and dependency-order merging before a separate web-renderer task. Author acceptance does not resolve native-test intermittency, verify untested platforms or imply publication readiness. No web renderer is implemented here.
+
+Ted demonstrated animated WebP using the existing Image insert. Record this as his observation, without claiming playback synchronisation or adding his media. JANUS will use existing notes/directives, not a new component. Private work and Component Types edits remain outside the integration. Licence terms are unchanged.

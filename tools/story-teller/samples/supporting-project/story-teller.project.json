@@ -1,0 +1,10 @@
+{
+  "schema": "story-teller-project",
+  "version": 1,
+  "title": "A fictional JANUS demonstration",
+  "parts": [{"id": "part", "title": "The harbour", "scenes": ["scene", "other"]}],
+  "scenes": [
+    {"id": "scene", "partId": "part", "label": "1.1", "title": "Two accounts", "file": "scenes/Two accounts.md"},
+    {"id": "other", "partId": "part", "label": "1.2", "title": "The next scene", "file": "scenes/Next.md"}
+  ]
+}

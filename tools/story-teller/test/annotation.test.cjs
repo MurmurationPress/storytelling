@@ -45,7 +45,7 @@ test('annotation parses once into stable safe structure and counts rendered grap
 test('wiki labels render in prose and annotations, while escapes, code and embeds remain literal', () => {
   const prose = 'See [[target|Label]], [[Other]], \\[[escaped]], `[[code]]`, and ![[media.png]].';
   const scene = parseScene(prose + '\n\n' + `${tick}typeout\n@format annotation\n\n[[target|Shown]] \\[[escaped]] ` + '`[[code]]`' + ' ![[media.png]]\n' + tick);
-  assert.match(scene.beats[0].blocks[0].html, /See Label, Other, \[\[escaped\]\], <code>\[\[code\]\]<\/code>, and !\[\[media.png\]\]/);
+  assert.match(scene.beats[0].blocks[0].html.replace(/<span[^>]*>|<\/span>/g, ''), /See Label, Other, \[\[escaped\]\], <code>\[\[code\]\]<\/code>, and !\[\[media.png\]\]/);
   const rendered = scene.beats[0].blocks[1].annotation;
   assert.equal(rendered.segments.join(''), 'Shown [[escaped]] [[code]] ![[media.png]]');
   assert.doesNotMatch(rendered.html, /<a|<img/);

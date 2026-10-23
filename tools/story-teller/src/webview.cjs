@@ -7,6 +7,7 @@ const { graphemes } = require('./typeout.cjs');
 const { SceneAutoplay, currentReaderMessage } = require('./scene-navigation.cjs');
 const sceneAutoplay = new SceneAutoplay();
 let needsAudioGesture = false;
+const { SupportingReader } = require('./supporting-reader.cjs');
 const { ScrollFollower } = require('./follow.cjs');
 const api = acquireVsCodeApi();
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -27,16 +28,36 @@ let preparing = false;
 let pacingWarning = null;
 let pacingLabel = 'Off (unchanged default)';
 let lastEndTurnAt = -Infinity;
+let supportingDiagnostics = [];
+let supportingVersion = -1, noteRequest = 0;
+const noteRequests = new Map();
 const content = document.getElementById('beat');
 const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
 const follower = new ScrollFollower({ window, document, content, nav: document.querySelector('nav'),
   button: document.getElementById('follow-story'), reducedMotion: () => motion.matches });
+const notes = new SupportingReader({ window, document, content,
+  available: () => !preparing && presented && !document.hidden,
+  load(target) {
+    return new Promise((resolve, reject) => {
+      const request = ++noteRequest;
+      noteRequests.set(request, { resolve, reject });
+      api.postMessage({ type: 'supporting-load', instance: document.body.dataset.readerInstance, revision, request, target });
+    });
+  },
+  pause() { sceneAutoplay.cancel(); follower.setActive(false); player.pause(); sound.stop(); },
+  onClose() { follower.setActive(presented && !document.hidden); }
+});
+function resetNotes() {
+  notes.reset();
+  for (const request of noteRequests.values()) request.reject(Error('The scene changed'));
+  noteRequests.clear();
+}
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
   status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
-  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
+  warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...supportingDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || player.index === 0;
   document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
@@ -88,6 +109,7 @@ function revealAnnotation(progress, count) {
     segment.firstChild.textContent = parts.slice(0, shown).join('');
     segment.lastChild.textContent = parts.slice(shown).join('');
     segment.dataset.revealed = shown ? 'true' : 'false';
+    segment.dataset.complete = shown === parts.length ? 'true' : 'false';
   }
   // Hidden future list items must not show bullets; the same rule hides
   // empty future paragraphs and quote borders without changing their layout.
@@ -95,6 +117,7 @@ function revealAnnotation(progress, count) {
     block.style.visibility = block.querySelector('[data-revealed="true"]') ? '' : 'hidden';
 }
 function render() {
+  const focusedLink = document.activeElement?.matches?.('button.wiki-link') && content.contains(document.activeElement) ? notes.key(document.activeElement) : null;
   const active = player.activeTypeout;
   if (active && lastTypeoutRender?.scene === player.scene && lastTypeoutRender.index === player.index && lastTypeoutRender.blockIndex === active.blockIndex) {
     const progress = content.querySelector('.typeout-progress');
@@ -103,7 +126,7 @@ function render() {
       if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
       else progress.textContent = shown?.visibleText || '';
       progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
-      controls(); follower.changed(); return;
+      notes.afterRender(); controls(); follower.changed(); return;
     }
   }
   lastTypeoutRender = null;
@@ -139,16 +162,18 @@ function render() {
       if (block.format === 'annotation') {
         accessible.innerHTML = block.annotation.html;
         for (const segment of accessible.querySelectorAll('[data-story-segment]')) segment.removeAttribute('data-story-segment');
+        for (const link of accessible.querySelectorAll('[data-story-target]')) link.removeAttribute('data-story-target');
       } else accessible.textContent = block.text;
       const surface = document.createElement('div'); surface.className = 'typeout-surface';
       const progress = document.createElement(block.format === 'annotation' ? 'div' : 'pre');
-      progress.className = 'typeout-progress'; progress.setAttribute('aria-hidden', 'true');
+      progress.className = 'typeout-progress'; if (block.format !== 'annotation') progress.setAttribute('aria-hidden', 'true');
       if (block.format === 'annotation') {
         progress.innerHTML = block.annotation.html;
         progress.storyParts = block.annotation.segments.map(graphemes);
         for (const segment of progress.querySelectorAll('[data-story-segment]')) {
           const shown = document.createElement('span');
           const hidden = document.createElement('span'); hidden.className = 'typeout-unrevealed';
+          segment.setAttribute('aria-hidden', 'true');
           segment.replaceChildren(shown, hidden);
         }
         revealAnnotation(progress, block.revealCount);
@@ -175,7 +200,7 @@ function render() {
         const speaker = document.createElement('strong');
         speaker.textContent = message.speaker;
         const text = document.createElement('p');
-        text.textContent = message.text;
+        if (message.html) text.innerHTML = message.html; else text.textContent = message.text;
         item.append(speaker, text);
         if (message.speaker === block.viewer) item.className = 'outgoing';
         if (message.status) {
@@ -220,6 +245,8 @@ function render() {
     }
     content.append(ending);
   }
+  notes.afterRender();
+  if (focusedLink) notes.find(focusedLink)?.focus({ preventScroll: true });
   controls();
   follower.changed();
 }
@@ -251,7 +278,7 @@ function startSelectedScene() {
 }
 function turnNext() {
   if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
-  follower.beginTurn();
+  resetNotes(); follower.beginTurn();
   sound.stop();
   if (autoplayOnTurn) unlockSound(player.scene.beats[player.index + 1]);
   player.next({ autoplay: autoplayOnTurn }); render(); follower.endTurn();
@@ -259,18 +286,18 @@ function turnNext() {
 document.getElementById('next').addEventListener('click', turnNext);
 document.getElementById('previous').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  follower.beginTurn({ silent: true }); sound.stop(); player.previous(); render(); follower.endTurn();
+  resetNotes(); follower.beginTurn({ silent: true }); sound.stop(); player.previous(); render(); follower.endTurn();
 });
 document.getElementById('restart').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  follower.beginTurn(); sound.stop(); player.restart(); render(); follower.endTurn();
+  resetNotes(); follower.beginTurn(); sound.stop(); player.restart(); render(); follower.endTurn();
 });
 document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.play(); } });
 document.getElementById('pause').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
   if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
-document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
+document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { resetNotes(); follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
 document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
 document.getElementById('enable-sound').addEventListener('click', () => {
   if (!preparing && presented && !document.hidden) { unlockSound(player.scene.beats.find(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'))); render(); }
@@ -288,21 +315,32 @@ document.getElementById('autoplay').addEventListener('change', event => {
 motion.addEventListener('change', event => player.setReducedMotion(event.matches));
 function showSource() {
   if (preparing || !player.current) return;
-  sceneAutoplay.cancel();
+  resetNotes(); sceneAutoplay.cancel();
   const range = player.current.sourceRange;
   follower.beginTurn(); player.reset(); render(); follower.endTurn();
   api.postMessage({ type: 'show-source', uri: sourceUri, revision, index: player.index, startOffset: range.startOffset, endOffset: range.endOffset });
 }
 document.getElementById('show-source').addEventListener('click', showSource);
-document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) { sceneAutoplay.leave(); player.pause(); } render(); startSelectedScene(); });
-window.addEventListener('pagehide', () => { follower.dispose(); player.dispose(); sound.dispose(); });
+document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) { resetNotes(); sceneAutoplay.leave(); player.pause(); } render(); startSelectedScene(); });
+window.addEventListener('pagehide', () => { resetNotes(); notes.dispose(); follower.dispose(); player.dispose(); sound.dispose(); });
 window.addEventListener('beforeunload', () => sound.dispose());
 window.addEventListener('message', async event => {
   const message = event.data;
+  if (message?.type?.startsWith('supporting-') && (message.instance !== document.body.dataset.readerInstance || message.revision !== revision)) return;
+  if (message?.type === 'supporting-result') {
+    const request = noteRequests.get(message.request);
+    if (request) { noteRequests.delete(message.request); message.error ? request.reject(Error(message.error)) : request.resolve(message.note); }
+    return;
+  }
+  if (message?.type === 'supporting-refresh' && message.version > supportingVersion) {
+    supportingVersion = message.version; supportingDiagnostics = message.supporting.diagnostics;
+    notes.refresh(message.supporting.links); controls(); return;
+  }
   if (!currentReaderMessage(document.body.dataset.readerInstance, message)) return;
   if (message?.type === 'show-source-request') { showSource(); return; }
   if (message?.type === 'source-pending' && Number.isInteger(message.revision) && message.revision > incomingRevision) {
     incomingRevision = message.revision;
+    resetNotes();
     pendingDeparture = sceneAutoplay.departure;
     sceneAutoplay.cancel(); sound.stop();
     follower.beginTurn();
@@ -315,7 +353,7 @@ window.addEventListener('message', async event => {
         presentationEpoch = message.epoch;
         presented = message.visible;
         follower.setActive(presented && !document.hidden);
-        if (!presented) { sceneAutoplay.leave(); player.pause(); }
+        if (!presented) { resetNotes(); sceneAutoplay.leave(); player.pause(); }
         render(); startSelectedScene();
       }
       api.postMessage({ type: 'presentation-ack', epoch: message.epoch });
@@ -329,6 +367,7 @@ window.addEventListener('message', async event => {
     autoplayOnTurn = message.autoplayOnTurn; if (!autoplayOnTurn) sceneAutoplay.cancel(); render(); return;
   }
   if (message?.type !== 'source' || typeof message.source !== 'string' || !Number.isInteger(message.revision) || message.revision < incomingRevision || message.revision <= revision) return;
+  resetNotes();
   const departure = message.revision === incomingRevision ? pendingDeparture : sceneAutoplay.departure;
   incomingRevision = message.revision;
   sceneAutoplay.cancel();
@@ -343,6 +382,9 @@ window.addEventListener('message', async event => {
   }));
   if (message.revision !== incomingRevision || player.disposed) return;
   revision = message.revision;
+  supportingVersion = message.supportingVersion ?? -1;
+  supportingDiagnostics = message.supporting?.diagnostics || [];
+  notes.links = message.supporting?.links || {};
   if (typeof message.muted === 'boolean') muted = message.muted;
   if (typeof message.autoplayOnTurn === 'boolean') autoplayOnTurn = message.autoplayOnTurn;
   media = prepared;

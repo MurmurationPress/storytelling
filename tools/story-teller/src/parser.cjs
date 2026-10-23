@@ -1,16 +1,15 @@
 'use strict';
-const MarkdownIt = require('markdown-it');
 const { PACE_MULTIPLIERS } = require('./pace.cjs');
 const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS, BORDERS, FILLS } = require('./typeout.cjs');
 const { inspectStructure, beatRanges } = require('./structure.cjs');
-const { wikiLinks, renderAnnotation } = require('./annotation.cjs');
+const { renderAnnotation } = require('./annotation.cjs');
 const { visibleWords, proseInterval } = require('./prose-pacing.cjs');
-const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
-wikiLinks(md);
+const { createMarkdown, references, renderChat, inlineText } = require('./markdown.cjs');
+const md = createMarkdown();
 // Image URLs are inert data here; only the VS Code host may resolve local files.
 md.renderer.rules.link_open = () => '<span class="link-text">';
 md.renderer.rules.link_close = () => '</span>';
-const imageAlt = token => md.renderer.renderInlineAsText(token.children || [], md.options, {});
+const imageAlt = token => inlineText(md, token.children);
 md.renderer.rules.image = (tokens, index) => {
   const token = tokens[index];
   return `<img class="story-inline-image" data-story-src="${md.utils.escapeHtml(token.attrGet('src') || '')}" alt="${md.utils.escapeHtml(imageAlt(token))}">`;
@@ -23,8 +22,8 @@ const standaloneImage = (tokens, index) => {
 const captionAfter = (tokens, index) => {
   if (tokens[index]?.type !== 'paragraph_open' || tokens[index + 1]?.type !== 'inline' || tokens[index + 2]?.type !== 'paragraph_close') return null;
   const children = tokens[index + 1].children || [];
-  return children.length === 3 && children[0].type === 'em_open' && children[1].type === 'text' && children[2].type === 'em_close'
-    ? children[1].content.match(/^Caption: (.+)$/)?.[1] || null : null;
+  return children[0]?.type === 'em_open' && children.at(-1)?.type === 'em_close' && children.slice(1,-1).every(child => ['text','story_wikilink'].includes(child.type))
+    ? children.slice(1,-1).map(child => child.content).join('').match(/^Caption: (.+)$/)?.[1] || null : null;
 };
 
 // Top-level block rule, deliberately absent from paragraph-interruption rules.
@@ -56,6 +55,7 @@ function parseScene(source, { prosePacing = false } = {}) {
   const lines = structure.lines.map((line, i) => i === 0 ? line.text.replace(/^\uFEFF/, '') : line.text);
   const diagnostics = [];
   const images = new Set();
+  const wikiReferences = [];
   const imageLines = Object.create(null);
   const { start } = structure;
   const frontmatter = structure.frontmatter?.closed ? lines.slice(1, structure.frontmatter.end - 1).join('\n') : null;
@@ -87,8 +87,11 @@ function parseScene(source, { prosePacing = false } = {}) {
     };
     let prose = [];
     const flush = (pacedParagraph = false) => {
-      if (prose.length) add({ type: 'prose', html: md.renderer.render(prose, md.options, {}),
+      if (prose.length) {
+        wikiReferences.push(...references(prose, first + 1));
+        add({ type: 'prose', html: md.renderer.render(prose, md.options, {}),
         ...(pacedParagraph ? { pacedParagraph: true, proseIntervalMs: proseInterval(visibleWords(prose.find(t => t.type === 'inline'))) } : {}) });
+      }
       prose = [];
     };
     for (let i = 0; i < tokens.length; i++) {
@@ -158,11 +161,13 @@ function parseScene(source, { prosePacing = false } = {}) {
           prose.push(token);
         } else {
           flush();
-          add({ type: 'typeout', ...settings, text: body,
-            ...(settings.format === 'annotation' ? { annotation: renderAnnotation(body) } : {}), line: openLine + 1 });
+          const annotation = settings.format === 'annotation' ? renderAnnotation(body) : null;
+          if (annotation) wikiReferences.push(...annotation.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
+          add({ type: 'typeout', ...settings, text: body, ...(annotation ? { annotation } : {}), line: openLine + 1 });
         }
       } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];
+        const messageLines = [];
         const events = [];
         let delayMs;
         let responding = false;
@@ -200,7 +205,7 @@ function parseScene(source, { prosePacing = false } = {}) {
             if (responding || respondingForChat) message.responding = true;
             responding = false;
             delayMs = undefined;
-            messages.push(message);
+            messages.push(message); messageLines.push(invalidLine);
             canContinue = true;
             events.push({ type: 'message', message: messages.length - 1 });
             continue;
@@ -254,6 +259,11 @@ function parseScene(source, { prosePacing = false } = {}) {
           prose.push(token);
         } else {
           flush();
+          for (const [index, message] of messages.entries()) {
+            const rendered = renderChat(message.text);
+            if (rendered.references.length) { message.html = rendered.html; message.timingText = rendered.visibleText; }
+            wikiReferences.push(...rendered.references.map(ref => ({ ...ref, line: ref.line + messageLines[index] - 1 })));
+          }
           add({ type: 'chat', messages, events, title, viewer, ticks, pace, line: first + token.map[0] + 1 });
         }
       } else {
@@ -266,6 +276,6 @@ function parseScene(source, { prosePacing = false } = {}) {
     if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose, image, chat or typeout component in this beat');
     return { raw, line: first + 1, title: range.title, sourceRange: range, blocks, sequence };
   });
-  return { frontmatter, beats, diagnostics, images: [...images], imageLines };
+  return { frontmatter, beats, diagnostics, images: [...images], imageLines, wikiReferences: wikiReferences.sort((a,b)=>a.line-b.line) };
 }
 module.exports = { parseScene };
