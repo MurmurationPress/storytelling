@@ -60,3 +60,13 @@ test('scene override is resolved before stripping private author frontmatter',as
  await fs.writeFile(file,`---\nstory_teller_prose_pacing: off\nprivate_source: ${root}\n---\n${body}`);
  const prepared=await prepareWeb(root),scene=prepared.scenes[0].data;assert.equal(scene.prosePacing,false);assert.equal(scene.pacingSource,'scene');assert.equal(scene.source,body);assert.ok(!JSON.stringify(prepared.book).includes(root));assert.ok(!scene.source.includes('private_source'));
 });
+test('repeated resource reads cannot silently replace an earlier snapshot',async t=>{
+ const {root}=await fixture(t),asset=path.join(root,'assets/harbour-portrait.png');
+ const originalRead=fs.readFile.bind(fs);let reads=0;
+ t.mock.method(fs,'readFile',async(file,...args)=>{
+   const bytes=await originalRead(file,...args);
+   if(file===asset&&++reads>=3){const changed=Buffer.from(bytes);changed[changed.length-1]^=1;return changed;}
+   return bytes;
+ });
+ await assert.rejects(prepareWeb(root),/source changed/i);
+});

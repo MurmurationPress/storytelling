@@ -1,12 +1,12 @@
-# Static Story Teller reader (0.10.0 trial)
+# Static Story Teller reader (0.10.1 review baseline)
 
-Export a **saved, separate adaptation project**, not the manuscript vault. The extension and browser use the same parser, StoryPlayer, pacing, Markdown/type-out renderer, sound, scroll-follow and SupportingReader. Only their host adapters differ. This feature awaits Ted's acceptance; acceptance of supporting notes at `e9e04b3e194ec6458da59ee07ecc5094d8acf869` does not imply acceptance of web export.
+Export a **saved, separate adaptation project**, not the manuscript vault. The extension and browser use the same parser, StoryPlayer, pacing, Markdown/type-out renderer, sound, scroll-follow and SupportingReader. Only their host adapters differ. Ted has tested the standalone reader on his actual iPad over the local network and reports “It works well.” No browser version, human audio verification or exhaustive feature coverage is inferred. Earlier acceptance of supporting notes at `e9e04b3e194ec6458da59ee07ecc5094d8acf869` is a separate acceptance record.
 
 ## Export from VS Code
 
 Open the folder containing `story-teller.project.json`. Run **Story Teller: Export Web Reader**. If multiple projects are open, select one. Save or revert unsaved project files first: the command refuses dirty buffers, including supporting notes and the manifest, rather than silently exporting older disk content. Choose a **new folder outside the adaptation project**, then confirm Export. Existing destinations are refused. Warnings report missing/unsupported images and note targets. Inspect these before sharing the directory. Nothing saves, converts or rewrites manuscript files.
 
-The folder picker is VS Code's native Save dialog: enter the name of a new output directory, not an existing folder to replace. Cancellation before confirmation writes nothing. Export builds in a temporary sibling and publishes the directory only after tracked source hashes and dirty buffers are rechecked; failure removes the temporary output. Concurrent creation of a destination is refused.
+The folder picker is VS Code's native Save dialog: enter the name of a new output directory, not an existing folder to replace. Cancellation before confirmation writes nothing. Export builds in a temporary sibling and publishes the directory only after tracked source hashes and dirty buffers are rechecked (conflicting repeated reads abort rather than replacing an earlier hash); failure removes the temporary output. Concurrent creation of a destination is refused.
 
 ## Build/export from the command line
 
@@ -38,7 +38,7 @@ Open **http://127.0.0.1:8765/**. Choose a fresh destination on each export. Read
 - Sound requires a browser gesture. Enable sound is offered where necessary; unavailable audio has a diagnostic and silent visual fallback. Hiding/departing pauses, clears note surfaces and stops sound. Return does not resume automatically. A scene selection cancels outgoing playback immediately and rejects late responses.
 - Following tracks newly revealed content. Scroll up to reread without pausing; **Follow story ↓** resumes. Previous starts at the top, silently. A reading panel pauses both performance and following; dismissal leaves playback paused.
 - Wikilinks in prose, chats and annotations retain explicit targets and aliases: the two displayed `JANUS` links open `JANUS early.md` and `JANUS later.md`. Hover or focus previews a note; click/tap/Enter opens its reading panel. Nested links have Back; Escape, Close or an outside click/tap dismisses. Focus and main reading position return to the originating link. Hover/focus never starts or pauses the story. No automatic entity matching or spoiler inference.
-- Use Tab/Shift+Tab and native button activation throughout. Contents uses native disclosures. Reduced motion reveals type-outs immediately/silently while retaining authored sequencing; narrow layouts and forced-colour borders are included. Touch checks are browser emulation, **not actual iPad/Safari verification**.
+- Use Tab/Shift+Tab and native button activation throughout. Contents uses native disclosures. Reduced motion reveals type-outs immediately/silently while retaining authored sequencing; narrow layouts and forced-colour borders are included. Touch checks are browser emulation, **not device/Safari-version verification** (Ted’s separate actual-iPad report is recorded above).
 
 ## What is packaged
 
@@ -62,4 +62,10 @@ python3 test/web-reader.py /absolute/path/to/export
 
 The browser script uses an installed `/usr/bin/google-chrome`; configure that path locally for another browser installation. Playwright is test tooling, not a publication dependency. See RESULTS.md and `test/evidence/web-reader.json` for executed versions/results and native regression limitations.
 
-Try both JANUS links, a nested note/Back and dismissal. Play the chat; turn to the formatted annotation, pause/resume/reveal it, then turn to literal YAML and the animated lamp. Check the final beat's explicit next-scene action, missing-resource placeholders, Contents and reopening with Autoplay off. On a narrow window, scroll up during a long beat and use Follow story. New web behaviour awaits Ted's assessment.
+Try both JANUS links, a nested note/Back and dismissal. Play the chat; turn to the formatted annotation, pause/resume/reveal it, then turn to literal YAML and the animated lamp. Check the final beat's explicit next-scene action, missing-resource placeholders, Contents and reopening with Autoplay off. On a narrow window, scroll up during a long beat and use Follow story. Ted’s general acceptance is recorded above; this checklist is not a claim that every item was tested on his iPad.
+
+### Installed-extension closeout checks
+
+`node test/installed-web-export.cjs /absolute/path/story-teller-0.10.1.vsix` installs into a disposable normal VS Code profile, without `--extensionTestsPath` (that mode refuses modal prompts). It uses the supported simple file picker/custom confirmation, waits for extension registration and dialog initialisation, and follows the real command/confirmation to an exported directory. It handles trust for its synthetic project through VS Code's normal UI; it does not disable Workspace Trust. The OS-native file picker is not covered.
+
+For the affected reading handoffs, use `STORY_TELLER_VSIX=... STORY_TELLER_HOST_SCOPE=prose|notes|handoff npm run test:host`, choosing one scope per run. The handoff scope performs 20 cross-root replacements and verifies each committed marker. The driver follows the current live inspector target after a legitimate panel replacement; it never accepts preloaded/hidden content as the reading surface. The notes fixture has an explicit long wait and verifies playback is active before testing Pause-on-panel-open. No author pacing settings are changed.

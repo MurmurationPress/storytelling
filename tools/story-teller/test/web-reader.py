@@ -1,5 +1,5 @@
 """Actual exported HTTP reader checks; optional Python Playwright + installed Chrome.
-Usage: python test/web-reader.py /absolute/export/path
+Usage: python test/web-reader.py /absolute/export/path [evidence.json]
 No browser automation dependency is shipped in the reader/VSIX.
 """
 import asyncio, json, pathlib, sys, threading, functools, time
@@ -135,6 +135,6 @@ async def run(root):
         evidence['checks']['touch_reduced_motion_narrow_scene_cleanup_emulation']=True
         await browser.close()
     finally: server.shutdown()
-    output=pathlib.Path(__file__).parent/'evidence/web-reader.json';output.write_text(json.dumps(evidence,indent=2)+'\n');print(json.dumps(evidence,indent=2))
+    output=pathlib.Path(sys.argv[2]) if len(sys.argv)>2 else pathlib.Path(__file__).parent/'evidence/web-reader.json';output.write_text(json.dumps(evidence,indent=2)+'\n');print(json.dumps(evidence,indent=2))
 
 asyncio.run(run(pathlib.Path(sys.argv[1]).resolve()))

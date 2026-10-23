@@ -45,7 +45,12 @@ async function until(fn, timeout = 60000) {
     importProject = path.join(directory, 'supporting-project');
     await fs.cp(path.join(root, 'samples/supporting-project'), importProject, { recursive: true });
     const file=path.join(importProject,'scenes/Two accounts.md');
-    await fs.writeFile(file,(await fs.readFile(file,'utf8')).replace('Mara: I read','@delay 6000ms\nMara: I read'));
+    await fs.writeFile(file,(await fs.readFile(file,'utf8')).replace('Mara: I read','@delay 30000ms\nMara: I read'));
+  }
+  if(process.env.STORY_TELLER_HOST_SCOPE==='handoff') {
+    importProject=path.join(directory,'handoff-A');await fs.cp(path.join(root,'samples/web-project'),importProject,{recursive:true});
+    await fs.cp(importProject,path.join(directory,'handoff-B'),{recursive:true});
+    for(const name of ['A','B'])await fs.writeFile(path.join(directory,`handoff-${name}/scenes/Last.md`),`Unique root ${name} marker.\n`);
   }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
@@ -75,6 +80,7 @@ async function until(fn, timeout = 60000) {
   let socket;
   let id = 0;
   let bringFront = async () => {};
+  let reconnectReader = async () => {};
   async function request(action, source, options = {}) {
     if (['show-preview','preview-supporting'].includes(action)) await bringFront();
     await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action, source, ...options }));
@@ -83,10 +89,11 @@ async function until(fn, timeout = 60000) {
       return value.id === id && value;
     });
     assert.equal(ack.error, undefined);
+    if(['select-scene','open-project-scene','preview-project-scene','rapid-scenes'].includes(action))await reconnectReader(options.projectRoot);
   }
   try {
     await until(async () => { await fs.access(path.join(directory, 'ready')); return true; }, 60000);
-    const target = await until(async () => {
+    let target = await until(async () => {
       const targets = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
       return targets.find(t => t.type === 'iframe' && t.url.includes('murmurationpress.story-teller'));
     });
@@ -96,6 +103,16 @@ async function until(fn, timeout = 60000) {
       const page=(await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(item=>item.type==='page');
       const front=new WebSocket(page.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{front.onopen=resolve;front.onerror=reject;});
       try { await new Promise((resolve,reject)=>{front.onmessage=event=>{const result=JSON.parse(event.data);if(result.id===1)result.error?reject(Error(JSON.stringify(result.error))):resolve();};front.send(JSON.stringify({id:1,method:'Page.bringToFront',params:{}}));}); } finally { front.close(); }
+    };
+    let readerRoot=directory;
+    reconnectReader=async root=>{
+      const replacing=Boolean(root&&root!==readerRoot);
+      const live=await until(async()=>{
+        const candidates=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(t=>t.type==='iframe'&&t.url.includes('murmurationpress.story-teller'));
+        return candidates.length===1&&(!replacing||candidates[0].id!==target.id)&&candidates[0];
+      });
+      if(live.id!==target.id){const receive=socket.onmessage;socket.close();socket=new WebSocket(live.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{socket.onopen=resolve;socket.onerror=reject;});socket.onmessage=receive;target=live;}
+      if(root)readerRoot=root;
     };
     let callId = 0;
     const pending = new Map();
@@ -125,6 +142,19 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='handoff') {
+      const observations=[];
+      for(let turn=0;turn<20;turn++) {
+        const name=turn%2?'B':'A',started=Date.now();
+        await request('select-scene',undefined,{projectRoot:path.join(directory,`handoff-${name}`),file:'scenes/Last.md'});
+        try {await until(async()=>(await beat.textContent())?.includes(`Unique root ${name} marker.`),15000);}
+        catch(error){await fs.writeFile(path.join(directory,'handoff-failure.json'),JSON.stringify(await evaluate("({body:doc.body.innerText,instance:doc.body.dataset.readerInstance,url:doc.URL,visibility:doc.visibilityState})")));throw error;}
+        observations.push({turn,root:name,elapsed:Date.now()-started,...await evaluate("({instance:doc.body.dataset.readerInstance,phase:doc.getElementById('status').textContent,visibility:doc.visibilityState})")});
+      }
+      await fs.writeFile(path.join(directory,'handoff-evidence.json'),JSON.stringify(observations,null,2));
+      console.log(`PASS: ${vsix?'installed VSIX':'Development Host'} 20 committed cross-root handoffs; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'notes') {
       const key=async(name,virtual, text)=>{for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key:name,code:name,windowsVirtualKeyCode:virtual,nativeVirtualKeyCode:virtual,...(text&&type==='keyDown'?{text}:{})});};
       const state=()=>evaluate("({phase:doc.getElementById('status').textContent,top:doc.scrollingElement.scrollTop,dialog:doc.querySelector('.supporting-panel').open,preview:!doc.querySelector('.supporting-preview').hidden,title:doc.querySelector('.supporting-panel h2').textContent})");
@@ -132,6 +162,7 @@ async function until(fn, timeout = 60000) {
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Two accounts.md'});
       try { await until(async()=>await evaluate("doc.querySelectorAll('#beat button.wiki-link').length>=3")); }
       catch(error) {await fs.writeFile(path.join(directory,'notes-initial-failure.json'),JSON.stringify(await evaluate("({text:doc.body.innerText,instance:doc.body.dataset.readerInstance,visibility:doc.visibilityState,resources:performance.getEntriesByType('resource').map(e=>e.name)})")));throw error;}
+
       const initial=await state();assert.match(initial.phase,/playing/);
       assert.deepEqual(await evaluate("[...doc.querySelectorAll('#beat button.wiki-link')].slice(0,3).map(e=>[e.textContent,e.dataset.storyTarget])"),[['Edward','Ted'],['JANUS','JANUS early'],['JANUS','JANUS later']]);
       await move('#beat button[data-story-target="JANUS early"]');
@@ -146,7 +177,7 @@ async function until(fn, timeout = 60000) {
       await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:2,y:2});
       await evaluate("doc.querySelector('#beat button[data-story-target=\"JANUS later\"]').focus()");
       await until(async()=>await evaluate("doc.querySelector('.supporting-preview').textContent.includes('public notice')"));
-      const beforePanel=await state();await key('Enter',13,'\r');
+      const beforePanel=await state();assert.match(beforePanel.phase,/playing/,'pause test requires an active performance');await key('Enter',13,'\r');
       await until(async()=>(await state()).dialog);assert.match((await state()).phase,/paused/);
       await until(async()=>await evaluate("doc.querySelector('.supporting-panel article').textContent.includes('public notice')"));
       const held=await beat.textContent();await sleep(450);assert.equal(await beat.textContent(),held);
@@ -454,7 +485,10 @@ async function until(fn, timeout = 60000) {
       await request('open-project-scene', undefined, { projectRoot: importProject });
       await request('preview-project-scene');
       assert.equal((await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).filter(item=>item.type==='iframe' && item.url.includes('murmurationpress.story-teller')).length, 1, 'outline navigation reuses the reader');
-      await until(async () => (await beat.textContent())?.includes('First paragraph.'));
+      try {await until(async () => (await beat.textContent())?.includes('First paragraph.'));}
+      catch(error){await fs.writeFile(path.join(directory,'prose-initial-failure.json'),JSON.stringify(await evaluate("({text:doc.body.innerText,instance:doc.body.dataset.readerInstance,visibility:doc.visibilityState,url:doc.URL,scripts:[...doc.scripts].map(s=>({src:s.src,nonce:s.nonce})),csp:doc.querySelector('meta[http-equiv]')?.content,hasNotes:!!doc.querySelector('.supporting-panel'),outerFrames:[...document.querySelectorAll('iframe')].map(f=>({id:f.id,style:f.style.cssText,rect:f.getBoundingClientRect().toJSON(),instance:f.contentDocument?.body?.dataset.readerInstance,text:f.contentDocument?.body?.innerText})),resources:doc.defaultView.performance.getEntriesByType('resource').map(e=>({name:e.name,duration:e.duration}))})")));const targets=await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();await fs.writeFile(path.join(directory,'debug-targets.json'),JSON.stringify(targets));const main=targets.find(t=>t.type==='page'),probe=new WebSocket(main.webSocketDebuggerUrl);await new Promise(r=>probe.onopen=r);const screenshot=await new Promise(r=>{probe.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===1)r(v.result?.data);};probe.send(JSON.stringify({id:1,method:'Page.captureScreenshot',params:{}}));});probe.close();if(screenshot)await fs.writeFile(path.join(directory,'handoff-failure.png'),Buffer.from(screenshot,'base64'));
+      await bringFront();await sleep(500);await fs.writeFile(path.join(directory,'handoff-after-foreground.json'),JSON.stringify(await evaluate("({text:doc.body.innerText,instance:doc.body.dataset.readerInstance,outerFrames:[...document.querySelectorAll('iframe')].map(f=>({id:f.id,style:f.style.cssText,rect:f.getBoundingClientRect().toJSON(),instance:f.contentDocument?.body?.dataset.readerInstance,text:f.contentDocument?.body?.innerText}))})")));throw error;}
+
       assert.doesNotMatch(await beat.textContent(), /Second paragraph/);
       assert.match(await locator('#status').textContent(), /prose pacing On \(book\)/);
       const captures = [{ at: Date.now(), text: await beat.textContent() }];

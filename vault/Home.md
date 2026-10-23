@@ -40,3 +40,5 @@ Add new ideas where they belong, link them, and retain unresolved alternatives. 
 **Accepted authoring baseline (2026-10-23):** Ted accepts the import/outline/pacing/navigation work in PR #12 and supporting notes in PR #14. See [[Story Teller]] and [[Supporting Content]] for scope, historical evidence and platform limits. Their review/integration precedes the separate web-renderer task.
 
 - [[Story Teller Web Reader]] — portable static export/reader trial, separate from the accepted extension and EPUB experiments.
+
+**Actual-device reader acceptance:** Ted tested the standalone web reader on his actual iPad over the local network and reported, “It works well.” See [[Story Teller Web Reader]] for scope and validation; browser version, audio and exhaustive coverage are not inferred.

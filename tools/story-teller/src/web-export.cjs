@@ -28,7 +28,12 @@ async function prepareWeb(projectRoot) {
   if (!sequence.length) throw Error('Project contains no scenes');
   for (const list of [manifest.parts, sequence]) if (new Set(list.map(item=>item.id)).size!==list.length || list.some(item=>typeof item.id!=='string'||!item.id)) throw Error('Project needs unique stable identities');
   const assets = new Map(), snapshots = new Map([[manifestFile,digest(manifestBytes)]]), warnings = [];
-  const read = async file=>{const bytes=await fs.readFile(file);snapshots.set(file,digest(bytes));return bytes.toString('utf8');};
+  const recordSnapshot=(file,bytes)=>{
+    const hash=digest(bytes);
+    if(snapshots.has(file)&&snapshots.get(file)!==hash){const error=Error('Publication source changed during export; try again');error.code='ESTORYSTALE';throw error;}
+    snapshots.set(file,hash);return hash;
+  };
+  const read = async file=>{const bytes=await fs.readFile(file);recordSnapshot(file,bytes);return bytes.toString('utf8');};
   const index = await indexSupporting(root);
   const adapter = { Uri:{file:fsPath=>({fsPath,scheme:'file'})}, FileType:{File:1}, workspace:{getWorkspaceFolder:()=>({uri:{fsPath:root}}),fs:{stat:async uri=>({type:(await fs.stat(uri.fsPath)).isFile()?1:0}),readFile:uri=>fs.readFile(uri.fsPath)}} };
   async function mediaFor(file, images) {
@@ -36,10 +41,11 @@ async function prepareWeb(projectRoot) {
     for(const src of images) {
       try {
         const uri=await inspectImage(adapter,{uri:{scheme:'file',fsPath:file}},src);
-        const bytes=await fs.readFile(uri.fsPath), hash=digest(bytes), name=`assets/${hash}${path.extname(uri.fsPath).toLowerCase()}`;
-        snapshots.set(uri.fsPath,hash);assets.set(name,bytes);result[src]={url:name};
+        const bytes=await fs.readFile(uri.fsPath), hash=recordSnapshot(uri.fsPath,bytes), name=`assets/${hash}${path.extname(uri.fsPath).toLowerCase()}`;
+        assets.set(name,bytes);result[src]={url:name};
       } catch(error) {
         // Missing/unsupported resources remain readable placeholders. Escapes are fatal.
+        if(error.code==='ESTORYSTALE')throw error;
         if (/outside|permitted resource root/.test(error.message)) throw Error('An image escapes the permitted project resource root');
         result[src]={error:error.message};warnings.push(`Image unavailable: ${src}: ${error.message}`);
       }
