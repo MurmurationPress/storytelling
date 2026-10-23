@@ -3,6 +3,7 @@ const vscode = require('vscode');
 const { registerInsert } = require('./insert-command.cjs');
 const { registerIntelliSense } = require('./intellisense-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
+const { registerWebExport } = require('./web-export-command.cjs');
 const { registerImport } = require('./import-command.cjs');
 const { registerPacing, projectFor, projectFile } = require('./pacing-command.cjs');
 const { resolveSettings } = require('./pacing-settings.cjs');
@@ -22,6 +23,7 @@ function currentEditor() {
   return editor;
 }
 function activate(context) {
+  registerWebExport(vscode, context);
   registerConversion(vscode, context);
   registerPacing(vscode, context);
   registerInsert(vscode, context);

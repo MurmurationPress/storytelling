@@ -130,7 +130,8 @@ async function until(fn, timeout = 60000) {
       const state=()=>evaluate("({phase:doc.getElementById('status').textContent,top:doc.scrollingElement.scrollTop,dialog:doc.querySelector('.supporting-panel').open,preview:!doc.querySelector('.supporting-preview').hidden,title:doc.querySelector('.supporting-panel h2').textContent})");
       const move=async selector=>{const rect=await evaluate(`(()=>{const r=doc.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(), f=document.getElementById('active-frame').getBoundingClientRect();return {x:f.x+r.x+Math.min(10,r.width/2),y:f.y+r.y+Math.min(10,r.height/2)};})()`);await send('Input.dispatchMouseEvent',{type:'mouseMoved',x:rect.x,y:rect.y});};
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Two accounts.md'});
-      await until(async()=>await evaluate("doc.querySelectorAll('#beat button.wiki-link').length>=3"));
+      try { await until(async()=>await evaluate("doc.querySelectorAll('#beat button.wiki-link').length>=3")); }
+      catch(error) {await fs.writeFile(path.join(directory,'notes-initial-failure.json'),JSON.stringify(await evaluate("({text:doc.body.innerText,instance:doc.body.dataset.readerInstance,visibility:doc.visibilityState,resources:performance.getEntriesByType('resource').map(e=>e.name)})")));throw error;}
       const initial=await state();assert.match(initial.phase,/playing/);
       assert.deepEqual(await evaluate("[...doc.querySelectorAll('#beat button.wiki-link')].slice(0,3).map(e=>[e.textContent,e.dataset.storyTarget])"),[['Edward','Ted'],['JANUS','JANUS early'],['JANUS','JANUS later']]);
       await move('#beat button[data-story-target="JANUS early"]');

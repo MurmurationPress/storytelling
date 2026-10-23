@@ -8,3 +8,8 @@ RESULTS.md
 package-lock.json
 .gitignore
 *.vsix
+
+src/reader-presentation.cjs
+src/web-entry.cjs
+
+local-web-preview*/**
