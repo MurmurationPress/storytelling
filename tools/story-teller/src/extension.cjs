@@ -3,6 +3,7 @@ const vscode = require('vscode');
 const { registerInsert } = require('./insert-command.cjs');
 const { registerIntelliSense } = require('./intellisense-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
+const { registerWebExport } = require('./web-export-command.cjs');
 const { registerImport } = require('./import-command.cjs');
 const { registerPacing, projectFor, projectFile } = require('./pacing-command.cjs');
 const { resolveSettings } = require('./pacing-settings.cjs');
@@ -22,6 +23,7 @@ function currentEditor() {
   return editor;
 }
 function activate(context) {
+  registerWebExport(vscode, context);
   registerConversion(vscode, context);
   registerPacing(vscode, context);
   registerInsert(vscode, context);
@@ -44,7 +46,16 @@ function activate(context) {
     const selected = thisBeat ? beatAtOffset(ranges, document.offsetAt(editor.selection.active)) : -1;
     if (thisBeat && selected < 0) { vscode.window.showInformationMessage('Place the cursor inside a story beat.'); return; }
     const targetOffset = sceneStart ? 0 : selected < 0 ? undefined : ranges[selected].startOffset;
-    const existing = sceneStart ? managedReader || activePreview || previews.get(key) || previews.values().next().value : previews.get(key);
+    let existing = sceneStart ? managedReader || activePreview || previews.get(key) || previews.values().next().value : previews.get(key);
+    const base = baseFor(vscode, document);
+    let replacementColumn;
+    if (existing && sceneStart && existing.resourceRoot !== (base?.root || null)) {
+      // Do not hot-reload HTML and resource policy together. VS Code can keep
+      // the old active frame while a replacement has already reported ready.
+      // A fresh public panel gives the new policy one unambiguous lifetime.
+      replacementColumn = existing.panel.viewColumn;
+      existing.panel.dispose(); existing = null;
+    }
     if (existing) {
       if (sceneStart) {
         existing.sceneMayAutoplay = true;
@@ -52,15 +63,6 @@ function activate(context) {
         previews.delete(existing.key);
         existing.key = key; existing.document = document;
         existing.panel.title = `Story Teller · ${decodeURIComponent(key.split('/').pop())}`;
-        const base = baseFor(vscode, document);
-        if (existing.resourceRoot !== (base?.root || null)) {
-          // Changing resource policy can recreate the inner webview document.
-          // Give that document a new identity and wait for its own ready signal.
-          existing.ready = false; existing.resourceRoot = base?.root || null;
-          existing.sceneStart = true; existing.requestedOffset = 0;
-          existing.panel.webview.options = { ...existing.panel.webview.options, localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist'), vscode.Uri.joinPath(context.extensionUri, 'media'), ...(base ? [vscode.Uri.file(base.root)] : [])] };
-          existing.panel.webview.html = existing.makeHtml();
-        }
         previews.set(key, existing); managedReader = existing;
       }
       existing.sourceColumn = editor.viewColumn;
@@ -79,8 +81,7 @@ function activate(context) {
       }
       return;
     }
-    const base = baseFor(vscode, document);
-    const panel = vscode.window.createWebviewPanel('storyTeller.scene', `Story Teller · ${decodeURIComponent(key.split('/').pop())}`, { viewColumn: vscode.ViewColumn.Beside, preserveFocus: true }, {
+    const panel = vscode.window.createWebviewPanel('storyTeller.scene', `Story Teller · ${decodeURIComponent(key.split('/').pop())}`, { viewColumn: replacementColumn || vscode.ViewColumn.Beside, preserveFocus: true }, {
       enableScripts: true, enableCommandUris: false, retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist'), vscode.Uri.joinPath(context.extensionUri, 'media'), ...(base ? [vscode.Uri.file(base.root)] : [])]
     });
@@ -167,6 +168,7 @@ function activate(context) {
       else if (event.contentChanges.length && entry.supportIndex && inside(entry.supportIndex.root, event.document.uri.fsPath)) entry.scheduleSupporting();
     });
     const ready = panel.webview.onDidReceiveMessage(async message => {
+      if(entry.disposed)return;
       if (message?.type === 'supporting-load') {
         const { instance, revision, request, target } = message;
         if (entry.disposed || instance !== entry.instance || revision !== entry.revision || !Number.isSafeInteger(request) || typeof target !== 'string' || target.length > 1024) return;
@@ -212,7 +214,7 @@ function activate(context) {
       }
     });
     panel.onDidDispose(() => {
-      entry.disposed = true; entry.revision++; previews.delete(entry.key);
+      entry.disposed = true; entry.revision++; if(previews.get(entry.key)===entry)previews.delete(entry.key);
       if (managedReader === entry) managedReader = null;
       if (activePreview === entry) { activePreview = null; void vscode.commands.executeCommand('setContext', 'storyTeller.previewActive', false); }
       if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);

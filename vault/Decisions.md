@@ -187,3 +187,15 @@ This authorises implementation of the extract experiment only. The earlier think
 Ted accepts PR #12's import, ordered outline, prose pacing, scroll-follow, keyboard shortcuts and scene-opening autoplay, and PR #14's explicit supporting-note links, aliases, previews, nested panels and refresh. He authorises review and dependency-order merging before a separate web-renderer task. Author acceptance does not resolve native-test intermittency, verify untested platforms or imply publication readiness. No web renderer is implemented here.
 
 Ted demonstrated animated WebP using the existing Image insert. Record this as his observation, without claiming playback synchronisation or adding his media. JANUS will use existing notes/directives, not a new component. Private work and Component Types edits remain outside the integration. Licence terms are unchanged.
+
+
+## 2026-10-23 — Standalone static reader trial
+
+Ted explicitly accepts supporting content at PR #14's `e9e04b3e194ec6458da59ee07ecc5094d8acf869`. PRs #12 and #14 were already merged by the preceding integration task; the web-reader branch therefore starts at combined main `8122a26b1d809216d5e03d37fcf860b5ae2ddcae`. No PR is merged as part of this task.
+
+Authorised scope: export a saved adaptation's existing ordered manifest, scene bodies, supporting Markdown and referenced supported local images into a static HTTP reader. Reuse the same parser/player/presentation, with separate browser and VS Code host adapters. No hosting, backend, account/payment system, EPUB export, new component or licence choice. [[Story Teller Web Reader]] records the implementation, tests and limits. The new web delivery awaits Ted's acceptance; prior extension acceptance does not establish it.
+
+
+## 2026-10-23 — Accept and review standalone reader
+
+Ted reports actual iPad use over the local network: “It works well.” Record this as general reader acceptance, without inferring Safari/browser version, human audio verification or exhaustive features. He authorises final review, installed-VSIX handoff/export investigation, and expected-head squash integration of PR #15 once validation passes. A material change to reader behaviour would require focused acceptance; no deployment or licence change is authorised. Historical incomplete native observations must not be relabelled as passes.

@@ -2,7 +2,7 @@
   "name": "story-teller",
   "displayName": "Story Teller",
   "description": "Provisional prose, chat, image and type-out scene preview.",
-  "version": "0.9.1",
+  "version": "0.10.1",
   "private": true,
   "publisher": "murmurationpress",
   "repository": {
@@ -83,6 +83,10 @@
         "command": "storyTeller.showBeatInSource",
         "title": "Story Teller: Show Beat in Source",
         "enablement": "storyTeller.previewActive"
+      },
+      {
+        "command": "storyTeller.exportWeb",
+        "title": "Story Teller: Export Web Reader"
       }
     ],
     "menus": {
@@ -160,12 +164,14 @@
     ]
   },
   "scripts": {
-    "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js",
+    "build": "esbuild src/webview.cjs --bundle --platform=browser --outfile=dist/player.js && esbuild src/web-entry.cjs --bundle --platform=browser --outfile=dist/web-reader.js",
     "test": "node --test test/*.test.cjs",
-    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/follow.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs && node --check src/manuscript-import.cjs && node --check src/import-command.cjs && node --check src/prose-pacing.cjs && node --check src/pacing-settings.cjs && node --check src/pacing-command.cjs && node --check src/scene-navigation.cjs && node --check src/markdown.cjs && node --check src/supporting-content.cjs && node --check src/supporting-host.cjs && node --check src/supporting-reader.cjs",
+    "check": "node --check src/media.cjs && node --check src/pace.cjs && node --check src/typeout.cjs && node --check src/annotation.cjs && node --check src/sound.cjs && node --check src/extension.cjs && node --check src/parser.cjs && node --check src/player.cjs && node --check src/webview.cjs && node --check src/follow.cjs && node --check src/convert.cjs && node --check src/convert-callouts.cjs && node --check src/convert-scene-metadata.cjs && node --check src/conversion-command.cjs && node --check src/structure.cjs && node --check src/settings.cjs && node --check src/insert.cjs && node --check src/insert-command.cjs && node --check src/intellisense.cjs && node --check src/intellisense-command.cjs && node --check src/manuscript-import.cjs && node --check src/import-command.cjs && node --check src/prose-pacing.cjs && node --check src/pacing-settings.cjs && node --check src/pacing-command.cjs && node --check src/scene-navigation.cjs && node --check src/markdown.cjs && node --check src/supporting-content.cjs && node --check src/supporting-host.cjs && node --check src/supporting-reader.cjs && node --check src/reader-presentation.cjs && node --check src/web-entry.cjs && node --check src/web-export.cjs && node --check src/web-export-command.cjs",
     "test:host": "node test/run-host.cjs",
     "vscode:prepublish": "npm run build",
-    "package": "vsce package --no-rewrite-relative-links"
+    "package": "vsce package --no-rewrite-relative-links",
+    "export:web": "node src/web-export.cjs",
+    "pretest": "npm run build"
   },
   "dependencies": {
     "markdown-it": "15.0.3",

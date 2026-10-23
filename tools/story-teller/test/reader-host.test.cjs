@@ -18,7 +18,7 @@ function host(savedAutoplay = true, project = null) {
     workspace:{textDocuments:[source],onDidChangeTextDocument:fn=>{changes.push(fn);return noop();},createFileSystemWatcher:()=>({onDidChange:noop,onDidCreate:noop,onDidDelete:noop,dispose(){}})},
     window:{activeTextEditor:editor(source),showInformationMessage:noop,createWebviewPanel:(kind,title,column,options)=>{
       const panel={title,visible:true,active:true,viewColumn:2,webview:{options,html:'',asWebviewUri:value=>value.toString(),postMessage:message=>{panel.messages.push(message);return Promise.resolve(true);},onDidReceiveMessage:fn=>{panel.receive=fn;return noop();}},messages:[],
-        onDidChangeViewState:fn=>{panel.viewState=fn;return noop();},onDidDispose:fn=>{panel.onDispose=fn;return noop();},reveal:()=>{panel.visible=true;panel.active=true;panel.viewState?.();},dispose:()=>{panel.onDispose?.();}};
+        onDidChangeViewState:fn=>{panel.viewState=fn;return noop();},onDidDispose:fn=>{panel.onDispose=fn;return noop();},reveal:()=>{panel.visible=true;panel.active=true;panel.viewState?.();},dispose:()=>{panel.disposed=true;panel.onDispose?.();}};
       panels.push(panel);return panel;
     }} };
   const load=Module._load;
@@ -40,16 +40,19 @@ function host(savedAutoplay = true, project = null) {
   const ready=panel=>panel.receive({type:'ready',instance:instance(panel)});
   return {vscode,commands,panels,source,doc,editor,changes,contexts,updates,instance,ready,get integration(){return integration;},hold:promise=>{held=promise;}};
 }
-test('outline retarget reuses one panel, waits for its current document and rejects an obsolete ready signal', async t=>{
+test('cross-root outline retarget replaces the resource-policy lifetime and rejects disposed ready signals', async t=>{
   const h=host();t.after(()=>h.panels.forEach(p=>p.dispose()));
   await h.commands.get('storyTeller.previewScene')();const panel=h.panels[0];await h.ready(panel);
   assert.equal(panel.messages.find(m=>m.type==='source').sceneStart,false);
   const old=h.instance(panel);h.integration.onScenePending();assert.equal(panel.messages.at(-1).type,'source-pending');
   await h.integration.openScene(h.editor(h.doc('/project/scenes/A.md')));
-  assert.equal(h.panels.length,1);assert.notEqual(h.instance(panel),old);
+  assert.equal(h.panels.length,2);assert.equal(panel.disposed,true);
+  const replacement=h.panels[1];assert.notEqual(h.instance(replacement),old);
+  assert.equal(h.panels.filter(p=>!p.disposed).length,1);
   const sent=panel.messages.filter(m=>m.type==='source').length;
   await panel.receive({type:'ready',instance:old});assert.equal(panel.messages.filter(m=>m.type==='source').length,sent);
-  await h.ready(panel);const message=panel.messages.at(-1);
+  assert.equal(replacement.messages.filter(m=>m.type==='source').length,0);
+  await h.ready(replacement);const message=replacement.messages.at(-1);
   assert.equal(message.type,'source');assert.equal(message.uri,'file:///project/scenes/A.md');assert.equal(message.sceneStart,true);assert.equal(message.targetOffset,0);
 });
 test('same-root outline scenes preserve the webview and saved Autoplay Off; metadata-only events do not reset it', async t=>{
@@ -94,4 +97,13 @@ test('beat folding targets its source editor before the native action and reject
   h.contexts.length=0;
   await h.commands.get('storyTeller.expandBeats')();
   assert.equal(h.contexts.some(args=>args[0]==='editor.unfold'),false);
+});
+
+test('root replacement before first ready never posts the old source or starts the new reader prematurely',async t=>{
+ const h=host();t.after(()=>h.panels.forEach(p=>p.dispose()));
+ await h.commands.get('storyTeller.previewScene')();const old=h.panels[0];
+ await h.integration.openScene(h.editor(h.doc('/different/scenes/new.md')));
+ const current=h.panels[1];assert.equal(old.disposed,true);assert.equal(current.messages.some(m=>m.type==='source'),false);
+ await h.ready(old);assert.equal(old.messages.some(m=>m.type==='source'),false);
+ await h.ready(current);assert.equal(current.messages.at(-1).uri,'file:///different/scenes/new.md');
 });

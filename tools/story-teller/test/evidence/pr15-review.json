@@ -1,0 +1,131 @@
+{
+  "acceptance": {
+    "report": "Ted: “It works well.”",
+    "device": "actual iPad",
+    "network": "local network",
+    "not_established": [
+      "Safari/browser version",
+      "human audio verification",
+      "exhaustive feature coverage"
+    ]
+  },
+  "reviewedOriginalHead": "d33dec8591fe3d9dd42a356b821ddf1e37e99bd4",
+  "normalInstalledExport": {
+    "vsCode": "1.143.1",
+    "sourcePreserved": true,
+    "workspaceTrustPromptHandled": true,
+    "mode": "normal installed VSIX; no development/test extension flags",
+    "picker": "VS Code simple file picker in disposable profile",
+    "confirmationObserved": "Cancel\nExport\nExport saved scenes, supporting Markdown and referenced local images into a new static reader folder? No source files will be changed.",
+    "exportedLabels": [
+      "1.1",
+      "1.2",
+      "2.1"
+    ]
+  },
+  "handoffInvestigation": {
+    "reproduced": "installed 0.10.1 review build before lifetime fix; temporary host-boundary logging only",
+    "trace": [
+      {
+        "type": "html",
+        "instance": "reader-1",
+        "elapsed_ms": 0
+      },
+      {
+        "type": "root-change",
+        "instance": "reader-1",
+        "elapsed_ms": 785
+      },
+      {
+        "type": "html",
+        "instance": "reader-2",
+        "elapsed_ms": 785
+      },
+      {
+        "type": "receive",
+        "typeName": "ready",
+        "instance": "reader-1",
+        "expected": "reader-2",
+        "elapsed_ms": 1005
+      },
+      {
+        "type": "receive",
+        "typeName": "ready",
+        "instance": "reader-2",
+        "expected": "reader-2",
+        "elapsed_ms": 1099
+      },
+      {
+        "type": "ready-matched",
+        "instance": "reader-2",
+        "elapsed_ms": 1099
+      },
+      {
+        "type": "send-start",
+        "revision": 2,
+        "instance": "reader-2",
+        "elapsed_ms": 1100
+      },
+      {
+        "type": "send-ready",
+        "revision": 2,
+        "instance": "reader-2",
+        "elapsed_ms": 1116
+      },
+      {
+        "type": "dispose",
+        "instance": "reader-2",
+        "elapsed_ms": 61538
+      }
+    ],
+    "observedActiveReader": "reader-1",
+    "hostExpectedReader": "reader-2",
+    "activeReaderState": "visible controls, empty scene; has SupportingReader DOM",
+    "classification": "in-place resource-policy/HTML replacement did not promote the new reader into the active frame; not just a paragraph selector failure",
+    "vendorInternalInterleaving": "not independently isolated; no reader/VS Code patch or security change",
+    "historicalNotesTimeout": "no independent note-specific cause recovered; same root transition removed and installed notes verified"
+  },
+  "installedVsCodeImplementation": {
+    "version": "1.143.1",
+    "commit": "e646868227c3e3a9e3f24277c8c7220be42c0be7",
+    "relativeSource": "out/vs/workbench/contrib/webview/browser/pre/index.html",
+    "sha256": "0aa945c4f62d0099d1c38ffb30a201422eae53ca9f1e922d09c2b05ca73b437c",
+    "mechanisms": [
+      "active-frame versus pending-frame promotion",
+      "buffered messages until pending frame loads"
+    ]
+  },
+  "validation": {
+    "unitTests": 212,
+    "installedProse": "pass",
+    "installedNotes": "pass with explicit playing precondition and 30s test-fixture delay",
+    "installedCrossRootHandoffs": 20,
+    "normalInstalledExport": "pass using real simple picker and modal confirmation",
+    "exportedHttpReading": "pass; see pr15-installed-http.json",
+    "readerBundlesAndStyles": "byte-identical to delivered 0.10.0",
+    "normalExportFiles": 17,
+    "normalExportBytes": "all byte-identical to 0.10.0 synthetic fixture export",
+    "noConfiguredGitHubChecks": true,
+    "sourcePreserved": true,
+    "vsixVersion": "0.10.1",
+    "vsixSha256": "c721dcedadf664252a136502f38a45fd7323155d1e44939990c8f2f14dde943a"
+  },
+  "remainingLimits": [
+    "native OS file picker not exercised; normal Code uses supported simple picker in disposable profile",
+    "historical folding/input intermittency not claimed universally resolved",
+    "no inferred browser version or exhaustive iPad/audio coverage",
+    "extension-level licence unchanged/unresolved"
+  ],
+  "corrections": [
+    "Cross-root preview uses a fresh public WebviewPanel/policy lifetime in the existing group; same-root reuse remains",
+    "Disposed ready callbacks cannot affect a replacement",
+    "Repeated conflicting source/resource snapshots abort export",
+    "Test observer reconnects to the actual current iframe target when a panel is legitimately replaced"
+  ],
+  "automationClassifications": {
+    "extensionTestModal": "VS Code refuses modal prompts in --extensionTestsPath mode; final export exercised in normal installation",
+    "notesPauseAssertion": "Completed fixture was not a playing performance; explicit fixture delay and precondition now control this case",
+    "normalStartupAndPicker": "Wait for extension registration and initial path; use correct CDP modifiers and role-based native controls",
+    "originalHandoff": "Observed old active identity versus replacement ready/source; resource-root hot reload integration fault avoided through panel lifetime isolation"
+  }
+}

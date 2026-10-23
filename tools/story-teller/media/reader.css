@@ -54,8 +54,8 @@ pre { overflow: auto; padding: .6rem; background: var(--vscode-textCodeBlock-bac
 .typeout-fill-none .typeout-surface, .typeout-fill-none pre { background: transparent; }
 .typeout-fill-grey .typeout-surface, .typeout-fill-grey pre { background: #e9ebed; color: #202124; }
 .typeout-fill-yellow .typeout-surface, .typeout-fill-yellow pre { background: #fff1bd; color: #29220d; }
-body.vscode-dark .typeout-fill-grey .typeout-surface, body.vscode-dark .typeout-fill-grey pre { background: #34383c; color: #f0f0f0; }
-body.vscode-dark .typeout-fill-yellow .typeout-surface, body.vscode-dark .typeout-fill-yellow pre { background: #4a401d; color: #fff4cf; }
+:is(body.vscode-dark, body.reader-dark) .typeout-fill-grey .typeout-surface, :is(body.vscode-dark, body.reader-dark) .typeout-fill-grey pre { background: #34383c; color: #f0f0f0; }
+:is(body.vscode-dark, body.reader-dark) .typeout-fill-yellow .typeout-surface, :is(body.vscode-dark, body.reader-dark) .typeout-fill-yellow pre { background: #4a401d; color: #fff4cf; }
 body.vscode-high-contrast .typeout-fill-grey .typeout-surface, body.vscode-high-contrast .typeout-fill-grey pre,
 body.vscode-high-contrast .typeout-fill-yellow .typeout-surface, body.vscode-high-contrast .typeout-fill-yellow pre,
 body.vscode-high-contrast-light .typeout-fill-grey .typeout-surface, body.vscode-high-contrast-light .typeout-fill-grey pre,
