@@ -6,6 +6,8 @@ created: 2026-10-21
 
 # Story Teller
 
+**2026-10-23 acceptance and supporting-note trial:** Ted accepts scroll-follow, the five keyboard commands and outline scene autoplay at `bf846888f0cbedc70328ff103eea12b9ea8b861e`. Earlier pending records are historical. The new [[Supporting Content]] trial provides explicit wikilink hover/focus previews and a bounded reading panel without adding notes to the story sequence. It awaits Ted's acceptance. It is implemented in the extension preview only; the standalone web reader remains a later task.
+
 **2026-10-23:** Ted has tested and accepted automatic scroll-follow. The 0.8.3 trial adds direct, rebindable beat commands and an outline-to-reader scene-opening action under the existing Autoplay preference. Those conveniences await his acceptance. The reader cancels outgoing playback on scene selection, reuses one preview, and requires an in-reader gesture where sound cannot start automatically. See the extension guide/results for keyboard bindings, evidence and limits.
 
 **2026-10-22 scroll-follow trial:** the local preview now tests automatic following of visible prose, chat, image and type-out content, with reader-controlled suspension/resumption and top-of-beat navigation. It is implemented for Ted's assessment, not yet accepted or a claim about EPUB readers. The prior accepted playback and automatic prose pacing remain as recorded below.

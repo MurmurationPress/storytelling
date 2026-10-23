@@ -9,7 +9,7 @@ function visibleWords(inline) {
   function walk(tokens) {
     for (const token of tokens || []) {
       if (token.type === 'image') continue; // A standalone image has its own component.
-      if (token.type === 'text' || token.type === 'code_inline') text += `${token.content} `;
+      if (token.type === 'text' || token.type === 'code_inline' || token.type === 'story_wikilink') text += `${token.content} `;
       else if (token.type === 'softbreak' || token.type === 'hardbreak') text += ' ';
       else if (token.children) walk(token.children);
     }

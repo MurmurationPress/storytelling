@@ -1,5 +1,7 @@
 'use strict';
 
+const inAside = event => Boolean(event.target?.closest?.('[data-story-aside]'));
+
 // Reader presentation policy. The host supplies DOM/clock facilities; no VS Code messages.
 function latestRect(content, document) {
   const last = content.lastElementChild;
@@ -32,17 +34,19 @@ class ScrollFollower {
     this.handlers = [
       [window, 'scroll', () => this.onScroll(), { passive: true }],
       [window, 'resize', () => this.changed(), { passive: true }],
-      [document, 'wheel', event => { if (event.deltaY < -1) this.suspend(); }, { passive: true }],
-      [document, 'touchstart', event => { this.touchY = event.touches[0]?.clientY ?? null; }, { passive: true }],
+      [document, 'wheel', event => { if (!inAside(event) && event.deltaY < -1) this.suspend(); }, { passive: true }],
+      [document, 'touchstart', event => { this.touchY = inAside(event) ? null : event.touches[0]?.clientY ?? null; }, { passive: true }],
       [document, 'touchmove', event => {
+        if (inAside(event)) return;
         const y = event.touches[0]?.clientY;
         if (y != null && this.touchY != null && y > this.touchY + 2) this.suspend();
         this.touchY = y ?? null;
       }, { passive: true }],
       [document, 'touchend', () => { this.touchY = null; }, { passive: true }],
-      [document, 'pointerdown', event => { this.scrollbarDrag = event.clientX >= window.innerWidth - 20; }, { passive: true }],
+      [document, 'pointerdown', event => { this.scrollbarDrag = !inAside(event) && event.clientX >= window.innerWidth - 20; }, { passive: true }],
       [document, 'pointerup', () => { this.scrollbarDrag = false; }, { passive: true }],
       [document, 'keydown', event => {
+        if (inAside(event)) return;
         if (event.target?.matches?.('input, textarea, select, [contenteditable="true"]')) return;
         if (['ArrowUp', 'PageUp', 'Home'].includes(event.key) || (event.key === ' ' && event.shiftKey)) this.suspend();
       }],

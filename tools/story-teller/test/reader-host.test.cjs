@@ -3,7 +3,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const Module = require('node:module');
 const path = require('node:path');
-function host(savedAutoplay = true) {
+function host(savedAutoplay = true, project = null) {
   const commands = new Map(), panels=[], changes=[], contexts=[], updates=[];
   let integration, held;
   const noop=()=>({dispose(){}});
@@ -28,7 +28,7 @@ function host(savedAutoplay = true) {
       if(request==='./import-command.cjs')return {registerImport:(v,c,options)=>{integration=options;}};
       if(request==='./conversion-command.cjs')return {registerConversion:()=>{}};
       if(request==='./insert-command.cjs')return {registerInsert:()=>{}};
-      if(request==='./pacing-command.cjs')return {registerPacing:()=>{},projectFor:async()=>null,projectFile:()=>null};
+      if(request==='./pacing-command.cjs')return {registerPacing:()=>{},projectFor:async()=>project,projectFile:()=>null};
       if(request==='./intellisense-command.cjs')return {registerIntelliSense:()=>{}};
       if(request==='./media.cjs')return {baseFor:(v,d)=>({root:path.dirname(d.uri.fsPath)}),resolveMedia:async()=>{if(held)await held;return {media:{}};}};
     }
@@ -69,4 +69,12 @@ test('superseded asynchronous preparation cannot post an old scene into the read
   await Promise.resolve();h.integration.onScenePending();h.hold(null);
   await h.integration.openScene(h.editor(h.doc('/standalone/latest.md')));release();await first;
   assert.match(panel.messages.at(-1).uri,/latest.md$/);assert.equal(panel.messages.filter(m=>m.type==='source'&&m.uri.endsWith('slow.md')).length,0);
+});
+
+test('supporting Markdown cannot be opened as a performed scene by author preview commands',async()=>{
+  const h=host(true,{file:'/project/story-teller.project.json',manifest:{}});
+  h.vscode.window.activeTextEditor=h.editor(h.doc('/project/Supporting Content/Ted.md','A note.\n---\nNot a beat.'));
+  await h.commands.get('storyTeller.previewScene')();await h.commands.get('storyTeller.previewThisBeat')();
+  assert.equal(h.panels.length,0);
+  await h.integration.openScene(h.editor(h.doc('/project/scenes/old.md')),()=>false);assert.equal(h.panels.length,0,'a superseded scene selection cannot win during project lookup');
 });

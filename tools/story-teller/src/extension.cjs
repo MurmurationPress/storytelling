@@ -6,6 +6,8 @@ const { registerConversion } = require('./conversion-command.cjs');
 const { registerImport } = require('./import-command.cjs');
 const { registerPacing, projectFor, projectFile } = require('./pacing-command.cjs');
 const { resolveSettings } = require('./pacing-settings.cjs');
+const { prepareSupporting, loadForPreview, supportingSource, watchSupporting } = require('./supporting-host.cjs');
+const { inside } = require('./media.cjs');
 const { autoplayPreference } = require('./scene-navigation.cjs');
 const { randomBytes } = require('node:crypto');
 const { parseScene } = require('./parser.cjs');
@@ -28,11 +30,15 @@ function activate(context) {
   let activePreview = null, managedReader = null;
   let preferredMute = Boolean(context.globalState.get('storyTeller.muted', false));
   let preferredAutoplay = autoplayPreference(context.globalState);
-  const openPreview = async (thisBeat = false, sceneEditor = null) => {
+  const openPreview = async (thisBeat = false, sceneEditor = null, current = () => true) => {
     const sceneStart = Boolean(sceneEditor);
     const editor = sceneEditor || currentEditor();
     if (!editor) return;
     const document = editor.document;
+    let project = null;
+    try { project = await projectFor(vscode, document.uri); } catch { /* source preparation reports manifest errors */ }
+    if (!current() || document.isClosed) return;
+    if (supportingSource(project, document.uri)) { vscode.window.showInformationMessage('Supporting Content notes are read through story wikilinks. Open a scene to preview its beats.'); return; }
     const key = document.uri.toString();
     const ranges = thisBeat ? rangesFor(document) : null;
     const selected = thisBeat ? beatAtOffset(ranges, document.offsetAt(editor.selection.active)) : -1;
@@ -79,7 +85,7 @@ function activate(context) {
       localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist'), vscode.Uri.joinPath(context.extensionUri, 'media'), ...(base ? [vscode.Uri.file(base.root)] : [])]
     });
     const entry = { panel, key, document, resourceRoot: base?.root || null, ready: false, sceneStart, sceneMayAutoplay: sceneStart, sourceColumn: editor.viewColumn, requestedOffset: targetOffset, revision: 0, presentationEpoch: 0,
-      presentationRetry: null, sentSource: null, disposed: false, send: null, sendPresentation: null };
+      supportingVersion: 0, supportIndex: null, noteRefreshTimer: null, sendingRevision: null, presentationRetry: null, sentSource: null, disposed: false, send: null, sendPresentation: null };
     previews.set(key, entry);
     if (sceneStart) managedReader = entry;
     entry.makeHtml = () => {
@@ -97,17 +103,43 @@ function activate(context) {
     entry.send = async (changed = entry.document, requestedOffset, startScene = false) => {
       const key = entry.key, instance = entry.instance;
       const current = ++entry.revision;
+      entry.sendingRevision = current;
+      const supportVersion = ++entry.supportingVersion;
       const source = changed.getText();
       panel.webview.postMessage({ type: 'source-pending', instance, revision: current });
-      let pacing, pacingWarning = null;
-      try { pacing = resolveSettings(source, (await projectFor(vscode, changed.uri))?.manifest); }
+      let pacing, project, pacingWarning = null;
+      try { project = await projectFor(vscode, changed.uri); pacing = resolveSettings(source, project?.manifest); }
       catch (error) { pacing = resolveSettings(source, null); pacingWarning = `Project pacing unavailable: ${error.message}`; }
-      const prepared = await resolveMedia(vscode, changed, panel.webview, parseScene(source, { prosePacing: pacing.enabled }));
+      const scene = parseScene(source, { prosePacing: pacing.enabled });
+      const [prepared, supporting] = await Promise.all([resolveMedia(vscode, changed, panel.webview, scene), prepareSupporting(project, scene.wikiReferences)]);
       if (!entry.disposed && key === entry.key && instance === entry.instance && current === entry.revision) {
+        entry.supportIndex = supporting.index; entry.setSupportingWatch(supporting.index);
         entry.sentSource = source;
         panel.webview.postMessage({ type: 'source', instance, source, uri: key, revision: current, targetOffset: requestedOffset, sceneStart: startScene, sceneAutoplay: startScene && entry.sceneMayAutoplay && panel.visible, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
+          supporting: { links: supporting.links, diagnostics: supporting.diagnostics }, supportingVersion: supportVersion,
           prosePacing: pacing.enabled, pacingSource: pacing.source, pacingWarning: pacingWarning || pacing.warning || null, ...prepared });
       }
+      if (entry.sendingRevision === current) entry.sendingRevision = null;
+    };
+    entry.setSupportingWatch = index => {
+      if (entry.noteWatch?.root === index?.project) return;
+      entry.noteWatch?.dispose();
+      entry.noteWatch = index ? watchSupporting(vscode, index, () => { if (!entry.disposed) entry.scheduleSupporting(); }) : null;
+    };
+    entry.refreshSupporting = async () => {
+      if (entry.sendingRevision !== null) { entry.scheduleSupporting(); return; }
+      const version = ++entry.supportingVersion, revision = entry.revision, instance = entry.instance, key = entry.key;
+      let project = null;
+      try { project = await projectFor(vscode, entry.document.uri); } catch { /* reported by preparation */ }
+      const supporting = await prepareSupporting(project, parseScene(entry.sentSource || entry.document.getText()).wikiReferences);
+      if (!entry.disposed && version === entry.supportingVersion && revision === entry.revision && instance === entry.instance && key === entry.key) {
+        entry.supportIndex = supporting.index; entry.setSupportingWatch(supporting.index);
+        void panel.webview.postMessage({ type: 'supporting-refresh', instance, revision, version, supporting: { links: supporting.links, diagnostics: supporting.diagnostics } });
+      }
+    };
+    entry.scheduleSupporting = () => {
+      if (entry.noteRefreshTimer !== null) clearTimeout(entry.noteRefreshTimer);
+      entry.noteRefreshTimer = setTimeout(() => { entry.noteRefreshTimer = null; if (!entry.disposed) void entry.refreshSupporting(); }, 100);
     };
     entry.sendPresentation = visible => {
       if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);
@@ -132,9 +164,17 @@ function activate(context) {
     const visibility = panel.onDidChangeViewState(presentation);
     const listener = vscode.workspace.onDidChangeTextDocument(event => {
       if (event.contentChanges.length && event.document.uri.toString() === entry.key) { entry.requestedOffset = undefined; entry.sceneStart = false; entry.send(event.document); }
+      else if (event.contentChanges.length && entry.supportIndex && inside(entry.supportIndex.root, event.document.uri.fsPath)) entry.scheduleSupporting();
     });
     const ready = panel.webview.onDidReceiveMessage(async message => {
-      if (message?.type === 'presentation-ack' && message.epoch === entry.presentationEpoch) {
+      if (message?.type === 'supporting-load') {
+        const { instance, revision, request, target } = message;
+        if (entry.disposed || instance !== entry.instance || revision !== entry.revision || !Number.isSafeInteger(request) || typeof target !== 'string' || target.length > 1024) return;
+        let response;
+        try { response = { note: await loadForPreview(vscode, panel.webview, entry.supportIndex, target) }; }
+        catch (error) { response = { error: error.message }; }
+        if (!entry.disposed && instance === entry.instance && revision === entry.revision) panel.webview.postMessage({ type: 'supporting-result', instance, revision, request, ...response });
+      } else if (message?.type === 'presentation-ack' && message.epoch === entry.presentationEpoch) {
         if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);
         entry.presentationRetry = null;
       } else if (message?.type === 'ready' && message.instance === entry.instance) {
@@ -176,6 +216,8 @@ function activate(context) {
       if (managedReader === entry) managedReader = null;
       if (activePreview === entry) { activePreview = null; void vscode.commands.executeCommand('setContext', 'storyTeller.previewActive', false); }
       if (entry.presentationRetry !== null) clearTimeout(entry.presentationRetry);
+      if (entry.noteRefreshTimer !== null) clearTimeout(entry.noteRefreshTimer);
+      entry.noteWatch?.dispose();
       listener.dispose(); ready.dispose(); visibility.dispose();
     });
     context.subscriptions.push(panel);
@@ -188,7 +230,7 @@ function activate(context) {
       }
     },
     onSceneFailed() { for (const entry of previews.values()) if (!entry.disposed) void entry.send(); },
-    openScene: editor => openPreview(false, editor)
+    openScene: (editor, current) => openPreview(false, editor, current)
   });
   context.subscriptions.push(
     vscode.commands.registerCommand('storyTeller.previewScene', () => openPreview()),

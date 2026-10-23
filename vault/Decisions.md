@@ -5,6 +5,12 @@ status: active
 
 # Decisions
 
+## 2026-10-23 — Accept reader conveniences; trial explicit supporting notes
+
+**Ted's acceptance:** automatic scroll-follow, all five direct keyboard commands and Part–Scene Outline autoplay at `bf846888f0cbedc70328ff103eea12b9ea8b861e` are tested and accepted. This supersedes their earlier pending statuses. It is not a release, licence or general reader-compatibility decision.
+
+**Authorised trial, awaiting acceptance:** supporting Markdown notes in an adaptation project's fixed `Supporting Content/` folder, reached only through explicit authored wikilinks. Aliases and distinct files with one display name give the author control over the information offered at each point. No entity matching, timeline/spoiler engine, transclusion or story-sequence entries are introduced. Hover/focus previews leave playback alone; a longer reading panel pauses it and returns to the same beat, with explicit resume. This lives in the current VS Code preview, not a new web renderer. See [[Supporting Content]].
+
 ## 2026-10-23 — Accept scroll-follow; trial keyboard conveniences and outline autoplay
 
 **Ted's acceptance:** automatic scroll-follow is tested and accepted. The earlier pending entry below is historical. This does not establish acceptance of every new navigation enhancement.

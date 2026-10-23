@@ -87,3 +87,7 @@ Ted requested a check for existing platforms before committing to building one. 
 ## Accepted prototype direction — 2026-10-20
 
 Ted has tested and accepted prose → page turn → automatically performed PRIME state → prose in our small managed EPUB reader. The publication packages content/assets; the component performs local authored output; the reader confirms presentation, supplies enter/leave and preserves native sequence/navigation. This is a demonstrated extract-level separation, not a universal EPUB encounter API. Static authored meaning remains the fallback, with optional manual activation where supported. See [[Managed EPUB Foundation]] for the next limited milestone and remaining device/security limits.
+
+## 2026-10-23 — Explicit supporting-note trial
+
+Ted has authorised [[Supporting Content]] in Story Teller: authored wikilinks select a particular supporting file, including distinct files sharing one label. This tests the bounded-aside direction in the existing extension preview. Hover/focus leaves the performance alone; opening a longer panel pauses it, with a return to the same beat and explicit resume. For this trial the author controls spoilers through the chosen links; automatic availability, timeline and spoiler rules remain outside scope. No supporting note becomes a scene or an automatic narrative step.

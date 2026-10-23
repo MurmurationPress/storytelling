@@ -54,7 +54,7 @@ class StoryPlayer {
         if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
         else {
           const message = block.messages[event.message];
-          this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? automaticDelay(message.text, block.pace) });
+          this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? automaticDelay(message.timingText ?? message.text, block.pace) });
           if (block.ticks && message.speaker === block.viewer) this.steps.push({ type: 'read', blockIndex, message: event.message, delayMs: 600 });
         }
       }

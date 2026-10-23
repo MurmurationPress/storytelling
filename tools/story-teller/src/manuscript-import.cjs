@@ -5,6 +5,7 @@ const crypto = require('node:crypto');
 const YAML = require('yaml');
 const { inspectStructure } = require('./structure.cjs');
 const { inside, FORMATS } = require('./media.cjs');
+const { SUPPORTING_FOLDER } = require('./supporting-content.cjs');
 const VERSION = 1;
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
 const slash = value => value.split(path.sep).join('/');
@@ -24,7 +25,7 @@ async function scan(folder) {
   const result = [];
   async function walk(dir) {
     for (const entry of await fs.readdir(dir, { withFileTypes: true })) {
-      if (entry.name.startsWith('.')) continue;
+      if (entry.name.startsWith('.') || entry.name === SUPPORTING_FOLDER) continue;
       const file = path.join(dir, entry.name);
       if (entry.isSymbolicLink()) continue;
       if (entry.isDirectory()) await walk(file);
@@ -72,6 +73,7 @@ function orderGroup(items, key, errors, group) {
   catch (error) { errors.push(`${group}: ${error.message}`); return [...items]; }
 }
 function discover(items, folder) {
+  items = items.filter(item => !inside(path.join(folder, SUPPORTING_FOLDER), item.file));
   const warnings = [], errors = [];
   const bookStem = slash(path.resolve(folder)).replace(/\/$/, '');
   const book = items.find(x => x.data?.type === 'book' && path.join(path.dirname(x.file), path.basename(x.file, '.md')) === bookStem);
@@ -189,6 +191,7 @@ async function writeProject(planData, destination) {
   try { await fs.lstat(destination); throw Error('Destination already exists'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const parent = path.dirname(destination), temp = await fs.mkdtemp(path.join(parent, '.story-teller-import-'));
   try {
+    await fs.mkdir(path.join(temp, SUPPORTING_FOLDER));
     await fs.mkdir(path.join(temp, 'scenes')); await fs.mkdir(path.join(temp, 'assets')); await fs.mkdir(path.join(temp, 'metadata'));
     const manifest = { schema: 'story-teller-project', version: VERSION, title: titleOf(planData.book.data, planData.book.file), orderField: planData.key,
       provenance: { book: planData.book.file, sourceScope: planData.assetRoot, sourceRevision: await gitRevision(planData.book.file) }, bookFile: 'metadata/book.md',
@@ -222,6 +225,7 @@ async function gitRevision(file) {
 }
 function orderedScenes(manifest) {
   if (manifest?.schema !== 'story-teller-project' || manifest.version !== VERSION || !Array.isArray(manifest.parts) || !Array.isArray(manifest.scenes)) throw Error('Unsupported Story Teller project manifest');
+  if (manifest.scenes.some(scene => typeof scene.file === 'string' && scene.file.replace(/\\/g, '/').split('/').includes(SUPPORTING_FOLDER))) throw Error('Supporting Content notes cannot appear in the scene sequence');
   const byId = new Map(manifest.scenes.map(s => [s.id, s]));
   const ordered = manifest.parts.flatMap(p => p.scenes.map(id => { const scene = byId.get(id); if (!scene || scene.partId !== p.id) throw Error(`Invalid scene reference ${id}`); return scene; }));
   if (ordered.length !== manifest.scenes.length || new Set(ordered.map(s => s.id)).size !== ordered.length) throw Error('Project sequence is inconsistent');
