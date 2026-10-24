@@ -1,9 +1,11 @@
 # Book Matter
 
 Ted requested front/back matter and explicit project scaffolding on the merged
-web-reader baseline. This new increment awaits his acceptance. Acceptance of
-prior authoring, import, notes and web-reader work does not establish acceptance
-or actual-device verification of this increment.
+web-reader baseline. Ted accepts PR #17 at implementation head
+`8198a6b7114f30944ea1b6b00e47479aa9d49085`: “Good, simple deliverable. Happy with
+that.” This is author acceptance of the deliverable, not new iPad/Safari, touch,
+audio or exhaustive platform verification. Final review/integration is authorised;
+scene-title heading issue #16 remains separate.
 
 New imports and the explicit upgrade command share scaffolding logic. Existing
 files, including empty documents, remain authoritative. Matter has stable

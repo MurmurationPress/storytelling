@@ -241,7 +241,10 @@ Ted demonstrated animated WebP through the existing Image insert. This is suppor
 
 Run **Story Teller: Export Web Reader** from an opened adaptation project. Save/revert project buffers first; choose a new destination outside the project and explicitly confirm. Export uses the saved manifest sequence, leaves sources untouched and copies only publication content/assets. See [WEB-READER.md](WEB-READER.md) for CLI export, local HTTP preview, reader controls, safety boundaries and acceptance checks. Ted has now tested the web reader on his actual iPad over the local network and reports “It works well.” This does not establish a browser version, human audio check or exhaustive coverage.
 
-## Book matter and project scaffolding (0.11.0; awaiting Ted’s acceptance)
+## Book matter and project scaffolding (0.11.0; accepted by Ted)
+
+Ted accepted this deliverable: “Good, simple deliverable. Happy with that.” This
+does not add actual iPad/Safari or touch verification.
 
 New manuscript imports create **Front Matter.md**, **Back Matter.md** and
 **Supporting Content/** even when there is no publication metadata or matter.

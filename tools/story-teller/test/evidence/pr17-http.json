@@ -1,0 +1,22 @@
+{
+  "method": "actual exported directory over HTTP; Chrome/Linux",
+  "checks": [
+    "front matter fully displayed; relative image and ordered Contents",
+    "matter wikilink opens safe supporting panel and restores focus",
+    "Continue starts scene automatically; Previous cancels active reveal",
+    "autoplay Off leaves scene ready; end action enters back matter; Previous returns silently completed",
+    "390px narrow layout, keyboard navigation and no horizontal overflow"
+  ],
+  "unverified": [
+    "actual touch",
+    "iPad/Safari",
+    "human listening"
+  ],
+  "browser": "156.0.8078.47",
+  "typeoutFrames": [
+    "st",
+    "statu",
+    "status:"
+  ],
+  "pageErrors": []
+}

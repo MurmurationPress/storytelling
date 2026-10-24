@@ -207,4 +207,7 @@ imports create editable front/back matter and supporting-content space; existing
 projects gain these only through an explicit upgrade command. Matter is static
 Markdown outside the story-scene sequence; nonempty matter participates in web
 reading order/Contents. Existing files and authored wording take precedence over
-metadata synthesis. This increment is awaiting Ted’s acceptance. See [[Book Matter]].
+metadata synthesis. Ted now accepts the deliverable in PR #17: “Good, simple
+deliverable. Happy with that.” He authorises final review and expected-head
+squash integration after checks pass. This is not new iPad/Safari/touch coverage;
+scene-title heading #16 stays separate. See [[Book Matter]].

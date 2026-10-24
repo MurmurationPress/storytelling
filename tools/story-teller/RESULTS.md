@@ -1,3 +1,32 @@
+# PR #17 acceptance and final review
+
+Ted accepts implementation head `8198a6b7114f30944ea1b6b00e47479aa9d49085`:
+“Good, simple deliverable. Happy with that.” This supersedes the pending author
+acceptance below, without expanding platform, touch, audio or publication claims.
+Scene-title heading issue #16 is separate and remains open.
+
+Final review covers shared import/upgrade scaffolding, existing empty/edited
+files, repeat execution, configured supporting folders, outline placement,
+static-page navigation/media cancellation, ordered export/Contents/empty omission
+and pre-upgrade compatibility. No material runtime defect or accepted-behaviour
+change was identified. Closeout changes record acceptance and evidence only.
+The implementation and test code remain identical to the accepted head.
+
+Fresh local syntax/build, all **229 tests**, packaging, Development Host,
+installed-VSIX matter/upgrade and normal installed Import wizard checks pass.
+Fresh matter and all-component HTTP checks pass in Chrome/Linux, including
+390px layout and temporal reveal. See `test/evidence/pr17-review.json`,
+`pr17-http.json` and `pr17-baseline-http.json`. The rebuilt 0.11.0 installer
+differs from the accepted installer only in its README; all runtime files and
+dependency licences were checked, with private/development exclusions intact. Historical failed/inconclusive
+attempts below remain historical; no retry is used to relabel them passed.
+GitHub reports no checks for this PR; local passes are not GitHub CI results.
+The unresolved extension-level licence and previously documented platform/test
+limits remain. No new licence, release, VSIX upload, deployment or manuscript
+change is authorised. Final head and merge/tree verification are reported on PR #17.
+
+---
+
 # Book matter and scaffolding — 0.11.0 (2026-10-24)
 
 **Status:** implementation awaiting Ted’s acceptance. Previously accepted chat,

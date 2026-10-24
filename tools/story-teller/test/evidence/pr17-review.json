@@ -1,0 +1,95 @@
+{
+  "acceptedImplementationHead": "8198a6b7114f30944ea1b6b00e47479aa9d49085",
+  "acceptance": {
+    "quote": "Good, simple deliverable. Happy with that.",
+    "scope": "author acceptance of book-matter/scaffolding deliverable",
+    "notInferred": [
+      "new iPad/Safari verification",
+      "actual touch coverage",
+      "human listening",
+      "publication readiness"
+    ]
+  },
+  "review": {
+    "materialDefectsFound": false,
+    "runtimeChanges": false,
+    "sceneTitleIssue16": "separate; open; no closing issue references",
+    "runtimeTree": "65b15ce143d760803266b64fa8870d7280ecb5e0"
+  },
+  "localChecks": {
+    "syntax": "pass",
+    "tests": {
+      "passed": 229,
+      "failed": 0
+    },
+    "browserBundles": "pass",
+    "package": "pass",
+    "nativeDevelopment": {
+      "mode": "Extension Development Host",
+      "checks": [
+        "upgrade command creates only missing back matter; preserves edited front matter",
+        "static front matter, relative image, supporting-note panel and Show Beat in Source",
+        "Continue autoplays scene; Previous returns static and silent",
+        "back-matter Previous returns last scene beat silently completed",
+        "unsaved matter edits refresh while source editor remains selected",
+        "rapid document requests commit only latest back matter, with no stale reveal"
+      ]
+    },
+    "nativeInstalled": {
+      "mode": "installed VSIX",
+      "checks": [
+        "upgrade command creates only missing back matter; preserves edited front matter",
+        "static front matter, relative image, supporting-note panel and Show Beat in Source",
+        "Continue autoplays scene; Previous returns static and silent",
+        "back-matter Previous returns last scene beat silently completed",
+        "unsaved matter edits refresh while source editor remains selected",
+        "rapid document requests commit only latest back matter, with no stale reveal"
+      ]
+    },
+    "installedImportWizard": {
+      "mode": "normal installed VSIX; native command palette, simple folder pickers, review webview and explicit Import confirmation",
+      "vsCode": "1.143.1",
+      "vsix": "/home/thawkins/Documents/GitHub/storytelling-matter/tools/story-teller/story-teller-0.11.0.vsix",
+      "sourcePreserved": true,
+      "workspaceTrust": "disabled only in disposable automation profile (same as existing Development Host runner)",
+      "checks": [
+        "new import creates front/back matter and supporting folder",
+        "review lists matter and ordered scene",
+        "explicit destination confirmation",
+        "source files unchanged"
+      ],
+      "imported": "/tmp/story-installed-export-QGh8dI/Imported matter"
+    },
+    "matterHTTP": "pr17-http.json",
+    "allComponentsHTTP": "pr17-baseline-http.json"
+  },
+  "installer": {
+    "version": "0.11.0",
+    "path": "tools/story-teller/story-teller-0.11.0.vsix",
+    "sha256": "c53841f44ad118a93957cb8d6e3094b8ae6ab37ce4121d8c2270424b26f0c497",
+    "acceptedSHA256": "27ee27730f9c464f7edcfa68e2b946ceb19a127d0a9eb2b4f9c9ef84ca9f6317",
+    "changedArchiveEntries": [
+      "extension/readme.md"
+    ],
+    "runtimeByteIdentical": true,
+    "files": 381,
+    "dependencyLicenceFiles": 8,
+    "privateAndDevelopmentMaterialExcluded": true
+  },
+  "githubCI": {
+    "statusChecks": [],
+    "actionsWorkflowCount": 0,
+    "meaning": "No GitHub CI checks exist; local validation only."
+  },
+  "limits": [
+    "No new actual iPad/Safari/touch or human audio verification",
+    "Workspace Trust disabled solely in disposable native automation profiles; simple picker, not OS-native picker",
+    "Broader historic folding/focus intermittency not rerun or declared fixed",
+    "Extension-level licence remains unresolved; no terms changed"
+  ],
+  "preservation": {
+    "componentTypesSHA256": "1a84216d0d21f9b4d6e8f92d8305e8ce97c99c650992f6e29e7b9a267a84c73f",
+    "authoringWorktreeUntouched": true,
+    "sourceManuscriptsUntouched": true
+  }
+}
