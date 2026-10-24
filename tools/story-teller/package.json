@@ -57,7 +57,7 @@
       },
       {
         "command": "storyTeller.insert",
-        "title": "Story Teller: Insert\u2026"
+        "title": "Story Teller: Insert…"
       },
       {
         "command": "storyTeller.wrapSelectionAsChat",
@@ -130,7 +130,7 @@
       "storyTeller": [
         {
           "id": "storyTeller.outline",
-          "name": "Part\u2013Scene Outline"
+          "name": "Part–Scene Outline"
         }
       ]
     },
@@ -184,5 +184,6 @@
   "devDependencies": {
     "@vscode/vsce": "4.0.0",
     "esbuild": "0.28.2"
-  }
+  },
+  "license": "MIT"
 }

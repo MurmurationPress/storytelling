@@ -246,3 +246,8 @@ these features, without adding iPad/Safari, touch or human audio evidence. Final
 review is authorised to squash #18 then reconcile/test/squash #19 with exact-head
 guards. No review-specific exclusion, MWC change, licence change or deployment.
 Historical validation reports are retained with their original observation limits.
+
+
+## 2026-10-24 — Public code and MIT licensing
+
+Ted explicitly authorises making this repository public and licensing its original software and technical documentation under MIT. Manuscripts, fictional extracts, artwork and publication assets retain separate copyright; third-party licences remain in force. This supersedes earlier unresolved-licence/private-repository directions, without authorising publication of private adaptations.

@@ -435,8 +435,8 @@ screen, generated Contents document, progress-saving system or EPUB export.
 ### Try this increment
 
 1. Install `story-teller-0.11.0.vsix` using **Extensions: Install from VSIX…**,
-   then reload VS Code. The extension-level licence remains unresolved; no
-   marketplace release or new licence is implied.
+   then reload VS Code. The extension code is MIT licensed; manuscripts and
+   artwork retain their separate copyright. See the repository's LICENSING.md.
 2. Open an existing imported adaptation folder. Run **Add Book Matter and
    Supporting Content**. Check both new outline documents. Write a title or
    acknowledgements, leave either intentionally empty, and repeat the command:

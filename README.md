@@ -17,9 +17,7 @@ Only built-in Obsidian features are required. Notes are ordinary Markdown and re
 - Obsidian is the current workshop. Its suitability as the long-term authoring platform is an open question.
 - The repository is [MurmurationPress/storytelling](https://github.com/MurmurationPress/storytelling). **Murmuration Storytelling** is a working project title, not an agreed product name.
 
-Keep this repository private while developing unpublished material. The PRIME manuscripts remain authoritative in their existing repository; this notebook does not replace them.
-
-No licence granting reuse of the manuscripts, artwork or project material is included. References to other published works are conceptual examples, not permission to adapt them.
+The software and technical documentation are licensed under [MIT](LICENSE). See [licence scope](LICENSING.md): manuscripts, fictional extracts, artwork and publication assets retain their separate copyright. References to other published works do not grant permission to adapt them. Keep unpublished adaptations outside this public code repository. The PRIME manuscripts remain authoritative in their existing repository; this notebook does not replace them.
 
 The first focused implementation experiment is the [Planetary Model EPUB prototype](experiments/planetary-epub/README.md), with a [downloadable EPUB](experiments/planetary-epub/dist/planetary-model-playback-v2.epub) and [reader results](experiments/planetary-epub/RESULTS.md). This is one extract and a capability investigation, not a general publishing platform.
 
