@@ -5,6 +5,7 @@ const path = require('node:path');
 const { inside } = require('./media.cjs');
 const { renderMarkdown } = require('./markdown.cjs');
 const { inspectStructure } = require('./structure.cjs');
+const { supportingFolder } = require('./book-matter.cjs');
 const SUPPORTING_FOLDER = 'Supporting Content';
 function targetPath(target) {
   if (typeof target !== 'string' || !target.trim()) throw Error('Use a nonempty supporting-note filename');
@@ -16,8 +17,8 @@ function targetPath(target) {
   if (target.split('/').some(part => !part || part === '.')) throw Error('Use a complete note path');
   return { file: /\.md$/i.test(target) ? target : `${target}.md`, explicit };
 }
-async function indexSupporting(projectRoot) {
-  const root = path.join(projectRoot, SUPPORTING_FOLDER), files = [];
+async function indexSupporting(projectRoot, manifest) {
+  const root = path.join(projectRoot, supportingFolder(manifest)), files = [];
   const project = await fs.realpath(projectRoot);
   let canonical;
   try { canonical = await fs.realpath(root); }

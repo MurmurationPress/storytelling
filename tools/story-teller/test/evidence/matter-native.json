@@ -1,0 +1,56 @@
+{
+  "version": "0.11.0",
+  "platform": "Linux; VS Code 1.143.1",
+  "checks": {
+    "development": {
+      "mode": "Extension Development Host",
+      "checks": [
+        "upgrade command creates only missing back matter; preserves edited front matter",
+        "static front matter, relative image, supporting-note panel and Show Beat in Source",
+        "Continue autoplays scene; Previous returns static and silent",
+        "back-matter Previous returns last scene beat silently completed",
+        "unsaved matter edits refresh while source editor remains selected",
+        "rapid document requests commit only latest back matter, with no stale reveal"
+      ]
+    },
+    "installed": {
+      "mode": "installed VSIX",
+      "checks": [
+        "upgrade command creates only missing back matter; preserves edited front matter",
+        "static front matter, relative image, supporting-note panel and Show Beat in Source",
+        "Continue autoplays scene; Previous returns static and silent",
+        "back-matter Previous returns last scene beat silently completed",
+        "unsaved matter edits refresh while source editor remains selected",
+        "rapid document requests commit only latest back matter, with no stale reveal"
+      ]
+    },
+    "installedImport": {
+      "mode": "normal installed VSIX; native command palette, simple folder pickers, review webview and explicit Import confirmation",
+      "vsCode": "1.143.1",
+      "vsix": "/home/thawkins/Documents/GitHub/storytelling-matter/tools/story-teller/story-teller-0.11.0.vsix",
+      "sourcePreserved": true,
+      "workspaceTrust": "disabled only in disposable automation profile (same as existing Development Host runner)",
+      "checks": [
+        "new import creates front/back matter and supporting folder",
+        "review lists matter and ordered scene",
+        "explicit destination confirmation",
+        "source files unchanged"
+      ],
+      "imported": "/tmp/story-installed-export-j3gvzm/Imported matter"
+    }
+  },
+  "installedNotesRegression": "PASS: /tmp/story-teller-host-O0uBn2 (same packaged runtime)",
+  "acceptance": "New matter increment awaiting Ted; prior acceptance remains separately recorded",
+  "limits": [
+    "simple VS Code pickers; not OS-native picker",
+    "Workspace Trust disabled only in disposable automated profiles",
+    "no new actual iPad/Safari/touch or human listening verification",
+    "historical broad folding/focus intermittency not rerun or declared fixed"
+  ],
+  "vsixSHA256": "27ee27730f9c464f7edcfa68e2b946ceb19a127d0a9eb2b4f9c9ef84ca9f6317",
+  "package": {
+    "files": 381,
+    "privateAndDevelopmentMaterialExcluded": true,
+    "requiredRuntimeAndLicencesPresent": true
+  }
+}

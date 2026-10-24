@@ -1,4 +1,5 @@
 'use strict';
+const { matterScene } = require('./matter-presentation.cjs');
 const { parseScene } = require('./parser.cjs');
 const { beatAtOffset } = require('./structure.cjs');
 const { StoryPlayer } = require('./player.cjs');
@@ -25,6 +26,8 @@ let sourceUri = '';
 let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
+let isMatter = false;
+let documentNavigation = {};
 let pacingWarning = null;
 let pacingLabel = 'Off (unchanged default)';
 let lastEndTurnAt = -Infinity;
@@ -56,11 +59,13 @@ function resetNotes() {
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  status.textContent = preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
+  status.textContent = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
   warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...supportingDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
-  document.getElementById('previous').disabled = preparing || player.index === 0;
-  document.getElementById('next').disabled = preparing || !beat || player.index >= player.scene.beats.length - 1;
+  document.getElementById('previous').disabled = preparing || (player.index === 0 && !documentNavigation.previous);
+  document.getElementById('next').disabled = preparing || !beat || (isMatter ? !documentNavigation.next : player.index >= player.scene.beats.length - 1);
+  document.getElementById('next').textContent = isMatter ? 'Continue →' : 'Next';
+  for (const id of ['restart','play','pause','replay','mute','enable-sound']) document.getElementById(id).hidden = isMatter;
   document.getElementById('restart').disabled = preparing || !beat;
   document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented;
   document.getElementById('pause').disabled = preparing || !['playing', 'paused'].includes(player.phase) || !presented;
@@ -70,7 +75,7 @@ function controls() {
   reveal.hidden = !active; reveal.disabled = preparing || !active || !presented;
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
-  document.getElementById('enable-sound').hidden = !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
+  document.getElementById('enable-sound').hidden = isMatter || !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
   document.getElementById('autoplay').checked = autoplayOnTurn;
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
@@ -241,12 +246,12 @@ function render() {
       });
       ending.append(button);
     } else {
-      if (api.nextScene) {
-        const button = document.createElement('button'); button.type='button'; button.textContent='Next scene →';
-        button.addEventListener('click', () => { if (performance.now()-lastEndTurnAt<400)return;lastEndTurnAt=performance.now();api.nextScene(); });
+      if (documentNavigation.next || api.nextScene) {
+        const button = document.createElement('button'); button.type='button'; button.textContent=isMatter ? 'Continue →' : 'Next scene →';
+        button.addEventListener('click', () => { if (performance.now()-lastEndTurnAt<400)return;lastEndTurnAt=performance.now();turnDocument('next'); });
         ending.append(button);
       } else {
-        const label = document.createElement('p');label.className='end-of-scene';label.textContent='End of scene';ending.append(label);
+        const label = document.createElement('p');label.className='end-of-scene';label.textContent=isMatter ? 'End of book' : 'End of scene';ending.append(label);
       }
     }
     content.append(ending);
@@ -282,7 +287,16 @@ const unlockSound = (beat = player.current) => {
 function startSelectedScene() {
   if (sceneAutoplay.take(revision, !preparing && presented && !document.hidden)) player.play();
 }
+function turnDocument(direction) {
+  if (preparing || !presented || document.hidden) return;
+  sceneAutoplay.cancel(); sound.stop(); player.pause(); follower.setActive(false); resetNotes();
+  if (direction === 'next' && autoplayOnTurn && !muted && !player.reducedMotion) sound.unlock()?.then(render);
+  preparing = true; render();
+  if (direction === 'next' && api.nextScene) api.nextScene();
+  else api.postMessage({ type: 'project-turn', revision, direction });
+}
 function turnNext() {
+  if (isMatter) { if(documentNavigation.next) turnDocument('next'); return; }
   if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
   resetNotes(); follower.beginTurn();
   sound.stop();
@@ -291,7 +305,9 @@ function turnNext() {
 }
 document.getElementById('next').addEventListener('click', turnNext);
 document.getElementById('previous').addEventListener('click', () => {
+  lastEndTurnAt = -Infinity;
   if (preparing || !presented || document.hidden) return;
+  if (player.index === 0 && documentNavigation.previous) { turnDocument('previous'); return; }
   resetNotes(); follower.beginTurn({ silent: true }); sound.stop(); player.previous(); render(); follower.endTurn();
 });
 document.getElementById('restart').addEventListener('click', () => {
@@ -335,7 +351,7 @@ api.onMessage(async event => {
   const message = event.data;
   if (message?.type?.startsWith('supporting-') && (message.instance !== document.body.dataset.readerInstance || message.revision !== revision)) return;
   if (message?.type === 'source-error' && message.instance === document.body.dataset.readerInstance && message.revision === incomingRevision) {
-    preparing=false;mediaDiagnostics=[message.error];player.update({beats:[],diagnostics:[]});render();return;
+    isMatter=false;documentNavigation={};preparing=false;mediaDiagnostics=[message.error];player.update({beats:[],diagnostics:[]});render();return;
   }
   if (message?.type === 'supporting-result') {
     const request = noteRequests.get(message.request);
@@ -404,9 +420,11 @@ api.onMessage(async event => {
   sourceUri = message.uri;
   pacingWarning = message.pacingWarning;
   pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
-  player.update(parseScene(message.source, { prosePacing: message.prosePacing === true }));
+  isMatter = message.matter === true;
+  documentNavigation = message.documentNavigation || {};
+  player.update(isMatter ? matterScene(message.source) : parseScene(message.source, { prosePacing: message.prosePacing === true }));
   const saved = api.getState();
-  if (message.sceneStart === true) {
+  if (isMatter) { player.revealBeat(); needsAudioGesture = false; } else if (message.documentPrevious === true) { player.index = player.scene.beats.length - 1; player.reset(); player.revealBeat(); needsAudioGesture = false; } else if (message.sceneStart === true) {
     player.index = 0; player.reset();
     needsAudioGesture = player.scene.beats.some(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'));
     sceneAutoplay.arm(revision, autoplayOnTurn && message.sceneAutoplay === true, departure);

@@ -199,3 +199,15 @@ Authorised scope: export a saved adaptation's existing ordered manifest, scene b
 ## 2026-10-23 — Accept and review standalone reader
 
 Ted reports actual iPad use over the local network: “It works well.” Record this as general reader acceptance, without inferring Safari/browser version, human audio verification or exhaustive features. He authorises final review, installed-VSIX handoff/export investigation, and expected-head squash integration of PR #15 once validation passes. A material change to reader behaviour would require focused acceptance; no deployment or licence change is authorised. Historical incomplete native observations must not be relabelled as passes.
+
+## Book matter and explicit project scaffolding
+
+Ted authorised a separate increment from current merged web-reader main. New
+imports create editable front/back matter and supporting-content space; existing
+projects gain these only through an explicit upgrade command. Matter is static
+Markdown outside the story-scene sequence; nonempty matter participates in web
+reading order/Contents. Existing files and authored wording take precedence over
+metadata synthesis. Ted now accepts the deliverable in PR #17: “Good, simple
+deliverable. Happy with that.” He authorises final review and expected-head
+squash integration after checks pass. This is not new iPad/Safari/touch coverage;
+scene-title heading #16 stays separate. See [[Book Matter]].

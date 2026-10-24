@@ -37,7 +37,13 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'supporting-doc-state') {
+      if (request.action === 'upgrade-matter') {
+        await vscode.commands.executeCommand('storyTeller.addBookMatter');
+      } else if (request.action === 'edit-project-document') {
+        const note=await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
+        await vscode.window.showTextDocument(note,{viewColumn:vscode.ViewColumn.One,preserveFocus:false});
+        const edit=new vscode.WorkspaceEdit();edit.replace(note.uri,new vscode.Range(note.positionAt(0),note.positionAt(note.getText().length)),request.source);await vscode.workspace.applyEdit(edit);
+      } else if (request.action === 'supporting-doc-state') {
         const notes=vscode.workspace.textDocuments.filter(doc=>doc.uri.fsPath.startsWith(directory)&&doc.uri.fsPath.includes('/Supporting Content/')).map(doc=>({file:doc.uri.fsPath,dirty:doc.isDirty,version:doc.version,text:doc.getText()}));
         await fs.writeFile(path.join(directory,'supporting-doc-state.json'),JSON.stringify(notes));
       } else if (request.action === 'select-scene') {
@@ -63,6 +69,8 @@ exports.run = async function () {
         const editor = vscode.window.activeTextEditor;
         await fs.writeFile(path.join(directory, 'active-source-state.json'), JSON.stringify({uri:editor?.document.uri.fsPath, text:editor?.document.getText(), line:editor?.selection.active.line, active: vscode.window.tabGroups.activeTabGroup.activeTab?.label,
           previews:vscode.window.tabGroups.all.flatMap(group=>group.tabs).filter(tab=>tab.input?.viewType?.endsWith('storyTeller.scene')).map(tab=>tab.label)}));
+      } else if (request.action === 'rapid-documents') {
+        await Promise.all(request.files.map(file=>vscode.commands.executeCommand('storyTeller.openProjectScene',request.projectRoot,{file})));
       } else if (request.action === 'rapid-scenes') {
         await Promise.all(['The Signal.md','The Answer.md'].map(file=>vscode.commands.executeCommand('storyTeller.openProjectScene',request.projectRoot,{file:'scenes/'+file})));
       } else if (request.action === 'open-outline') {

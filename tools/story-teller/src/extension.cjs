@@ -1,5 +1,6 @@
 'use strict';
 const vscode = require('vscode');
+const path = require('node:path');
 const { registerInsert } = require('./insert-command.cjs');
 const { registerIntelliSense } = require('./intellisense-command.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
@@ -11,6 +12,10 @@ const { prepareSupporting, loadForPreview, supportingSource, watchSupporting } =
 const { inside } = require('./media.cjs');
 const { autoplayPreference } = require('./scene-navigation.cjs');
 const { randomBytes } = require('node:crypto');
+const { registerMatter } = require('./matter-command.cjs');
+const { matterDocuments } = require('./book-matter.cjs');
+const { matterScene } = require('./matter-presentation.cjs');
+const { orderedScenes } = require('./manuscript-import.cjs');
 const { parseScene } = require('./parser.cjs');
 const { inspectStructure, beatRanges, beatAtOffset, beatFoldRanges } = require('./structure.cjs');
 const { baseFor, resolveMedia } = require('./media.cjs');
@@ -32,7 +37,7 @@ function activate(context) {
   let activePreview = null, managedReader = null;
   let preferredMute = Boolean(context.globalState.get('storyTeller.muted', false));
   let preferredAutoplay = autoplayPreference(context.globalState);
-  const openPreview = async (thisBeat = false, sceneEditor = null, current = () => true) => {
+  const openPreview = async (thisBeat = false, sceneEditor = null, current = () => true, previousDocument = false) => {
     const sceneStart = Boolean(sceneEditor);
     const editor = sceneEditor || currentEditor();
     if (!editor) return;
@@ -76,7 +81,7 @@ function activate(context) {
       }, 100);
       if (thisBeat || sceneStart) {
         existing.requestedOffset = targetOffset;
-        existing.sceneStart = sceneStart;
+        existing.sceneStart = sceneStart; existing.previousDocument = previousDocument;
         if (existing.ready) { await existing.send(document, targetOffset, sceneStart); existing.sceneStart = false; existing.requestedOffset = undefined; }
       }
       return;
@@ -85,7 +90,7 @@ function activate(context) {
       enableScripts: true, enableCommandUris: false, retainContextWhenHidden: true,
       localResourceRoots: [vscode.Uri.joinPath(context.extensionUri, 'dist'), vscode.Uri.joinPath(context.extensionUri, 'media'), ...(base ? [vscode.Uri.file(base.root)] : [])]
     });
-    const entry = { panel, key, document, resourceRoot: base?.root || null, ready: false, sceneStart, sceneMayAutoplay: sceneStart, sourceColumn: editor.viewColumn, requestedOffset: targetOffset, revision: 0, presentationEpoch: 0,
+    const entry = { panel, key, document, previousDocument, resourceRoot: base?.root || null, ready: false, sceneStart, sceneMayAutoplay: sceneStart, sourceColumn: editor.viewColumn, requestedOffset: targetOffset, revision: 0, presentationEpoch: 0,
       supportingVersion: 0, supportIndex: null, noteRefreshTimer: null, sendingRevision: null, presentationRetry: null, sentSource: null, disposed: false, send: null, sendPresentation: null };
     previews.set(key, entry);
     if (sceneStart) managedReader = entry;
@@ -111,19 +116,23 @@ function activate(context) {
       let pacing, project, pacingWarning = null;
       try { project = await projectFor(vscode, changed.uri); pacing = resolveSettings(source, project?.manifest); }
       catch (error) { pacing = resolveSettings(source, null); pacingWarning = `Project pacing unavailable: ${error.message}`; }
-      const scene = parseScene(source, { prosePacing: pacing.enabled });
+      const documents = project ? [...matterDocuments(project.manifest).filter(item => item.kind === 'front'), ...orderedScenes(project.manifest), ...matterDocuments(project.manifest).filter(item => item.kind === 'back')] : [];
+      const docIndex = project ? documents.findIndex(item => path.resolve(path.dirname(project.file), item.file) === changed.uri.fsPath) : -1;
+      const matter = ['front','back'].includes(documents[docIndex]?.kind);
+      const scene = matter ? matterScene(source) : parseScene(source, { prosePacing: pacing.enabled });
       const [prepared, supporting] = await Promise.all([resolveMedia(vscode, changed, panel.webview, scene), prepareSupporting(project, scene.wikiReferences)]);
       if (!entry.disposed && key === entry.key && instance === entry.instance && current === entry.revision) {
+        entry.projectDocuments = documents; entry.projectIndex = docIndex; entry.projectRoot = project && path.dirname(project.file); entry.isMatter = matter;
         entry.supportIndex = supporting.index; entry.setSupportingWatch(supporting.index);
         entry.sentSource = source;
         panel.webview.postMessage({ type: 'source', instance, source, uri: key, revision: current, targetOffset: requestedOffset, sceneStart: startScene, sceneAutoplay: startScene && entry.sceneMayAutoplay && panel.visible, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
-          supporting: { links: supporting.links, diagnostics: supporting.diagnostics }, supportingVersion: supportVersion,
+          matter, documentPrevious: startScene && entry.previousDocument, documentNavigation: { previous: docIndex > 0, next: docIndex >= 0 && docIndex < documents.length - 1 }, supporting: { links: supporting.links, diagnostics: supporting.diagnostics }, supportingVersion: supportVersion,
           prosePacing: pacing.enabled, pacingSource: pacing.source, pacingWarning: pacingWarning || pacing.warning || null, ...prepared });
       }
       if (entry.sendingRevision === current) entry.sendingRevision = null;
     };
     entry.setSupportingWatch = index => {
-      if (entry.noteWatch?.root === index?.project) return;
+      if (entry.noteWatch?.root === index?.root) return;
       entry.noteWatch?.dispose();
       entry.noteWatch = index ? watchSupporting(vscode, index, () => { if (!entry.disposed) entry.scheduleSupporting(); }) : null;
     };
@@ -132,7 +141,7 @@ function activate(context) {
       const version = ++entry.supportingVersion, revision = entry.revision, instance = entry.instance, key = entry.key;
       let project = null;
       try { project = await projectFor(vscode, entry.document.uri); } catch { /* reported by preparation */ }
-      const supporting = await prepareSupporting(project, parseScene(entry.sentSource || entry.document.getText()).wikiReferences);
+      const supporting = await prepareSupporting(project, (entry.isMatter ? matterScene : parseScene)(entry.sentSource || entry.document.getText()).wikiReferences);
       if (!entry.disposed && version === entry.supportingVersion && revision === entry.revision && instance === entry.instance && key === entry.key) {
         entry.supportIndex = supporting.index; entry.setSupportingWatch(supporting.index);
         void panel.webview.postMessage({ type: 'supporting-refresh', instance, revision, version, supporting: { links: supporting.links, diagnostics: supporting.diagnostics } });
@@ -195,13 +204,17 @@ function activate(context) {
         await context.globalState.update('storyTeller.autoplayOnTurn', preferredAutoplay);
         for (const other of previews.values()) if (other !== entry)
           other.panel.webview.postMessage({ type: 'autoplay-preference', autoplayOnTurn: preferredAutoplay });
+      } else if (message?.type === 'project-turn') {
+        if (message.revision !== entry.revision || !['next','previous'].includes(message.direction)) return;
+        const target = entry.projectDocuments?.[entry.projectIndex + (message.direction === 'next' ? 1 : -1)];
+        if (target) await vscode.commands.executeCommand('storyTeller.openProjectScene', entry.projectRoot, target, { previous: message.direction === 'previous' });
       } else if (message?.type === 'show-source') {
         const key = entry.key;
         if (entry.disposed || message.uri !== key || message.revision !== entry.revision) return;
         let source = vscode.workspace.textDocuments.find(doc => doc.uri.toString() === key && !doc.isClosed);
         try { source ||= await vscode.workspace.openTextDocument(vscode.Uri.parse(key)); }
         catch { vscode.window.showWarningMessage('The source document is no longer available.'); return; }
-        const range = rangesFor(source)[message.index];
+        const range = entry.isMatter ? matterScene(source.getText()).beats[0].sourceRange : rangesFor(source)[message.index];
         if (!range || source.uri.toString() !== key || source.getText() !== entry.sentSource || range.startOffset !== message.startOffset || range.endOffset !== message.endOffset) {
           vscode.window.showWarningMessage('The beat changed after this preview was prepared. Refresh the preview before navigating.'); return;
         }
@@ -224,6 +237,7 @@ function activate(context) {
     });
     context.subscriptions.push(panel);
   };
+  registerMatter(vscode, context);
   registerImport(vscode, context, {
     onScenePending() {
       for (const entry of previews.values()) {
@@ -232,7 +246,7 @@ function activate(context) {
       }
     },
     onSceneFailed() { for (const entry of previews.values()) if (!entry.disposed) void entry.send(); },
-    openScene: (editor, current) => openPreview(false, editor, current)
+    openScene: (editor, current, previous) => openPreview(false, editor, current, previous)
   });
   context.subscriptions.push(
     vscode.commands.registerCommand('storyTeller.previewScene', () => openPreview()),
