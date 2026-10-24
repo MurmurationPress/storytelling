@@ -1,9 +1,13 @@
 # Import Repairs
 
-This repair experiment is awaiting Ted’s acceptance. It is stacked on PR #18 at
-`8088f75bd5c35d2d604f6ba14eb64f3c08041053`, which remains unmerged/unaccepted;
-main contains PR #17 at `2f5a8b93ad07dce0742c9f50d95638e38025f17e`. The separate
-branch preserves the heading candidate rather than treating it as integrated.
+Ted accepts PR #18’s scene headings and PR #19’s importer repairs together:
+“All now working as expected. The embedded markdown files are skipped, which is
+acceptable.” Skipped Markdown transclusion is an accepted limitation; SVG remains
+unsupported. No new iPad/Safari, touch or human listening verification is inferred.
+#18 was reviewed at `201dba59850f3b27893f74332906e2c988ff8c72` and squash-merged as
+`307c1fa48e0d0783e7ddcb4291124b24c09cf6b5`, with exact tree verification. #19 is
+reconciled onto that main without changing its accepted runtime or rewriting the
+preserved feature history. Original investigation heads below remain provenance.
 
 ## Established findings
 
@@ -41,7 +45,7 @@ inspection pinned elsewhere. No available ZIP was compared. Private source is
 read-only, and verification of actual PNG bytes uses disposable copies in an
 otherwise fictional book. No manuscript passage or private asset is committed.
 
-## Implemented contract (pending acceptance)
+## Implemented contract (accepted by Ted)
 
 New imports store an optional version-1 manifest sequence of root part/scene IDs.
 Part children retain their own ordered references; direct scenes have null partId.

@@ -234,3 +234,15 @@ by this task. See [[Import Repairs]] for current source/MWC findings and the
 pending implementation. Source manuscripts/assets, corrected review metadata,
 Component Types and existing worktrees remain untouched. No SVG/transclusion
 support, licence change or deployment is authorised.
+
+
+## Acceptance and dependency-order integration — PRs #18 and #19
+
+Ted accepts the scene-title and importer fixes together: “All now working as
+expected. The embedded markdown files are skipped, which is acceptable.” Skipped
+Markdown transclusion is an accepted limitation, not implemented transclusion;
+SVG remains unsupported. This supersedes prior pending-acceptance wording for
+these features, without adding iPad/Safari, touch or human audio evidence. Final
+review is authorised to squash #18 then reconcile/test/squash #19 with exact-head
+guards. No review-specific exclusion, MWC change, licence change or deployment.
+Historical validation reports are retained with their original observation limits.

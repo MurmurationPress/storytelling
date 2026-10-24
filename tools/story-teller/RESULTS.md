@@ -1,3 +1,39 @@
+# PRs #18 / #19 — accepted integration review
+
+Ted accepts the combined scene-title and importer behaviour: “All now working as
+expected. The embedded markdown files are skipped, which is acceptable.” This
+accepts skipped Markdown transclusion as a limitation, not implemented transclusion.
+SVG remains unsupported. No new iPad/Safari, physical touch or human audio coverage
+is inferred. Historical pending-acceptance statements below are superseded here.
+
+#18 final reviewed head: `201dba59850f3b27893f74332906e2c988ff8c72` (runtime unchanged
+from `8088f75bd5c35d2d604f6ba14eb64f3c08041053`); squash main:
+`307c1fa48e0d0783e7ddcb4291124b24c09cf6b5`. Exact tree equality was verified.
+#19 is reconciled by merging that main into its original history without a force
+push, preserving its runtime byte-for-byte from `a7b84c9f762949c7b27298b566da91474df70b2d`.
+Its effective main diff contains only the reviewed importer repairs and records;
+the earlier heading changes are already in main, not reapplied in the squash.
+
+Final code review found no material defect requiring changed behaviour. The shared
+manifest root sequence preserves book-child/part order; legacy manifests keep their
+original traversal. Image lookup and copying remain bounded to the explicitly
+selected canonical root; ambiguous references block rather than choose a candidate.
+Back rescans sources, and the review footer separates actual blockers from warnings.
+Source-snapshot, heading and existing-project compatibility tests remain intact.
+No Boyle-specific membership exclusion or MWC change was introduced.
+
+Validation on the final records-only head: 247 tests, syntax checks, both builds and
+packaging; focused sequential Development Host and installed-VSIX import/preview,
+plus a real HTTP export order/image check. Native and browser evidence below was
+originally gathered at a7b84c9 and is applicable to identical runtime; fresh final
+review runs are recorded in `test/evidence/import-integration.json`. Broader historical folding/focus intermittency
+is not claimed fixed. Disposable profiles use VS Code's simple picker and disable
+Workspace Trust only there; OS picker/trust UI remains unverified. The extension
+licence remains unspecified; package warnings and dependency licences are retained.
+No GitHub Actions workflows/check runs are configured: local passes are not CI.
+
+---
+
 # Mixed book scenes, PNG resolution and review blockers — 0.11.2
 
 **Status:** awaiting Ted’s acceptance. This separate fix is stacked on PR #18’s
@@ -766,3 +802,28 @@ A source fixture includes raw script/iframe markup, remote Markdown image/link a
 - Hidden-webview state restoration is implemented with the documented webview state/ready APIs, but tab hide/recreation and full application restart were not included in the automated host run. Full saved-session restoration is outside this slice.
 - No actual macOS, Windows, remote-workspace, VS Code Web, screen-reader or high-contrast verification. Styles use VS Code theme variables and native buttons; broader accessibility verification remains open.
 - Existing EPUB experiments and Art feature work were not changed or retested by this separate extension slice. No new EPUB, release, publication, merge or deployment is produced.
+
+
+# PR #18 final review and author acceptance
+
+Ted accepts the combined scene-title/import fixes in #18 (`8088f75bd5c35d2d604f6ba14eb64f3c08041053`)
+and #19 (`a7b84c9f762949c7b27298b566da91474df70b2d`): “All now working as expected.
+The embedded markdown files are skipped, which is acceptable.” This accepts
+skipped Markdown transclusion as a limitation; SVG remains unsupported. It adds
+no iPad/Safari, physical touch or human audio verification. The pending language
+in the original implementation reports below is historical and superseded by this
+acceptance. No new product behaviour is introduced by final-review records.
+
+Review found no material heading defect: insertion follows YAML and first-beat
+metadata, matching leading headings are preserved, different headings and literal
+titles remain readable, no title-only beat is introduced, and the web header
+avoids repeating a matching body title. Source files, part/matter/supporting notes,
+identity and sequence remain outside this transformation. #19 will be reviewed
+and integrated separately after #18 using the combined accepted runtime.
+
+The final documentation-only head is checked with the same 236-test suite,
+syntax/build/package checks. Runtime source is byte-identical to the reported
+heading head, so its recorded native/HTTP evidence remains applicable; that is
+not a claim of a new device test. Local checks are distinct from absent GitHub CI.
+
+---

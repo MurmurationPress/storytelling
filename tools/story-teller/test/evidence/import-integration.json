@@ -1,0 +1,182 @@
+{
+  "acceptedRuntime": "a7b84c9f762949c7b27298b566da91474df70b2d",
+  "runtimeSourceUnchanged": true,
+  "package": {
+    "version": "0.11.2",
+    "entries": 383,
+    "bytes": 1369238,
+    "sha256": "cc058c02aa5b4e3d7da88679807d170511f9180dc8b234e984946713ef5ff0aa",
+    "runtimeMatchesWorkingTree": true,
+    "licences": [
+      "extension/node_modules/markdown-it/LICENSE",
+      "extension/node_modules/yaml/LICENSE",
+      "extension/node_modules/argparse/LICENSE",
+      "extension/node_modules/entities/LICENSE",
+      "extension/node_modules/linkify-it/LICENSE",
+      "extension/node_modules/mdurl/LICENSE",
+      "extension/node_modules/punycode.js/LICENSE-MIT.txt",
+      "extension/node_modules/uc.micro/LICENSE.txt"
+    ],
+    "extensionLicence": "unspecified; warning retained",
+    "privateMaterialExcluded": true
+  },
+  "native": {
+    "developmentImport": {
+      "mode": "real Extension Development Host, no extensionTestsPath",
+      "vsCode": "1.143.1",
+      "sourcePreserved": true,
+      "workspaceTrust": "disabled only in disposable test profile; VS Code simple picker",
+      "blockedReview": {
+        "disabled": true,
+        "footerExplainsPNG": true,
+        "controlsVisible": true
+      },
+      "correctedReview": {
+        "disabled": false,
+        "unsupportedWarningsNonBlocking": true
+      },
+      "orderedTitles": [
+        "Before",
+        "Child",
+        "Between",
+        "Last",
+        "After"
+      ],
+      "partCount": 2,
+      "PNGBytesPreserved": true,
+      "headingPreserved": true,
+      "privateAssetUsed": false
+    },
+    "installedImport": {
+      "mode": "normal installed VSIX",
+      "vsCode": "1.143.1",
+      "sourcePreserved": true,
+      "workspaceTrust": "disabled only in disposable test profile; VS Code simple picker",
+      "blockedReview": {
+        "disabled": true,
+        "footerExplainsPNG": true,
+        "controlsVisible": true
+      },
+      "correctedReview": {
+        "disabled": false,
+        "unsupportedWarningsNonBlocking": true
+      },
+      "orderedTitles": [
+        "Before",
+        "Child",
+        "Between",
+        "Last",
+        "After"
+      ],
+      "partCount": 2,
+      "PNGBytesPreserved": true,
+      "headingPreserved": true,
+      "privateAssetUsed": true
+    },
+    "developmentPreview": {
+      "mode": "Extension Development Host",
+      "checks": [
+        "native outline root order, without a synthetic part",
+        "manual reading sequence includes root scenes before, between and after parts; H1 preserved",
+        "resolved PNG decoded with alias in narrow native preview"
+      ],
+      "PNG": {
+        "width": 360,
+        "height": 560,
+        "shown": 123,
+        "alt": "A fictional chart."
+      },
+      "narrow": {
+        "width": 205,
+        "overflow": 0
+      },
+      "orderedTitles": [
+        "Before",
+        "Child",
+        "Between",
+        "Last",
+        "After"
+      ],
+      "sourceFrom": "copy of actual GUI import"
+    },
+    "installedPreview": {
+      "mode": "installed VSIX",
+      "checks": [
+        "native outline root order, without a synthetic part",
+        "manual reading sequence includes root scenes before, between and after parts; H1 preserved",
+        "resolved PNG decoded with alias in narrow native preview"
+      ],
+      "PNG": {
+        "width": 1388,
+        "height": 1461,
+        "shown": 182,
+        "alt": "A fictional chart."
+      },
+      "narrow": {
+        "width": 205,
+        "overflow": 0
+      },
+      "orderedTitles": [
+        "Before",
+        "Child",
+        "Between",
+        "Last",
+        "After"
+      ],
+      "sourceFrom": "copy of actual GUI import"
+    }
+  },
+  "HTTP": {
+    "method": "actual exported directory over HTTP; Linux Chrome",
+    "orderedTitles": [
+      "Before",
+      "Child",
+      "Between",
+      "Last",
+      "After"
+    ],
+    "unverified": [
+      "actual iPad/Safari",
+      "actual touch",
+      "human listening"
+    ],
+    "checks": [
+      "Contents and manual reading order include book scenes before/between/after genuine parts, no synthetic part or duplicate heading",
+      "resolved PNG decoded with alias at desktop/narrow widths; unsupported SVG/Markdown not executed/transcluded; Previous and Contents selection work"
+    ],
+    "browser": "156.0.8078.47",
+    "PNG": {
+      "width": 1388,
+      "height": 1461,
+      "shown": 182,
+      "alt": "A fictional chart."
+    },
+    "pageErrors": []
+  },
+  "localChecks": {
+    "PR18": {
+      "tests": 236,
+      "syntax": true,
+      "build": true,
+      "package": true
+    },
+    "PR19": {
+      "tests": 247,
+      "syntax": true,
+      "build": true,
+      "package": true
+    }
+  },
+  "GitHubCI": {
+    "workflows": 0,
+    "checkRuns": 0,
+    "localResultsAreNotCI": true
+  },
+  "limits": [
+    "No new iPad/Safari, physical touch or human listening evidence",
+    "Native tests use VS Code simple picker and disposable profiles with Workspace Trust disabled",
+    "Historical broader native folding/focus intermittency is not claimed resolved",
+    "SVG and Markdown transclusion unsupported; skipped Markdown transclusion accepted by Ted",
+    "Extension-level licence unspecified and unchanged"
+  ]
+}

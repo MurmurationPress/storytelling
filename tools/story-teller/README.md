@@ -231,11 +231,11 @@ Review the scrollable panel of parts, numbered scenes, included files, copied as
 
 Select **Continue**, choose a parent folder, enter a new project folder name and confirm **Import**. It writes into a temporary folder then renames atomically; it refuses an existing destination and does not save or modify the original manuscript. The new folder contains `story-teller.project.json` (schema version 1, stable IDs, explicit part/scene order, provenance), editable scene copies, original book/part metadata copies, supported assets and an empty `Supporting Content/` folder. Accept **Open Project Folder** to open the destination window with **Story Teller → Part–Scene Outline** revealed and the first part expanded. Selecting a scene opens its Markdown adaptation; **Preview This Beat** and source navigation work as for standalone documents. The outline and the `orderedScenes` assembly input read the same manifest sequence. You can still open any standalone Markdown scene without a project.
 
-### Mixed book scenes, PNG lookup and review blockers (0.11.2; awaiting acceptance)
+### Mixed book scenes, PNG lookup and review blockers (0.11.2; accepted by Ted)
 
-This repair candidate includes the still-unaccepted PR #18 scene-heading work;
-its repair PR is stacked on that branch, not merged into main. Existing projects
-are not rewritten. Test new imports in a **new destination**, keeping your edited
+Ted accepts the combined scene-heading and importer repairs, including skipped
+Markdown transclusion as an acceptable limitation. This adds no new iPad/touch/audio
+verification. Existing projects are not rewritten. Test new imports in a **new destination**, keeping your edited
 adaptation for comparison.
 
 Scenes whose parent is the selected book are valid alongside parts. Book scenes
@@ -289,7 +289,7 @@ Continue’s explicit reasons/ready state, then inspect the chart in the outline
 preview and a fresh web export. The current local reproduction uses live source,
 not an old ZIP. No source file or review metadata is modified by these repairs.
 
-### Imported scene headings (#16; awaiting Ted’s acceptance)
+### Imported scene headings (#16; accepted by Ted)
 
 New imports add the resolved story-scene title as an H1 at the opening of the
 Markdown body, after unchanged YAML frontmatter and any leading structural beat
