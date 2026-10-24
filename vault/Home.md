@@ -42,3 +42,6 @@ Add new ideas where they belong, link them, and retain unresolved alternatives. 
 - [[Story Teller Web Reader]] — portable static export/reader trial, separate from the accepted extension and EPUB experiments.
 
 **Actual-device reader acceptance:** Ted tested the standalone web reader on his actual iPad over the local network and reported, “It works well.” See [[Story Teller Web Reader]] for scope and validation; browser version, audio and exhaustive coverage are not inferred.
+
+- [[Book Matter]] — explicit import/upgrade scaffolding and static front/back
+  pages; new increment awaiting Ted’s acceptance, separate from accepted web work.

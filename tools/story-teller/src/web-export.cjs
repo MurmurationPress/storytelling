@@ -2,6 +2,8 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
+const { matterDocuments } = require('./book-matter.cjs');
+const { matterScene } = require('./matter-presentation.cjs');
 const { orderedScenes } = require('./manuscript-import.cjs');
 const { resolveSettings } = require('./pacing-settings.cjs');
 const { parseScene } = require('./parser.cjs');
@@ -25,7 +27,8 @@ async function prepareWeb(projectRoot) {
   const manifestFile=await localFile(root,'story-teller.project.json'),manifestBytes=await fs.readFile(manifestFile);
   const manifest = JSON.parse(manifestBytes);
   const sequence = orderedScenes(manifest);
-  if (!sequence.length) throw Error('Project contains no scenes');
+  const matter = matterDocuments(manifest);
+  const documents = [...matter.filter(item=>item.kind==='front'), ...sequence, ...matter.filter(item=>item.kind==='back')];
   for (const list of [manifest.parts, sequence]) if (new Set(list.map(item=>item.id)).size!==list.length || list.some(item=>typeof item.id!=='string'||!item.id)) throw Error('Project needs unique stable identities');
   const assets = new Map(), snapshots = new Map([[manifestFile,digest(manifestBytes)]]), warnings = [];
   const recordSnapshot=(file,bytes)=>{
@@ -34,7 +37,7 @@ async function prepareWeb(projectRoot) {
     snapshots.set(file,hash);return hash;
   };
   const read = async file=>{const bytes=await fs.readFile(file);recordSnapshot(file,bytes);return bytes.toString('utf8');};
-  const index = await indexSupporting(root);
+  const index = await indexSupporting(root, manifest);
   const adapter = { Uri:{file:fsPath=>({fsPath,scheme:'file'})}, FileType:{File:1}, workspace:{getWorkspaceFolder:()=>({uri:{fsPath:root}}),fs:{stat:async uri=>({type:(await fs.stat(uri.fsPath)).isFile()?1:0}),readFile:uri=>fs.readFile(uri.fsPath)}} };
   async function mediaFor(file, images) {
     const result=Object.create(null);
@@ -53,16 +56,19 @@ async function prepareWeb(projectRoot) {
     return result;
   }
   const scenes=[];
-  for(const item of sequence) {
-    if(!item.file.startsWith('scenes/'))throw Error('Scene files must be inside scenes/');
+  for(const item of documents) {
+    const isMatter = ['front','back'].includes(item.kind);
+    if(!isMatter && !item.file.startsWith('scenes/'))throw Error('Scene files must be inside scenes/');
     const file=await localFile(root,item.file), original=await read(file), pacing=resolveSettings(original,manifest);
-    if(pacing.warning)throw Error(pacing.warning);
-    const source=publicationBody(original), parsed=parseScene(original,{prosePacing:pacing.enabled});
+    if(!isMatter && pacing.warning)throw Error(pacing.warning);
+    const source=publicationBody(original);
+    if (isMatter && !source.replace(/<!--[\s\S]*?-->/g, '').trim()) continue;
+    const parsed=isMatter ? matterScene(original) : parseScene(original,{prosePacing:pacing.enabled});
     const links=await describeLinks(index,parsed.wikiReferences);
     const media=await mediaFor(file,parsed.images);
-    const data={source,media,supporting:{links:links.links,diagnostics:links.diagnostics},prosePacing:pacing.enabled,pacingSource:pacing.source};
+    const data={source,matter:isMatter,media,supporting:{links:links.links,diagnostics:links.diagnostics},prosePacing:pacing.enabled,pacingSource:pacing.source};
     warnings.push(...parsed.diagnostics,...links.diagnostics);
-    scenes.push({id:item.id,partId:item.partId,label:String(item.label),title:String(item.title),file:`content/${digest(item.id)}.json`,data});
+    scenes.push({id:item.id,kind:isMatter?item.kind:'scene',partId:item.partId,label:String(item.label || ''),title:String(item.title),file:`content/${digest(item.id)}.json`,data});
   }
   const notes=Object.create(null), targets=Object.create(null);
   for(const id of index.files) {
@@ -73,7 +79,7 @@ async function prepareWeb(projectRoot) {
     warnings.push(...note.diagnostics);
   }
   for(const scene of scenes)Object.assign(targets,scene.data.supporting.links);
-  const book={version:1,id:digest(sequence.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.map(({data,...scene})=>scene),notes,targets};
+  const book={version:1,id:digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
   return {root,book,scenes,assets,snapshots,warnings:[...new Set(warnings)]};
 }
 async function exportWeb(projectRoot,destination,{beforeWrite=()=>{}}={}) {
@@ -102,7 +108,7 @@ async function exportWeb(projectRoot,destination,{beforeWrite=()=>{}}={}) {
     for(const [file,hash] of prepared.snapshots) {if(!inside(prepared.root,await fs.realpath(file))||digest(await fs.readFile(file))!==hash)throw Error('Publication source changed during export; try again');}
     await fs.mkdir(destination);reserved=true;
     await fs.rename(temp,destination);reserved=false;
-    return {destination,warnings:prepared.warnings,scenes:prepared.scenes.length,assets:prepared.assets.size};
+    return {destination,warnings:prepared.warnings,scenes:prepared.book.scenes.length,pages:prepared.scenes.length,assets:prepared.assets.size};
   } catch(error) {if(reserved)await fs.rmdir(destination);throw error;}
   finally {await fs.rm(temp,{recursive:true,force:true});}
 }

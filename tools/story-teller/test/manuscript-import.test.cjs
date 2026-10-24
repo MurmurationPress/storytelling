@@ -123,6 +123,6 @@ test('symlinked book note cannot widen the selected source silently', async t =>
   const outside = path.join(f.root, 'outside.md');
   await fs.rename(sibling, outside); await fs.symlink(outside, sibling);
   const discovery = m.discover(await m.scan(f.book), f.book);
-  assert.match(discovery.errors.join('\n'), /No sibling book note/);
+  assert.match(discovery.errors.join('\n'), /symlink/);
   assert.match(discovery.errors.join('\n'), /symlink/);
 });

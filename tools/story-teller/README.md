@@ -6,7 +6,7 @@ Story Teller previews a separate Markdown adaptation as manually selected story 
 
 Requires desktop VS Code 1.95 or later. Node.js is needed only to build the extension from source.
 
-To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.10.1.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.10.1** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
+To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.11.0.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.11.0** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
 
 Make a *separate* Markdown adaptation of a completed chapter. Keep the original manuscript unchanged. Save the adaptation before linking images so relative paths have a base directory. Open it in VS Code, then run **Story Teller: Preview Scene**. The preview opens beside that document, with the first beat ready. **Play** starts it. **Next** turns one beat; with **Autoplay** enabled (the default), that next beat starts performing immediately. Turn the toggle off to make Next leave it ready for Play. The preference is remembered in VS Code, separately from Markdown. When a beat finishes, including a trailing authored pause, a **Next →** button appears below its content. It performs the same page turn as the top Next button; the top control remains available throughout. On the final beat, **End of scene** appears instead. **Previous** shows the preceding beat fully revealed and silent for rereading, with its bottom Next button. **Replay Beat** resets and starts the current beat again. **Restart** returns to beat one in its ready state, showing only untimed leading content; it never autoplays. **Pause/Resume** preserves the remaining wait. Beat turns remain reader-controlled: completion never advances to another beat or scene. Source edits and closing the preview cancel pending playback; unsaved edits reset the current beat to ready. Hiding the preview pauses it, and returning never resumes automatically.
 
@@ -62,7 +62,7 @@ Story wikilinks work in prose, chat message bodies and formatted annotation type
 
 Save new notes to make their filenames discoverable. Unsaved edits to existing notes, and supporting-file create/change/delete events, refresh note content and source-located diagnostics without resetting the story. A visible panel refreshes in place. Missing, ambiguous or invalid links remain focusable so the reader can see a useful failure message; author warnings identify the target and correction. Editing the scene itself still uses the established ready/reset behaviour.
 
-To try the synthetic example, open **`samples/supporting-project/` as the VS Code folder**, then select **1.1 Two accounts** in Part–Scene Outline. Hover/focus both JANUS links, open Edward, follow the accounts and go Back, then close and Resume. Turn to the annotation beat to inspect a progressively revealed link and a deliberate missing-note diagnostic. The example and its original test image are development files, excluded from the VSIX. This is the extension preview/player only; a standalone web renderer is a later task. `supporting-content.cjs` owns indexing/target resolution and content loading without VS Code; `supporting-host.cjs` adapts unsaved documents and local image resources. `SupportingReader` takes an injected `load(target)` returning safe `{id, title, html, links, media, diagnostics}` plus availability/pause/close callbacks. Requests carry the current reader instance and source revision; refreshes use a separate version and never update the scene/player. The host explicitly watches the project with [VS Code’s RelativePattern API](https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher), rather than assuming an implicit workspace event stream. Watcher exclusions remain respected; clean buffers do not mask external file changes, while unsaved buffers take precedence. Touch, iPad, Windows/macOS and VSCodium are unverified.
+To try the synthetic example, open **`samples/supporting-project/` as the VS Code folder**, then select **1.1 Two accounts** in Part–Scene Outline. Hover/focus both JANUS links, open Edward, follow the accounts and go Back, then close and Resume. Turn to the annotation beat to inspect a progressively revealed link and a deliberate missing-note diagnostic. The example and its original test image are development files, excluded from the VSIX. Supporting content is available in both the extension preview and the standalone web export described below. `supporting-content.cjs` owns indexing/target resolution and content loading without VS Code; `supporting-host.cjs` adapts unsaved documents and local image resources. `SupportingReader` takes an injected `load(target)` returning safe `{id, title, html, links, media, diagnostics}` plus availability/pause/close callbacks. Requests carry the current reader instance and source revision; refreshes use a separate version and never update the scene/player. The host explicitly watches the project with [VS Code’s RelativePattern API](https://code.visualstudio.com/api/references/vscode-api#workspace.createFileSystemWatcher), rather than assuming an implicit workspace event stream. Watcher exclusions remain respected; clean buffers do not mask external file changes, while unsaved buffers take precedence. Touch, iPad, Windows/macOS and VSCodium are unverified.
 
 ## Beats and components
 
@@ -217,11 +217,11 @@ npm run test:host
 npm run package
 ~~~
 
-For supporting-note native checks, run `STORY_TELLER_HOST_SCOPE=notes npm run test:host`; add `STORY_TELLER_VSIX="$PWD/story-teller-0.10.1.vsix"` to exercise the installed package. For other focused native checks, run `STORY_TELLER_HOST_SCOPE=prose npm run test:host` for temporal paragraph reveal and scene override, `STORY_TELLER_HOST_SCOPE=intellisense npm run test:host`, `STORY_TELLER_HOST_SCOPE=annotation npm run test:host`, `STORY_TELLER_HOST_SCOPE=import npm run test:host` for the imported-project outline/preview (system picker remains manual), or use `STORY_TELLER_HOST_SCOPE=metadata` for State conversion; prepend `STORY_TELLER_VSIX=/absolute/path/story-teller-0.10.1.vsix` to test the installed package in a disposable profile. Press F5 using **Story Teller: Extension Development Host** to open the fictional samples folder, then preview lantern.md. The native host suite requires a graphical Linux session and installed VS Code; it uses temporary files and test-only CDP inspection. The npm build needs Node.js 22 or later. RESULTS.md records validation separately from Ted's acceptance.
+For supporting-note native checks, run `STORY_TELLER_HOST_SCOPE=notes npm run test:host`; add `STORY_TELLER_VSIX="$PWD/story-teller-0.11.0.vsix"` to exercise the installed package. For other focused native checks, run `STORY_TELLER_HOST_SCOPE=prose npm run test:host` for temporal paragraph reveal and scene override, `STORY_TELLER_HOST_SCOPE=intellisense npm run test:host`, `STORY_TELLER_HOST_SCOPE=annotation npm run test:host`, `STORY_TELLER_HOST_SCOPE=import npm run test:host` for the imported-project outline/preview (system picker remains manual), or use `STORY_TELLER_HOST_SCOPE=metadata` for State conversion; prepend `STORY_TELLER_VSIX=/absolute/path/story-teller-0.11.0.vsix` to test the installed package in a disposable profile. Press F5 using **Story Teller: Extension Development Host** to open the fictional samples folder, then preview lantern.md. The native host suite requires a graphical Linux session and installed VS Code; it uses temporary files and test-only CDP inspection. The npm build needs Node.js 22 or later. RESULTS.md records validation separately from Ted's acceptance.
 
 During final review, isolated VS Code 1.142.0 runs sometimes returned beat ranges but left the source editor expanded after Collapse All Beats. The preview tab activation and presentation handshake were corrected; four subsequent full native runs in clean Development Host and installed-VSIX profiles passed. The tab-activation race is the likely cause, though it was not isolated in an A/B test. If folding recurs, record the active source/preview tabs and run the full native suite; `STORY_TELLER_HOST_SCOPE=no-fold npm run test:host` diagnoses other flows but does **not** establish that folding passes. See RESULTS.md for the observations.
 
-Known limits: no automatic beat turns, visual beat-card editor, EPUB import, EPUB export, image animation, video or live chat generation. Beat preservation after substantial edits is best effort; duplicate/rewritten beats can change which ordinal is retained. Hidden webview recreation restores a beat ready rather than restoring its exact timer. Only desktop Linux VS Code has been exercised natively; VSCodium, iPad/Safari, remote workspaces and other operating systems remain unverified. The VSIX is a local milestone, not a marketplace release or general manuscript-format promise.
+Known limits: no automatic beat turns, visual beat-card editor, EPUB import, EPUB export, general video or live chat generation. Animated WebP uses the existing image path; its animation is independent of playback pause. Beat preservation after substantial edits is best effort; duplicate/rewritten beats can change which ordinal is retained. Hidden webview recreation restores a beat ready rather than restoring its exact timer. Only desktop Linux VS Code has been exercised natively; VSCodium, iPad/Safari, remote workspaces and other operating systems remain unverified. The VSIX is a local milestone, not a marketplace release or general manuscript-format promise.
 
 ## Import an ordered Markdown manuscript
 
@@ -240,3 +240,114 @@ Ted demonstrated animated WebP through the existing Image insert. This is suppor
 ## Export a standalone static reader (trial)
 
 Run **Story Teller: Export Web Reader** from an opened adaptation project. Save/revert project buffers first; choose a new destination outside the project and explicitly confirm. Export uses the saved manifest sequence, leaves sources untouched and copies only publication content/assets. See [WEB-READER.md](WEB-READER.md) for CLI export, local HTTP preview, reader controls, safety boundaries and acceptance checks. Ted has now tested the web reader on his actual iPad over the local network and reports “It works well.” This does not establish a browser version, human audio check or exhaustive coverage.
+
+## Book matter and project scaffolding (0.11.0; awaiting Ted’s acceptance)
+
+New manuscript imports create **Front Matter.md**, **Back Matter.md** and
+**Supporting Content/** even when there is no publication metadata or matter.
+Keep these in your separate adaptation; original manuscripts are never edited.
+The outline lists Front Matter before the parts and Back Matter after them.
+Select either to open its Markdown source and static reader page. Editing keeps
+source focus and refreshes the preview. Scene labels, IDs and beat shortcuts are
+unchanged. Supporting notes are never part of the reading order.
+
+For an existing project, run **Story Teller: Add Book Matter and Supporting
+Content** from the Command Palette. With multiple workspace projects, choose
+one. The command creates only missing items and reports created/already-present
+items or an error. It preserves deliberately empty files and author edits. Run
+it again safely. Opening an older project does not upgrade or write it; older
+projects still preview and export normally. Save/revert a dirty project manifest
+before upgrading. A failed upgrade can leave individually created scaffold
+files; the report identifies the error and a repeat preserves those files and
+finishes registration. It never labels a failed upgrade complete.
+
+### Import mappings and provenance
+
+Read-only inspection of current CONSTRAINT and MWC found `type: book|part|scene`,
+`parent` wikilinks and `manuscript_order_key`, but **no publication-matter
+classification**. This increment adds an explicit source convention, not a claim
+about existing MWC output: `type: front-matter` or `type: back-matter`, with
+`parent: "[[Book]]"`. Several notes on either side use the selected order key;
+a single note needs no order value. Their Markdown bodies retain wording/order
+and supported media is relocated using the existing importer. Original YAML and
+content remain archived in project metadata. Names alone never classify matter.
+Unmatched parents and unknown types are reported/excluded. Unclassified book-note
+body text remains archived, rather than being guessed to be publication matter.
+
+Existing classified front matter is authoritative: metadata is **not appended**
+to it, avoiding duplicate title/copyright pages. Otherwise, supplied scalar
+`title`, `subtitle`, `author`, `series`, `series_book`, `publisher`, `imprint`,
+`copyright`, `rights`, `language`, `isbn_epub`, `isbn_paper`, `isbn_hard` populate
+new front matter. Identical values are not repeated; rights already contained in
+the copyright string are not repeated. No legal terms, author name, cover, date
+or title inferred from a filename is inserted. Description, cover metadata,
+collections and other workshop fields remain in the archived book note; they
+are not automatically turned into publication pages. No source metadata yields
+empty editable matter. Ordered scenes parented directly to a book without parts
+retain explicit order and receive labels 1, 2, …; a matter-only/empty book also
+opens and exports without fabricating a part or scene.
+
+Upgrading uses the project’s retained `bookFile` metadata, not absolute provenance
+paths back into a vault. New imports additionally retain ready-to-use matter
+sources (`matter.front/back.sourceFile`) for recreating a missing document later.
+Older imports cannot recover previously excluded source matter automatically;
+copy that content into the adaptation manually. Existing documents always win.
+
+### Portable manifest and reading
+
+Manifest version 1 gains optional entries:
+
+```json
+{
+  "matter": {
+    "front": { "id": "stable-front-id", "file": "Front Matter.md" },
+    "back": { "id": "stable-back-id", "file": "Back Matter.md" }
+  },
+  "settings": { "supportingContent": "Supporting Content" }
+}
+```
+
+Omitting `settings.supportingContent` means `Supporting Content`. A configured
+project-relative folder such as `Notes/Background` is respected by scaffolding,
+preview and export; no competing default folder is created. Traversal and escape
+symlinks are rejected. Keep notes separate from scenes/metadata/assets. Paths and
+matter IDs remain separate from generated scene labels. Registration is in the
+manifest; merely naming an unrelated file Front Matter.md does not publish it.
+
+Matter is ordinary, fully displayed safe Markdown: headings, text, existing
+images and explicit supporting-note links. Ordinary Markdown links retain the
+reader’s existing inert safe presentation. Fenced chat/typeout examples remain
+code on these pages; they are not performed. Frontmatter is author metadata and
+is not displayed. Continue enters the next document; Previous returns to the
+preceding matter page or the last beat of a preceding scene, fully revealed and
+silent. Entering a scene via Continue respects Autoplay. The shared reader stops
+outgoing reveal/audio/scroll work before a document turn. Beat turns remain manual.
+
+Web export includes nonempty matter in Contents and reading order:
+Front Matter → scenes in manifest order → Back Matter. Blank/metadata-only matter
+is omitted from web Contents and sequence, while remaining visible/editable in
+the author outline. A book with no nonempty reading pages displays an empty-book
+message. Export uses saved content and existing local-asset/note rules; no source
+vault, archived metadata or unrelated files are included. There is no new cover
+screen, generated Contents document, progress-saving system or EPUB export.
+
+### Try this increment
+
+1. Install `story-teller-0.11.0.vsix` using **Extensions: Install from VSIX…**,
+   then reload VS Code. The extension-level licence remains unresolved; no
+   marketplace release or new licence is implied.
+2. Open an existing imported adaptation folder. Run **Add Book Matter and
+   Supporting Content**. Check both new outline documents. Write a title or
+   acknowledgements, leave either intentionally empty, and repeat the command:
+   your edits/empty file must remain unchanged.
+3. Alternatively import `samples/matter-source/Lantern/` from this repository,
+   select `order`, review the matter list and one scene, then choose a **new**
+   destination outside the source. Open the project folder and select Front Matter.
+4. Follow Continue → story → last beat → Next scene → Back Matter. Check
+   Autoplay on/off and Previous. Edit matter while previewing; verify focus stays
+   in your source. Add `[[Definition|A note]]` and the corresponding supporting note.
+5. Export to a new folder, serve it with `python3 -m http.server 8000 --directory
+   /path/to/export`, and open `http://localhost:8000`. Check Contents, images,
+   notes and narrow widths. Empty matter must be absent from the exported reader.
+
+Automated/native evidence and platform limits are recorded in RESULTS.md.

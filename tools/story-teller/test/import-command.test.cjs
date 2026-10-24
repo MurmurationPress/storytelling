@@ -97,6 +97,7 @@ test('outline command cancels before validation and commits only the latest scen
   const root=await fs.mkdtemp(path.join(os.tmpdir(),'story-scene-command-'));
   t.after(()=>fs.rm(root,{recursive:true,force:true}));
   await fs.mkdir(path.join(root,'scenes'));for(const name of ['A','B'])await fs.writeFile(path.join(root,'scenes',name+'.md'),name+' unchanged.');
+  await fs.writeFile(path.join(root,'story-teller.project.json'), JSON.stringify({schema:'story-teller-project',version:1,parts:[{id:'p',scenes:['A','B']}],scenes:['A','B'].map(id=>({id,partId:'p',file:`scenes/${id}.md`}))}));
   const answers={dialogs:[]},calls=[];
   const host=fakeHost(answers,{onScenePending:()=>calls.push('stop'),openScene:editor=>calls.push(editor.document.uri.fsPath)});
   const command=host.commands.get('storyTeller.openProjectScene');
@@ -109,4 +110,24 @@ test('a failed outline selection releases the outgoing reader to ready without o
   const calls=[];const host=fakeHost({dialogs:[]},{onScenePending:()=>calls.push('stop'),onSceneFailed:()=>calls.push('ready')});
   await host.commands.get('storyTeller.openProjectScene')('/not-a-project',{file:'../private.md'});
   assert.deepEqual(calls,['stop','ready']);assert.match(host.messages[0],/Story Teller scene/);
+});
+test('empty and single-matter imports need no fictional order key or book metadata',async t=>{
+  const f=await fixture(t);
+  for(const withMatter of [false,true]) {
+    const book=path.join(f.root,withMatter?'Single':'Empty');await fs.mkdir(book);
+    if(withMatter)await fs.writeFile(path.join(book,'Opening.md'),'---\ntype: front-matter\nparent: "[[Single]]"\n---\nAuthored opening.\n');
+    const host=fakeHost({dialogs:[[{fsPath:book}],[{fsPath:f.dest}]],quick:'cancel',name:withMatter?'Single adaptation':'Empty adaptation',confirm:'Import'});
+    await host.commands.get('storyTeller.importManuscript')();
+    const root=path.join(f.dest,withMatter?'Single adaptation':'Empty adaptation');
+    assert.equal(await fs.readFile(path.join(root,'Front Matter.md'),'utf8'),withMatter?'Authored opening.\n':'');
+    assert.equal(await fs.readFile(path.join(root,'Back Matter.md'),'utf8'),'');
+    assert.equal(JSON.parse(await fs.readFile(path.join(root,'story-teller.project.json'),'utf8')).scenes.length,0);
+    assert.match(host.reviews[0].html,/Not needed \(no ordered story items\)/);
+  }
+});
+test('multiple classified matter notes without an order key are diagnosed rather than filename sorted',async t=>{
+  const f=await fixture(t),book=path.join(f.root,'Ambiguous');await fs.mkdir(book);
+  for(const name of ['B','A'])await fs.writeFile(path.join(book,name+'.md'),'---\ntype: front-matter\nparent: "[[Ambiguous]]"\n---\nWords.\n');
+  const host=fakeHost({dialogs:[[{fsPath:book}]]});await host.commands.get('storyTeller.importManuscript')();
+  assert.match(host.messages.join('\n'),/No frontmatter order fields/);assert.equal(host.reviews.length,0);
 });

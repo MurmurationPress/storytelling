@@ -6,6 +6,7 @@ const YAML = require('yaml');
 const { inspectStructure } = require('./structure.cjs');
 const { inside, FORMATS } = require('./media.cjs');
 const { SUPPORTING_FOLDER } = require('./supporting-content.cjs');
+const { metadataMatter, scaffold, matterDocuments, supportingFolder } = require('./book-matter.cjs');
 const VERSION = 1;
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
 const slash = value => value.split(path.sep).join('/');
@@ -76,11 +77,11 @@ function discover(items, folder) {
   items = items.filter(item => !inside(path.join(folder, SUPPORTING_FOLDER), item.file));
   const warnings = [], errors = [];
   const bookStem = slash(path.resolve(folder)).replace(/\/$/, '');
-  const book = items.find(x => x.data?.type === 'book' && path.join(path.dirname(x.file), path.basename(x.file, '.md')) === bookStem);
-  if (!book) errors.push(`No sibling book note of type book found for ${folder}. Select its companion manuscript folder.`);
-  const candidates = items.filter(x => x.data && ['part', 'scene'].includes(x.data.type));
+  let book = items.find(x => x.data?.type === 'book' && path.join(path.dirname(x.file), path.basename(x.file, '.md')) === bookStem);
+  if (!book) { warnings.push('No sibling book metadata note; new book matter will remain empty unless explicitly classified content exists.'); book = { file: `${folder}.md`, data: {}, source: '', body: '', synthetic: true }; }
+  const candidates = items.filter(x => x.data && ['part', 'scene', 'front-matter', 'back-matter'].includes(x.data.type));
   for (const item of items) if (item.error) errors.push(`Cannot classify Markdown note: ${item.error}`);
-  for (const item of items.filter(x => x.data && !['part', 'scene', 'book'].includes(x.data.type))) warnings.push(`Excluded ${item.data.type || 'untyped'} note: ${item.file}`);
+  for (const item of items.filter(x => x.data && !['part', 'scene', 'book', 'front-matter', 'back-matter'].includes(x.data.type))) warnings.push(`Excluded ${item.data.type || 'untyped'} note: ${item.file}`);
   const fields = [...new Set(candidates.flatMap(x => Object.keys(x.data).filter(key => /order|sequence/i.test(key))))].map(key => ({ key, samples: candidates.filter(x => x.data[key] !== undefined).slice(0, 4).map(x => String(x.data[key])), count: candidates.filter(x => x.data[key] !== undefined).length }));
   return { book, items, folder, fields, warnings, errors };
 }
@@ -89,6 +90,7 @@ function plan(discovery, key) {
   const book = discovery.book;
   if (book?.data?.cover_image) warnings.push(`Book cover_image frontmatter is preserved but not collected as scene media: ${book.data.cover_image}`);
   if (!book) return { errors, warnings, parts: [], scenes: [], assets: [], key };
+  if (book.body?.trim()) warnings.push('Book-note body is archived, not classified as front/back matter; review it manually.');
   const parts = discovery.items.filter(x => x.data?.type === 'part' && matchesParent(x.data.parent, book.file));
   const otherParts = discovery.items.filter(x => x.data?.type === 'part' && !matchesParent(x.data.parent, book.file));
   for (const x of otherParts) warnings.push(`Excluded part with different parent: ${x.file}`);
@@ -109,12 +111,22 @@ function plan(discovery, key) {
     }
     resultParts.push(record);
   }
+  if (!parts.length) {
+    for (const item of orderGroup(sceneCandidates.filter(x => matchesParent(x.data.parent, book.file)), key, errors, 'Scenes'))
+      scenes.push({ id: crypto.randomUUID(), partId: null, label: String(scenes.length + 1), title: titleOf(item.data,item.file), source:item.file, orderValue:item.data[key],kind:'scene',content:item.source });
+  }
   const included = new Set(scenes.map(s => s.source));
   if (included.size !== scenes.length) errors.push('A manuscript note belongs to more than one part; parent metadata is ambiguous');
   for (const scene of sceneCandidates) if (!included.has(scene.file)) warnings.push(`Excluded scene with missing/unmatched parent: ${scene.file}`);
-  if (!parts.length) errors.push('No ordered part notes found under the book parent');
-  if (!scenes.length) errors.push('No manuscript-bearing scenes found');
-  return { book, key, parts: resultParts, scenes, warnings, errors, assets: [] };
+  const matter = {};
+  for (const kind of ['front', 'back']) {
+    const candidates = discovery.items.filter(x => x.data?.type === `${kind}-matter`);
+    const members = candidates.filter(x => matchesParent(x.data.parent, book.file));
+    for (const x of candidates.filter(x => !members.includes(x))) warnings.push(`Excluded matter with unmatched book parent: ${x.file}`);
+    matter[kind] = (members.length > 1 ? orderGroup(members, key, errors, `${kind} matter`) : members).map(x => ({ source: x.file, content: x.source, body: x.body }));
+  }
+  if (sceneCandidates.length && !scenes.length) errors.push('No manuscript-bearing scenes matched ordered parts');
+  return { book, key, parts: resultParts, scenes, matter, warnings, errors, assets: [] };
 }
 function isLiteralAt(line, offset) {
   if (offset > 0 && line[offset - 1] === '\\') return true;
@@ -149,7 +161,7 @@ function mediaReferences(source) {
 }
 async function resolveAssets(planData, scope) {
   const root = await fs.realpath(scope), map = new Map(), warnings = [...planData.warnings], unresolved = [];
-  for (const scene of planData.scenes) {
+  for (const scene of [...planData.scenes, ...Object.values(planData.matter || {}).flat()]) {
     scene.references = [];
     for (const ref of mediaReferences(scene.content)) {
       if (ref.ambiguous) { warnings.push(`${scene.source}:${ref.line}: ambiguous media embed ${ref.raw}`); continue; }
@@ -177,10 +189,10 @@ async function resolveAssets(planData, scope) {
   }
   return { ...planData, warnings, unresolved, assets: [...map.values()], assetRoot: root };
 }
-function rewriteScene(scene) {
+function rewriteScene(scene, prefix = '../assets/') {
   let content = scene.content;
   for (const ref of [...scene.references].sort((a,b) => b.start - a.start)) {
-    const relative = `../assets/${encodeURIComponent(ref.name).replace(/[!'()*]/g, c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}`;
+    const relative = `${prefix}${encodeURIComponent(ref.name).replace(/[!'()*]/g, c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`)}`;
     const alt = ref.alt.replace(/\\/g, '\\\\').replace(/\]/g, '\\]');
     content = content.slice(0, ref.start) + `![${alt}](${relative})` + content.slice(ref.end);
   }
@@ -191,13 +203,12 @@ async function writeProject(planData, destination) {
   try { await fs.lstat(destination); throw Error('Destination already exists'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const parent = path.dirname(destination), temp = await fs.mkdtemp(path.join(parent, '.story-teller-import-'));
   try {
-    await fs.mkdir(path.join(temp, SUPPORTING_FOLDER));
     await fs.mkdir(path.join(temp, 'scenes')); await fs.mkdir(path.join(temp, 'assets')); await fs.mkdir(path.join(temp, 'metadata'));
-    const manifest = { schema: 'story-teller-project', version: VERSION, title: titleOf(planData.book.data, planData.book.file), orderField: planData.key,
+    let manifest = { schema: 'story-teller-project', version: VERSION, title: titleOf(planData.book.data, planData.book.file), orderField: planData.key,
       provenance: { book: planData.book.file, sourceScope: planData.assetRoot, sourceRevision: await gitRevision(planData.book.file) }, bookFile: 'metadata/book.md',
       parts: planData.parts.map(p => ({ id: p.id, title: p.title, orderValue: p.orderValue, metadataFile: `metadata/${p.id}.md`, scenes: p.scenes })), scenes: [] };
-    if (sha(await fs.readFile(planData.book.file)) !== sha(planData.book.source)) throw Error(`Book note changed after review: ${planData.book.file}`);
-    await fs.writeFile(path.join(temp, 'metadata', 'book.md'), planData.book.source);
+    if (!planData.book.synthetic && sha(await fs.readFile(planData.book.file)) !== sha(planData.book.source)) throw Error(`Book note changed after review: ${planData.book.file}`);
+    await fs.writeFile(path.join(temp, 'metadata', 'book.md'), planData.book.synthetic ? '---\n{}\n---\n' : planData.book.source);
     for (const part of planData.parts) {
       if (sha(await fs.readFile(part.source)) !== sha(part.original)) throw Error(`Part note changed after review: ${part.source}`);
       await fs.writeFile(path.join(temp, 'metadata', `${part.id}.md`), part.original);
@@ -208,6 +219,24 @@ async function writeProject(planData, destination) {
       await fs.writeFile(path.join(temp, 'scenes', filename), rewriteScene(scene));
       manifest.scenes.push({ id: scene.id, partId: scene.partId, kind: scene.kind, label: scene.label, title: scene.title, orderValue: scene.orderValue,
         file: `scenes/${filename}`, provenance: { source: scene.source, sha256: sha(scene.content) } });
+    }
+    const matterContent = {};
+    for (const kind of ['front', 'back']) {
+      const members = planData.matter?.[kind] || [];
+      const bodies = [];
+      for (const [index, item] of members.entries()) {
+        if (sha(await fs.readFile(item.source)) !== sha(item.content)) throw Error(`Matter source changed after review: ${item.source}`);
+        await fs.writeFile(path.join(temp, 'metadata', `${kind}-matter-${index}.md`), item.content);
+        const rewritten = rewriteScene(item, 'assets/');
+        bodies.push(parseMeta(rewritten, item.source).body);
+      }
+      matterContent[kind] = members.length ? bodies.join('\n\n') : kind === 'front' ? metadataMatter(planData.book.data) : '';
+    }
+    manifest = (await scaffold(temp, manifest, matterContent)).manifest;
+    for (const kind of ['front', 'back']) {
+      const template = `metadata/${kind}-matter.md`;
+      await fs.writeFile(path.join(temp, template), matterContent[kind]);
+      manifest.matter[kind].sourceFile = template;
     }
     for (const asset of planData.assets) {
       const bytes = await fs.readFile(asset.source);
@@ -225,9 +254,10 @@ async function gitRevision(file) {
 }
 function orderedScenes(manifest) {
   if (manifest?.schema !== 'story-teller-project' || manifest.version !== VERSION || !Array.isArray(manifest.parts) || !Array.isArray(manifest.scenes)) throw Error('Unsupported Story Teller project manifest');
-  if (manifest.scenes.some(scene => typeof scene.file === 'string' && scene.file.replace(/\\/g, '/').split('/').includes(SUPPORTING_FOLDER))) throw Error('Supporting Content notes cannot appear in the scene sequence');
+  matterDocuments(manifest);
+  if (manifest.scenes.some(scene => typeof scene.file === 'string' && scene.file.replace(/\\/g, '/').startsWith(`${supportingFolder(manifest)}/`))) throw Error('Supporting Content notes cannot appear in the scene sequence');
   const byId = new Map(manifest.scenes.map(s => [s.id, s]));
-  const ordered = manifest.parts.flatMap(p => p.scenes.map(id => { const scene = byId.get(id); if (!scene || scene.partId !== p.id) throw Error(`Invalid scene reference ${id}`); return scene; }));
+  const ordered = manifest.parts.length === 0 && manifest.scenes.every(scene => scene.partId === null) ? [...manifest.scenes] : manifest.parts.flatMap(p => p.scenes.map(id => { const scene = byId.get(id); if (!scene || scene.partId !== p.id) throw Error(`Invalid scene reference ${id}`); return scene; }));
   if (ordered.length !== manifest.scenes.length || new Set(ordered.map(s => s.id)).size !== ordered.length) throw Error('Project sequence is inconsistent');
   return ordered;
 }

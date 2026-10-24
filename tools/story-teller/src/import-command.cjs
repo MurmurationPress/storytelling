@@ -5,6 +5,7 @@ const { randomBytes } = require('node:crypto');
 const { scan, discover, plan, resolveAssets, writeProject, orderedScenes } = require('./manuscript-import.cjs');
 const { SceneSelection } = require('./scene-navigation.cjs');
 const { inside } = require('./media.cjs');
+const { matterDocuments } = require('./book-matter.cjs');
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 const pendingOutlineMatches = (pending, folders) => Boolean(pending) && folders.some(folder => path.resolve(folder.uri.fsPath) === path.resolve(pending));
 function showImportReview(vscode, prepared) {
@@ -19,7 +20,7 @@ function showImportReview(vscode, prepared) {
     const excluded = prepared.warnings.filter(w => /^Excluded\b/.test(w));
     const warnings = prepared.warnings.filter(w => !/^Excluded\b/.test(w));
     const blocked = prepared.errors.length || prepared.unresolved.length;
-    panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'"><style nonce="${nonce}">html,body{height:100%;margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font:var(--vscode-font-size) var(--vscode-font-family)}body{display:flex;flex-direction:column}main{overflow:auto;flex:1;padding:1rem 1.4rem;overflow-wrap:anywhere}.path{word-break:break-all;opacity:.75}section{border-block-start:1px solid var(--vscode-panel-border);padding-block:.5rem}li{margin-block:.45rem}footer{position:sticky;bottom:0;display:flex;gap:.6rem;padding:.8rem 1.4rem;border-top:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background)}button{padding:.4rem .85rem;color:var(--vscode-button-foreground);background:var(--vscode-button-background);border:0;cursor:pointer}button:focus-visible{outline:2px solid var(--vscode-focusBorder)}button:disabled{opacity:.5;cursor:not-allowed}</style></head><body><main><h1>Review manuscript import</h1><p><strong>Source book:</strong> ${escapeHtml(prepared.book.data.title || path.basename(prepared.book.file))}<br><span class="path">${escapeHtml(prepared.book.file)}</span></p><p><strong>Order key:</strong> ${escapeHtml(prepared.key)} · ${prepared.parts.length} parts · ${prepared.scenes.length} scenes · ${prepared.assets.length} supported assets</p><h2>Ordered Part–Scene sequence</h2>${parts}<h2>Assets to copy</h2>${list(prepared.assets.map(asset => `${asset.name} ← ${asset.source}`))}<h2>Exclusions</h2>${list(excluded)}<h2>Warnings</h2>${list(warnings)}<h2>Unresolved assets</h2>${list(prepared.unresolved)}<h2>Order errors</h2>${list(prepared.errors)}<p>No files have been written. Continue chooses a destination and asks for final confirmation.</p></main><footer><button id="back">Back</button><button id="continue" ${blocked ? 'disabled' : ''}>Continue</button><button id="cancel">Cancel</button></footer><script nonce="${nonce}">const api=acquireVsCodeApi();for(const id of ['back','continue','cancel'])document.getElementById(id).addEventListener('click',()=>api.postMessage(id));document.addEventListener('keydown',event=>{if(event.key==='Escape')api.postMessage('cancel')});document.getElementById('back').focus();</script></body></html>`;
+    panel.webview.html = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src 'nonce-${nonce}'; img-src 'none'; connect-src 'none'; base-uri 'none'; form-action 'none'"><style nonce="${nonce}">html,body{height:100%;margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font:var(--vscode-font-size) var(--vscode-font-family)}body{display:flex;flex-direction:column}main{overflow:auto;flex:1;padding:1rem 1.4rem;overflow-wrap:anywhere}.path{word-break:break-all;opacity:.75}section{border-block-start:1px solid var(--vscode-panel-border);padding-block:.5rem}li{margin-block:.45rem}footer{position:sticky;bottom:0;display:flex;gap:.6rem;padding:.8rem 1.4rem;border-top:1px solid var(--vscode-panel-border);background:var(--vscode-editor-background)}button{padding:.4rem .85rem;color:var(--vscode-button-foreground);background:var(--vscode-button-background);border:0;cursor:pointer}button:focus-visible{outline:2px solid var(--vscode-focusBorder)}button:disabled{opacity:.5;cursor:not-allowed}</style></head><body><main><h1>Review manuscript import</h1><p><strong>Source book:</strong> ${escapeHtml(prepared.book.data.title || path.basename(prepared.book.file))}<br><span class="path">${escapeHtml(prepared.book.file)}</span></p><p><strong>Order key:</strong> ${escapeHtml(prepared.key || 'Not needed (no ordered story items)')} · ${prepared.parts.length} parts · ${prepared.scenes.length} scenes · ${prepared.assets.length} supported assets</p><h2>Ordered Part–Scene sequence</h2>${parts}${prepared.parts.length ? '' : list(prepared.scenes.map(scene => `${scene.label} ${scene.title} · ${scene.source}`))}<h2>Book matter</h2>${list(['Front Matter.md', 'Back Matter.md', 'Supporting Content/', ...Object.entries(prepared.matter || {}).flatMap(([kind, items]) => items.map(item => `${kind}: ${item.source}`))])}<p>Classified matter retains its text/order. Otherwise supplied publication metadata populates front matter; missing information remains empty.</p><h2>Assets to copy</h2>${list(prepared.assets.map(asset => `${asset.name} ← ${asset.source}`))}<h2>Exclusions</h2>${list(excluded)}<h2>Warnings</h2>${list(warnings)}<h2>Unresolved assets</h2>${list(prepared.unresolved)}<h2>Order errors</h2>${list(prepared.errors)}<p>No files have been written. Continue chooses a destination and asks for final confirmation.</p></main><footer><button id="back">Back</button><button id="continue" ${blocked ? 'disabled' : ''}>Continue</button><button id="cancel">Cancel</button></footer><script nonce="${nonce}">const api=acquireVsCodeApi();for(const id of ['back','continue','cancel'])document.getElementById(id).addEventListener('click',()=>api.postMessage(id));document.addEventListener('keydown',event=>{if(event.key==='Escape')api.postMessage('cancel')});document.getElementById('back').focus();</script></body></html>`;
     const listener = panel.webview.onDidReceiveMessage(message => { if (['back', 'continue', 'cancel'].includes(message)) done(message); });
     panel.onDidDispose(() => { listener.dispose(); if (!settled) { settled = true; resolve('cancel'); } });
   });
@@ -32,16 +33,19 @@ function registerImport(vscode, context, { onScenePending = () => {}, onSceneFai
   const watcher = vscode.workspace.createFileSystemWatcher('**/story-teller.project.json');
   watcher.onDidChange(() => tree.refresh()); watcher.onDidCreate(() => tree.refresh()); watcher.onDidDelete(() => tree.refresh());
   context.subscriptions.push(watcher);
-  context.subscriptions.push(vscode.commands.registerCommand('storyTeller.openProjectScene', async (projectRoot, scene) => {
+  context.subscriptions.push(vscode.commands.registerCommand('storyTeller.openProjectScene', async (projectRoot, scene, options = {}) => {
     const token = selection.begin();
     try {
       const root = await fs.realpath(projectRoot);
-      const candidate = path.resolve(root, scene.file);
-      if (!inside(root, candidate) || !inside(path.join(root, 'scenes'), candidate) || !candidate.endsWith('.md') || !inside(root, await fs.realpath(candidate))) throw Error('Scene path is outside the imported project');
+      const manifest = JSON.parse(await fs.readFile(path.join(root, 'story-teller.project.json'), 'utf8'));
+      const authoritative = [...orderedScenes(manifest), ...matterDocuments(manifest)].find(item => (!scene.id || item.id === scene.id) && item.file === scene.file);
+      if (!authoritative) throw Error('Document is no longer in this project');
+      const candidate = path.resolve(root, authoritative.file);
+      if (!inside(root, candidate) || !candidate.endsWith('.md') || !inside(root, await fs.realpath(candidate))) throw Error('Scene path is outside the imported project');
       if (!selection.isCurrent(token)) return;
       await selection.commit(token, async current => {
         const editor = await vscode.window.showTextDocument(vscode.Uri.file(candidate), { preview: false, preserveFocus: false });
-        if (current() && openScene) await openScene(editor, current);
+        if (current() && openScene) await openScene(editor, current, options.previous === true);
       });
     } catch (error) { if (selection.isCurrent(token)) { onSceneFailed(); vscode.window.showErrorMessage(`Story Teller scene: ${error.message}`); } }
   }));
@@ -53,10 +57,10 @@ function registerImport(vscode, context, { onScenePending = () => {}, onSceneFai
       const discovery = discover(await scan(folder), folder);
       if (discovery.errors.length) { await vscode.window.showErrorMessage(discovery.errors.join('\n')); return; }
       const fields = discovery.fields.map(field => ({ label: field.key, description: `${field.count} items · ${field.samples.join(', ')}`, field }));
-      if (!fields.length) { await vscode.window.showErrorMessage('No frontmatter order fields found in manuscript items.'); return; }
+      if (!fields.length && (discovery.items.some(item => ['part','scene'].includes(item.data?.type)) || ['front-matter','back-matter'].some(type => discovery.items.filter(item => item.data?.type === type).length > 1))) { await vscode.window.showErrorMessage('No frontmatter order fields found in manuscript items.'); return; }
       let prepared;
       for (;;) {
-        const choice = await vscode.window.showQuickPick(fields, { title: 'Choose the frontmatter order key', placeHolder: 'The selected key orders parts and their scenes; filenames never determine order' });
+        const choice = fields.length ? await vscode.window.showQuickPick(fields, { title: 'Choose the frontmatter order key', placeHolder: 'The selected key orders parts and their scenes; filenames never determine order' }) : { field: { key: null } };
         if (!choice) return;
         prepared = await resolveAssets(plan(discovery, choice.field.key), folder);
       if (prepared.unresolved.length && !prepared.errors.length) {
@@ -110,15 +114,21 @@ class ProjectTree {
       try {
         const manifest = JSON.parse(await fs.readFile(file, 'utf8'));
         orderedScenes(manifest);
+        const matter = matterDocuments(manifest);
+        const front = matter.find(item => item.kind === 'front');
+        if (front) result.push(this.sceneItem(folder.uri.fsPath, front));
         for (const part of manifest.parts) result.push({ root: folder.uri.fsPath, manifest, part, label: part.title,
           description: `Part ${manifest.parts.indexOf(part) + 1}`, collapsibleState: manifest.parts.indexOf(part) === 0 ? this.vscode.TreeItemCollapsibleState.Expanded : this.vscode.TreeItemCollapsibleState.Collapsed });
+        if (!manifest.parts.length) for (const scene of orderedScenes(manifest)) result.push(this.sceneItem(folder.uri.fsPath, scene));
+        const back = matter.find(item => item.kind === 'back');
+        if (back) result.push(this.sceneItem(folder.uri.fsPath, back));
       } catch (error) {
         if (error.code !== 'ENOENT') result.push({ label: `Project needs review: ${error.message}`, description: folder.name, collapsibleState: this.vscode.TreeItemCollapsibleState.None });
       }
     }
     return result;
   }
-  sceneItem(root, scene) { return { label: `${scene.label} ${scene.title}`, tooltip: scene.file,
+  sceneItem(root, scene) { return { label: scene.kind === 'front' || scene.kind === 'back' ? scene.title : `${scene.label} ${scene.title}`, tooltip: scene.file,
     collapsibleState: this.vscode.TreeItemCollapsibleState.None,
     command: { command: 'storyTeller.openProjectScene', title: 'Open Story Teller scene', arguments: [root, scene] } }; }
   getTreeItem(element) { return element; }

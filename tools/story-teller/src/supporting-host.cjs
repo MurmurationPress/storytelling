@@ -1,5 +1,6 @@
 'use strict';
 const path = require('node:path');
+const { supportingFolder } = require('./book-matter.cjs');
 const fs = require('node:fs/promises');
 const { indexSupporting, describeLinks, loadSupporting, SUPPORTING_FOLDER } = require('./supporting-content.cjs');
 const { inside } = require('./media.cjs');
@@ -7,7 +8,7 @@ const { FORMATS, resolveMedia } = require('./media.cjs');
 async function prepareSupporting(project, references) {
   try {
     if (!project) throw Error(`Open the adaptation project folder containing story-teller.project.json, then add notes in ${SUPPORTING_FOLDER}/`);
-    const index = await indexSupporting(path.dirname(project.file));
+    const index = await indexSupporting(path.dirname(project.file), project.manifest);
     return { index, ...(await describeLinks(index, references)) };
   } catch (error) {
     return { index: null, links: Object.fromEntries(references.map(ref=>[ref.target,{error:error.message}])),
@@ -33,7 +34,7 @@ function watchSupporting(vscode, index, changed) {
   const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(vscode.Uri.file(index.project), '**/*'));
   const notify = uri => { if (inside(index.project, uri.fsPath) && (inside(index.root, uri.fsPath) || FORMATS[path.extname(uri.fsPath).toLowerCase()])) changed(uri); };
   const listeners = [watcher.onDidChange(notify), watcher.onDidCreate(notify), watcher.onDidDelete(notify)];
-  return { root: index.project, dispose() { for (const listener of listeners) listener.dispose(); watcher.dispose(); } };
+  return { root: index.root, dispose() { for (const listener of listeners) listener.dispose(); watcher.dispose(); } };
 }
-const supportingSource = (project, uri) => Boolean(project && uri.scheme === 'file' && inside(path.join(path.dirname(project.file), SUPPORTING_FOLDER), uri.fsPath));
+const supportingSource = (project, uri) => Boolean(project && uri.scheme === 'file' && inside(path.join(path.dirname(project.file), supportingFolder(project.manifest)), uri.fsPath));
 module.exports={prepareSupporting,loadForPreview,supportingSource,watchSupporting};

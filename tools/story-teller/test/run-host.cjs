@@ -52,6 +52,18 @@ async function until(fn, timeout = 60000) {
     await fs.cp(importProject,path.join(directory,'handoff-B'),{recursive:true});
     for(const name of ['A','B'])await fs.writeFile(path.join(directory,`handoff-${name}/scenes/Last.md`),`Unique root ${name} marker.\n`);
   }
+  if(process.env.STORY_TELLER_HOST_SCOPE==='matter') {
+    importProject=path.join(directory,'matter-project');
+    const importer=require('../src/manuscript-import.cjs');
+    const folder=path.join(root,'samples/matter-source/Lantern');
+    await importer.writeProject(await importer.resolveAssets(importer.plan(importer.discover(await importer.scan(folder),folder),'order'),folder),importProject);
+    const manifest=JSON.parse(await fs.readFile(path.join(importProject,'story-teller.project.json'),'utf8'));
+    await fs.writeFile(path.join(importProject,'Front Matter.md'),'# Native front matter\n\n[[Definition|A note]].\n\n![Lamp](assets/'+(await fs.readdir(path.join(importProject,'assets')))[0]+')');
+    await fs.writeFile(path.join(importProject,'Supporting Content/Definition.md'),'A supporting definition.');
+    // Exercise an existing-project upgrade through the real command, preserving
+    // edited front matter and reconstructing the missing back document.
+    await fs.unlink(path.join(importProject,'Back Matter.md'));
+  }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
   const vsix = process.env.STORY_TELLER_VSIX;
@@ -89,7 +101,7 @@ async function until(fn, timeout = 60000) {
       return value.id === id && value;
     });
     assert.equal(ack.error, undefined);
-    if(['select-scene','open-project-scene','preview-project-scene','rapid-scenes'].includes(action))await reconnectReader(options.projectRoot);
+    if(['select-scene','open-project-scene','preview-project-scene','rapid-scenes','rapid-documents'].includes(action))await reconnectReader(options.projectRoot);
   }
   try {
     await until(async () => { await fs.access(path.join(directory, 'ready')); return true; }, 60000);
@@ -142,6 +154,49 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='matter') {
+      const evidence={mode:vsix?'installed VSIX':'Extension Development Host',checks:[]};
+      await request('upgrade-matter');
+      assert.match(await fs.readFile(path.join(importProject,'Back Matter.md'),'utf8'),/authored ending/);
+      assert.match(await fs.readFile(path.join(importProject,'Front Matter.md'),'utf8'),/Native front matter/);
+      evidence.checks.push('upgrade command creates only missing back matter; preserves edited front matter');
+      await request('select-scene',undefined,{projectRoot:importProject,file:'Front Matter.md'});
+      await until(async()=>(await beat.textContent())?.includes('Native front matter'));
+      assert.equal(await evaluate('doc.getElementById("play").hidden'),true);
+      await until(async()=>await evaluate('doc.querySelector("#beat img")?.naturalWidth>0'));
+      await evaluate('doc.querySelector("#beat button.wiki-link").click()',true);
+      await until(async()=>await evaluate('doc.querySelector("dialog[open] article")?.textContent.includes("supporting definition")'));
+      await evaluate('doc.querySelector("dialog header button:last-child").click()',true);
+      await frame.locator('#show-source').click();await request('active-source-state');
+      assert.equal(JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8')).uri,path.join(importProject,'Front Matter.md'));
+      evidence.checks.push('static front matter, relative image, supporting-note panel and Show Beat in Source');
+      await frame.locator('#next').click();
+      await until(async()=>(await beat.textContent())?.includes('Mara watched'));
+      assert.match(await frame.locator('#status').textContent(),/playing/);
+      await frame.locator('#previous').click();
+      await until(async()=>(await beat.textContent())?.includes('Native front matter'));
+      const held=await beat.textContent();await sleep(400);assert.equal(await beat.textContent(),held);
+      evidence.checks.push('Continue autoplays scene; Previous returns static and silent');
+      await request('select-scene',undefined,{projectRoot:importProject,file:'Back Matter.md'});
+      await until(async()=>(await beat.textContent())?.includes('authored ending'));
+      await frame.locator('#previous').click();
+      await until(async()=>(await beat.textContent())?.includes('She closed the ledger'));
+      assert.match(await frame.locator('#status').textContent(),/completed/);
+      evidence.checks.push('back-matter Previous returns last scene beat silently completed');
+      await request('select-scene',undefined,{projectRoot:importProject,file:'Front Matter.md'});
+      await until(async()=>(await beat.textContent())?.includes('Native front matter'));
+      await request('edit-project-document',undefined,{file:path.join(importProject,'Front Matter.md'),source:'# Native edited opening\n\nEdited without losing source focus.'});
+      await until(async()=>(await beat.textContent())?.includes('Native edited opening'));
+      await request('active-source-state');const state=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));assert.equal(state.uri,path.join(importProject,'Front Matter.md'));
+      evidence.checks.push('unsaved matter edits refresh while source editor remains selected');
+      const manifest=JSON.parse(await fs.readFile(path.join(importProject,'story-teller.project.json'),'utf8'));
+      await request('rapid-documents',undefined,{projectRoot:importProject,files:['Front Matter.md',manifest.scenes[0].file,'Back Matter.md']});
+      await until(async()=>(await beat.textContent())?.includes('authored ending'));await sleep(400);assert.equal(await evaluate('doc.querySelectorAll(".typeout-progress").length'),0);
+      evidence.checks.push('rapid document requests commit only latest back matter, with no stale reveal');
+      await fs.writeFile(path.join(directory,'matter-evidence.json'),JSON.stringify(evidence,null,2));
+      console.log(`PASS: ${evidence.mode} matter workflow; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='handoff') {
       const observations=[];
       for(let turn=0;turn<20;turn++) {

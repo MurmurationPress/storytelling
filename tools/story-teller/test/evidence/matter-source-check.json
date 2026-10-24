@@ -1,0 +1,17 @@
+{
+  "method": "metadata mapping checked using a disposable copy; no private text committed",
+  "sourceRevision": "5bbe44d242a2f2db56ff75ab1ef864e8b564fb20",
+  "source": "Books/CONSTRAINT.md",
+  "sourceSHA256": "03bc65e62f9d8fdaeb7fdeec794677b09cb889d1c83c19d634332e4a5d73b009",
+  "sourceUnchanged": true,
+  "fieldsVerified": [
+    "title",
+    "author",
+    "publisher",
+    "copyright",
+    "isbn_epub",
+    "isbn_paper",
+    "isbn_hard"
+  ],
+  "notExercised": "full private-book import"
+}
