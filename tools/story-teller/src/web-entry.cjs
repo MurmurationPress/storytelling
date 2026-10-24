@@ -41,19 +41,20 @@ async function start() {
     title.textContent=book.title;document.title=book.title;
     try{preference=JSON.parse(localStorage.getItem(`story-teller:${book.id}`)||'{}')||{};}catch{preference={};}
     const ordered=new Map(book.readingOrder.map((s,i)=>[s.id,i]));
-    const matterButton = item => { const button=document.createElement('button');button.type='button';button.textContent=item.title;button.addEventListener('click',()=>void selectScene(ordered.get(item.id),true));contents.append(button); };
-    for(const item of book.readingOrder.filter(item=>item.kind==='front'))matterButton(item);
-    for(const part of book.parts) {
-      const group=document.createElement('details');group.open=true;
+    const entryButton = (item, parent=contents, numbered=false) => {
+      const button=document.createElement('button');button.type='button';button.textContent=numbered ? `${item.label} ${item.title}` : item.title;
+      button.addEventListener('click',()=>{void selectScene(ordered.get(item.id),true);document.getElementById('contents-toggle').setAttribute('aria-expanded','false');contents.hidden=true;document.getElementById('contents-toggle').focus({preventScroll:true});});parent.append(button);
+    };
+    for(const item of book.readingOrder.filter(item=>item.kind==='front'))entryButton(item);
+    const sequence=book.sequence || (book.parts.length ? book.parts.map(part=>({kind:'part',id:part.id})) : book.scenes.map(scene=>({kind:'scene',id:scene.id})));
+    for(const entry of sequence) {
+      if(entry.kind==='scene') { entryButton(book.readingOrder[ordered.get(entry.id)],contents,true); continue; }
+      const part=book.parts.find(part=>part.id===entry.id),group=document.createElement('details');group.open=true;
       const heading=document.createElement('summary');heading.textContent=part.title;group.append(heading);
-      for(const id of part.scenes) {
-        const index=ordered.get(id),scene=book.readingOrder[index],button=document.createElement('button');button.type='button';button.textContent=`${scene.label} ${scene.title}`;
-        button.addEventListener('click',()=>{void selectScene(index,true);document.getElementById('contents-toggle').setAttribute('aria-expanded','false');contents.hidden=true;document.getElementById('contents-toggle').focus({preventScroll:true});});group.append(button);
-      }
+      for(const id of part.scenes)entryButton(book.readingOrder[ordered.get(id)],group,true);
       contents.append(group);
     }
-    if(!book.parts.length)for(const item of book.readingOrder.filter(item=>item.kind==='scene'))matterButton(item);
-    for(const item of book.readingOrder.filter(item=>item.kind==='back'))matterButton(item);
+    for(const item of book.readingOrder.filter(item=>item.kind==='back'))entryButton(item);
     controller=createReader(bridge);
     notify({type:'presentation',visible:!document.hidden,epoch:0});
     const saved=book.readingOrder.findIndex(scene=>scene.id===preference.sourceUri);

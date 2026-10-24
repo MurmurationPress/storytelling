@@ -5,7 +5,7 @@ const crypto = require('node:crypto');
 const { matterDocuments } = require('./book-matter.cjs');
 const { hasSceneHeading } = require('./scene-heading.cjs');
 const { matterScene } = require('./matter-presentation.cjs');
-const { orderedScenes } = require('./manuscript-import.cjs');
+const { orderedScenes, orderedRoots } = require('./manuscript-import.cjs');
 const { resolveSettings } = require('./pacing-settings.cjs');
 const { parseScene } = require('./parser.cjs');
 const { inspectStructure } = require('./structure.cjs');
@@ -80,7 +80,7 @@ async function prepareWeb(projectRoot) {
     warnings.push(...note.diagnostics);
   }
   for(const scene of scenes)Object.assign(targets,scene.data.supporting.links);
-  const book={version:1,id:digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
+  const book={version:1,id:digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),sequence:orderedRoots(manifest).map(entry=>({kind:entry.kind,id:entry.item.id})),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
   return {root,book,scenes,assets,snapshots,warnings:[...new Set(warnings)]};
 }
 async function exportWeb(projectRoot,destination,{beforeWrite=()=>{}}={}) {

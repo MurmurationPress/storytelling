@@ -225,6 +225,16 @@ will remain unmerged. See the importer guide and validation records in
 `tools/story-teller/`. Prior feature acceptance does not establish acceptance or
 new platform coverage for this change.
 
+## Ordered import and PNG resolution repairs
+
+Ted authorises investigation/repair of valid book-level scenes mixed with parts,
+bounded Obsidian PNG lookup, and explanatory review blockers. This separate PR is
+stacked on still-open/unaccepted PR #18 to retain its H1 work; neither PR is merged
+by this task. See [[Import Repairs]] for current source/MWC findings and the
+pending implementation. Source manuscripts/assets, corrected review metadata,
+Component Types and existing worktrees remain untouched. No SVG/transclusion
+support, licence change or deployment is authorised.
+
 
 ## Acceptance and dependency-order integration — PRs #18 and #19
 

@@ -1,0 +1,111 @@
+{
+  "developmentImport": {
+    "mode": "real Extension Development Host, no extensionTestsPath",
+    "vsCode": "1.143.1",
+    "sourcePreserved": true,
+    "workspaceTrust": "disabled only in disposable test profile; VS Code simple picker",
+    "blockedReview": {
+      "disabled": true,
+      "footerExplainsPNG": true,
+      "controlsVisible": true
+    },
+    "correctedReview": {
+      "disabled": false,
+      "unsupportedWarningsNonBlocking": true
+    },
+    "orderedTitles": [
+      "Before",
+      "Child",
+      "Between",
+      "Last",
+      "After"
+    ],
+    "partCount": 2,
+    "PNGBytesPreserved": true,
+    "headingPreserved": true,
+    "privateAssetUsed": false
+  },
+  "installedImport": {
+    "mode": "normal installed VSIX",
+    "vsCode": "1.143.1",
+    "sourcePreserved": true,
+    "workspaceTrust": "disabled only in disposable test profile; VS Code simple picker",
+    "blockedReview": {
+      "disabled": true,
+      "footerExplainsPNG": true,
+      "controlsVisible": true
+    },
+    "correctedReview": {
+      "disabled": false,
+      "unsupportedWarningsNonBlocking": true
+    },
+    "orderedTitles": [
+      "Before",
+      "Child",
+      "Between",
+      "Last",
+      "After"
+    ],
+    "partCount": 2,
+    "PNGBytesPreserved": true,
+    "headingPreserved": true,
+    "privateAssetUsed": true
+  },
+  "developmentPreview": {
+    "mode": "Extension Development Host",
+    "checks": [
+      "native outline root order, without a synthetic part",
+      "manual reading sequence includes root scenes before, between and after parts; H1 preserved",
+      "resolved PNG decoded with alias in narrow native preview"
+    ],
+    "PNG": {
+      "width": 360,
+      "height": 560,
+      "shown": 123,
+      "alt": "A fictional chart."
+    },
+    "narrow": {
+      "width": 205,
+      "overflow": 0
+    },
+    "orderedTitles": [
+      "Before",
+      "Child",
+      "Between",
+      "Last",
+      "After"
+    ],
+    "sourceFrom": "copy of actual GUI import"
+  },
+  "installedPreview": {
+    "mode": "installed VSIX",
+    "checks": [
+      "native outline root order, without a synthetic part",
+      "manual reading sequence includes root scenes before, between and after parts; H1 preserved",
+      "resolved PNG decoded with alias in narrow native preview"
+    ],
+    "PNG": {
+      "width": 1388,
+      "height": 1461,
+      "shown": 182,
+      "alt": "A fictional chart."
+    },
+    "narrow": {
+      "width": 205,
+      "overflow": 0
+    },
+    "orderedTitles": [
+      "Before",
+      "Child",
+      "Between",
+      "Last",
+      "After"
+    ],
+    "sourceFrom": "copy of actual GUI import"
+  },
+  "limits": [
+    "Workspace Trust disabled only in disposable test profiles; VS Code simple folder picker, not OS picker/trust UI",
+    "No iPad/Safari, physical touch, VSCodium, Windows/macOS or new human listening verification",
+    "An earlier overlapped GUI attempt is not counted as a clean run; final GUI runs are sequential"
+  ]
+}

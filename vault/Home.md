@@ -13,6 +13,7 @@ This vault develops that question and records evidence before broader product co
 ## Start here
 
 - [[Managed EPUB Foundation]] — Ted's acceptance, publication/component/reader separation and the five-issue milestone.
+- [[Import Repairs]] — accepted mixed book-scene order, bounded PNG lookup and review-blocker fixes; #18/#19 integration records.
 - [[Component Types]] — Ted's original authored component possibilities, preserved intact.
 - [[Future Component Possibilities]] — ideas retained outside this milestone.
 

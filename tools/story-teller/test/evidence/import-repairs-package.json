@@ -1,0 +1,25 @@
+{
+  "version": "0.11.2",
+  "entries": 383,
+  "bytes": 1369259,
+  "sha256": "929c0a1155da05c7772f186277cc87b23a7bd028675395644a862854ebc8e384",
+  "runtimeMatchesSource": true,
+  "dependencyLicences": [
+    "extension/node_modules/markdown-it/LICENSE",
+    "extension/node_modules/yaml/LICENSE",
+    "extension/node_modules/argparse/LICENSE",
+    "extension/node_modules/entities/LICENSE",
+    "extension/node_modules/linkify-it/LICENSE",
+    "extension/node_modules/mdurl/LICENSE",
+    "extension/node_modules/punycode.js/LICENSE-MIT.txt",
+    "extension/node_modules/uc.micro/LICENSE.txt"
+  ],
+  "excluded": [
+    "tests/evidence",
+    "samples",
+    "vault",
+    "manuscripts",
+    "private images/adaptations"
+  ],
+  "extensionLicence": "unspecified; packaging warning retained"
+}

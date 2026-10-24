@@ -6,7 +6,7 @@ Story Teller previews a separate Markdown adaptation as manually selected story 
 
 Requires desktop VS Code 1.95 or later. Node.js is needed only to build the extension from source.
 
-To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.11.1.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.11.1** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
+To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.11.2.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.11.2** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
 
 Make a *separate* Markdown adaptation of a completed chapter. Keep the original manuscript unchanged. Save the adaptation before linking images so relative paths have a base directory. Open it in VS Code, then run **Story Teller: Preview Scene**. The preview opens beside that document, with the first beat ready. **Play** starts it. **Next** turns one beat; with **Autoplay** enabled (the default), that next beat starts performing immediately. Turn the toggle off to make Next leave it ready for Play. The preference is remembered in VS Code, separately from Markdown. When a beat finishes, including a trailing authored pause, a **Next →** button appears below its content. It performs the same page turn as the top Next button; the top control remains available throughout. On the final beat, **End of scene** appears instead. **Previous** shows the preceding beat fully revealed and silent for rereading, with its bottom Next button. **Replay Beat** resets and starts the current beat again. **Restart** returns to beat one in its ready state, showing only untimed leading content; it never autoplays. **Pause/Resume** preserves the remaining wait. Beat turns remain reader-controlled: completion never advances to another beat or scene. Source edits and closing the preview cancel pending playback; unsaved edits reset the current beat to ready. Hiding the preview pauses it, and returning never resumes automatically.
 
@@ -231,7 +231,65 @@ Review the scrollable panel of parts, numbered scenes, included files, copied as
 
 Select **Continue**, choose a parent folder, enter a new project folder name and confirm **Import**. It writes into a temporary folder then renames atomically; it refuses an existing destination and does not save or modify the original manuscript. The new folder contains `story-teller.project.json` (schema version 1, stable IDs, explicit part/scene order, provenance), editable scene copies, original book/part metadata copies, supported assets and an empty `Supporting Content/` folder. Accept **Open Project Folder** to open the destination window with **Story Teller → Part–Scene Outline** revealed and the first part expanded. Selecting a scene opens its Markdown adaptation; **Preview This Beat** and source navigation work as for standalone documents. The outline and the `orderedScenes` assembly input read the same manifest sequence. You can still open any standalone Markdown scene without a project.
 
-### Imported scene headings (#16; awaiting Ted’s acceptance)
+### Mixed book scenes, PNG lookup and review blockers (0.11.2; accepted by Ted)
+
+Ted accepts the combined scene-heading and importer repairs, including skipped
+Markdown transclusion as an acceptable limitation. This adds no new iPad/touch/audio
+verification. Existing projects are not rewritten. Test new imports in a **new destination**, keeping your edited
+adaptation for comparison.
+
+Scenes whose parent is the selected book are valid alongside parts. Book scenes
+and parts share the selected sibling order key, then each part’s scenes follow
+in that part’s own order. A book scene may appear before, between or after parts;
+no synthetic part is introduced. Root scenes receive independent labels 1, 2, …;
+part/child labels remain 1.1, 1.2, 2.1, …. Missing, ambiguous or unmatched scene
+parents and missing/duplicate/conflicting sibling keys block import with source
+paths/lines. Filenames never fill a missing order. Heading/title, IDs, grouping,
+source metadata and source bytes remain intact.
+
+New manifest version-1 projects record `sequence` as root references, for example
+`[{"kind":"scene","id":"opening"},{"kind":"part","id":"first"}]`.
+`parts[].scenes` supplies ordered children. `orderedScenes`, Part–Scene Outline,
+preview document navigation and exported web Contents use this same sequence.
+Legacy manifests without it keep their existing order; mixed new projects require
+this extension version. No reordering UI or reimport reconciliation is added.
+
+Supported PNG/JPEG/WebP lookup:
+
+- `![[graph.png|A chart]]`: unique bare filename anywhere within the explicitly
+  selected root. Multiple candidates block with their paths; no guessed choice.
+- `![[graph.png|300]]` and `![[graph.png|300x200]]`: recognise dimension hints,
+  keeping original image bytes and normal responsive reader layout.
+- `![[Media/graph.png]]` or `![Chart](Media/graph.png)`: exact source-relative or
+  selected-root-relative path. If both point to different files, report ambiguity.
+- `./graph.png` or `../shared/graph.png`: explicitly source-relative; parent paths
+  are allowed only while staying inside the selected root. Escaping paths/symlinks
+  are rejected. Basename search does not traverse hidden/symlink directories.
+
+First choose the **book folder**, such as `Books/EMERGENCE`, then the prepared
+`manuscript_order_key`. For shared media outside it, select the authorised vault
+root (e.g. `PrimeTrilogy`, containing both Books and Media) when prompted. The
+importer does not silently climb parent folders. You can instead choose **Review
+Blockers** to see why Continue is disabled; this never skips a missing image.
+SVG and embedded Markdown remain unsupported, unchanged and explicitly labelled
+non-blocking warnings; no SVG renderer or transclusion is added.
+
+Review lists the actual asset root and interleaved reading sequence. All ordering
+and supported-image blockers appear near Continue as well as in the main list;
+controls stay available while the reason list scrolls. Fix the named reference or
+metadata, or select the right root. **Back** rereads saved source metadata and
+rebuilds lookup, retaining the selected root; then review again. Unsupported
+warnings/informational exclusions alone do not disable Continue. Missing,
+ambiguous or unreadable supported images do; there is no silent skip option.
+Final source/asset snapshot checks still prevent stale imports.
+
+For Ted’s acceptance: import EMERGENCE into a new destination, confirm First
+Detection before its first part, choose the vault root for shared media, check
+Continue’s explicit reasons/ready state, then inspect the chart in the outline
+preview and a fresh web export. The current local reproduction uses live source,
+not an old ZIP. No source file or review metadata is modified by these repairs.
+
+### Imported scene headings (#16; accepted by Ted)
 
 New imports add the resolved story-scene title as an H1 at the opening of the
 Markdown body, after unchanged YAML frontmatter and any leading structural beat

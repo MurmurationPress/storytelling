@@ -1,0 +1,81 @@
+{
+  "method": "Actual exported directory served over HTTP; installed Chrome headless on Linux",
+  "unverified": [
+    "actual touch device",
+    "iPad/Safari",
+    "human listening",
+    "Windows/macOS"
+  ],
+  "checks": {
+    "theme_text_colours": {
+      "light": "rgb(37, 37, 44)",
+      "dark": "rgb(238, 238, 238)"
+    },
+    "followed_scroll_top": 568,
+    "chat_temporal_counts": [
+      0,
+      0,
+      0,
+      1,
+      1,
+      2,
+      2,
+      3
+    ],
+    "chat_elapsed_ms": [
+      658,
+      1319,
+      1978,
+      2635,
+      3294,
+      3953,
+      4607,
+      5265
+    ],
+    "scene_load_failure_recovery": true,
+    "departure_return_no_resume": true,
+    "actual_audio_graph_pause_mute": [
+      "connect",
+      "connect",
+      "disconnect",
+      "disconnect",
+      "connect",
+      "connect",
+      "disconnect",
+      "disconnect",
+      "connect",
+      "connect",
+      "disconnect",
+      "disconnect",
+      "connect",
+      "connect",
+      "disconnect",
+      "disconnect",
+      "connect",
+      "connect",
+      "disconnect",
+      "disconnect"
+    ],
+    "desktop_notes_keyboard_hover_nested_back_pause": true,
+    "annotation_prefix_lengths": [
+      5,
+      11,
+      16
+    ],
+    "annotation_visible_prefixes": [
+      "Remem",
+      "Remember JA",
+      "Remember JANUS. "
+    ],
+    "annotation_requested_sample_interval_ms": 160,
+    "silent_previous_literal_yaml": true,
+    "explicit_scene_turn": true,
+    "ordered_contents": true,
+    "rapid_stale_scene_rejection": true,
+    "preference_reopening": true,
+    "missing_images_and_notes": true,
+    "no_remote_requests_or_authored_script": true,
+    "touch_reduced_motion_narrow_scene_cleanup_emulation": true
+  },
+  "browser": "156.0.8078.47"
+}
