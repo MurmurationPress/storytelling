@@ -1,3 +1,118 @@
+# Mixed book scenes, PNG resolution and review blockers — 0.11.2
+
+**Status:** awaiting Ted’s acceptance. This separate fix is stacked on PR #18’s
+unmerged/unaccepted scene-heading head `8088f75bd5c35d2d604f6ba14eb64f3c08041053`.
+Neither that PR nor its H1 behaviour is marked accepted or merged. Main was
+`2f5a8b93ad07dce0742c9f50d95638e38025f17e`; unrelated/private authoring work and
+Component Types are preserved. No manuscript content or private image is committed.
+
+**Established causes:** read-only inspection of the current local PrimeTrilogy
+revision `382bcf5656c340a5988df5064f26482a2d95aef3` confirms First Detection is a
+scene parented to EMERGENCE itself. MWC `08ec248d6bdd1cef33cd1eab255df24430a8e9fa`,
+`src/manuscript/ManuscriptOrder.ts` (`distributedEntries`/`appendChildren`), sorts
+book children (parts and direct scenes) as siblings and then visits part children.
+The old importer only considered direct scenes when there were no parts. The
+reported PNG embed at JANUS Analysis.md:141 is a bare filename plus display alias,
+inside a quote. Its valid bytes live under Media/Media Book 1. The old resolver
+tried just the scene directory and the asset root directly, not nested basename
+lookup. Reproduction with either book-only or vault scope yielded **0 order errors,
+1 unresolved PNG, 2 unsupported-format warnings**. That PNG disabled Continue;
+SVG/Markdown warnings did not. Ted’s original selected root is unknown. No ZIP was
+used or compared. The corrected current-source plan with explicitly authorised
+vault scope has **36 reading documents (previously 35), First Detection first,
+0 order errors and 0 unresolved images**, retaining the 2 unsupported warnings.
+
+**Fix:** optional version-1 root `sequence` references preserve mixed book-scene /
+part order without a synthetic part; the outline, player assembly/navigation and
+web Contents use it. Legacy projects retain their existing order. Direct scenes
+have independent ordinal labels; part/child numbering and stable IDs are retained.
+Unmatched, absent, ambiguous parents or unclear sibling order block with located
+errors rather than silently dropping manuscript. Bare Obsidian PNG/JPEG/WebP names
+require a unique candidate under the explicitly selected canonical root. Relative
+and root-relative paths, aliases and dimension hints are supported; ambiguity,
+escaping symlinks/traversal, missing/corrupt supported images block. SVG and Markdown
+transclusion remain unsupported warnings. Review displays the authorised root and
+all blocking reasons both in its content and beside Continue; Back rereads sources
+and permits correction. No skip-missing-assets path was introduced. Scene-heading
+code from #18 is unchanged and its regression checks remain passing.
+
+**Automated:** syntax checks, both browser builds and **247 tests pass**, including
+11 new focused regressions. Coverage includes book scenes before/between/after
+parts, sibling versus child order, exact parent/order failures, shared outline/export
+sequence, legacy manifests, H1/source preservation, PNG lookup/relocation/aliases,
+Unicode/encoded paths, dimensions, ambiguity, corrupt/missing images, traversal and
+actual escaping symlinks, blocking reasons and a corrected Back/review flow.
+
+**Actual VS Code 1.143.1/Linux:** both the real Extension Development Host and the
+normal **installed 0.11.2 VSIX** completed source picking, order selection, blocked
+review, Back, explicit vault/asset-root selection, corrected enabled review,
+destination selection and explicit Import confirmation. Footer reasons contain the
+PNG source/line; controls stay visible; unsupported warnings alone allow Continue.
+Source hashes, copied image bytes and scene headings match. Native outline and
+preview checks follow the actual GUI-imported five-scene fictional book through
+book scenes before/between/after two real parts. The installed exercise uses the
+reported PNG only as a disposable copied asset in that fictional book: decoded
+**1388 × 1461**, alias retained, narrow preview width **205 px**, zero horizontal
+overflow. No private manuscript text, pixels or screenshots enter test evidence.
+Development Host uses the original fictional test PNG. See
+`test/evidence/import-repairs-native.json` for scoped observations.
+
+**Native automation observations:** an early order-picker Enter was sent before
+the active row was ready; another folder-picker entry was overwritten during its
+initialisation. Driver guards now wait for the focused result and exact picker
+state. One later GUI overlap made an observation inconclusive and is not counted
+as clean evidence; final import/preview checks ran sequentially. Preview traversal
+waits beyond the existing 400 ms duplicate-activation guard instead of treating an
+intentionally ignored rapid click as a missing scene. No corresponding product
+exception was found or lifecycle/navigation policy changed. The broader historical
+folding/focus intermittency is not claimed resolved; this task runs the focused
+native import/order/image checks, not an indiscriminate rerun of that broader suite.
+Disposable profiles disable Workspace Trust and use VS Code’s simple picker;
+OS picker and trust-dialog behaviour are not verified.
+
+**Actual HTTP export:** a real web export of the installed GUI-imported project
+renders the ordered Contents/manual sequence, one H1 per scene, the exact copied
+PNG and its alias; narrow **390 px** bounds, Previous and Contents selection pass
+with no page errors. A separate synthetic all-components HTTP regression checks
+chat and annotation prefixes over time, audio-graph cleanup (not listening),
+prose/imagery, following, supporting-note keyboard/hover/nested Back, scene-load
+recovery, stale navigation, preferences, reduced-motion/touch emulation and no
+remote/authored-script requests. See `test/evidence/import-repairs-web.json` and
+`import-repairs-baseline.json`. Actual iPad/Safari, physical touch, VSCodium,
+Windows/macOS and human audio verification are not established by these runs.
+
+**Package:** local `story-teller-0.11.2.vsix` includes browser bundles, stylesheet,
+new bounded resolver and production dependency licences. Package inspection excludes
+samples, tests/evidence, vault/manuscript/adaptation files and private art. The
+extension-level licence remains unspecified; vsce’s warning is retained and no
+terms changed. No GitHub Actions workflows/required checks are configured in this
+repository; local passes are not described as GitHub CI passes. No release,
+VSIX upload, deployment or merge is performed.
+
+**Reproduce focused checks:** from `tools/story-teller`, run `npm run check`,
+`npm test` and `npm run package`. Run native GUI drivers sequentially in a graphical
+Linux session: `STORY_TELLER_DEVELOPMENT=1 node test/installed-import-repairs.cjs
+story-teller-0.11.2.vsix`, then `node test/installed-import-repairs.cjs
+story-teller-0.11.2.vsix` (each shell command is one line). Each prints the disposable
+imported project path. Run `STORY_TELLER_HOST_SCOPE=repairs
+STORY_TELLER_REPAIRS_PROJECT="/printed/project/path"
+STORY_TELLER_VSIX="$PWD/story-teller-0.11.2.vsix" npm run test:host` on one line to
+inspect its installed outline/preview. Omit the VSIX variable for Development Host.
+`npm run export:web -- "/printed/project/path" "/new/export/path"` exports it;
+`python test/import-repairs-web.py /new/export/path /tmp/repair-http.json` uses
+optional Python Playwright and installed Chrome to serve/test it over loopback
+HTTP. Native drivers use Node’s CDP support and disposable editor profiles; no
+browser/test dependency is added to the shipped extension.
+
+**Ted’s acceptance exercise:** install 0.11.2 and reload; import EMERGENCE into a
+new destination with its actual order key. Explicitly select the authorised vault
+root when shared assets require it. Check First Detection before the first part,
+the PNG/alias in JANUS Analysis, the footer’s reason for any remaining blocker,
+then the outline/preview and a served web export. Source metadata and existing
+adaptations are never rewritten. README documents exact root/path and review rules.
+
+---
+
 # Scene-title import headings — 0.11.1, issue #16
 
 **Status:** awaiting Ted’s acceptance. This builds on merged PR #17

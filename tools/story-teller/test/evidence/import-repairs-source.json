@@ -1,0 +1,41 @@
+{
+  "sourceRevision": "382bcf5656c340a5988df5064f26482a2d95aef3",
+  "MWCRevision": "08ec248d6bdd1cef33cd1eab255df24430a8e9fa",
+  "old": {
+    "book": {
+      "readingDocuments": 35,
+      "errors": 0,
+      "unresolved": 1,
+      "unsupported": 2,
+      "firstIsReportedBookScene": false,
+      "reportedPNGResolved": false
+    },
+    "authorisedVault": {
+      "readingDocuments": 35,
+      "errors": 0,
+      "unresolved": 1,
+      "unsupported": 2,
+      "firstIsReportedBookScene": false,
+      "reportedPNGResolved": false
+    }
+  },
+  "repaired": {
+    "book": {
+      "readingDocuments": 36,
+      "errors": 0,
+      "unresolved": 1,
+      "unsupported": 2,
+      "firstIsReportedBookScene": true,
+      "reportedPNGResolved": false
+    },
+    "authorisedVault": {
+      "readingDocuments": 36,
+      "errors": 0,
+      "unresolved": 0,
+      "unsupported": 2,
+      "firstIsReportedBookScene": true,
+      "reportedPNGResolved": true
+    }
+  },
+  "sourcePreserved": true
+}

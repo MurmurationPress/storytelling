@@ -1,0 +1,27 @@
+{
+  "method": "actual exported directory over HTTP; Linux Chrome",
+  "orderedTitles": [
+    "Before",
+    "Child",
+    "Between",
+    "Last",
+    "After"
+  ],
+  "unverified": [
+    "actual iPad/Safari",
+    "actual touch",
+    "human listening"
+  ],
+  "checks": [
+    "Contents and manual reading order include book scenes before/between/after genuine parts, no synthetic part or duplicate heading",
+    "resolved PNG decoded with alias at desktop/narrow widths; unsupported SVG/Markdown not executed/transcluded; Previous and Contents selection work"
+  ],
+  "browser": "156.0.8078.47",
+  "PNG": {
+    "width": 1388,
+    "height": 1461,
+    "shown": 182,
+    "alt": "A fictional chart."
+  },
+  "pageErrors": []
+}

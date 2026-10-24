@@ -96,8 +96,8 @@ test('Unicode, spaces, escaped paths, unsupported and ambiguous embeds receive d
     '`![[literal.png]]`', '\\![[escaped.png]]', '[[ordinary link]]'
   ].join('\n')));
   const prepared = await m.resolveAssets(m.plan(m.discover(await m.scan(f.book), f.book), 'manuscript_order_key'), f.root);
-  assert.equal(prepared.assets.length, 2); assert.equal(prepared.unresolved.length, 0);
-  assert.match(prepared.warnings.join('\n'), /ambiguous media embed/);
+  assert.equal(prepared.assets.length, 2); assert.equal(prepared.unresolved.length, 1);
+  assert.match(prepared.unresolved.join('\n'), /ambiguous media embed/);
   assert.match(prepared.warnings.join('\n'), /unsupported media format \.svg/);
   const rewritten = m.rewriteScene(prepared.scenes[0]);
   assert.match(rewritten, /!\[alt\]\(\.\.\/assets\/A%20spaced%20%F0%9F%9B%B0%EF%B8%8F-[a-f0-9]{64}\.png\)/);

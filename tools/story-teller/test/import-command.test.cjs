@@ -20,7 +20,7 @@ function fakeHost(answers, navigation) {
       showQuickPick: async rows => answers.quick === 'cancel' ? undefined : rows.find(r => r.label === answers.quick),
       createWebviewPanel: () => {
         let disposed = () => {};
-        const panel = { webview: { html: '', onDidReceiveMessage: fn => { queueMicrotask(() => fn(answers.review || 'continue')); return d; } },
+        const panel = { webview: { html: '', onDidReceiveMessage: fn => { queueMicrotask(async () => fn(answers.onReview ? await answers.onReview() : answers.review || 'continue')); return d; } },
           onDidDispose: fn => { disposed = fn; return d; }, dispose: () => disposed() };
         reviews.push(panel.webview);
         return panel;
@@ -130,4 +130,13 @@ test('multiple classified matter notes without an order key are diagnosed rather
   for(const name of ['B','A'])await fs.writeFile(path.join(book,name+'.md'),'---\ntype: front-matter\nparent: "[[Ambiguous]]"\n---\nWords.\n');
   const host=fakeHost({dialogs:[[{fsPath:book}]]});await host.commands.get('storyTeller.importManuscript')();
   assert.match(host.messages.join('\n'),/No frontmatter order fields/);assert.equal(host.reviews.length,0);
+});
+test('Back rereads corrected parent metadata before enabling review and writing',async t=>{
+  const f=await fixture(t),file=path.join(f.book,'First/One.md');
+  const valid=await fs.readFile(file,'utf8');await fs.writeFile(file,valid.replace('Books/Lantern/First','Missing'));
+  const answers={dialogs:[[{fsPath:f.book}],[{fsPath:f.dest}]],quick:'manuscript_order_key',name:'Corrected',confirm:'Import'};
+  let count=0;answers.onReview=async()=>{count++;if(count===1){await fs.writeFile(file,valid);return 'back';}return 'continue';};
+  const host=fakeHost(answers);await host.commands.get('storyTeller.importManuscript')();
+  assert.equal(count,2);assert.match(host.reviews[0].html,/id="continue"[^>]*disabled/);assert.doesNotMatch(host.reviews[1].html,/id="continue"[^>]*disabled/);
+  const manifest=JSON.parse(await fs.readFile(path.join(f.dest,'Corrected/story-teller.project.json'),'utf8'));assert.equal(manifest.scenes.length,1);
 });

@@ -72,6 +72,14 @@ async function until(fn, timeout = 60000) {
       await importer.writeProject(await importer.resolveAssets(importer.plan(importer.discover(await importer.scan(folder),folder),'order'),folder),importProject);
     }
   }
+  if(process.env.STORY_TELLER_HOST_SCOPE==='repairs') {
+    importProject=path.join(directory,'repairs-project');
+    if(process.env.STORY_TELLER_REPAIRS_PROJECT)await fs.cp(process.env.STORY_TELLER_REPAIRS_PROJECT,importProject,{recursive:true});
+    else {
+      const source=path.join(directory,'source'),{folder}=await require('./import-repair-fixture.cjs').createFixture(source);
+      const importer=require('../src/manuscript-import.cjs');await importer.writeProject(await importer.resolveAssets(importer.plan(importer.discover(await importer.scan(folder),folder),'manuscript_order_key'),source),importProject);
+    }
+  }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
   const vsix = process.env.STORY_TELLER_VSIX;
@@ -162,6 +170,32 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='repairs') {
+      const manifest=JSON.parse(await fs.readFile(path.join(importProject,'story-teller.project.json'),'utf8')),ordered=require('../src/manuscript-import.cjs').orderedScenes(manifest),checks=[];
+      assert.deepEqual(ordered.map(s=>s.title),['Before','Child','Between','Last','After']);
+      await request('open-outline');
+      const target=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page'),main=new WebSocket(target.webSocketDebuggerUrl);await new Promise((r,j)=>{main.onopen=r;main.onerror=j;});
+      let mid=0;const mainText=()=>new Promise(resolve=>{const id=++mid;main.onmessage=event=>{const r=JSON.parse(event.data);if(r.id===id)resolve(r.result?.result?.value);};main.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression:'[...document.querySelectorAll("[role=tree]")].map(e=>e.innerText).find(s=>s.includes("1 Before")&&s.includes("3 After"))',returnByValue:true}}));});
+      const outline=await until(mainText);main.close();let last=-1;for(const title of ['1 Before','First','2 Between','Second','3 After']){const at=outline.indexOf(title);assert.ok(at>last,outline);last=at;}checks.push('native outline root order, without a synthetic part');
+      await request('select-scene',undefined,{projectRoot:importProject,file:ordered[0].file});
+      for(const [index,scene]of ordered.entries()) {
+        try { await until(async()=>await evaluate('doc.querySelector("#beat h1")?.textContent')===scene.title); }
+        catch(error) { await fs.writeFile(path.join(directory,'repair-navigation-failure.json'),JSON.stringify({expected:scene.title,actual:await evaluate('({title:doc.querySelector("#beat h1")?.textContent,status:doc.getElementById("status").textContent,body:doc.body.innerText})')}));throw error; }
+        assert.equal(await evaluate('doc.querySelectorAll("#beat h1").length'),1);
+        if(scene.title==='Child')await until(async()=>await evaluate('doc.querySelector("#beat img")?.naturalWidth>0'));
+        // Respect the existing 400ms double-activation guard between completed
+        // prose-only scenes; do not change production navigation to speed a test.
+        if(index<ordered.length-1){await sleep(450);await frame.locator('.beat-ending button').click();}
+      }
+      checks.push('manual reading sequence includes root scenes before, between and after parts; H1 preserved');
+      await request('select-scene',undefined,{projectRoot:importProject,file:ordered[1].file});await until(async()=>await evaluate('doc.querySelector("#beat img")?.naturalWidth>0'));
+      const png=await evaluate('({width:doc.querySelector("#beat img").naturalWidth,height:doc.querySelector("#beat img").naturalHeight,shown:doc.querySelector("#beat img").clientWidth,alt:doc.querySelector("#beat img").alt})');
+      const bytes=await fs.readFile(path.join(importProject,'assets',(await fs.readdir(path.join(importProject,'assets')))[0]));assert.equal(png.width,bytes.readUInt32BE(16));assert.equal(png.height,bytes.readUInt32BE(20));assert.ok(png.shown>0);assert.equal(png.alt,'A fictional chart.');
+      await request('narrow-reader');await sleep(250);const bounds=await evaluate('({width:doc.documentElement.clientWidth,overflow:doc.documentElement.scrollWidth-doc.documentElement.clientWidth})');assert.ok(bounds.overflow<=1,JSON.stringify(bounds));checks.push('resolved PNG decoded with alias in narrow native preview');
+      const evidence={mode:vsix?'installed VSIX':'Extension Development Host',checks,PNG:png,narrow:bounds,orderedTitles:ordered.map(s=>s.title),sourceFrom:process.env.STORY_TELLER_REPAIRS_PROJECT?'copy of actual GUI import':'real importer on synthetic fixture'};
+      await fs.writeFile(path.join(directory,'repairs-evidence.json'),JSON.stringify(evidence,null,2));console.log(`PASS: ${evidence.mode} repair outline/preview; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='headings') {
       const manifest=JSON.parse(await fs.readFile(path.join(importProject,'story-teller.project.json'),'utf8')),scene=manifest.scenes[0];
       const source=await fs.readFile(path.join(importProject,scene.file),'utf8');
