@@ -7,6 +7,7 @@ const { inspectStructure } = require('./structure.cjs');
 const { inside, FORMATS } = require('./media.cjs');
 const { SUPPORTING_FOLDER } = require('./supporting-content.cjs');
 const { metadataMatter, scaffold, matterDocuments, supportingFolder } = require('./book-matter.cjs');
+const { addSceneHeading } = require('./scene-heading.cjs');
 const VERSION = 1;
 const sha = value => crypto.createHash('sha256').update(value).digest('hex');
 const slash = value => value.split(path.sep).join('/');
@@ -216,7 +217,8 @@ async function writeProject(planData, destination) {
     for (const scene of planData.scenes) {
       if (sha(await fs.readFile(scene.source)) !== sha(scene.content)) throw Error(`Source changed after review: ${scene.source}`);
       const filename = `${scene.id}.md`;
-      await fs.writeFile(path.join(temp, 'scenes', filename), rewriteScene(scene));
+      const content = rewriteScene(scene);
+      await fs.writeFile(path.join(temp, 'scenes', filename), scene.kind === 'scene' ? addSceneHeading(content, scene.title) : content);
       manifest.scenes.push({ id: scene.id, partId: scene.partId, kind: scene.kind, label: scene.label, title: scene.title, orderValue: scene.orderValue,
         file: `scenes/${filename}`, provenance: { source: scene.source, sha256: sha(scene.content) } });
     }

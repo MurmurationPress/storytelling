@@ -64,6 +64,14 @@ async function until(fn, timeout = 60000) {
     // edited front matter and reconstructing the missing back document.
     await fs.unlink(path.join(importProject,'Back Matter.md'));
   }
+  if(process.env.STORY_TELLER_HOST_SCOPE==='headings') {
+    importProject=path.join(directory,'headings-project');
+    if(process.env.STORY_TELLER_HEADING_PROJECT) await fs.cp(process.env.STORY_TELLER_HEADING_PROJECT,importProject,{recursive:true});
+    else {
+      const importer=require('../src/manuscript-import.cjs'),folder=path.join(root,'samples/matter-source/Lantern');
+      await importer.writeProject(await importer.resolveAssets(importer.plan(importer.discover(await importer.scan(folder),folder),'order'),folder),importProject);
+    }
+  }
   const log = await fs.open(path.join(directory, 'code.log'), 'w');
   const executable = process.env.VSCODE_EXECUTABLE || '/usr/share/code/code';
   const vsix = process.env.STORY_TELLER_VSIX;
@@ -154,6 +162,27 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='headings') {
+      const manifest=JSON.parse(await fs.readFile(path.join(importProject,'story-teller.project.json'),'utf8')),scene=manifest.scenes[0];
+      const source=await fs.readFile(path.join(importProject,scene.file),'utf8');
+      await request('select-scene',undefined,{projectRoot:importProject,file:scene.file});
+      await until(async()=>await evaluate('doc.querySelector("#beat h1")?.textContent')===scene.title);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat h1").length'),1);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat h1 em, #beat h1 a, #beat h1 img").length'),0);
+      assert.match(await frame.locator('#status').textContent(),/Beat 1 of 2/);
+      assert.match(await beat.textContent(),/Mara watched/);
+      await frame.locator('#show-source').click();await request('active-source-state');
+      const shown=JSON.parse(await fs.readFile(path.join(directory,'active-source-state.json'),'utf8'));assert.equal(shown.uri,path.join(importProject,scene.file));assert.equal(shown.text,source);
+      await request('narrow-reader');await sleep(250);
+      const bounds=await evaluate('({width:doc.documentElement.clientWidth,overflow:doc.documentElement.scrollWidth-doc.documentElement.clientWidth})');assert.ok(bounds.overflow<=1,JSON.stringify(bounds));
+      await frame.locator('#next').click();await until(async()=>(await beat.textContent())?.includes('She closed the ledger'));
+      assert.equal(await evaluate('doc.querySelectorAll("#beat h1").length'),0);
+      await frame.locator('#previous').click();await until(async()=>await evaluate('doc.querySelector("#beat h1")?.textContent')===scene.title);
+      assert.match(await frame.locator('#status').textContent(),/completed/);
+      const evidence={mode:vsix?'installed VSIX':'Extension Development Host',sceneTitle:scene.title,bodyH1Count:1,firstBeatIncludesProse:true,beatCount:2,sourceNavigationUnchanged:true,narrowBounds:bounds,silentPrevious:true,sourceFrom:process.env.STORY_TELLER_HEADING_PROJECT?'copy of actual GUI import':'real importer on committed synthetic fixture'};
+      await fs.writeFile(path.join(directory,'heading-evidence.json'),JSON.stringify(evidence,null,2));console.log(`PASS: ${evidence.mode} imported heading workflow; ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='matter') {
       const evidence={mode:vsix?'installed VSIX':'Extension Development Host',checks:[]};
       await request('upgrade-matter');

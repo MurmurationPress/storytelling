@@ -18,7 +18,7 @@ async function selectScene(index,autoplay=true,previous=false) {
     const response=await fetch(scene.file,{cache:'no-store'});if(!response.ok)throw Error('Scene could not be loaded');
     const data=await response.json();if(token!==generation)return;
     bridge.nextScene=index+1<book.readingOrder.length?()=>void selectScene(index+1,true):null;
-    document.getElementById('scene-title').textContent=`${scene.label} ${scene.title}`.trim();
+    document.getElementById('scene-title').textContent=data.sceneTitleInBody ? (scene.label ? `Scene ${scene.label}` : '') : `${scene.label} ${scene.title}`.trim();
     notify({type:'source',revision:token,uri:scene.id,...data,documentPrevious:previous,documentNavigation:{previous:index>0,next:index+1<book.readingOrder.length},sceneStart:autoplay,sceneAutoplay:autoplay,muted:preference.muted===true,autoplayOnTurn:preference.autoplayOnTurn!==false});
   } catch(error){if(token===generation){notify({type:'source-error',revision:token,error:error.message});}}
 }

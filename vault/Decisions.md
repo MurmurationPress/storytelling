@@ -211,3 +211,28 @@ metadata synthesis. Ted now accepts the deliverable in PR #17: “Good, simple
 deliverable. Happy with that.” He authorises final review and expected-head
 squash integration after checks pass. This is not new iPad/Safari/touch coverage;
 scene-title heading #16 stays separate. See [[Book Matter]].
+
+
+## Scene-title heading import — issue #16
+
+Ted authorised this separate, limited increment after PR #17 integration. New
+story-scene imports gain a literal H1 matching the resolved outline title, while
+matching existing leading H1s remain unchanged. First-beat metadata/boundaries,
+original wording and source files are preserved. Part documents, matter and
+supporting notes are excluded; no bulk adaptation update is authorised. The web
+header keeps the scene number when the body supplies the title. This implementation and its synthetic validation await Ted’s acceptance; the PR
+will remain unmerged. See the importer guide and validation records in
+`tools/story-teller/`. Prior feature acceptance does not establish acceptance or
+new platform coverage for this change.
+
+
+## Acceptance and dependency-order integration — PRs #18 and #19
+
+Ted accepts the scene-title and importer fixes together: “All now working as
+expected. The embedded markdown files are skipped, which is acceptable.” Skipped
+Markdown transclusion is an accepted limitation, not implemented transclusion;
+SVG remains unsupported. This supersedes prior pending-acceptance wording for
+these features, without adding iPad/Safari, touch or human audio evidence. Final
+review is authorised to squash #18 then reconcile/test/squash #19 with exact-head
+guards. No review-specific exclusion, MWC change, licence change or deployment.
+Historical validation reports are retained with their original observation limits.

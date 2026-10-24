@@ -1,0 +1,16 @@
+{
+  "method": "Actual GUI-imported project exported and served over HTTP; Linux Chrome",
+  "title": "Signal: caf\u00e9 *\u03bb*",
+  "unverified": [
+    "actual iPad/Safari",
+    "actual touch",
+    "human listening"
+  ],
+  "checks": [
+    "one literal body H1 with punctuation/Unicode, first prose in same beat, no repeated header title",
+    "Contents retains full scene label/title; Next, silent Previous and Restart preserve existing beat semantics",
+    "390px layout without horizontal overflow"
+  ],
+  "browser": "156.0.8078.47",
+  "pageErrors": []
+}

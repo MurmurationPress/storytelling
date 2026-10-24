@@ -1,3 +1,100 @@
+# PR #18 final review and author acceptance
+
+Ted accepts the combined scene-title/import fixes in #18 (`8088f75bd5c35d2d604f6ba14eb64f3c08041053`)
+and #19 (`a7b84c9f762949c7b27298b566da91474df70b2d`): “All now working as expected.
+The embedded markdown files are skipped, which is acceptable.” This accepts
+skipped Markdown transclusion as a limitation; SVG remains unsupported. It adds
+no iPad/Safari, physical touch or human audio verification. The pending language
+in the original implementation reports below is historical and superseded by this
+acceptance. No new product behaviour is introduced by final-review records.
+
+Review found no material heading defect: insertion follows YAML and first-beat
+metadata, matching leading headings are preserved, different headings and literal
+titles remain readable, no title-only beat is introduced, and the web header
+avoids repeating a matching body title. Source files, part/matter/supporting notes,
+identity and sequence remain outside this transformation. #19 will be reviewed
+and integrated separately after #18 using the combined accepted runtime.
+
+The final documentation-only head is checked with the same 236-test suite,
+syntax/build/package checks. Runtime source is byte-identical to the reported
+heading head, so its recorded native/HTTP evidence remains applicable; that is
+not a claim of a new device test. Local checks are distinct from absent GitHub CI.
+
+---
+
+# Scene-title import headings — 0.11.1, issue #16
+
+**Status:** awaiting Ted’s acceptance. This builds on merged PR #17
+(`2f5a8b93ad07dce0742c9f50d95638e38025f17e`); its accepted book-matter work and
+all other recorded acceptance remain unchanged. This feature’s PR and #16 stay
+open. No new actual iPad/Safari, touch or human listening claim is made.
+
+**Change:** only new story-scene copies receive a literal H1 using the same
+resolved title as Part–Scene Outline, after metadata and before narrative content.
+Matching leading H1s remain byte-identical; different headings remain below it.
+The structural helper preserves frontmatter/BOM/line endings, named beats and
+leading separators. The first H1 and prose share the same beat and no new viewing
+time is added. Part introductions/metadata, matter, supporting notes and original
+source files are excluded. Existing adaptations are not upgraded or rewritten.
+Web export recognises the matching body title and retains only “Scene 1.1” in its
+header; Contents retains the full title. Legacy scenes without it retain the full
+header. No new manuscript setting, scene identity or order change is introduced.
+
+**Automated:** syntax checks, both browser bundles and **236 tests pass**. Seven
+focused tests cover new/matching/different H1s (including Setext and emphasis),
+frontmatter/BOM/CRLF/whitespace, literal examples, punctuation/Unicode/Markdown
+escaping, beat metadata/boundaries, ready-state prose with pacing on/off, source
+bytes, metadata, IDs/grouping/order, exclusions and legacy export. A regression
+caught a duplicate Setext H1 directly after beat metadata during implementation;
+heading comparison now parses the opening content seen by the player, after that
+metadata, without changing parser/beat semantics.
+
+**Actual VS Code 1.143.1/Linux:** normal installed 0.11.1 VSIX Import command,
+source/destination simple pickers, order selection, review and explicit Import
+confirmation pass on a disposable synthetic fixture. Its title is
+`Signal: café *λ*`; source hashes remain unchanged and the imported Markdown
+supplies the literal title below intact YAML. Development Host and installed VSIX
+preview checks use copies of that actual GUI import: one literal body H1, no
+emphasis/link/image interpretation of the title, first prose in Beat 1 of 2,
+source navigation without rewriting, narrow bounds, Next and silent Previous.
+The fixture body and artwork are fictional/original existing test assets; no
+private manuscript is imported or committed.
+
+**Native observation limit:** two import-driver attempts timed out before the
+folder picker appeared; no product exception was found. The final failed capture
+showed VS Code’s startup chat editor held focus despite a matching cached command
+result. The driver now records selection and guards visibility/actual input focus
+before Enter. A separate complete import passes with the final VSIX; this does
+not establish that historical native focus/folding intermittency is resolved.
+Automation uses disposable profiles with Workspace Trust disabled and VS Code’s
+simple picker, as the existing runner does; it does not verify normal trust UI
+or the operating-system file picker.
+
+**Actual HTTP reader:** exported the GUI-imported saved project, served it over
+HTTP and inspected DOM in Chrome 156.0.8078.47/Linux. The body title is literal and
+unique; the web header does not repeat it; first prose/beat count and Contents
+labels are correct; Next, silent Previous and Restart work; 390px layout has no
+horizontal overflow. No page errors. The existing all-components HTTP regression
+also passes (legacy scene path, notes, reveal/pacing, media lifecycle, navigation,
+reduced-motion and touch emulation). Emulation is not an actual-device result.
+
+**Package:** 0.11.1 locally installable VSIX; required runtime, new heading helper,
+browser bundles and dependency licences inspected. Private material, samples,
+tests/evidence, vault and local exports are excluded. Existing unresolved
+extension-level licence and packaging/bundling warnings remain; licence terms
+and dependencies are unchanged. No release, deployment, VSIX upload or merge.
+Evidence: `test/evidence/scene-heading-native.json`, `scene-heading-web.json`,
+`scene-heading-baseline.json` and the synthetic narrow screenshot.
+
+**Acceptance exercise:** install `story-teller-0.11.1.vsix`, reload, import a copied
+prepared manuscript into a NEW destination; inspect a scene with no heading, a
+matching H1 and a different heading. Check intact metadata, one resolved title,
+original wording and outline order; preview and export over HTTP. Existing
+adaptations must remain untouched. Broader OS/device/screen-reader checks remain
+unverified. Source and private authoring worktrees are preserved.
+
+---
+
 # PR #17 acceptance and final review
 
 Ted accepts implementation head `8198a6b7114f30944ea1b6b00e47479aa9d49085`:

@@ -3,6 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { matterDocuments } = require('./book-matter.cjs');
+const { hasSceneHeading } = require('./scene-heading.cjs');
 const { matterScene } = require('./matter-presentation.cjs');
 const { orderedScenes } = require('./manuscript-import.cjs');
 const { resolveSettings } = require('./pacing-settings.cjs');
@@ -66,7 +67,7 @@ async function prepareWeb(projectRoot) {
     const parsed=isMatter ? matterScene(original) : parseScene(original,{prosePacing:pacing.enabled});
     const links=await describeLinks(index,parsed.wikiReferences);
     const media=await mediaFor(file,parsed.images);
-    const data={source,matter:isMatter,media,supporting:{links:links.links,diagnostics:links.diagnostics},prosePacing:pacing.enabled,pacingSource:pacing.source};
+    const data={source,matter:isMatter,sceneTitleInBody:!isMatter && item.kind!=='part-content' && hasSceneHeading(original, String(item.title)),media,supporting:{links:links.links,diagnostics:links.diagnostics},prosePacing:pacing.enabled,pacingSource:pacing.source};
     warnings.push(...parsed.diagnostics,...links.diagnostics);
     scenes.push({id:item.id,kind:isMatter?item.kind:'scene',partId:item.partId,label:String(item.label || ''),title:String(item.title),file:`content/${digest(item.id)}.json`,data});
   }
