@@ -6,7 +6,7 @@ Story Teller previews a separate Markdown adaptation as manually selected story 
 
 Requires desktop VS Code 1.95 or later. Node.js is needed only to build the extension from source.
 
-To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.11.0.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.11.0** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
+To install the local milestone, open VS Code's Extensions view, choose **… → Install from VSIX…**, and select `story-teller-0.11.1.vsix`. Reload the window if asked. If replacing an older local build, confirm **Story Teller 0.11.1** in Extensions before testing. The VSIX includes its runtime JavaScript, stylesheet and production Markdown/YAML parsers; it does not include manuscript material or fictional development samples.
 
 Make a *separate* Markdown adaptation of a completed chapter. Keep the original manuscript unchanged. Save the adaptation before linking images so relative paths have a base directory. Open it in VS Code, then run **Story Teller: Preview Scene**. The preview opens beside that document, with the first beat ready. **Play** starts it. **Next** turns one beat; with **Autoplay** enabled (the default), that next beat starts performing immediately. Turn the toggle off to make Next leave it ready for Play. The preference is remembered in VS Code, separately from Markdown. When a beat finishes, including a trailing authored pause, a **Next →** button appears below its content. It performs the same page turn as the top Next button; the top control remains available throughout. On the final beat, **End of scene** appears instead. **Previous** shows the preceding beat fully revealed and silent for rereading, with its bottom Next button. **Replay Beat** resets and starts the current beat again. **Restart** returns to beat one in its ready state, showing only untimed leading content; it never autoplays. **Pause/Resume** preserves the remaining wait. Beat turns remain reader-controlled: completion never advances to another beat or scene. Source edits and closing the preview cancel pending playback; unsaved edits reset the current beat to ready. Hiding the preview pauses it, and returning never resumes automatically.
 
@@ -231,7 +231,47 @@ Review the scrollable panel of parts, numbered scenes, included files, copied as
 
 Select **Continue**, choose a parent folder, enter a new project folder name and confirm **Import**. It writes into a temporary folder then renames atomically; it refuses an existing destination and does not save or modify the original manuscript. The new folder contains `story-teller.project.json` (schema version 1, stable IDs, explicit part/scene order, provenance), editable scene copies, original book/part metadata copies, supported assets and an empty `Supporting Content/` folder. Accept **Open Project Folder** to open the destination window with **Story Teller → Part–Scene Outline** revealed and the first part expanded. Selecting a scene opens its Markdown adaptation; **Preview This Beat** and source navigation work as for standalone documents. The outline and the `orderedScenes` assembly input read the same manifest sequence. You can still open any standalone Markdown scene without a project.
 
-The imported content is deliberately unconverted. Review a copied scene, then run the existing chat, callout or State converters individually if wanted. No EPUB import, export, manuscript reordering or automatic reimport is included. A copied Obsidian SVG embed will remain unsupported in this preview until an imagery decision is made; the import review reports it. Ted successfully imported and ran his project, and has accepted prose pacing and outline scene autoplay. Ted accepts the import/outline workflow; the automated cross-window handoff limitation remains documented in RESULTS.
+### Imported scene headings (#16; awaiting Ted’s acceptance)
+
+New imports add the resolved story-scene title as an H1 at the opening of the
+Markdown body, after unchanged YAML frontmatter and any leading structural beat
+metadata/boundary. The title is the same value used in Part–Scene Outline.
+Ordinary punctuation and Unicode remain readable; Markdown-sensitive characters
+are escaped so the title renders literally, including `*`, wiki-looking text and
+HTML-looking text. Existing leading H1s with the same rendered text are retained
+byte-for-byte (including Setext headings and authored emphasis). Comparison is
+case-sensitive and ignores differences in rendered whitespace. A different
+heading is preserved below the inserted title.
+
+```markdown
+---
+type: scene
+title: The signal
+---
+# The signal
+
+Original scene content…
+```
+
+The generated heading belongs to the first nonempty beat: it does not add a
+separator, title-only beat or viewing delay. Leading separators and named-beat
+comments retain their structural positions. Story scene IDs, labels, grouping,
+order and original source hashes stay unchanged. Copied part introductions,
+part metadata, front/back matter and supporting notes receive no new heading.
+There is no upgrade command or modification of existing adaptations on opening.
+
+In web exports, a story that already supplies its matching opening H1 uses
+“Scene 1.1” in the reader header; its full title stays in the body and Contents.
+This avoids a repeated automatic title. Scenes without that H1 retain the existing
+full header. The VS Code player renders the source H1 normally.
+
+To try it, install 0.11.1, import a synthetic or copied prepared manuscript to a
+**new** destination, select its scene in the outline and inspect source/preview.
+Check one title in the first beat with prose below it, then export and serve the
+reader over HTTP. Existing adaptations remain untouched. See RESULTS.md for the
+native/browser evidence and platform limits.
+
+Imported chat, callout and State syntax is deliberately left unconverted. Review a copied scene, then run the existing chat, callout or State converters individually if wanted. No EPUB import, export, manuscript reordering or automatic reimport is included. A copied Obsidian SVG embed will remain unsupported in this preview until an imagery decision is made; the import review reports it. Ted successfully imported and ran his project, and has accepted prose pacing and outline scene autoplay. Ted accepts the import/outline workflow; the automated cross-window handoff limitation remains documented in RESULTS.
 
 ### Animated WebP observation
 

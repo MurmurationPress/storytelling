@@ -1,0 +1,87 @@
+{
+  "version": "0.11.1",
+  "baseMain": "2f5a8b93ad07dce0742c9f50d95638e38025f17e",
+  "issue": 16,
+  "acceptance": "awaiting Ted; issue and feature PR remain open",
+  "tests": {
+    "passed": 236,
+    "failed": 0,
+    "focusedHeadingTests": 7
+  },
+  "syntax": "pass",
+  "bundles": "pass",
+  "package": {
+    "files": 382,
+    "runtimeMatchesWorkingTree": true,
+    "requiredRuntimeAndLicences": true,
+    "privateAndDevelopmentMaterialExcluded": true,
+    "sha256": "e34c100800ebd53abdf91606249ebac3d4f606884656dcf1c2ac592e42e3984c"
+  },
+  "installedImport": {
+    "mode": "normal installed VSIX; native command palette, simple folder pickers, review webview and explicit Import confirmation",
+    "vsCode": "1.143.1",
+    "vsix": "/home/thawkins/Documents/GitHub/storytelling-headings/tools/story-teller/story-teller-0.11.1.vsix",
+    "sourcePreserved": true,
+    "sceneHeading": {
+      "title": "Signal: caf\u00e9 *\u03bb*",
+      "file": "scenes/76bc2296-ae4c-4646-a501-6f1956815e57.md",
+      "bodyHeadingVerified": true
+    },
+    "workspaceTrust": "disabled only in disposable automation profile (same as existing Development Host runner)",
+    "checks": [
+      "new import creates front/back matter and supporting folder",
+      "review lists matter and ordered scene",
+      "explicit destination confirmation",
+      "source files unchanged"
+    ],
+    "imported": "/tmp/story-installed-export-8lus9o/Imported matter"
+  },
+  "developmentPreview": {
+    "mode": "Extension Development Host",
+    "sceneTitle": "Signal: caf\u00e9 *\u03bb*",
+    "bodyH1Count": 1,
+    "firstBeatIncludesProse": true,
+    "beatCount": 2,
+    "sourceNavigationUnchanged": true,
+    "narrowBounds": {
+      "width": 205,
+      "overflow": 0
+    },
+    "silentPrevious": true,
+    "sourceFrom": "copy of actual GUI import"
+  },
+  "installedPreview": {
+    "mode": "installed VSIX",
+    "sceneTitle": "Signal: caf\u00e9 *\u03bb*",
+    "bodyH1Count": 1,
+    "firstBeatIncludesProse": true,
+    "beatCount": 2,
+    "sourceNavigationUnchanged": true,
+    "narrowBounds": {
+      "width": 205,
+      "overflow": 0
+    },
+    "silentPrevious": true,
+    "sourceFrom": "copy of actual GUI import"
+  },
+  "HTTP": {
+    "sceneHeading": "scene-heading-web.json",
+    "allComponents": "scene-heading-baseline.json",
+    "projectSource": "earlier actual GUI import at /tmp/story-installed-export-0VvFMH/Imported matter; same importer/helper code"
+  },
+  "failedObservations": [
+    "Setext H1 after named-beat metadata initially duplicated in a focused regression; fixed before package",
+    "Two native import-driver attempts timed out before the folder picker; final snapshot showed startup chat editor held focus despite a matching cached command result. Driver now guards visibility and actual input focus; successful import is separate evidence, not proof all historical focus intermittency is resolved."
+  ],
+  "limits": [
+    "Linux VS Code 1.143.1 and Chrome 156.0.8078.47 only",
+    "Simple picker, not OS-native picker; Workspace Trust disabled only in disposable automation profiles",
+    "No new actual iPad/Safari/touch or human audio verification",
+    "Unresolved extension-level licence remains; no terms or dependencies changed"
+  ],
+  "preservation": {
+    "privateSourcesNotUsed": true,
+    "originalSourceHashesVerified": true,
+    "componentTypesSHA256": "1a84216d0d21f9b4d6e8f92d8305e8ce97c99c650992f6e29e7b9a267a84c73f"
+  }
+}

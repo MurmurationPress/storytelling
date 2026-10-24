@@ -15,6 +15,10 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
  const root=path.join(dir,'project');
  const source=path.join(dir,'source');await fs.cp(path.join(__dirname,'../samples/matter-source'),source,{recursive:true});
  await fs.cp(path.join(__dirname,'../samples/web-project'),root,{recursive:true});
+ if(process.env.STORY_TELLER_IMPORT_HEADINGS==='1') {
+   const file=path.join(source,'Lantern/Signal.md');
+   await fs.writeFile(file,(await fs.readFile(file,'utf8')).replace('type: scene','type: scene\ntitle: \"Signal: café *λ*\"'));
+ }
  await fs.mkdir(path.join(dir,'profile/User'),{recursive:true});
  await fs.writeFile(path.join(dir,'profile/User/settings.json'),JSON.stringify({'files.simpleDialog.enable':true,'window.dialogStyle':'custom','workbench.startupEditor':'none'}));
  const log=await fs.open(path.join(dir,'code.log'),'w');
@@ -35,7 +39,12 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
   async function command(name) {
     for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key:'P',code:'KeyP',modifiers:10,windowsVirtualKeyCode:80,nativeVirtualKeyCode:80});
     await until(()=>inspect("Boolean(document.querySelector('.quick-input-widget input')?.checkVisibility())"));
-    await send('Input.insertText',{text:name});await until(()=>inspect(`document.querySelector('.quick-input-widget')?.innerText.includes(${JSON.stringify(name.replace('Story Teller: ',''))})`));await key('Enter');
+    await click("document.querySelector('.quick-input-widget input')");
+    await send('Input.insertText',{text:name});await until(()=>inspect(`document.querySelector('.quick-input-list .monaco-list-row.focused')?.innerText.includes(${JSON.stringify(name.replace('Story Teller: ',''))})`));
+    await click("document.querySelector('.quick-input-widget input')");
+    await until(()=>inspect("document.querySelector('.quick-input-widget input')?.checkVisibility() && document.activeElement===document.querySelector('.quick-input-widget input')"));
+    await fs.writeFile(path.join(dir,'command-selection.json'),JSON.stringify(await inspect("({focus:document.activeElement?.outerHTML,selected:document.querySelector('.quick-input-list .monaco-list-row.focused')?.innerText,value:document.querySelector('.quick-input-widget input')?.value})")));
+    await key('Enter');
   }
   const click=async selector=>{const point=await inspect(`(()=>{const b=${selector};if(!b)return null;const r=b.getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2};})()`);assert.ok(point);for(const type of ['mousePressed','mouseReleased'])await send('Input.dispatchMouseEvent',{type,...point,button:'left',clickCount:1});};
   async function input(text) {await inspect("(()=>{const i=document.querySelector('.quick-input-widget input');i.focus();i.select();})()");await send('Input.insertText',{text});await sleep(250);}
@@ -68,8 +77,13 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
   assert.match(await fs.readFile(path.join(imported,'Front Matter.md'),'utf8'),/authored opening/);
   assert.match(await fs.readFile(path.join(imported,'Back Matter.md'),'utf8'),/authored ending/);
   assert.deepEqual(await sourceHashes(source),sourceBefore);
-  assert.equal(JSON.parse(await fs.readFile(path.join(imported,'story-teller.project.json'),'utf8')).scenes.length,1);
-  const evidence={mode:'normal installed VSIX; native command palette, simple folder pickers, review webview and explicit Import confirmation',vsCode:JSON.parse(await fs.readFile('/usr/share/code/resources/app/package.json','utf8')).version,vsix,sourcePreserved:true,workspaceTrust:'disabled only in disposable automation profile (same as existing Development Host runner)',checks:['new import creates front/back matter and supporting folder','review lists matter and ordered scene','explicit destination confirmation','source files unchanged'],imported};
+  const manifest=JSON.parse(await fs.readFile(path.join(imported,'story-teller.project.json'),'utf8'));assert.equal(manifest.scenes.length,1);
+  const scene=manifest.scenes[0],text=await fs.readFile(path.join(imported,scene.file),'utf8');
+  assert.ok(require('../src/scene-heading.cjs').hasSceneHeading(text,scene.title));
+  const original=await fs.readFile(path.join(source,'Lantern/Signal.md'),'utf8');
+  assert.equal(require('../src/manuscript-import.cjs').parseMeta(text,scene.file).data.type,'scene');
+  assert.ok(text.endsWith(require('../src/manuscript-import.cjs').parseMeta(original,scene.file).body));
+  const evidence={mode:'normal installed VSIX; native command palette, simple folder pickers, review webview and explicit Import confirmation',vsCode:JSON.parse(await fs.readFile('/usr/share/code/resources/app/package.json','utf8')).version,vsix,sourcePreserved:true,sceneHeading:{title:scene.title,file:scene.file,bodyHeadingVerified:true},workspaceTrust:'disabled only in disposable automation profile (same as existing Development Host runner)',checks:['new import creates front/back matter and supporting folder','review lists matter and ordered scene','explicit destination confirmation','source files unchanged'],imported};
   await fs.writeFile(path.join(dir,'matter-evidence.json'),JSON.stringify(evidence,null,2));console.log(JSON.stringify(evidence,null,2));
  }catch(error){if(inspect)await fs.writeFile(path.join(dir,'failure.json'),JSON.stringify(await inspect("({body:document.body.innerText,focus:document.activeElement?.outerHTML,widgets:[...document.querySelectorAll('.quick-input-widget')].map(e=>({html:e.outerHTML.slice(0,200),visible:e.checkVisibility(),rect:e.getBoundingClientRect().toJSON()})),inputs:[...document.querySelectorAll('input')].map(i=>({value:i.value,placeholder:i.placeholder}))})").catch(e=>({captureError:e.message}))));console.error(`Failure profile: ${dir}`);throw error;}
  finally{socket?.close();code.kill('SIGTERM');await log.close();}
