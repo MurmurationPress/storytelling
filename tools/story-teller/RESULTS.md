@@ -1,3 +1,27 @@
+# PR #18 final review and author acceptance
+
+Ted accepts the combined scene-title/import fixes in #18 (`8088f75bd5c35d2d604f6ba14eb64f3c08041053`)
+and #19 (`a7b84c9f762949c7b27298b566da91474df70b2d`): “All now working as expected.
+The embedded markdown files are skipped, which is acceptable.” This accepts
+skipped Markdown transclusion as a limitation; SVG remains unsupported. It adds
+no iPad/Safari, physical touch or human audio verification. The pending language
+in the original implementation reports below is historical and superseded by this
+acceptance. No new product behaviour is introduced by final-review records.
+
+Review found no material heading defect: insertion follows YAML and first-beat
+metadata, matching leading headings are preserved, different headings and literal
+titles remain readable, no title-only beat is introduced, and the web header
+avoids repeating a matching body title. Source files, part/matter/supporting notes,
+identity and sequence remain outside this transformation. #19 will be reviewed
+and integrated separately after #18 using the combined accepted runtime.
+
+The final documentation-only head is checked with the same 236-test suite,
+syntax/build/package checks. Runtime source is byte-identical to the reported
+heading head, so its recorded native/HTTP evidence remains applicable; that is
+not a claim of a new device test. Local checks are distinct from absent GitHub CI.
+
+---
+
 # Scene-title import headings — 0.11.1, issue #16
 
 **Status:** awaiting Ted’s acceptance. This builds on merged PR #17
