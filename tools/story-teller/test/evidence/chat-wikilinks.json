@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-27",
+  "scope": "synthetic Story Teller chat wikilinks",
+  "automated": {
+    "vscodeDevelopmentHost": {
+      "mode": "Extension Development Host",
+      "checks": [
+        "linked heading/speaker/body and continuation",
+        "outgoing alignment and read ticks",
+        "handle-only responding",
+        "hover and focus previews",
+        "keyboard Enter/Escape",
+        "nested note/back",
+        "pause, focus return and explicit resume",
+        "replay",
+        "no nested interactive elements"
+      ]
+    },
+    "installedVSIXFocused": {
+      "mode": "installed VSIX",
+      "checks": [
+        "linked heading/speaker/body and continuation",
+        "outgoing alignment and read ticks",
+        "handle-only responding",
+        "hover and focus previews",
+        "keyboard Enter/Escape",
+        "nested note/back",
+        "pause, focus return and explicit resume",
+        "replay",
+        "no nested interactive elements"
+      ]
+    },
+    "standalone": {
+      "mode": "fresh standalone HTTP export, headless Chrome on Linux",
+      "checks": [
+        "linked heading/speaker/body and continuation",
+        "outgoing alignment and read ticks",
+        "handle-only responding",
+        "hover and focus previews",
+        "keyboard Enter/Escape",
+        "nested note/back",
+        "pause, focus return and explicit resume",
+        "replay",
+        "no nested interactive elements"
+      ],
+      "unverified": [
+        "human hands-on review",
+        "iPad/Safari",
+        "touch",
+        "other operating systems"
+      ]
+    },
+    "unitSuite": {
+      "testFiles": 30,
+      "passed": 30,
+      "failed": 0,
+      "focusedChatTests": 7
+    },
+    "broadNative": {
+      "developmentHost": "passed",
+      "installedVSIX": "passed",
+      "note": "Broad native runs preceded final legacy continuation-separator compatibility refinement; full unit suite and final installed focused probe passed afterwards."
+    },
+    "package": {
+      "version": "0.11.2",
+      "entries": 384,
+      "runtimeSourceEquality": "passed",
+      "testsAndSamplesExcluded": true
+    }
+  },
+  "handsOnHumanChecks": "Not performed",
+  "limitations": [
+    "Linux automation only; no new iPad/Safari, touch, VSCodium, other operating-system or human audio evidence"
+  ],
+  "readerSourceSHA256": {
+    "parser.cjs": "e8a5be51ec02a72c29bb32e690119bf1f27f431a97ecbebceef4fb11e5074ec0",
+    "markdown.cjs": "b6a4f12b4271763b083d2cd12d2102ed3a12937d78e243f51fb07a3796df03bf",
+    "reader-presentation.cjs": "e5f4808f29d082806847250cdeec0780c46707de4f37415749e57c517bd74677"
+  },
+  "vscodeVersion": "1.143.1",
+  "converterSourceSHA256": "7b962cdb0676829eb83a67db330da073ab61e9902d6836be620372185ce4a475"
+}

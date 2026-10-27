@@ -1,12 +1,33 @@
 'use strict';
 // Pure, conservative manuscript adaptation. No editor/file/network access.
 const { inspectStructure } = require('./structure.cjs');
+const { renderChat } = require('./markdown.cjs');
 const { parseScene } = require('./parser.cjs');
 function escaped(text, at) {
   let count = 0;
   while (at > 0 && text[--at] === '\\') count++;
   return count % 2 === 1;
 }
+function decodeDelimiters(text) {
+  // Delimiter escapes belong to the wrapper, not to authored wikilink content.
+  let output = '';
+  for (let at = 0; at < text.length; at++) {
+    if (text.slice(at, at + 2) === '[[' && !escaped(text, at)) {
+      const end = text.indexOf(']]', at + 2);
+      if (end >= 0 && renderChat(text.slice(at, end + 2)).references.length) {
+        output += text.slice(at, end + 2); at = end + 1; continue;
+      }
+    }
+    if (text[at] === '|' && escaped(text, at)) output = output.slice(0, -1);
+    output += text[at];
+  }
+  return output;
+}
+function identityRemainder(text) {
+  // Only recognised explicit links may carry bracket syntax in identities.
+  return renderChat(text).visibleText;
+}
+
 function legacyBody(body) {
   const output = [];
   let previous = null;
@@ -25,7 +46,7 @@ function legacyBody(body) {
       if (/^>\s+\S/.test(line)) {
         if (messages || viewer || line.includes(',')) fail('multiple/changing right-aligned participants need review');
         const name = line.replace(/^>\s+/, '');
-        if (/[\[\]*`^<>]/.test(name)) fail('formatted viewer identity needs review');
+        if (/[\[\]*`^<>]/.test(identityRemainder(name))) fail('formatted viewer identity needs review');
         viewer = true; output.push(`@viewer ${name}`); continue;
       }
       if (/^@title\s+\S/.test(line)) {
@@ -57,15 +78,28 @@ function legacyBody(body) {
     const raw = body.slice(start + 2, end);
     if (raw.includes('{{')) fail('nested message wrapper needs review');
     const pipes = [];
-    for (let i = 0; i < raw.length; i++) if (raw[i] === '|' && !escaped(raw, i)) pipes.push(i);
+    for (let i = 0; i < raw.length; i++) {
+      if (raw.slice(i, i + 2) === '[[' && !escaped(raw, i)) {
+        const end = raw.indexOf(']]', i + 2);
+        if (end < 0 || !renderChat(raw.slice(i, end + 2)).references.length) fail('malformed wikilink needs review');
+        i = end + 1; continue;
+      }
+      if (raw[i] === '|' && !escaped(raw, i)) pipes.push(i);
+    }
+    // Retain the existing literal continuation prefix between the first/last
+    // fields. Other extra unescaped pipes cannot be assigned losslessly.
+    if (pipes.slice(1, -1).some(at => {
+      const lineStart = raw.lastIndexOf('\n', at - 1);
+      return lineStart < 0 || raw.slice(lineStart + 1, at) !== '  ';
+    })) fail('ambiguous message-field delimiters need review');
     if (!pipes.length) fail('message lacks a speaker/body delimiter');
     const last = pipes.at(-1);
     if (pipes.length >= 2 && raw.slice(last + 1).trim()) fail('nonempty subtext has no lossless player representation');
-    const header = raw.slice(0, pipes[0]).replace(/\\\|/g, '|').trim();
+    const header = decodeDelimiters(raw.slice(0, pipes[0])).trim();
     const speaker = header || previous;
-    if (!speaker || /[:\r\n\[\]*`<>^]/.test(speaker)) fail('unresolved, formatted or unrepresentable speaker identity');
+    if (!speaker || /[:\r\n\[\]*`<>^]/.test(identityRemainder(speaker))) fail('unresolved, formatted or unrepresentable speaker identity');
     // Preserve actual text/line breaks, decoding only the manuscript delimiter escape.
-    const message = raw.slice(pipes[0] + 1, pipes.length >= 2 ? last : raw.length).replace(/\\\|/g, '|');
+    const message = decodeDelimiters(raw.slice(pipes[0] + 1, pipes.length >= 2 ? last : raw.length));
     if (/!\[/.test(message)) fail('embedded artwork requires editorial review; assets are not converted');
     if (message.includes('\r')) fail('mixed message line endings need review');
     const parts = message.split('\n');

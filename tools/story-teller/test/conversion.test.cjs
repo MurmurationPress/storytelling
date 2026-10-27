@@ -53,7 +53,7 @@ test('ambiguous and unsupported containers are retained whole with review warnin
   for (const body of [
     '{{Ari|Hi|quietly}}', '{{|Unresolved speaker|}}', '# One\n# Two\n{{Ari|Hi|}}',
     '> Ari, Bo\n{{Ari|Hi|}}', '^ System\n{{System|Hi|}}', '{{Ari|Hi|}}\n...\n{{Bo|Bye|}}',
-    '{{Ari|Hi|}}\n# A later comment', '{{Ari|Unclosed', '{{[[Ari]]|Hello|}}',
+    '{{Ari|Hi|}}\n# A later comment', '{{Ari|Unclosed',
     '{{Ari|![[image.png]]|}}', '{{Ari|Hi|}} trailing prose', '{{Ari|Hi|}}\n@unknown yes',
     '> **Ari**\n{{Ari|Hi|}}', '{{Ari|Hi|}}\n@ticks on', 'Ari:Missing space'
   ]) {

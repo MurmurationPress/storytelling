@@ -126,6 +126,41 @@ Standalone @delay and @pause also work outside fences at a top-level Markdown bl
 
 Beat progression stays manual. Play is explicit for the opening or source-selected beat; the reader-controlled Next turn may start its destination according to the autoplay toggle. A source edit resets playback to ready. Reduced motion does not erase authored chat sequencing.
 
+### Supporting links in chats
+
+Explicit wikilinks work in headings, speaker names, message bodies and continuation
+lines. Plain and aliased links use the same supporting-note hover/focus preview
+and reading panel as prose:
+
+````markdown
+```chat
+# [[Harbour room|Evening conversation]]
+@viewer StillLearning
+@ticks
+@responding
+[[Celia|StillLearning]]: Thank you, [[Skip]].
+  | Have you asked [[Miranda Stubbs|Miranda]]?
+[[Jo Ellis|JoMakesThings]]: I will ask.
+```
+````
+
+Only the displayed handle identifies a participant: `@viewer StillLearning`
+matches `[[Celia|StillLearning]]`. A linked directive such as
+`@viewer [[Celia|StillLearning]]` also works; it is metadata, not another visible
+link. Different handles linking to the same note remain different participants.
+Calculated message waits count visible link labels, not targets or delimiters.
+`@title [[Harbour room|Evening conversation]]` is an alternative heading.
+Other Markdown-looking chat text stays literal; escaped links and inline code
+keep their existing literal behaviour. Missing/invalid targets use the usual
+supporting-note diagnostics. Opening a panel pauses playback; closing it returns
+focus and requires explicit Resume.
+
+Legacy conversion accepts `{{[[Celia|StillLearning]]|Thank you, [[Skip]].}}`
+and aliases within messages. Pipes inside recognised wikilinks are not field
+separators; escaped delimiter pipes and inherited speakers remain supported.
+Malformed links, ambiguous field separators and nonempty subtext stay unchanged
+with review warnings.
+
 ### Static images and captions
 
 A standalone Markdown image paragraph becomes an image component. An inline image stays inside its prose component. A separate plain italic caption paragraph immediately after a standalone image gives a visible caption while alt text remains the accessibility description:
