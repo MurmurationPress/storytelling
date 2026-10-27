@@ -827,3 +827,96 @@ heading head, so its recorded native/HTTP evidence remains applicable; that is
 not a claim of a new device test. Local checks are distinct from absent GitHub CI.
 
 ---
+
+## Chat wikilinks — 2026-10-27
+
+**Reproduced before edits:** a valid linked speaker and heading remained raw
+`[[target|label]]` strings; only message-body targets appeared in reference
+collection. Adding `@viewer StillLearning` and `@ticks` to
+`[[Celia|StillLearning]]` caused the chat to fall back to code with a viewer-match
+warning. Legacy `{{[[Celia|StillLearning]]|Thank you, [[Skip]].}}` was refused as
+nonempty subtext because the alias pipe was treated as a field separator.
+The existing body renderer already rendered safe explicit links, preserved
+ordinary Markdown-looking text/code/escapes and calculated waits from visible
+labels; that behaviour is retained.
+
+**Fix:** speakers and both heading forms reuse `renderChat`. Source markup and
+safe HTML stay separate from displayed labels; displayed handles drive viewer
+matching, alignment, ticks, typing text and the conversation's accessible name.
+Linked viewer directives supply a handle only. Recognised wiki spans shield their
+colons from message parsing and their pipes from legacy field parsing. Wrapper
+escape decoding leaves wikilink content intact. Malformed/ambiguous wrappers and
+nonempty subtext remain review-only. Speaker/heading references join the existing
+resolver, diagnostics and exported target collection. No reader lifecycle or
+supporting-panel implementation was replaced.
+
+**Automated validation:** `npm test` passes all 30 test files, including seven
+focused chat-wikilink cases; `npm run check`, browser bundle build and VSIX
+packaging pass. Package inspection verifies final parser/Markdown/converter
+source bytes, both bundles and exclusion of tests/samples (384 archive entries).
+The broad native Development Host and installed-VSIX regressions pass, including
+existing conversion/authoring/playback checks. Focused checks pass in actual VS Code
+1.143.1 on Linux, in an installed VSIX disposable profile, and in a fresh
+standalone HTTP export under headless Chrome. They exercise heading, speaker,
+body and continuation links; outgoing alignment, read ticks, handle-only typing;
+hover/focus preview; keyboard Enter/Escape; nested note/back; playback pause,
+focus return, explicit resume and replay; and absence of nested controls.
+See `test/evidence/chat-wikilinks.json` for the shared probe's observations.
+The broad native runs preceded the final legacy continuation-separator
+compatibility refinement; the full unit suite and final-package focused probe
+were rerun after it.
+
+Reproduce from `tools/story-teller/`:
+
+```sh
+npm ci
+npm test
+npm run check
+npm run package
+STORY_TELLER_HOST_SCOPE=chat-links node test/run-host.cjs
+STORY_TELLER_HOST_SCOPE=chat-links STORY_TELLER_VSIX=story-teller-0.11.2.vsix node test/run-host.cjs
+node test/chat-links-web.cjs
+npm run test:host
+STORY_TELLER_VSIX=story-teller-0.11.2.vsix npm run test:host
+```
+
+**Observation limits:** these are automated interactions with real applications,
+not human hands-on review or new iPad/Safari/touch/audio/platform acceptance.
+All fixtures are synthetic. An initial native probe read the frame too early;
+its polling now tolerates frame loading. An initial web probe clicked Play before
+scene loading completed; it now waits for the loaded ready scene. Sandbox-limited
+packaging could not inspect the extension entrypoint; packaging with normal
+process permissions succeeded. These initial harness/environment failures are
+not product-fix claims. No release, merge, deployment, manuscript, Stories-Told,
+PrimeTrilogy or experimental EPUB changes are part of this task.
+
+
+### PR #21 acceptance and integration review — 2026-10-27
+
+**Ted's hands-on acceptance:** Ted tested candidate
+`c0338666fc3a44ddf71b115db346b95c172ead73` in his actual Story Teller project:
+“That works well. Will be very useful.” This accepts the desktop chat-wikilink
+behaviour he tested. It is separate from the automated synthetic checks above;
+no exhaustive acceptance or new iPad/Safari, touch, other-platform or human audio
+coverage is inferred. The earlier “not human hands-on review” limitation describes
+the implementation task's automated checks, not this later report.
+
+**Final review:** the remote head still matched the previously reviewed candidate,
+and main remained `cb69228355f1d8db8c6759b4a7e09cb7b9dc44b5`. No subsequent
+runtime changes, formal reviews, inline comments, unresolved review threads or
+closing-issue references were present. GitHub reported no CI checks; this is
+absence of CI, not a CI pass. Review rechecked source/label separation, viewer
+matching, timing, safe HTML, reference discovery, literal/code treatment and
+conservative conversion. No material blocker was found. This closeout adds only
+Story Teller acceptance/review documentation in this file and the existing
+Story Teller/Decisions vault notes. Runtime, tests, dependencies and syntax stay
+byte-identical to Ted's accepted candidate, so the existing native/installed-VSIX
+and fresh HTTP-export interaction evidence remains applicable without claiming
+new device observations.
+
+The final documentation head is validated again with the full 30-file unit suite,
+syntax checks, both browser builds and VSIX packaging/archive inspection.
+Post-merge validation compares the entire merged tree with the final reviewed
+head, then checks the unit suite, syntax and build from merged main. No directly
+associated closing issue was identified; unrelated issues, including #20, remain
+open. No release, tag movement or deployment is authorised.

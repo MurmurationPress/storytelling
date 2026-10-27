@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'chat-links') {
+    importProject = path.join(directory, 'chat-project');
+    await require('./chat-link-fixture.cjs').create(importProject);
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'notes') {
     importProject = path.join(directory, 'supporting-project');
     await fs.cp(path.join(root, 'samples/supporting-project'), importProject, { recursive: true });
@@ -170,6 +174,18 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='chat-links') {
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Chat.md'});
+      const checks=await require('./chat-link-probe.cjs')({evaluate,key:async(key,virtual,text)=>{
+        for(const type of ['keyDown','keyUp'])await send('Input.dispatchKeyEvent',{type,key,code:key,windowsVirtualKeyCode:virtual,...(text&&type==='keyDown'?{text}:{})});
+      },hover:async selector=>{
+        const point=await evaluate(`(()=>{const r=doc.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(),f=document.getElementById('active-frame').getBoundingClientRect();return {x:f.x+r.x+5,y:f.y+r.y+5};})()`);
+        await send('Input.dispatchMouseEvent',{type:'mouseMoved',...point});
+      },wait:sleep});
+      await fs.writeFile(path.join(directory,'chat-links.json'),JSON.stringify({mode:vsix?'installed VSIX':'Extension Development Host',checks},null,2));
+      console.log('PASS actual VS Code chat links: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='repairs') {
       const manifest=JSON.parse(await fs.readFile(path.join(importProject,'story-teller.project.json'),'utf8')),ordered=require('../src/manuscript-import.cjs').orderedScenes(manifest),checks=[];
       assert.deepEqual(ordered.map(s=>s.title),['Before','Child','Between','Last','After']);

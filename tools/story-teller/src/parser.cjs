@@ -4,7 +4,7 @@ const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS, BORDERS, FILLS } =
 const { inspectStructure, beatRanges } = require('./structure.cjs');
 const { renderAnnotation } = require('./annotation.cjs');
 const { visibleWords, proseInterval } = require('./prose-pacing.cjs');
-const { createMarkdown, references, renderChat, inlineText } = require('./markdown.cjs');
+const { createMarkdown, references, renderChat, inlineText, chatMessage } = require('./markdown.cjs');
 const md = createMarkdown();
 // Image URLs are inert data here; only the VS Code host may resolve local files.
 md.renderer.rules.link_open = () => '<span class="link-text">';
@@ -174,6 +174,7 @@ function parseScene(source, { prosePacing = false } = {}) {
         let respondingForChat = false;
         let canContinue = false;
         let title = null;
+        let titleLine = null;
         let viewer = null;
         let ticks = false;
         let pace = 'normal';
@@ -196,9 +197,9 @@ function parseScene(source, { prosePacing = false } = {}) {
           if (titleHeader) {
             if (events.length || seen.has('title')) { invalid = '@title must appear once, before messages/pauses'; break; }
             if (!(titleHeader[1] ?? titleHeader[2])?.trim()) { invalid = '@title needs a nonempty title'; break; }
-            title = (titleHeader[1] ?? titleHeader[2]).trim(); seen.add('title'); continue;
+            title = (titleHeader[1] ?? titleHeader[2]).trim(); titleLine = invalidLine; seen.add('title'); continue;
           }
-          const match = line.match(/^([^:\n]+):[ \t]+(.*)$/);
+          const match = chatMessage(line);
           if (match && match[1].trim()) {
             const message = { speaker: match[1].trim(), text: match[2] };
             if (delayMs !== undefined) message.delayMs = delayMs;
@@ -236,7 +237,7 @@ function parseScene(source, { prosePacing = false } = {}) {
           if (name === 'viewer' || name === 'ticks') {
             if (events.length || seen.has(name)) { invalid = `@${name} must appear once, before messages/pauses`; break; }
             seen.add(name);
-            if (name === 'viewer') viewer = value.trim();
+            if (name === 'viewer') viewer = renderChat(value.trim()).visibleText;
             else if (value === 'on' || value === 'off') ticks = value === 'on';
             else { invalid = 'use @ticks to enable ticks, or omit it to disable them'; break; }
           } else {
@@ -250,6 +251,14 @@ function parseScene(source, { prosePacing = false } = {}) {
         }
         if (responding && !invalid) invalid = '@responding needs a following message';
         if (delayMs !== undefined && !invalid) invalid = '@delay needs a following message';
+        for (const message of messages) {
+          const label = renderChat(message.speaker);
+          if (label.references.length) {
+            message.speakerSource = message.speaker;
+            message.speakerHtml = label.html;
+            message.speaker = label.visibleText;
+          }
+        }
         if (ticks && (!viewer || !messages.some(m => m.speaker === viewer)) && !invalid) invalid = '@ticks needs @viewer matching a speaker';
         if (invalid || !messages.length) {
           diagnostics.push(`Line ${invalidLine}: ${invalid || 'chat needs at least one Speaker: message line'}; showing dialogue as code without executing the chat.`);
@@ -264,7 +273,12 @@ function parseScene(source, { prosePacing = false } = {}) {
             if (rendered.references.length) { message.html = rendered.html; message.timingText = rendered.visibleText; }
             wikiReferences.push(...rendered.references.map(ref => ({ ...ref, line: ref.line + messageLines[index] - 1 })));
           }
-          add({ type: 'chat', messages, events, title, viewer, ticks, pace, line: first + token.map[0] + 1 });
+          for (const [index, message] of messages.entries()) {
+            if (message.speakerSource) wikiReferences.push(...renderChat(message.speakerSource).references.map(ref => ({ ...ref, line: messageLines[index] })));
+          }
+          const heading = title ? renderChat(title) : null;
+          if (heading) wikiReferences.push(...heading.references.map(ref => ({ ...ref, line: titleLine })));
+          add({ type: 'chat', messages, events, title: heading?.visibleText ?? title, ...(heading?.references.length ? { titleSource: title, titleHtml: heading.html } : {}), viewer, ticks, pace, line: first + token.map[0] + 1 });
         }
       } else {
         if (prosePacing && token.type === 'paragraph_open' && token.level === 0) flush();

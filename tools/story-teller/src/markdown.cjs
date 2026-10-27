@@ -66,6 +66,18 @@ function renderChat(text) {
   html += inline.utils.escapeHtml(text.slice(at)); visible += text.slice(at);
   return { html, visibleText: visible, references: refs };
 }
+// A colon in a recognised wiki target/label is not the speaker separator.
+function chatMessage(text) {
+  const links = (inline.parseInline(text, {})[0]?.children || []).filter(token => token.type === 'story_wikilink');
+  for (let at = 0; at < text.length; at++) {
+    const link = links.find(token => token.meta.offset === at);
+    if (link) { at = text.indexOf(']]', at + 2) + 1; continue; }
+    if (text[at] !== ':') continue;
+    const tail = text.slice(at + 1).match(/^[ \t]+(.*)$/);
+    return tail && text.slice(0, at).trim() ? [text, text.slice(0, at), tail[1]] : null;
+  }
+  return null;
+}
 const noteMarkdown = createMarkdown();
 function renderMarkdown(source) {
   const tokens = noteMarkdown.parse(source, {});
@@ -73,4 +85,4 @@ function renderMarkdown(source) {
   for (const token of tokens) for (const child of token.children || []) if (child.type === 'image') imageLines[child.attrGet('src') || ''] ??= (token.map?.[0] || 0) + 1;
   return { imageLines, html: noteMarkdown.renderer.render(tokens, noteMarkdown.options, {}), images: imagesIn(tokens), references: references(tokens) };
 }
-module.exports = { inlineText, wikiLinks, createMarkdown, references, imagesIn, renderChat, renderMarkdown };
+module.exports = { inlineText, wikiLinks, createMarkdown, references, imagesIn, renderChat, renderMarkdown, chatMessage };

@@ -196,7 +196,7 @@ function render() {
       if (block.title) {
         const heading = document.createElement('h2');
         heading.className = 'chat-title';
-        heading.textContent = block.title;
+        if (block.titleHtml) heading.innerHTML = block.titleHtml; else heading.textContent = block.title;
         content.append(heading);
       }
       const list = document.createElement('ol');
@@ -205,7 +205,7 @@ function render() {
       for (const message of block.messages) {
         const item = document.createElement('li');
         const speaker = document.createElement('strong');
-        speaker.textContent = message.speaker;
+        if (message.speakerHtml) speaker.innerHTML = message.speakerHtml; else speaker.textContent = message.speaker;
         const text = document.createElement('p');
         if (message.html) text.innerHTML = message.html; else text.textContent = message.text;
         item.append(speaker, text);
