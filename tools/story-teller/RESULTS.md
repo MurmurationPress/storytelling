@@ -889,3 +889,34 @@ packaging could not inspect the extension entrypoint; packaging with normal
 process permissions succeeded. These initial harness/environment failures are
 not product-fix claims. No release, merge, deployment, manuscript, Stories-Told,
 PrimeTrilogy or experimental EPUB changes are part of this task.
+
+
+### PR #21 acceptance and integration review — 2026-10-27
+
+**Ted's hands-on acceptance:** Ted tested candidate
+`c0338666fc3a44ddf71b115db346b95c172ead73` in his actual Story Teller project:
+“That works well. Will be very useful.” This accepts the desktop chat-wikilink
+behaviour he tested. It is separate from the automated synthetic checks above;
+no exhaustive acceptance or new iPad/Safari, touch, other-platform or human audio
+coverage is inferred. The earlier “not human hands-on review” limitation describes
+the implementation task's automated checks, not this later report.
+
+**Final review:** the remote head still matched the previously reviewed candidate,
+and main remained `cb69228355f1d8db8c6759b4a7e09cb7b9dc44b5`. No subsequent
+runtime changes, formal reviews, inline comments, unresolved review threads or
+closing-issue references were present. GitHub reported no CI checks; this is
+absence of CI, not a CI pass. Review rechecked source/label separation, viewer
+matching, timing, safe HTML, reference discovery, literal/code treatment and
+conservative conversion. No material blocker was found. This closeout adds only
+Story Teller acceptance/review documentation in this file and the existing
+Story Teller/Decisions vault notes. Runtime, tests, dependencies and syntax stay
+byte-identical to Ted's accepted candidate, so the existing native/installed-VSIX
+and fresh HTTP-export interaction evidence remains applicable without claiming
+new device observations.
+
+The final documentation head is validated again with the full 30-file unit suite,
+syntax checks, both browser builds and VSIX packaging/archive inspection.
+Post-merge validation compares the entire merged tree with the final reviewed
+head, then checks the unit suite, syntax and build from merged main. No directly
+associated closing issue was identified; unrelated issues, including #20, remain
+open. No release, tag movement or deployment is authorised.

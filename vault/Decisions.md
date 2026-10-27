@@ -251,3 +251,18 @@ Historical validation reports are retained with their original observation limit
 ## 2026-10-24 — Public code and MIT licensing
 
 Ted explicitly authorises making this repository public and licensing its original software and technical documentation under MIT. Manuscripts, fictional extracts, artwork and publication assets retain separate copyright; third-party licences remain in force. This supersedes earlier unresolved-licence/private-repository directions, without authorising publication of private adaptations.
+
+
+## 2026-10-27 — Accept desktop chat wikilinks; integrate PR #21
+
+Ted tested the candidate at `c0338666fc3a44ddf71b115db346b95c172ead73` in his
+actual Story Teller project: “That works well. Will be very useful.” Record this
+as acceptance of the desktop chat-wikilink behaviour he tested, separately from
+the reported synthetic automated validation. No exhaustive acceptance or new
+iPad/Safari, touch or other-platform verification is inferred. See [[Story Teller]]
+and the extension results for the bounded implementation and evidence.
+
+Ted authorises final review, expected-head squash integration and post-merge
+checks for PR #21. This does not authorise a release, tag movement, deployment,
+manuscript changes or unrelated backlog closure; human-readable filenames (#20)
+remain separate.

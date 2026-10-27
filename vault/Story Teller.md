@@ -6,6 +6,16 @@ created: 2026-10-21
 
 # Story Teller
 
+**Chat-wikilink acceptance (2026-10-27):** Ted tested the PR #21 candidate
+(`c0338666fc3a44ddf71b115db346b95c172ead73`) in his actual Story Teller project
+and reports: “That works well. Will be very useful.” This accepts the desktop
+chat-wikilink behaviour he tested. It does not establish exhaustive feature
+acceptance or new iPad/Safari, touch or other-platform coverage. The synthetic
+automated VS Code/standalone-reader checks remain separate evidence in the
+[results](../tools/story-teller/RESULTS.md). Ted authorises final review and
+expected-head squash integration; no release, tag movement or deployment.
+
+
 **Standalone reader acceptance:** Ted tested the web reader on his actual iPad over the local network and says, “It works well.” Browser version, audible sound and exhaustive feature coverage are not established by that report. See [[Story Teller Web Reader]] for the distinct acceptance and validation records.
 
 **2026-10-23 accepted integration:** Ted accepts PR #12's manuscript import, Part–Scene Outline, prose pacing, scroll-follow, all five keyboard shortcuts and scene-opening autoplay, and PR #14's supporting wikilinks/aliases, previews, nested reading panels and refresh. Earlier pending entries are historical. This is author acceptance of the extension experience, not platform certification, publication readiness or resolution of native-test intermittency. Ted also demonstrated animated WebP through the existing Image insert; no playback synchronisation, pause/replay control of image frames or new media component is established. JANUS will use existing notes and directives; no separate JANUS component is needed. A subsequent standalone export/reader trial is recorded in [[Story Teller Web Reader]]; its acceptance is separate.
