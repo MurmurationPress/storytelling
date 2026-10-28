@@ -406,7 +406,7 @@ api.onMessage(async event => {
   const departure = message.revision === incomingRevision ? pendingDeparture : sceneAutoplay.departure;
   incomingRevision = message.revision;
   sceneAutoplay.cancel();
-  follower.beginTurn();
+  follower.beginTurn({ silent: message.documentPrevious === true || message.matter === true });
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
   preparing = true; render();
   const prepared = Object.create(null);
@@ -448,6 +448,9 @@ api.onMessage(async event => {
     player.reset();
   }
   preparing = false;
+  // A document turn suspends following while its snapshot loads. The browser
+  // has no new host presentation event to reactivate it after that turn.
+  follower.setActive(presented && !document.hidden);
   render();
   follower.endTurn();
   startSelectedScene();
