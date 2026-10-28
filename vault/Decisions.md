@@ -266,3 +266,16 @@ Ted authorises final review, expected-head squash integration and post-merge
 checks for PR #21. This does not authorise a release, tag movement, deployment,
 manuscript changes or unrelated backlog closure; human-readable filenames (#20)
 remain separate.
+
+## 2026-10-28 — Reader-controlled playback speed, issue #13
+
+Ted observes that the existing default feels too fast even for him as a quick
+reader. He authorises a reader preference in both Story Teller surfaces while
+preserving that default for compatibility. The implementation offers 0.5×,
+0.75×, 1× (default), 1.25× and 1.5× and applies shared policy to calculated
+prose/chat/type-out timing after authored baselines. Explicit waits stay fixed;
+no content, authoring default or animated-image timing changes are authorised.
+Validation and acceptance records belong in the Story Teller results. The PR
+and issue remain open pending Ted's assessment, especially reading comfort at
+0.75× and 0.5×. This is implementation authorisation, not reader acceptance,
+deployment or a release.

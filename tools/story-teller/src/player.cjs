@@ -5,12 +5,13 @@ const defaultScheduler = {
   setTimeout: (callback, delay) => setTimeout(callback, delay),
   clearTimeout: handle => clearTimeout(handle)
 };
+const { readerSpeed, calculatedDuration } = require('./reader-speed.cjs');
 const { defaultDelay, automaticDelay } = require('./pace.cjs');
 const { graphemes, graphemeDelay } = require('./typeout.cjs');
 class StoryPlayer {
-  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false } = {}) {
+  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false, playbackSpeed = 1 } = {}) {
     this.scene = scene; this.index = 0; this.scheduler = scheduler; this.onChange = onChange;
-    this.reducedMotion = reducedMotion;
+    this.reducedMotion = reducedMotion; this.playbackSpeed = readerSpeed(playbackSpeed);
     this.generation = 0; this.timer = null; this.disposed = false;
     this.reset();
   }
@@ -39,7 +40,7 @@ class StoryPlayer {
       // A reading interval belongs to the preceding paragraph and exists only
       // when another component follows. Explicit boundary delay replaces it.
       if (precedingComponent?.pacedParagraph)
-        this.steps.push({ type: 'pause', delayMs: block.boundaryDelayMs ?? precedingComponent.proseIntervalMs });
+        this.steps.push({ type: 'pause', calculated: block.boundaryDelayMs == null, delayMs: block.boundaryDelayMs ?? precedingComponent.proseIntervalMs });
       precedingComponent = block;
       if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
       else if (block.type === 'typeout') {
@@ -48,13 +49,13 @@ class StoryPlayer {
         this.typeoutParts.set(blockIndex, parts);
         this.steps.push({ type: 'typeout-start', blockIndex, delayMs: block.delayMs ?? 0 });
         for (let index = 0; index < parts.length; index++)
-          this.steps.push({ type: 'typeout-grapheme', blockIndex, delayMs: graphemeDelay(index, block.speed) });
+          this.steps.push({ type: 'typeout-grapheme', blockIndex, calculated: true, delayMs: graphemeDelay(index, block.speed) });
       }
       else for (const event of block.events) {
         if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
         else {
           const message = block.messages[event.message];
-          this.steps.push({ type: 'message', blockIndex, message: event.message, delayMs: message.delayMs ?? automaticDelay(message.timingText ?? message.text, block.pace) });
+          this.steps.push({ type: 'message', blockIndex, message: event.message, calculated: message.delayMs == null, delayMs: message.delayMs ?? automaticDelay(message.timingText ?? message.text, block.pace) });
           if (block.ticks && message.speaker === block.viewer) this.steps.push({ type: 'read', blockIndex, message: event.message, delayMs: 600 });
         }
       }
@@ -98,13 +99,29 @@ class StoryPlayer {
     if (this.disposed || !this.current || !['ready', 'paused'].includes(this.phase)) return;
     this.phase = 'playing'; this.schedule(); this.onChange();
   }
-  schedule() {
+  setPlaybackSpeed(value) {
+    const speed = readerSpeed(value);
+    if (speed === this.playbackSpeed || this.disposed) return;
+    const calculated = this.steps[this.cursor]?.calculated;
+    // Convert remaining active time through baseline units, without rounding.
+    if (calculated && ['playing', 'paused'].includes(this.phase)) {
+      const remaining = this.phase === 'playing'
+        ? Math.max(0, this.deadline - this.scheduler.now()) : this.remaining;
+      if (remaining != null) this.remaining = remaining * this.playbackSpeed / speed;
+      if (this.phase === 'playing') this.cancelTimer();
+    }
+    this.playbackSpeed = speed;
+    if (calculated && this.phase === 'playing') this.schedule();
+    this.onChange();
+  }
+  schedule(anchor = this.scheduler.now()) {
     this.showProse();
     const step = this.steps[this.cursor];
     if (!step) { this.phase = 'completed'; return; }
     if (step.blockIndex !== undefined && this.current.blocks[step.blockIndex].type === 'chat') this.enteredChats.add(step.blockIndex);
-    const delay = this.remaining ?? step.delayMs;
-    this.remaining = delay; this.deadline = this.scheduler.now() + delay;
+    const delay = this.remaining ?? (step.calculated ? calculatedDuration(step.delayMs, this.playbackSpeed) : step.delayMs);
+    // Carry calculated deadlines to avoid reveal drift; authored waits start in full.
+    this.remaining = delay; this.deadline = (step.calculated ? anchor : this.scheduler.now()) + delay;
     const generation = this.generation;
     const cursor = this.cursor;
     this.timer = this.scheduler.setTimeout(() => {
@@ -122,8 +139,8 @@ class StoryPlayer {
       if (step.type === 'message') this.counts.set(step.blockIndex, step.message + 1);
       if (step.type === 'read') this.read.add(`${step.blockIndex}:${step.message}`);
       this.cursor++;
-      this.schedule(); this.onChange();
-    }, delay);
+      this.schedule(this.deadline); this.onChange();
+    }, Math.max(0, this.deadline - this.scheduler.now()));
   }
   pause() {
     if (this.phase !== 'playing') return;

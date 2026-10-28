@@ -920,3 +920,75 @@ Post-merge validation compares the entire merged tree with the final reviewed
 head, then checks the unit suite, syntax and build from merged main. No directly
 associated closing issue was identified; unrelated issues, including #20, remain
 open. No release, tag movement or deployment is authorised.
+
+## 2026-10-28 — Reader playback speed (#13), 0.12.0 candidate
+
+Implementation is awaiting Ted's acceptance. Both surfaces share the timing
+policy/player and labelled native select. Calculated prose/chat/type-out timing
+is divided by the reader multiplier after authored baselines; explicit waits,
+zero durations, ticks, audio pitch and image frames retain their meanings.
+Mid-wait changes preserve proportional progress, paused changes stay paused,
+and cancellation generations reject stale callbacks. Calculated deadlines carry
+forward to avoid callback/rounding drift; authored waits start in full.
+
+Focused tests cover all five speeds and the unchanged 1× baseline, prose and
+chat baselines/overrides, YAML and annotation/Unicode reveal, active/paused
+calculated and explicit waits, replay/reveal/navigation/update/disposal, stale
+callbacks, delivery ticks, supporting-note pauses, sound voice cleanup, invalid
+preferences and unavailable VS Code storage. Existing suites retain coverage of
+authoring settings inheritance, autoplay, mute, reduced motion and reader/export
+security. Real browser validation additionally checks local storage failure and
+reload persistence, keyboard selection and narrow layout. Audio observations
+count oscillator creation/stopping; they are not human listening evidence.
+
+Reproduction (from repository root):
+
+```sh
+npm test --prefix tools/story-teller
+npm run check --prefix tools/story-teller
+npm run package --prefix tools/story-teller
+STORY_TELLER_HOST_SCOPE=speed node tools/story-teller/test/run-host.cjs
+STORY_TELLER_HOST_SCOPE=speed STORY_TELLER_VSIX=tools/story-teller/story-teller-0.12.0.vsix node tools/story-teller/test/run-host.cjs
+node tools/story-teller/test/speed-web.cjs
+```
+
+Each native run uses an isolated VS Code profile and synthetic project; installed
+mode loads Story Teller from the VSIX and a separate test adapter. The web runner
+exports the synthetic fixture through the real exporter and serves it over HTTP.
+Do not run native and Chrome UI probes concurrently: background window timer
+throttling invalidates wall-clock measurements. The early background-window
+measurement failed; focused runs supersede it. Early native narrow layout
+failed and led to label/select wrapping; the corrected 205px pane has no overflow.
+An early storage injection probe required enabling CDP Page events before its
+new-document script; the corrected probe tests storage before application startup.
+No historical failure is counted as a pass.
+
+Evidence: `test/evidence/reader-speed-development.json`,
+`reader-speed-installed.json` and `reader-speed-web.json` contain temporal
+measurements and checks. Automated native/Linux and Chrome emulated touch are
+separate from actual-device testing. No new actual iPad/Safari, screen-reader,
+other operating-system or human listening coverage is claimed. Private
+adaptations and unrelated EPUB experiments were not changed.
+
+Acceptance checklist for Ted (PR unmerged; issue #13 open):
+
+- [ ] Install 0.12.0 and verify 1× retains familiar presentation.
+- [ ] Read a familiar paced prose/chat passage at **0.75×**: is it comfortable?
+- [ ] Repeat at **0.5×**: does the extra time make reading comfortable?
+- [ ] Try type-out and change speed mid-reveal; check heard sound and visible
+  continuity, Pause/Resume, immediate reveal and Replay.
+- [ ] Check authored waits, supporting notes, manual turns and autoplay/mute.
+- [ ] Reopen preview/browser; verify saved speed, then restore 1× (default).
+- [ ] Try the exported reader on an actual touch device at a narrow width.
+
+No deployment, release/tag publication, automatic page turns, source adaptation
+updates or licence changes are part of this candidate.
+
+Final checks: **271/271 tests pass**, syntax checks, both browser builds and
+VSIX packaging pass. Packaged runtime files match the validated working tree.
+`test/evidence/reader-speed-package.json` records artifact hashes;
+`reader-speed-narrow.png` shows the 320px HTTP reader. The local handoff is
+`story-teller-0.12.0.vsix` plus `local-web-preview-speed/` (synthetic only).
+Serve the latter over HTTP, for example `python3 -m http.server 8765 --bind
+127.0.0.1 --directory tools/story-teller/local-web-preview-speed` from repository
+root. These generated artifacts are ignored rather than committed as a release.

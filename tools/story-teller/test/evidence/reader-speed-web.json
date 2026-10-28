@@ -1,0 +1,64 @@
+{
+  "mode": "synthetic export over HTTP, headless Chrome Linux",
+  "checks": [
+    "all five actual select values and temporal paragraph pacing",
+    "supporting note pauses; speed change and close leave playback paused",
+    "paused change stays paused and retains proportional progress on resume",
+    "active speed change retains current paragraph",
+    "active Unicode reveal preserves text, speed change keeps one audio voice, paused reveal and cleanup",
+    "chat completes using authored brisk baseline",
+    "active explicit wait duration unchanged by speed change",
+    "browser preference survives reload",
+    "native keyboard selection and 320px touch-emulated layout",
+    "invalid and unavailable browser storage fall back safely; playback remains usable",
+    "dynamic reduced motion completes scaled annotation reveal",
+    "emulated touch targets native select"
+  ],
+  "timings": [
+    {
+      "speed": 0.5,
+      "expected": 2000,
+      "observed": 2020
+    },
+    {
+      "speed": 0.75,
+      "expected": 1333.3333333333333,
+      "observed": 1338
+    },
+    {
+      "speed": 1,
+      "expected": 1000,
+      "observed": 1005
+    },
+    {
+      "speed": 1.25,
+      "expected": 800,
+      "observed": 814
+    },
+    {
+      "speed": 1.5,
+      "expected": 666.6666666666666,
+      "observed": 675
+    }
+  ],
+  "bounds": {
+    "width": 320,
+    "overflow": 0,
+    "control": {
+      "x": 119.28125,
+      "y": 229.53125,
+      "width": 99,
+      "height": 44,
+      "top": 229.53125,
+      "right": 218.28125,
+      "bottom": 273.53125,
+      "left": 119.28125
+    }
+  },
+  "unverified": [
+    "actual touch device",
+    "iPad/Safari",
+    "human reading comfort",
+    "human audio listening"
+  ]
+}

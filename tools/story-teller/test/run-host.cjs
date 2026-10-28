@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'speed') {
+    importProject = path.join(directory, 'speed-project');
+    await require('./speed-fixture.cjs').create(importProject);
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'chat-links') {
     importProject = path.join(directory, 'chat-project');
     await require('./chat-link-fixture.cjs').create(importProject);
@@ -174,6 +178,32 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='speed') {
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Speed.md'});
+      await bringFront();
+      await until(async()=>await evaluate('Boolean(doc?.getElementById("playback-speed"))'));
+      const point=await evaluate('(()=>{const r=doc.getElementById("playback-speed").getBoundingClientRect(),f=document.getElementById("active-frame").getBoundingClientRect();return{x:f.x+r.x+5,y:f.y+r.y+5};})()');
+      await send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',clickCount:1,...point});
+      await send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',clickCount:1,...point});
+      await send('Input.dispatchKeyEvent',{type:'keyDown',key:'Escape',windowsVirtualKeyCode:27});
+      const original=await fs.readFile(path.join(importProject,'scenes/Speed.md'),'utf8');
+      const evidence=await require('./speed-probe.cjs')({evaluate,wait:sleep});
+      await evaluate('doc.getElementById("playback-speed").focus()');
+      for(const type of ['keyDown','keyUp']) await send('Input.dispatchKeyEvent',{type,key:'ArrowDown',code:'ArrowDown',windowsVirtualKeyCode:40});
+      assert.equal(await evaluate('doc.getElementById("playback-speed").value'),'0.75');
+      for(const type of ['keyDown','keyUp']) await send('Input.dispatchKeyEvent',{type,key:'ArrowUp',code:'ArrowUp',windowsVirtualKeyCode:38});
+      evidence.checks.push('native keyboard selection');
+      await request('narrow-reader');await sleep(250);
+      evidence.bounds=await evaluate('({width:doc.documentElement.clientWidth,overflow:doc.documentElement.scrollWidth-doc.documentElement.clientWidth,control:doc.getElementById("playback-speed").getBoundingClientRect().toJSON()})');
+      assert.ok(evidence.bounds.overflow<=1,JSON.stringify(evidence.bounds));
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Other.md'});
+      await until(async()=>await evaluate('doc.getElementById("playback-speed").value')==='0.5');
+      assert.equal(await fs.readFile(path.join(importProject,'scenes/Speed.md'),'utf8'),original);
+      evidence.checks.push('VS Code global reader preference survives scene selection; narrow native layout; source unchanged');
+      await fs.writeFile(path.join(directory,'speed.json'),JSON.stringify({mode:vsix?'installed VSIX':'Development Host',...evidence},null,2));
+      console.log('PASS actual VS Code playback speed: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='chat-links') {
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Chat.md'});
       const checks=await require('./chat-link-probe.cjs')({evaluate,key:async(key,virtual,text)=>{
