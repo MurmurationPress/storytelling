@@ -1,4 +1,4 @@
-# Static Story Teller reader (0.10.1 review baseline)
+# Static Story Teller reader
 
 Export a **saved, separate adaptation project**, not the manuscript vault. The extension and browser use the same parser, StoryPlayer, pacing, Markdown/type-out renderer, sound, scroll-follow and SupportingReader. Only their host adapters differ. Ted has tested the standalone reader on his actual iPad over the local network and reports “It works well.” No browser version, human audio verification or exhaustive feature coverage is inferred. Earlier acceptance of supporting notes at `e9e04b3e194ec6458da59ee07ecc5094d8acf869` is a separate acceptance record.
 
@@ -98,3 +98,9 @@ separate in RESULTS.md.
 source/export procedure, `/skip/` package, Cloudflare preview prerequisites and
 later approval steps for production/DNS/Ghost. The existing reader/exporter is
 reused; no shared multi-book architecture is introduced.
+
+The Skip 0.12.2 review candidate restores follow activation after a document turn
+and makes supporting hover previews inherit the current web palette. Static
+matter and silent Previous start at the top; scroll-back suspension and Follow
+story resumption are preserved. Current exported-book regressions/results are
+linked from PUBLISH-SKIP.md; these are not additional actual-device claims.

@@ -1114,3 +1114,71 @@ See [PUBLISH-SKIP.md](PUBLISH-SKIP.md) for exact pins, repeatable export, previe
 update/rollback and approval steps and the exact Ghost link. Evidence:
 `test/evidence/skip-publication.json`. Full private build reports/screenshots and
 archive remain outside both repositories and the uploaded directory.
+
+### 0.12.2 — Ted's full-book follow/theme reports
+
+Ted reports automatic following fails while manual scrolling works, and that
+wikilinks produce a black scrollable popout. Both are reproduced in the actual
+0.12.1 Cloudflare book export. The normal front-matter Continue → Introduction →
+Next scene path calls `turnDocument`, which deactivates the follower during source
+loading. The web adapter supplies no new host-presentation event, and source
+commit did not reactivate it. At a completed overflowing beat, desktop stayed
+at scrollTop 0 with last-content bottom 1171.9px in a 720px viewport; manual
+scrolling moved to 500px. Mobile emulation likewise stayed at 0 with content
+bottom 1820.5px. The first sweep's Contents-centric traversal did not assert this
+handoff; passing playback/asset checks did not establish working auto-follow.
+
+The fix reactivates only an inactive follower after a visible source commit,
+without resetting one already active. Static matter and silent Previous remain
+at the top. It does not change timing, sound, authored content/settings or manual
+turns. Upward wheel/touch reading suspends following during new content and the
+Follow story button explicitly resumes it. New-content and end-control positions
+are asserted in the full-book regression.
+
+The hover preview computed `rgb(37,37,37)` background and `rgb(37,37,44)` text in
+light mode. Its missing web-theme widget variables now derive from the page
+palette. The full reading panel already used that palette; its size, contrast,
+contained article scrolling and restoration of the background reading position
+are now asserted, rather than assumed. Contrast is 14.45:1 light / 13.85:1 dark.
+
+Reader runtime `6239345f2b73a96163790400cf061da7068d8805`, 0.12.2 review candidate.
+Source remains `7c030a1`: no new source changes. The export remains zero-warning,
+14 scenes / 144 beats, both matter pages, 23 notes and 44 original assets.
+272/272 tests, syntax, builds and packaging pass. A synthetic single-touch,
+nested/Back/Close, keyboard/mouse hover regression also passes.
+
+The targeted exported-book regression passes all six local and live HTTPS cases:
+1100px desktop, 390px and 320px emulated touch, each light/dark. It follows the
+real document-turn route, proves movement while content appears, scrolls back
+with actual wheel/touch points, advances more content without pulling the reader
+down, resumes through Follow story, checks silent Previous within/across scenes,
+reaches bottom navigation, manually scrolls static matter and independently
+scrolls a long supporting note. The complete live 144-beat/44-asset/23-target/
+four-WebP-frame sweep passes again, with no page errors or failed/external content
+requests. All 75 served files match the final build over certificate-validated
+HTTPS; 404/privacy/cache/redirect checks pass. Screenshots and raw reports stay
+outside the uploaded site and public repository.
+
+Preview: https://cfc10c44.murmuration-skip.pages.dev/skip/ . Stable review alias
+remains https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/ . Cloudflare
+confirms preview environment, production branch main with no production
+snapshot or custom domains. Production, DNS and Ghost remain unchanged. Old hash
+URLs remain old builds; the current URL/alias should be used for tomorrow's test.
+
+**Separate native limitation:** an optional installed VSIX follow sweep passed
+initial following/rereading/resume but failed its exact hide/return pixel check
+on both the 0.12.1 baseline (1966→1987) and intermediate 0.12.2 (1966→2007).
+This is not counted as a complete native pass or treated as new platform
+certification. The final reactivation guard preserves the already-active source
+path; the publication fixes are validated in exported web readers. Earlier
+installed-note results retain their original 0.12.1 scope.
+
+The browser harness was corrected to respect the existing 400ms double-activation
+guard, emit real touchmove points (aggregate CDP scrolling emitted none under the
+virtual clock), and account for touch slop when reaching the bottom. These were
+probe corrections, not additional reader changes or manual-scroll defects.
+Evidence: `test/evidence/skip-reader-layout.json` and updated
+`test/evidence/skip-publication.json`; original publication evidence is retained
+as `skip-publication-0.12.1.json`. Actual iPad/Safari, screen-reader and human
+listening coverage is not inferred. No release, production deployment, DNS or
+Ghost publication is performed.

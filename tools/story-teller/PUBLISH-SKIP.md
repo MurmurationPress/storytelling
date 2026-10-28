@@ -1,10 +1,10 @@
 # Skip: one standalone web export
 
 This is a small publication trial, not a shared renderer or a new publishing
-platform. The existing exporter is unchanged; the 0.12.1 reader candidate fixes supporting-note activation/preview overlap without changing playback policy. Ghost remains the main
+platform. The existing exporter is unchanged; the 0.12.2 reader candidate fixes supporting-note activation/preview overlap without changing playback policy. Ghost remains the main
 Murmuration Press website; the reader is an independent static directory.
 
-Review preview: **https://c548539c.murmuration-skip.pages.dev/skip/**.
+Review preview: **https://cfc10c44.murmuration-skip.pages.dev/skip/**.
 Branch alias: **https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/**.
 
 Proposed production URL: **https://read.murmurationpress.co.uk/skip/**.
@@ -21,15 +21,15 @@ Ted's approval after reviewing the preview. Nothing here performs them.
   identical: `the PRIME novels` points to `The PRIME Novels`; Miranda Stubbs and
   Jo Ellis references point to the existing Miranda/Jo notes. No prose, dialogue,
   timing, settings, order, matter or artwork changes. The PR is not merged.
-- Reader runtime: `fa09c675900fecdd04cc9a846e628ec20e53ead2` (0.12.1 review candidate).
+- Reader runtime: `6239345f2b73a96163790400cf061da7068d8805` (0.12.2 review candidate).
 - Source project: `Story Teller - The Curious Adventures of Skip`.
 - Export: 14 scenes / 144 beats, front and back matter, 23 notes, 44 unique image
   files; all four initial warnings resolved, zero final warnings. Canvas resolves;
   all three final-chapter illustrations are included. Original animated WebP
   bytes are preserved. There are no authored type-out blocks in this source;
   renderer support and sound/mute controls are retained without inventing any.
-- Public upload: 78 files, 101,599,211 bytes, every asset below 25 MiB.
-- Local build: `/home/thawkins/Documents/Publication Builds/skip-cloudflare-review-20261028/`.
+- Public upload: 78 files, 101,599,601 bytes, every asset below 25 MiB.
+- Local build: `/home/thawkins/Documents/Publication Builds/skip-preview-0.12.2-review-20261028/`.
   `site/` is the **only** upload directory. `skip-preview-upload.zip` contains just
   that directory's contents, with `skip/` paths preserved.
 - Local Pages preview: **http://192.168.4.43:8788/skip/** on Ted's LAN while the
@@ -169,13 +169,13 @@ and production branch. The review branch below must differ from production:
 
 ```sh
 npx --yes wrangler@4.155.0 pages deploy \
-  '/home/thawkins/Documents/Publication Builds/skip-cloudflare-review-20261028/site' \
+  '/home/thawkins/Documents/Publication Builds/skip-preview-0.12.2-review-20261028/site' \
   --project-name murmuration-skip --branch skip-review-7c030a1 \
   --commit-hash 7c030a14c8911f26d468e1d5de2b714445da9648
 ```
 
-The completed review deployment is `c548539c-3169-41f5-b9d2-651459c64fe0` at
-`https://c548539c.murmuration-skip.pages.dev/skip/`. It is a preview, not a
+The completed review deployment is `cfc10c44-1396-4ae8-9966-b7c8bdfe3b72` at
+`https://cfc10c44.murmuration-skip.pages.dev/skip/`. It is a preview, not a
 production deployment. For updates, use the **actual URL returned by Wrangler**,
 followed by `/skip/`; the expected shape is
 `https://<deployment-id>.<verified-project>.pages.dev/skip/`. Record deployment ID,
@@ -188,8 +188,8 @@ For read-only byte/header verification of a hosted candidate:
 
 ```sh
 node tools/story-teller/scripts/verify-skip-preview.cjs \
-  '/home/thawkins/Documents/Publication Builds/skip-cloudflare-review-20261028' \
-  https://c548539c.murmuration-skip.pages.dev
+  '/home/thawkins/Documents/Publication Builds/skip-preview-0.12.2-review-20261028' \
+  https://cfc10c44.murmuration-skip.pages.dev
 ```
 
 This compares every served publication file with the build hashes, checks real
@@ -237,8 +237,8 @@ Do not upload source repositories, private reports, credentials or unrelated fil
 
 ## Validation result
 
-All 272 unit tests, syntax checks, both builds and 0.12.1 VSIX packaging pass.
-The installed VSIX supporting-note regression passes (mouse hover/focus/Enter,
+All 272 unit tests, syntax checks, both builds and 0.12.2 VSIX packaging pass.
+The earlier 0.12.1 installed VSIX supporting-note regression passes (mouse hover/focus/Enter,
 nested/Back, dismissal, pause, narrow layout, annotation and scene cleanup).
 The standalone synthetic regression verifies one-touch activation, keyboard/mouse
 mode changes and that the preview cannot cover its link.
@@ -247,15 +247,59 @@ Local and live Cloudflare browser runs traverse all 144 actual beats, open all 2
 supporting targets (including Canvas), decode all 44 assets, observe four distinct
 frames from each of four animated WebP files, restore saved position/preferences,
 and exercise real-time chat and 390px/320px emulated touch. There are no browser
-errors, failed resource requests or external content requests. The final upload
-adds only unchanged software notices to the fully browser-tested deployment; all
-prior files are byte-identical. Certificate-validated HTTPS verification compares
+errors, failed resource requests or external content requests. The current 0.12.2 upload includes the following and theme repairs described
+below and has its own full live-book and layout regression runs.
+Certificate-validated HTTPS verification compares
 all 75 served files with the final build, including those added notices; wrapper
 headers/redirects and real 404s are checked separately.
 
 No actual-device or human listening results are claimed. The production hostname,
 DNS and Ghost link await approval and remain untested. The full export is about
 102 MB because original artwork/animation bytes are preserved. Source fixes and
-the 0.12.1 note-activation fix remain review candidates, not a release.
+the 0.12.2 note/follow/theme fixes remain review candidates, not a release.
 Detailed summary: `test/evidence/skip-publication.json`. Full build inventory,
 ZIP hashes, browser/HTTP reports and screenshots stay beside the private build.
+
+## Follow/theme feedback — current 0.12.2 preview
+
+Ted clarified that manual scrolling works and automatic following fails. The
+normal front-matter Continue → Introduction → Next scene path reproduced this:
+the document-turn adapter deactivated following during loading and never
+reactivated it after committing the scene. Contents-only traversal hid that gap.
+The reader now reactivates an inactive follower after a source commit while
+retaining existing active state. Completed Previous and static matter start at
+the top. Upward wheel/touch scrolling suspends following while more content
+appears; **Follow story ↓** resumes it. End controls remain reachable manually.
+
+The black popout was the hover preview's hard-coded dark fallback combined with
+inherited near-black light-theme text. It now derives both colours from the
+reader palette. The reading panel already used the page palette; its bounds,
+article scrolling and background-position preservation are explicitly tested.
+The observed text contrast is 14.45:1 light / 13.85:1 dark.
+
+Repeat the exact full-book regression over the current HTTPS preview:
+
+```sh
+/tmp/skip-validation/bin/python tools/story-teller/test/skip-reader-layout.py \
+  '/home/thawkins/Documents/Publication Builds/skip-preview-0.12.2-review-20261028' \
+  https://cfc10c44.murmuration-skip.pages.dev cloudflare
+```
+
+Six live cases pass: desktop 1100px and emulated touch at 390px/320px, each in
+light/dark. Tests use real wheel/touch points, virtual playback time, ongoing
+content during rereading, Follow resumption, Previous within/across scenes,
+manual matter scrolling, end-control access and independent long-note scrolling.
+Full 144-beat playback and 75-file HTTPS verification also pass on this build.
+This remains automated Chrome/Linux coverage, not actual iPad/Safari testing.
+
+An optional VS Code follow sweep failed its exact hide/return pixel tolerance
+on both the 0.12.1 baseline (21px) and an intermediate 0.12.2 candidate (41px).
+No complete native-follow pass is claimed for 0.12.2. This separate, baseline
+reproducible host limitation is recorded; exported-web regression evidence is
+used for this preview. Evidence: `test/evidence/skip-reader-layout.json`.
+
+Tomorrow, open the updated preview or refresh the stable branch alias. Older
+hash-based preview URLs deliberately retain older builds. Check the normal
+Continue/Next scene route, scroll back during playback and use Follow story,
+then open a long note in the theme you normally use and read/scroll to its end.
+Production, DNS and Ghost still require Ted's approval.

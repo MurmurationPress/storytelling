@@ -12,7 +12,7 @@ to learn whether readers enjoy the presentation before investing in a shared
 architecture. Ghost remains the main website with a link to the reader. No
 shared multi-book renderer, accounts, payments or new platform is authorised.
 
-**Review preview:** https://c548539c.murmuration-skip.pages.dev/skip/
+**Review preview:** https://cfc10c44.murmuration-skip.pages.dev/skip/
 
 **Proposed production address:** `https://read.murmurationpress.co.uk/skip/`.
 Ted requested Cloudflare static hosting subject to inspecting the existing
@@ -30,7 +30,7 @@ preparation task.
 
 **Prepared export:** 14 scenes / 144 beats, both matter pages, 23 supporting
 notes, 44 unique image assets, zero final export warnings. The reader runtime is
-0.12.1 review candidate (`fa09c67`), based on accepted 0.12.0. Animated WebP bytes are retained. The current book
+0.12.2 review candidate (`6239345`), based on accepted 0.12.0. Animated WebP bytes are retained. The current book
 has no authored type-out blocks; the reader retains that capability and sound
 controls without adding content. Timing/prose settings are resolved by the
 existing exporter; changing speed remains a reader preference (1× default).
@@ -48,3 +48,22 @@ keeps private snapshots/reports beside, never inside, the public upload. Book te
 and artwork are not committed to the public tooling repository. Automated browser
 checks remain distinct from actual-device or human listening observations. See
 that guide and the publication validation summary for results and limitations.
+
+## Reported scroll-follow and supporting-preview problems
+
+Ted clarified that manual scrolling works while automatic following fails. The
+normal front-matter → introduction → story route reproduced an inactive follower
+after a document turn. The 0.12.2 review build reactivates it when the source
+snapshot commits, preserves rereading suspension/Follow story and keeps Previous
+and static matter at the top. The black hover popout used a dark fallback with
+dark light-theme text; it now uses the reader's current palette. The reading
+panel's bounds/independent scrolling are checked in both themes.
+
+Six local/live exported-book cases pass at desktop/390px/320px in light/dark,
+including actual wheel/emulated touch points, new content while rereading and
+Follow resumption. The full 144-beat live sweep and 75-file HTTPS comparison pass
+again. Actual device/Safari and human listening remain unverified. An optional
+VS Code hide/return pixel drift also reproduces on the previous baseline and is
+recorded as a separate native-test limitation. See the procedure/results.
+The current review URL above supersedes the older immutable preview URLs;
+production/DNS/Ghost remain untouched pending approval.

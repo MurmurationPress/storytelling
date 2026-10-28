@@ -323,3 +323,15 @@ untouched. The publication-blocking note-tap/overlap fix is a 0.12.1 review
 candidate; no reader redesign, timing change or licence change is introduced.
 Local/live automated checks are recorded separately from actual-device evidence.
 See [[Skip Web Publication]] and the linked procedure before approving production.
+
+### Skip preview feedback — follow/theme repairs for overnight review
+
+Ted clarified that manual scrolling works while automatic follow fails, and
+reported a black supporting popout. He authorises continued independent testing
+and reversible fixes while he is away; production, DNS and Ghost remain excluded.
+Both reports are reproduced in the full-book export. The 0.12.2 candidate restores
+following after document handoff, retains scroll-back suspension/Follow story,
+and themes hover previews to match the page. Explicit reader-theme and note
+scrolling checks cover desktop and narrow emulation; no actual-device acceptance
+is inferred. The current review is https://cfc10c44.murmuration-skip.pages.dev/skip/ .
+The prior actual/native observation limits remain in the validation record.
