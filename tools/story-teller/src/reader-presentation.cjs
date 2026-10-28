@@ -2,6 +2,7 @@
 const { matterScene } = require('./matter-presentation.cjs');
 const { parseScene } = require('./parser.cjs');
 const { beatAtOffset } = require('./structure.cjs');
+const { readerSpeed } = require('./reader-speed.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
 const { graphemes } = require('./typeout.cjs');
@@ -12,7 +13,7 @@ function createReader(api) {
 const sceneAutoplay = new SceneAutoplay();
 let needsAudioGesture = false;
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches });
+const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches, playbackSpeed: readerSpeed(api.getState()?.playbackSpeed) });
 const sound = new TypeoutSound();
 let muted = Boolean(api.getState()?.muted);
 let autoplayOnTurn = api.getState()?.autoplayOnTurn !== false;
@@ -76,11 +77,12 @@ function controls() {
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
   document.getElementById('enable-sound').hidden = isMatter || !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
+  document.getElementById('playback-speed').value = String(player.playbackSpeed);
   document.getElementById('autoplay').checked = autoplayOnTurn;
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
-  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn });
+  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
 }
 function imageElement(src, alt, inline = false) {
   const image = document.createElement('img');
@@ -328,6 +330,10 @@ document.getElementById('mute').addEventListener('click', () => {
   muted = !muted; api.postMessage({ type: 'mute-preference', muted });
   if (!muted && player.phase === 'playing') unlockSound(); render();
 });
+document.getElementById('playback-speed').addEventListener('change', event => {
+  player.setPlaybackSpeed(Number(event.target.value));
+  api.postMessage({ type: 'speed-preference', playbackSpeed: player.playbackSpeed });
+});
 document.getElementById('autoplay').addEventListener('change', event => {
   autoplayOnTurn = event.target.checked;
   if (!autoplayOnTurn) sceneAutoplay.cancel();
@@ -386,6 +392,9 @@ api.onMessage(async event => {
     }
     return;
   }
+  if (message?.type === 'speed-preference') {
+    player.setPlaybackSpeed(message.playbackSpeed); return;
+  }
   if (message?.type === 'mute-preference' && typeof message.muted === 'boolean') {
     muted = message.muted; render(); return;
   }
@@ -411,6 +420,7 @@ api.onMessage(async event => {
   supportingVersion = message.supportingVersion ?? -1;
   supportingDiagnostics = message.supporting?.diagnostics || [];
   notes.links = message.supporting?.links || {};
+  if ('playbackSpeed' in message) player.setPlaybackSpeed(message.playbackSpeed);
   if (typeof message.muted === 'boolean') muted = message.muted;
   if (typeof message.autoplayOnTurn === 'boolean') autoplayOnTurn = message.autoplayOnTurn;
   media = prepared;

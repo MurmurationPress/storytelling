@@ -487,3 +487,47 @@ screen, generated Contents document, progress-saving system or EPUB export.
    notes and narrow widths. Empty matter must be absent from the exported reader.
 
 Automated/native evidence and platform limits are recorded in RESULTS.md.
+
+## Reader playback speed (issue #13; accepted by Ted)
+
+The preview and exported web reader offer **Playback speed**: 0.5×, 0.75×,
+**1× (default)**, 1.25× and 1.5×. Use the labelled native select with keyboard,
+mouse or touch. It wraps with the controls at narrow widths. Smaller values
+are slower: 0.75× gives about one-third more reading time; 0.5× doubles it.
+
+The shared player divides calculated milliseconds by the selected multiplier,
+after applying the existing authoring baseline and bounds:
+
+- Prose: book/scene pacing on/off and its bounded paragraph reading interval.
+  Speed does not enable paragraph pacing when the author left it off.
+- Chat: bounded automatic delivery delay, including authored `@pace`.
+- Type-out: grapheme reveal intervals from authored `@speed` (or its default),
+  for literal YAML and formatted annotations.
+
+Explicit `@delay` and `@pause`, including their remaining active time, are
+unchanged. Zero stays zero. The 600ms delivery/read tick, sound pitch/texture
+and browser-owned animated-image frames are unchanged. Authoring validation
+bounds are unchanged; effective reader intervals can extend beyond the baseline
+bounds (for example an 800ms automatic chat delay becomes 1600ms at 0.5×).
+
+Changes take effect in the current calculated wait/reveal without restarting,
+repeating text or resetting progress. Remaining time is converted proportionally;
+a half-finished 1000ms baseline wait has 1000ms left after switching from 1× to
+0.5×. Revealed graphemes stay visible. Paused playback stays paused, including
+after reading a supporting note; Resume applies the chosen speed. Replay retains
+the preference. Manual turns, Autoplay, mute and reduced motion retain their
+existing meanings. Calculated deadlines carry forward rather than accumulating
+callback overhead; explicit waits always start with their full authored duration.
+
+Preview stores `storyTeller.playbackSpeed` in VS Code global reader state alongside
+autoplay/mute. Web reading stores it in the existing publication-specific browser
+preference record. Neither writes manuscript, project manifest or adaptation
+settings. Missing/invalid values fall back to 1×; blocked browser storage permits
+session-only reading. Preferences persist across scenes and reopening when storage
+is available. Browser storage is specific to the browser/profile and origin.
+
+Ted accepts the feature: “0.75 works best for me.” and “Checked all three tests,
+working well.” 0.75× is his personal preference; 1× remains the compatibility
+default. This report does not identify specific device/browser versions or
+establish exhaustive platform or human audio coverage. See RESULTS.md for the
+separate acceptance and automated validation records.

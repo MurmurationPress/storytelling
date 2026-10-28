@@ -1,0 +1,31 @@
+{
+  "version": "0.12.0",
+  "vsix": "story-teller-0.12.0.vsix",
+  "vsixSha256": "d4c6bab7361f70d52ac1d6e3a57e54167f47ff726caf41c8e26088f3406d59f1",
+  "export": "local-web-preview-speed",
+  "exportFiles": {
+    "content/bbccb9c002d5ed5994789fd8d38a8af3825f7691e10c44cac9b07dc54b15c2ee.json": "825d5540ed9efc863eca47adb1a1995fb51b171699984f17d974d15e2e18d773",
+    "content/d9298a10d1b0735837dc4bd85dac641b0f3cef27a47e5d53a54f2f3f5b2fcffa.json": "ccfd6e0d3933477a5f77ccbad382cd4943d931f852b7bb1fcf35385c52182a83",
+    "index.html": "e1de4a9abcee00ce6727dce433dd3f436d53c9825cbe1ff2532eaf796412cda2",
+    "licences/argparse.txt": "ab745c5061d1dea43a3885e5b4b6befc7e983954954775c5736debeefcdfd89b",
+    "licences/entities.txt": "cb992345949ccd6e8394b2cd6c465f7b897c864f845937dbf64e8997f389e164",
+    "licences/linkify-it.txt": "95e3f7f0e81e9b4940cdfaa1956aaff5e4dfd2fb1565041e7c78eb9a606f23e3",
+    "licences/markdown-it.txt": "792c48c5a849a15fdf9e37e8bcf9e6d1dd13b32b46c642a748a0a46a9919d473",
+    "licences/mdurl.txt": "6b6a356c4337e2446841f30f3cdf7e7023af8c5260b5e347c0f987b9f6aa2644",
+    "licences/punycode.js.txt": "483acb265f182907d1caf6cff9c16c96f31325ed23792832cc5d8b12d5f88c8a",
+    "licences/uc.micro.txt": "483acb265f182907d1caf6cff9c16c96f31325ed23792832cc5d8b12d5f88c8a",
+    "publication.json": "3c905ae4e5c0e9d3fc8bb0c57fcb5c9815383cdda4a60faf41f34ebf85e3af49",
+    "reader.css": "efc141b99d1021c91a92d60d570d6e03d9e2a535009576bbaa5f9045280cc764",
+    "reader.js": "9531e554004eb0cb6310337821f0477c83744786643effdb3f3f23137b4f0311",
+    "web.css": "fcd3015a61b13e2eb944a7854c5fd18aeb885f125f4937c508787c047d27bead"
+  },
+  "checks": {
+    "tests": 271,
+    "syntax": "pass",
+    "build": "pass",
+    "package": "pass",
+    "vsixRuntimeMatchesWorkingTree": true
+  },
+  "base": "cb8e9fb",
+  "releasePublished": false
+}

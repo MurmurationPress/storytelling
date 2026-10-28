@@ -1,0 +1,55 @@
+{
+  "mode": "installed VSIX",
+  "checks": [
+    "all five actual select values and temporal paragraph pacing",
+    "supporting note pauses; speed change and close leave playback paused",
+    "paused change stays paused and retains proportional progress on resume",
+    "active speed change retains current paragraph",
+    "active Unicode reveal preserves text, speed change keeps one audio voice, paused reveal and cleanup",
+    "chat completes using authored brisk baseline",
+    "active explicit wait duration unchanged by speed change",
+    "native keyboard selection",
+    "VS Code global reader preference survives scene selection; narrow native layout; source unchanged"
+  ],
+  "timings": [
+    {
+      "speed": 0.5,
+      "expected": 2000,
+      "observed": 2009
+    },
+    {
+      "speed": 0.75,
+      "expected": 1333.3333333333333,
+      "observed": 1351
+    },
+    {
+      "speed": 1,
+      "expected": 1000,
+      "observed": 1010
+    },
+    {
+      "speed": 1.25,
+      "expected": 800,
+      "observed": 812
+    },
+    {
+      "speed": 1.5,
+      "expected": 666.6666666666666,
+      "observed": 668
+    }
+  ],
+  "bounds": {
+    "width": 205,
+    "overflow": 0,
+    "control": {
+      "x": 36,
+      "y": 328,
+      "width": 100,
+      "height": 44,
+      "top": 328,
+      "right": 136,
+      "bottom": 372,
+      "left": 36
+    }
+  }
+}

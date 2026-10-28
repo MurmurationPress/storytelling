@@ -6,6 +6,15 @@ created: 2026-10-21
 
 # Story Teller
 
+**Playback-speed acceptance (2026-10-28, PR #22 / issue #13):** Ted reports,
+“0.75 works best for me.” and “Checked all three tests, working well.” This
+accepts the playback-speed feature at `28d9fc9823f023961e3dc137e24693e80e094e4d`;
+0.75× is his personal preference. **1× remains the compatibility default.**
+The report does not identify the three tests individually or establish specific
+device/browser versions, exhaustive platform coverage or human audio findings.
+Final review/integration is authorised; no release or deployment is authorised.
+See the [validation records](../tools/story-teller/RESULTS.md).
+
 **Chat-wikilink acceptance (2026-10-27):** Ted tested the PR #21 candidate
 (`c0338666fc3a44ddf71b115db346b95c172ead73`) in his actual Story Teller project
 and reports: “That works well. Will be very useful.” This accepts the desktop

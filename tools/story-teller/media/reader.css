@@ -81,3 +81,8 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .supporting-panel img { display:block; max-width:100%; max-height:65vh; height:auto; object-fit:contain; }
 .supporting-panel pre { white-space:pre-wrap; overflow-wrap:anywhere; }
 .supporting-warning { white-space:pre-wrap; font-size:.85rem; color:var(--vscode-editorWarning-foreground,#da8); }
+
+.reader-preference select { font: inherit; color: inherit; background: var(--vscode-input-background, Canvas); min-height: 44px; max-width: 100%; }
+.reader-preference { white-space: nowrap; }
+.reader-preference { flex-wrap: wrap; max-width: 100%; }
+.reader-preference select { min-width: 0; }

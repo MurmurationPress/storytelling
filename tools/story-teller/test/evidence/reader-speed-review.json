@@ -1,0 +1,228 @@
+{
+  "date": "2026-10-28",
+  "acceptedHead": "28d9fc9823f023961e3dc137e24693e80e094e4d",
+  "baseMain": "cb8e9fb2431060d749ddbba7776a6f1d5af31f87",
+  "acceptance": {
+    "quotes": [
+      "0.75 works best for me.",
+      "Checked all three tests, working well."
+    ],
+    "personalPreference": 0.75,
+    "compatibilityDefault": 1,
+    "individualTestsNotIdentified": true
+  },
+  "findings": {
+    "materialBlockers": 0,
+    "runtimeChanges": false,
+    "testsChanges": false,
+    "documentationAndEvidenceOnly": true,
+    "originalVsixMatchedRecordedHash": true,
+    "originalPackagedRuntimeFilesMatched": 42
+  },
+  "validation": {
+    "tests": {
+      "total": 271,
+      "passed": 271,
+      "failed": 0
+    },
+    "syntax": "pass",
+    "build": "pass",
+    "package": "pass",
+    "vsixAllExistingPackagedFilesMatched": 381
+  },
+  "installer": {
+    "file": "story-teller-0.12.0.vsix",
+    "sha256": "debb4b86871b4075f487a0646602f4da41580629abca062ef31f6857b36169ca"
+  },
+  "runtimeFiles": {
+    "dist/player.js": "4bebcc57e69287ec3a90e572f8bfe0b60b1ffe914f251e904544fff30fae9ff6",
+    "dist/web-reader.js": "9531e554004eb0cb6310337821f0477c83744786643effdb3f3f23137b4f0311",
+    "media/reader.css": "efc141b99d1021c91a92d60d570d6e03d9e2a535009576bbaa5f9045280cc764",
+    "media/story-teller.svg": "520a649bceb972fc45025c43bd1957dfeb9737ce3e8248c5aa2c99e0cc8174a5",
+    "media/web.css": "fcd3015a61b13e2eb944a7854c5fd18aeb885f125f4937c508787c047d27bead",
+    "media/web.html": "e1de4a9abcee00ce6727dce433dd3f436d53c9825cbe1ff2532eaf796412cda2",
+    "package-lock.json": "5aa56049a32d0512b6d07bf88900a3c1eb8212cb7a2b1ad2cca8b3e99b7f676f",
+    "package.json": "b7f661b4601833eb7d27835045df8646c6928c254eb0da4b60c5db984a893e76",
+    "src/annotation.cjs": "1d59baa8704143bbc2fc62af1539894114b98c0116e90e91c5bf6c35665a1ff8",
+    "src/book-matter.cjs": "af7824ba3cae6077e840513515b2e3b83de14be758442c3fbcb142f6a8572a58",
+    "src/conversion-command.cjs": "eadc51600ab34106140c91984554a600c89d75f42ffc74d1b98175bc9fbb9789",
+    "src/convert-callouts.cjs": "21dfcac3f27cde92e6f4ca9b6fdc0386fd33ee1095bf348a13d33e11561bcb31",
+    "src/convert-scene-metadata.cjs": "9466bdfe636d61daab4a0bf231e2d5995fa4e9ef92b3413e845f1beb8c33d166",
+    "src/convert.cjs": "7b962cdb0676829eb83a67db330da073ab61e9902d6836be620372185ce4a475",
+    "src/extension.cjs": "c46b1fc49342f403b5183a3236b51b052ab4773b5c36d4682d24e89035a7b68d",
+    "src/follow.cjs": "f0856d739324cfa9b231bc1db74608dcbc39e57e4bb1c44b9eb952d3dd6bffa3",
+    "src/import-assets.cjs": "d5ef714ce412ba97d67e149ed350629ee734d74778df2f34dbbf7199be93b515",
+    "src/import-command.cjs": "d48b67d9b8e2053e38a2b4308b14b041065fe105f22cd1a4952a44d197d5a551",
+    "src/insert-command.cjs": "913af071aecd3939dcc2a9126fc8c82c97dc9de7f96e7fd596fb2eaa58b255fa",
+    "src/insert.cjs": "42a68722d8ebdaaaceab1aeedae37066ad891c7925a0b0958a7681853deb2193",
+    "src/intellisense-command.cjs": "cdb23d0b3ffe159447ad1b5d789af71e08d1f32785e91bfcbd9157722f0d754d",
+    "src/intellisense.cjs": "5eb718fb68678f2b45f508be8d93b40c569a4bb9f8d21c8ae3d071ee4b65038d",
+    "src/manuscript-import.cjs": "bb300855d02f2bb52862f0a5e36ccd23d9e165de1229abfe6f3361af31fb6b4a",
+    "src/markdown.cjs": "b6a4f12b4271763b083d2cd12d2102ed3a12937d78e243f51fb07a3796df03bf",
+    "src/matter-command.cjs": "e255e665d4d46a705d07c7b8e860c8b0ac0f92a5886ce3855468524808ee2aa3",
+    "src/matter-presentation.cjs": "0bc58d82c95fd649bf1d41e7cfb89ac6b6a9f599ad43be18e76b33957d1cc8dd",
+    "src/media.cjs": "16ffe87feed1363ce082c9e9320c0ed4e7a9d2c6f20fdeb4f6a3bc992e47c359",
+    "src/pace.cjs": "baad24380250f5b638ae7dd45528e5844058c67916e676161996c679f643a6fc",
+    "src/pacing-command.cjs": "f9a884c93a3f033aa0e87cf7d7aa689d7999bbb058f58cc644409b229ee464b1",
+    "src/pacing-settings.cjs": "50d870bd7071ff5b5cb42afb3d045144d19fea0b4058e4fde1a3445b1ed7d938",
+    "src/parser.cjs": "e8a5be51ec02a72c29bb32e690119bf1f27f431a97ecbebceef4fb11e5074ec0",
+    "src/player.cjs": "b813b20f2baf8680d37c910d8805873c8dc0f6bd21e7b24c27013fed39b592d3",
+    "src/prose-pacing.cjs": "430e93cb84c5adcdeaca27adf8f4508eff141e2b97551a3553bcbeb0b772f904",
+    "src/reader-presentation.cjs": "8572e862be40e61d2550c821b6e5c5c91a2444d4d307d0b1d00316e802446889",
+    "src/reader-speed.cjs": "19589ab231c916b10f20bd89623b6c8b118fe8040d48eea0cdf0d63485ecb88d",
+    "src/scene-heading.cjs": "2879237fab773b750d6b59c7261e7cab9384150bffb3b3be2160defd3c8e2eb7",
+    "src/scene-navigation.cjs": "69fe980d550e413d8e4eb4338619e61d43a698822193844ac3368a370f15d015",
+    "src/settings.cjs": "3b5fde3b9a21b4b3218c8b3e8bdb2d16296ac9368bce0b89474086b4a17c1c4b",
+    "src/sound.cjs": "8ba8a885a6cb5bf4dde2847cafbb118a5b2b2f9ff17826203d3d83267ffc3d0a",
+    "src/structure.cjs": "36ac1b8eec127ca31f08fb4829e306dd1ec7bd0cab7b051fc70369fe21e945b1",
+    "src/supporting-content.cjs": "3cad9c763832d473d1341b20eefe5cbd06f6f341ef8358236ed9eb1603066fc5",
+    "src/supporting-host.cjs": "08c338060bd792f60ce21a35bd3c2f2363723dbcb9ec3667fdb69bc432e89ed4",
+    "src/supporting-reader.cjs": "6640d63ef6cec33e9d1fe41c52be529fbc0a5bc8c22523f1a80f726b4fda03a6",
+    "src/typeout.cjs": "d6793ad2a65ab61e3e8c4be25dbb533fbcf71db3ff999147ba271669582d5f68",
+    "src/web-entry.cjs": "8f5c28e9da18fc1fe8358f6f7e67b7d569eba6032e395ad7451b9969d96d11ff",
+    "src/web-export-command.cjs": "3ecdebed29bf41542108f184f67006f11c5d147c39012fcef725170c3c3c5135",
+    "src/web-export.cjs": "186a35b976cc1489b054aaf6bfecccd92b03738499cfc11e2803c5a4ed00028e",
+    "src/webview.cjs": "6bf5c5e0b351b50fef195749e941577cdae4071da84a610299ce5ec20edee83b"
+  },
+  "priorDevelopmentHostEvidence": "reader-speed-development.json (same runtime; not a new run)",
+  "repeatedInstalledVsix": {
+    "mode": "installed VSIX",
+    "checks": [
+      "all five actual select values and temporal paragraph pacing",
+      "supporting note pauses; speed change and close leave playback paused",
+      "paused change stays paused and retains proportional progress on resume",
+      "active speed change retains current paragraph",
+      "active Unicode reveal preserves text, speed change keeps one audio voice, paused reveal and cleanup",
+      "chat completes using authored brisk baseline",
+      "active explicit wait duration unchanged by speed change",
+      "native keyboard selection",
+      "VS Code global reader preference survives scene selection; narrow native layout; source unchanged"
+    ],
+    "timings": [
+      {
+        "speed": 0.5,
+        "expected": 2000,
+        "observed": 2001
+      },
+      {
+        "speed": 0.75,
+        "expected": 1333.3333333333333,
+        "observed": 1349
+      },
+      {
+        "speed": 1,
+        "expected": 1000,
+        "observed": 1003
+      },
+      {
+        "speed": 1.25,
+        "expected": 800,
+        "observed": 800
+      },
+      {
+        "speed": 1.5,
+        "expected": 666.6666666666666,
+        "observed": 674
+      }
+    ],
+    "bounds": {
+      "width": 205,
+      "overflow": 0,
+      "control": {
+        "x": 36,
+        "y": 328,
+        "width": 100,
+        "height": 44,
+        "top": 328,
+        "right": 136,
+        "bottom": 372,
+        "left": 36
+      }
+    }
+  },
+  "repeatedHttpExport": {
+    "mode": "synthetic export over HTTP, headless Chrome Linux",
+    "checks": [
+      "all five actual select values and temporal paragraph pacing",
+      "supporting note pauses; speed change and close leave playback paused",
+      "paused change stays paused and retains proportional progress on resume",
+      "active speed change retains current paragraph",
+      "active Unicode reveal preserves text, speed change keeps one audio voice, paused reveal and cleanup",
+      "chat completes using authored brisk baseline",
+      "active explicit wait duration unchanged by speed change",
+      "browser preference survives reload",
+      "native keyboard selection and 320px touch-emulated layout",
+      "invalid and unavailable browser storage fall back safely; playback remains usable",
+      "dynamic reduced motion completes scaled annotation reveal",
+      "emulated touch targets native select"
+    ],
+    "timings": [
+      {
+        "speed": 0.5,
+        "expected": 2000,
+        "observed": 2033
+      },
+      {
+        "speed": 0.75,
+        "expected": 1333.3333333333333,
+        "observed": 1350
+      },
+      {
+        "speed": 1,
+        "expected": 1000,
+        "observed": 1012
+      },
+      {
+        "speed": 1.25,
+        "expected": 800,
+        "observed": 799
+      },
+      {
+        "speed": 1.5,
+        "expected": 666.6666666666666,
+        "observed": 678
+      }
+    ],
+    "bounds": {
+      "width": 320,
+      "overflow": 0,
+      "control": {
+        "x": 119.28125,
+        "y": 229.53125,
+        "width": 99,
+        "height": 44,
+        "top": 229.53125,
+        "right": 218.28125,
+        "bottom": 273.53125,
+        "left": 119.28125
+      }
+    },
+    "unverified": [
+      "actual touch device",
+      "iPad/Safari",
+      "human reading comfort",
+      "human audio listening"
+    ]
+  },
+  "githubCiAtAcceptedHead": {
+    "workflows": {
+      "total_count": 0
+    },
+    "runs": {
+      "total_count": 0
+    },
+    "checks": {
+      "total_count": 0
+    },
+    "commitStatuses": 0,
+    "requiredStatusContexts": []
+  },
+  "integration": "Final documentation head, expected-head merge, tree equality and post-merge checks are reported on PR #22.",
+  "limits": [
+    "No specific device/browser versions inferred from acceptance",
+    "No exhaustive platform or screen-reader coverage",
+    "Touch emulation remains separate from actual-device evidence",
+    "Automated oscillator checks are not human listening",
+    "No deployment or release"
+  ]
+}

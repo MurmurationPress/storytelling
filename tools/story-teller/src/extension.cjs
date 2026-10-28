@@ -10,6 +10,7 @@ const { registerPacing, projectFor, projectFile } = require('./pacing-command.cj
 const { resolveSettings } = require('./pacing-settings.cjs');
 const { prepareSupporting, loadForPreview, supportingSource, watchSupporting } = require('./supporting-host.cjs');
 const { inside } = require('./media.cjs');
+const { readerSpeed, storedReaderSpeed } = require('./reader-speed.cjs');
 const { autoplayPreference } = require('./scene-navigation.cjs');
 const { randomBytes } = require('node:crypto');
 const { registerMatter } = require('./matter-command.cjs');
@@ -35,6 +36,7 @@ function activate(context) {
   registerIntelliSense(vscode, context);
   const previews = new Map();
   let activePreview = null, managedReader = null;
+  let preferredSpeed = storedReaderSpeed(context.globalState);
   let preferredMute = Boolean(context.globalState.get('storyTeller.muted', false));
   let preferredAutoplay = autoplayPreference(context.globalState);
   const openPreview = async (thisBeat = false, sceneEditor = null, current = () => true, previousDocument = false) => {
@@ -102,7 +104,7 @@ function activate(context) {
       return `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'nonce-${nonce}'; style-src ${panel.webview.cspSource}; img-src ${panel.webview.cspSource}; connect-src 'none'; font-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none';">
 <meta name="viewport" content="width=device-width, initial-scale=1"><title>Story Teller</title><link rel="stylesheet" href="${style}"></head><body data-reader-instance="${nonce}">
-<nav aria-label="Story controls"><button id="previous" type="button">Previous</button><button id="next" type="button">Next</button><button id="restart" type="button">Restart</button><button id="play" type="button">Play</button><button id="pause" type="button">Pause</button><button id="replay" type="button">Replay Beat</button><button id="reveal" type="button" hidden>Reveal Immediately</button><label class="reader-preference"><input id="autoplay" type="checkbox" checked>Autoplay</label><button id="enable-sound" type="button" hidden>Enable sound</button><button id="mute" type="button" aria-pressed="false">Mute sound</button><button id="show-source" type="button">Show Beat in Source</button><span id="status" role="status"></span></nav>
+<nav aria-label="Story controls"><button id="previous" type="button">Previous</button><button id="next" type="button">Next</button><button id="restart" type="button">Restart</button><button id="play" type="button">Play</button><button id="pause" type="button">Pause</button><button id="replay" type="button">Replay Beat</button><button id="reveal" type="button" hidden>Reveal Immediately</button><label class="reader-preference">Playback speed <select id="playback-speed" aria-label="Playback speed"><option value="0.5">0.5×</option><option value="0.75">0.75×</option><option value="1" selected>1× (default)</option><option value="1.25">1.25×</option><option value="1.5">1.5×</option></select></label><label class="reader-preference"><input id="autoplay" type="checkbox" checked>Autoplay</label><button id="enable-sound" type="button" hidden>Enable sound</button><button id="mute" type="button" aria-pressed="false">Mute sound</button><button id="show-source" type="button">Show Beat in Source</button><span id="status" role="status"></span></nav>
 <p id="warnings" role="status"></p><main id="beat" aria-label="Current story beat" tabindex="0"></main><button id="follow-story" type="button" hidden>Follow story ↓</button><script nonce="${nonce}" src="${script}"></script></body></html>`;
     };
     panel.webview.html = entry.makeHtml();
@@ -125,7 +127,7 @@ function activate(context) {
         entry.projectDocuments = documents; entry.projectIndex = docIndex; entry.projectRoot = project && path.dirname(project.file); entry.isMatter = matter;
         entry.supportIndex = supporting.index; entry.setSupportingWatch(supporting.index);
         entry.sentSource = source;
-        panel.webview.postMessage({ type: 'source', instance, source, uri: key, revision: current, targetOffset: requestedOffset, sceneStart: startScene, sceneAutoplay: startScene && entry.sceneMayAutoplay && panel.visible, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
+        panel.webview.postMessage({ type: 'source', instance, source, uri: key, revision: current, targetOffset: requestedOffset, sceneStart: startScene, sceneAutoplay: startScene && entry.sceneMayAutoplay && panel.visible, playbackSpeed: preferredSpeed, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
           matter, documentPrevious: startScene && entry.previousDocument, documentNavigation: { previous: docIndex > 0, next: docIndex >= 0 && docIndex < documents.length - 1 }, supporting: { links: supporting.links, diagnostics: supporting.diagnostics }, supportingVersion: supportVersion,
           prosePacing: pacing.enabled, pacingSource: pacing.source, pacingWarning: pacingWarning || pacing.warning || null, ...prepared });
       }
@@ -195,6 +197,10 @@ function activate(context) {
         entry.requestedOffset = undefined;
         const start = entry.sceneStart; entry.sceneStart = false;
         await entry.send(vscode.workspace.textDocuments.find(doc => doc.uri.toString() === entry.key && !doc.isClosed) || entry.document, target, start);
+      } else if (message?.type === 'speed-preference') {
+        preferredSpeed = readerSpeed(message.playbackSpeed);
+        try { await context.globalState.update('storyTeller.playbackSpeed', preferredSpeed); } catch { /* Keep the session preference when storage is unavailable. */ }
+        for (const other of previews.values()) if (other !== entry) other.panel.webview.postMessage({ type: 'speed-preference', playbackSpeed: preferredSpeed });
       } else if (message?.type === 'mute-preference' && typeof message.muted === 'boolean') {
         preferredMute = message.muted;
         void context.globalState.update('storyTeller.muted', preferredMute);

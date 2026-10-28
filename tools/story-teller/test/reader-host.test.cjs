@@ -107,3 +107,15 @@ test('root replacement before first ready never posts the old source or starts t
  await h.ready(old);assert.equal(old.messages.some(m=>m.type==='source'),false);
  await h.ready(current);assert.equal(current.messages.at(-1).uri,'file:///different/scenes/new.md');
 });
+
+test('speed uses global reader preference and survives replacement without authoring edits',async t=>{
+ const h=host();t.after(()=>h.panels.forEach(p=>p.dispose()));
+ await h.commands.get('storyTeller.previewScene')();const old=h.panels[0];await h.ready(old);
+ assert.equal(old.messages.find(m=>m.type==='source').playbackSpeed,1);
+ await old.receive({type:'speed-preference',playbackSpeed:.75,instance:h.instance(old)});
+ assert.deepEqual(h.updates.at(-1),['storyTeller.playbackSpeed',.75]);
+ await h.integration.openScene(h.editor(h.doc('/different/scenes/new.md')));const current=h.panels[1];await h.ready(current);
+ assert.equal(current.messages.find(m=>m.type==='source').playbackSpeed,.75);
+ await current.receive({type:'speed-preference',playbackSpeed:99,instance:h.instance(current)});
+ assert.deepEqual(h.updates.at(-1),['storyTeller.playbackSpeed',1]);
+});

@@ -57,3 +57,10 @@ test('hover preview stays pinned under the pointer while the story scrolls',()=>
   Object.assign(reader,{preview:{hidden:false},anchor:{target:'Ted'},pointerInPreview:true,find(){throw Error('Should not reanchor a pinned preview');}});
   assert.doesNotThrow(()=>reader.position());
 });
+
+test('supporting note speed changes retain explicit remaining time and do not resume on close',async()=>{
+ const h=fixture();h.player.play();h.advance(250);
+ await h.reader.open({dataset:{storyTarget:'Ted'}});assert.equal(h.player.phase,'paused');
+ h.player.setPlaybackSpeed(.5);assert.equal(h.player.remaining,750);
+ h.reader.close();assert.equal(h.player.phase,'paused');h.player.play();h.advance(749);assert.equal(h.player.phase,'playing');h.advance(1);assert.equal(h.player.phase,'completed');
+});

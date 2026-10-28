@@ -69,3 +69,25 @@ Try both JANUS links, a nested note/Back and dismissal. Play the chat; turn to t
 `node test/installed-web-export.cjs /absolute/path/story-teller-0.10.1.vsix` installs into a disposable normal VS Code profile, without `--extensionTestsPath` (that mode refuses modal prompts). It uses the supported simple file picker/custom confirmation, waits for extension registration and dialog initialisation, and follows the real command/confirmation to an exported directory. It handles trust for its synthetic project through VS Code's normal UI; it does not disable Workspace Trust. The OS-native file picker is not covered.
 
 For the affected reading handoffs, use `STORY_TELLER_VSIX=... STORY_TELLER_HOST_SCOPE=prose|notes|handoff npm run test:host`, choosing one scope per run. The handoff scope performs 20 cross-root replacements and verifies each committed marker. The driver follows the current live inspector target after a legitimate panel replacement; it never accepts preloaded/hidden content as the reading surface. The notes fixture has an explicit long wait and verifies playback is active before testing Pause-on-panel-open. No author pacing settings are changed.
+
+### Playback speed
+
+The compact **Playback speed** select offers 0.5×, 0.75×, 1× (default), 1.25×
+and 1.5×. Smaller is slower. It adjusts calculated prose intervals, automatic
+chat delivery (after `@pace`), and type-out reveal (after `@speed`). Authored
+`@delay`/`@pause`, delivery ticks, audio pitch and animated-image frames remain
+unchanged. Speed does not turn author-disabled prose pacing on.
+
+Change speed during playback or while paused: visible text and proportional
+calculated progress are retained; paused reading needs Resume. Explicit waits
+keep their remaining time. The preference is stored locally with the existing
+publication reader preferences, never in exported content or authoring files.
+Invalid/missing storage defaults to 1×; unavailable storage leaves the control
+usable for the current session. See the README for the precise timing contract.
+
+Ted accepts playback speed: “0.75 works best for me.” and “Checked all three
+tests, working well.” 0.75× is his personal preference; **1× remains the
+compatibility default**. This report does not individually identify the three
+tests or establish specific device/browser versions, exhaustive platform coverage
+or human audio findings. Automated timing and emulated-touch evidence remain
+separate in RESULTS.md.

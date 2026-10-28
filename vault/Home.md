@@ -47,3 +47,8 @@ Add new ideas where they belong, link them, and retain unresolved alternatives. 
 - [[Book Matter]] — explicit import/upgrade scaffolding and static front/back
   pages; accepted by Ted in PR #17 (“Good, simple deliverable. Happy with that.”).
   No new iPad/Safari or touch coverage is inferred.
+
+**Playback speed accepted (2026-10-28):** Ted reports “0.75 works best for me.”
+and “Checked all three tests, working well.” 0.75× is his reader preference;
+1× stays the compatibility default. See [[Story Teller]] and [[Story Teller Web Reader]]
+for bounded acceptance and review evidence.
