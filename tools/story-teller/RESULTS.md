@@ -923,7 +923,8 @@ open. No release, tag movement or deployment is authorised.
 
 ## 2026-10-28 — Reader playback speed (#13), 0.12.0 candidate
 
-Implementation is awaiting Ted's acceptance. Both surfaces share the timing
+Historical implementation record (acceptance below supersedes its pending status).
+Both surfaces share the timing
 policy/player and labelled native select. Calculated prose/chat/type-out timing
 is divided by the reader multiplier after authored baselines; explicit waits,
 zero durations, ticks, audio pitch and image frames retain their meanings.
@@ -970,7 +971,7 @@ separate from actual-device testing. No new actual iPad/Safari, screen-reader,
 other operating-system or human listening coverage is claimed. Private
 adaptations and unrelated EPUB experiments were not changed.
 
-Acceptance checklist for Ted (PR unmerged; issue #13 open):
+Original acceptance checklist (historical; not a per-item record of Ted's tests):
 
 - [ ] Install 0.12.0 and verify 1× retains familiar presentation.
 - [ ] Read a familiar paced prose/chat passage at **0.75×**: is it comfortable?
@@ -992,3 +993,49 @@ VSIX packaging pass. Packaged runtime files match the validated working tree.
 Serve the latter over HTTP, for example `python3 -m http.server 8765 --bind
 127.0.0.1 --directory tools/story-teller/local-web-preview-speed` from repository
 root. These generated artifacts are ignored rather than committed as a release.
+
+### PR #22 final review and acceptance — 2026-10-28
+
+Ted reports “0.75 works best for me.” and “Checked all three tests, working
+well.” This accepts the feature at `28d9fc9823f023961e3dc137e24693e80e094e4d`;
+0.75× is his personal preference, **1× remains the compatibility default**.
+The three tests are not individually identified. No device/browser versions,
+exhaustive platform coverage or human audio findings are inferred.
+
+The remote head matched the reported accepted commit and base main remained
+`cb8e9fb2431060d749ddbba7776a6f1d5af31f87`. No formal reviews, inline review
+comments or unresolved review threads were present. Repository settings allow
+squash merging; main has no required status contexts. No workflow files are
+configured in this tree. GitHub status/check/run observations are recorded in
+the review evidence; absence of checks is not a CI pass.
+
+Final review found no material blocker. Both readers use the shared speed
+policy, player and presentation. Calculated steps are explicitly marked after
+bounded prose/chat/type-out baselines; authored boundary delays, message delays,
+pauses, zero waits and ticks retain their existing meanings. Active calculated
+changes convert remaining time proportionally without resetting content;
+paused changes do not resume. Generation/cursor guards reject cancelled timers.
+Sound sync retains one voice at a time and stops it on pause, reveal or departure.
+Navigation retains speed and cancels outgoing work. Preference validation rejects
+non-enumerated values; VS Code global reads/writes and browser local storage have
+fallback handling. Native select labels, focus styling, keyboard operation and
+narrow wrapping are unchanged from the accepted candidate. Speed changes have
+no source/manifest authoring write path.
+
+This closeout changes acceptance/review documentation and validation records
+only. Runtime, tests, dependencies, parser and authoring settings remain
+byte-identical to the accepted head. The original VSIX matches its recorded
+SHA-256 and all 42 packaged runtime/manifest files match that head. Thus the
+reported Development Host, installed-VSIX and synthetic HTTP checks apply to
+this final runtime without inventing additional platform observations.
+
+The full 271-test suite, syntax checks, both builds and packaging are repeated
+for closeout. Packaging is rebuilt to include the updated guide. A focused
+installed-VSIX speed run and a fresh synthetic HTTP export run verify the rebuilt
+artifact; results and hashes are in `test/evidence/reader-speed-review.json`.
+The final documentation head is checked again before an expected-head squash
+merge; its entire tree must equal the merged tree. Post-merge tests, syntax,
+build/archive comparison and GitHub check inspection are reported on PR #22.
+Issue #13 closes only after those acceptance criteria and integration checks pass.
+No broader platform certification, manuscript change, release or deployment is
+part of this integration.

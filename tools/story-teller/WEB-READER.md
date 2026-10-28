@@ -85,6 +85,9 @@ publication reader preferences, never in exported content or authoring files.
 Invalid/missing storage defaults to 1×; unavailable storage leaves the control
 usable for the current session. See the README for the precise timing contract.
 
-For Ted's acceptance, compare a familiar passage at 1×, 0.75× and 0.5×; assess
-reading comfort separately from the automated timing measurements. No actual
-iPad or human listening validation is claimed for this speed-control change.
+Ted accepts playback speed: “0.75 works best for me.” and “Checked all three
+tests, working well.” 0.75× is his personal preference; **1× remains the
+compatibility default**. This report does not individually identify the three
+tests or establish specific device/browser versions, exhaustive platform coverage
+or human audio findings. Automated timing and emulated-touch evidence remain
+separate in RESULTS.md.

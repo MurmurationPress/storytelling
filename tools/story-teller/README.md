@@ -488,7 +488,7 @@ screen, generated Contents document, progress-saving system or EPUB export.
 
 Automated/native evidence and platform limits are recorded in RESULTS.md.
 
-## Reader playback speed (issue #13; awaiting Ted's acceptance)
+## Reader playback speed (issue #13; accepted by Ted)
 
 The preview and exported web reader offer **Playback speed**: 0.5×, 0.75×,
 **1× (default)**, 1.25× and 1.5×. Use the labelled native select with keyboard,
@@ -525,3 +525,9 @@ preference record. Neither writes manuscript, project manifest or adaptation
 settings. Missing/invalid values fall back to 1×; blocked browser storage permits
 session-only reading. Preferences persist across scenes and reopening when storage
 is available. Browser storage is specific to the browser/profile and origin.
+
+Ted accepts the feature: “0.75 works best for me.” and “Checked all three tests,
+working well.” 0.75× is his personal preference; 1× remains the compatibility
+default. This report does not identify specific device/browser versions or
+establish exhaustive platform or human audio coverage. See RESULTS.md for the
+separate acceptance and automated validation records.
