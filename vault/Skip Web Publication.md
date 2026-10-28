@@ -1,0 +1,50 @@
+---
+type: publication-preparation
+status: cloudflare-preview-production-approval-pending
+created: 2026-10-28
+---
+
+# Skip Web Publication
+
+**Ted's direction:** prepare The Curious Adventures of Skip using the existing
+standalone Story Teller export, one self-contained book at `/skip/`. The aim is
+to learn whether readers enjoy the presentation before investing in a shared
+architecture. Ghost remains the main website with a link to the reader. No
+shared multi-book renderer, accounts, payments or new platform is authorised.
+
+**Review preview:** https://c548539c.murmuration-skip.pages.dev/skip/
+
+**Proposed production address:** `https://read.murmurationpress.co.uk/skip/`.
+Ted requested Cloudflare static hosting subject to inspecting the existing
+account/deployment arrangements; that inspection and the review deployment are
+now complete. Ted authorises a preview for review; production
+upload, DNS changes and Ghost publication remain subject to his later approval.
+
+**Book source:** committed Stories-Told main `bf92b8e`, plus four target-only
+wikilink repairs at `7c030a1` in [source review PR #1](https://github.com/tedwarddick/Stories-Told/pull/1).
+All displayed words, dialogue, timing, settings, order, matter and artwork are
+preserved. These repairs resolve the PRIME novels, Miranda Stubbs and Jo Ellis
+to their existing notes. Canvas resolves; the final chapter's three illustrations
+are included. Neither source review nor production publication is merged by this
+preparation task.
+
+**Prepared export:** 14 scenes / 144 beats, both matter pages, 23 supporting
+notes, 44 unique image assets, zero final export warnings. The reader runtime is
+0.12.1 review candidate (`fa09c67`), based on accepted 0.12.0. Animated WebP bytes are retained. The current book
+has no authored type-out blocks; the reader retains that capability and sound
+controls without adding content. Timing/prose settings are resolved by the
+existing exporter; changing speed remains a reader preference (1× default).
+
+**Hosting boundary:** Ted authorised the CLI login after initial local preparation.
+Read-only account inspection found no existing Pages/Workers deployments and
+confirmed the Murmuration Press zone. A dedicated `murmuration-skip` Pages project
+uses production branch `main` and review branch `skip-review-7c030a1`. The DNS API
+returned 403; DNS is untouched. No production deployment or Ghost publication is
+authorised by preview preparation. The CLI's automatic Workers delegation failed
+without deploying; direct Pages creation preserves separate preview branches.
+
+The [repeatable preparation, validation, access and publication procedure](../tools/story-teller/PUBLISH-SKIP.md)
+keeps private snapshots/reports beside, never inside, the public upload. Book text
+and artwork are not committed to the public tooling repository. Automated browser
+checks remain distinct from actual-device or human listening observations. See
+that guide and the publication validation summary for results and limitations.

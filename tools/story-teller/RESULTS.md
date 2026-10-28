@@ -1039,3 +1039,78 @@ build/archive comparison and GitHub check inspection are reported on PR #22.
 Issue #13 closes only after those acceptance criteria and integration checks pass.
 No broader platform certification, manuscript change, release or deployment is
 part of this integration.
+
+## 2026-10-28 — Skip standalone publication preview
+
+Prepared the complete committed Stories-Told adaptation from main `bf92b8e`,
+with four explicit note-target repairs at `7c030a1` in source PR #1. Displayed
+wording, dialogue, editorial changes, settings, order, front/back matter and all
+artwork remain intact. Export uses a private committed snapshot, not a reimport
+from PrimeTrilogy or a dirty editor buffer. Initial missing-note warnings targeted
+the PRIME novels, Miranda Stubbs and Jo Ellis; their intended existing notes were
+confirmed and aliases preserve every displayed label. Final warnings: **zero**.
+
+Book: 14 scenes / 144 beats, both matter pages, 23 supporting notes, 44 unique
+assets (47 scene image placements), and four animated WebP files. Canvas and all
+three final-chapter illustrations resolve. The source contains no authored
+type-out blocks; renderer support/sound controls are retained, not demonstrated
+as new book content. No artwork or manuscript text is committed to this public
+repository. Upload inventory, snapshots, reports, credentials and unrelated files
+are separated; only `site/` is uploaded. Existing software/dependency notices and
+book copyright are retained without changing licence terms.
+
+**Publication blocker fixed:** a touch-generated mouseover could put a long
+supporting preview under the click target before the first tap completed. A
+captured event trace showed the click landing on the tooltip paragraph instead
+of Canvas. The 0.12.1 review candidate suppresses touch hover/focus previews while
+preserving keyboard/mouse previews. Preview placement flips/shrinks without
+covering its link; pinning preserves that clearance. Runtime commit `fa09c67`,
+based on accepted 0.12.0, changes no timing/navigation policy or authored content.
+Synthetic first-touch/nested/keyboard/mouse regression and bounds tests pass.
+
+**Validation:** 272/272 tests, syntax, both builds and VSIX packaging pass. Actual
+installed-VSIX note regressions pass in a disposable VS Code profile. Local Pages
+emulation and a live Cloudflare Chrome/Linux browser sweep each complete all 144
+beats with accelerated active time/reduced motion, verify message counts and
+images, and open all 23 supporting targets through real panels/nested navigation.
+Separate real-time checks exercise chat delivery, a paused 0.75×→0.5× change,
+resume, no duplicate reveal, saved scene/beat and speed/autoplay/mute, four changing
+frames for each animated WebP, and 390px/320px emulated touch including the first
+Canvas tap. No browser errors, failed resource requests or external content
+requests were observed. This is not actual iPad/Safari or human listening evidence.
+
+The final stage has 78 files (101,599,211 bytes). The last deployment adds only
+existing software licence/scope notices; every earlier public file remains
+byte-identical to the fully browser-tested deployment. A normal TLS-validating
+HTTPS probe matches all 75 served files against final SHA-256/length inventory;
+it also verifies canonical `/skip/` redirects, preview no-index, revalidation of
+reader/content, immutable hashed images, real missing-resource 404s and rejection
+of private snapshot/report/authoring paths. ZIP names and bytes match the same
+inventory. No private source or credentials were uploaded.
+
+**Deployment:** preview `c548539c-3169-41f5-b9d2-651459c64fe0`, project
+`murmuration-skip`, branch `skip-review-7c030a1`:
+https://c548539c.murmuration-skip.pages.dev/skip/ . Stable branch alias:
+https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/ . Cloudflare API confirms
+`environment: preview`, production branch `main`, no canonical production
+deployment and no custom domains. DNS-record inspection returned 403; DNS was
+not changed. Ghost was not modified. Production/DNS/Ghost require Ted's approval.
+
+**Historical harness/hosting observations:** initial snapshot streaming could
+close early; preparation now archives then extracts sequentially. Initial ZIP
+creation flattened paths; verification caught it and the corrected ZIP preserves
+them. Image-decode waits, CSP-safe function predicates and an unambiguous dialog
+header selector corrected probe races/ambiguity; those failed runs are not
+counted as passes. The first-touch failure was a separate reproduced product
+issue and is regression tested. Overlapping cache rules combined `no-cache` with
+immutable; the uploaded final rules have no overlap. Wrangler's automatic
+Workers delegation failed before creating/deploying anything; supported direct
+Pages project creation retained the requested preview-branch separation. The
+fresh preview hostname briefly failed TLS during provisioning, then normal
+certificate-validated requests passed. No TLS bypass or production upload was
+used. Existing preview deployments are retained.
+
+See [PUBLISH-SKIP.md](PUBLISH-SKIP.md) for exact pins, repeatable export, preview,
+update/rollback and approval steps and the exact Ghost link. Evidence:
+`test/evidence/skip-publication.json`. Full private build reports/screenshots and
+archive remain outside both repositories and the uploaded directory.

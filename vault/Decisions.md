@@ -295,3 +295,31 @@ merged-tree equality verification and closure of #13 after its criteria pass.
 Material changes to accepted behaviour require a new test build and focused
 acceptance. Private adaptations, unrelated branches/worktrees, licence terms and
 EPUB experiments remain untouched; no deployment or release is authorised.
+
+## 2026-10-28 — Prepare Skip as one standalone web publication
+
+Ted authorises preparing the latest committed Stories-Told adaptation of The
+Curious Adventures of Skip with the existing exporter, one self-contained book
+at proposed `read.murmurationpress.co.uk/skip/`. Ghost stays the main website.
+Cloudflare static hosting is subject to inspecting the account/deployment setup;
+a review preview is authorised, while production deployment, DNS and Ghost
+publication require later approval. No shared renderer/platform, accounts or
+payments are authorised. See [[Skip Web Publication]].
+
+Four broken supporting-note targets are repaired on a separate source branch,
+preserving displayed wording. Private source snapshots, reports and unrelated
+repository content stay outside the upload. Cloudflare CLI authentication is
+missing; local preparation/testing proceeds without claiming a hosted preview.
+
+### Skip preview completed; production remains subject to approval
+
+Ted completed the Cloudflare CLI login. Account inspection found no existing
+Pages/Workers deployments and confirmed the domain zone. Preview-only project
+`murmuration-skip` uses production branch `main` and review branch
+`skip-review-7c030a1`. The prepared preview is
+https://c548539c.murmuration-skip.pages.dev/skip/ . Cloudflare confirms no production
+deployment or custom domain. DNS API inspection returned 403; DNS and Ghost are
+untouched. The publication-blocking note-tap/overlap fix is a 0.12.1 review
+candidate; no reader redesign, timing change or licence change is introduced.
+Local/live automated checks are recorded separately from actual-device evidence.
+See [[Skip Web Publication]] and the linked procedure before approving production.

@@ -48,7 +48,7 @@ All `.md` files in **Supporting Content/** are publication notes and are include
 
 Missing/unsupported resources become placeholders and warnings. Unsafe traversal/symlink escapes abort export. HTML is disabled/escaped; ordinary Markdown URLs remain inert; remote/data images are not copied or fetched. A restrictive CSP disallows authored scripts, remote connections and embedded frames. Inline style attributes are permitted solely for the shared renderer's fixed presentation/position calculations; no authored CSS is interpreted. The generated bundle contains no VS Code API or filesystem adapter.
 
-Export is a snapshot, not a live watch/reimport system. Re-export to a new directory to publish subsequent edits. Reader links control the presented reading experience, not access control: anyone with the directory can inspect its entire publication data. No offline service worker, DRM, hosting, EPUB export, catalogue, accounts or payments are included. The existing extension-level licence remains unresolved; dependency notices are included without inventing licence terms for Story Teller.
+Export is a snapshot, not a live watch/reimport system. Re-export to a new directory to publish subsequent edits. Reader links control the presented reading experience, not access control: anyone with the directory can inspect its entire publication data. No offline service worker, DRM, hosting, EPUB export, catalogue, accounts or payments are included. Original software and technical documentation retain their existing MIT licence; manuscripts and artwork retain separate copyright. Dependency notices are included. See the repository licence-scope record.
 
 ## Checks and acceptance exercise
 
@@ -91,3 +91,10 @@ compatibility default**. This report does not individually identify the three
 tests or establish specific device/browser versions, exhaustive platform coverage
 or human audio findings. Automated timing and emulated-touch evidence remain
 separate in RESULTS.md.
+
+### Skip publication preparation
+
+[PUBLISH-SKIP.md](PUBLISH-SKIP.md) records the bounded one-book trial, committed
+source/export procedure, `/skip/` package, Cloudflare preview prerequisites and
+later approval steps for production/DNS/Ghost. The existing reader/exporter is
+reused; no shared multi-book architecture is introduced.
