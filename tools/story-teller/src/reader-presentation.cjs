@@ -450,7 +450,7 @@ api.onMessage(async event => {
   preparing = false;
   // A document turn suspends following while its snapshot loads. The browser
   // has no new host presentation event to reactivate it after that turn.
-  follower.setActive(presented && !document.hidden);
+  if (!follower.active && presented && !document.hidden) follower.setActive(true);
   render();
   follower.endTurn();
   startSelectedScene();

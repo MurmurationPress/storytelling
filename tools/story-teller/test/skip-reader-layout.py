@@ -34,13 +34,33 @@ async def run(build,origin,label):
                         r=await page.locator(selector).bounding_box();x=r['x']+r['width']/2;y=r['y']+min(r['height']/2,200)
                     else:x=40;y=height*.6
                     if mobile:
-                        await cdp.send('Input.synthesizeScrollGesture',{'x':x,'y':y,'yDistance':-amount,'speed':700,'gestureSourceType':'touch'})
+                        # Explicit points produce real touchmove/scroll events. The
+                        # aggregate synthetic gesture emitted no moves with Clock installed.
+                        metrics=await page.evaluate("selector=>{const e=selector?document.querySelector(selector):document.scrollingElement;const r=selector?e.getBoundingClientRect():{top:80,bottom:innerHeight-40};return {top:Math.max(0,r.top),bottom:Math.min(innerHeight,r.bottom),up:e.scrollTop,down:e.scrollHeight-e.clientHeight-e.scrollTop}}",selector)
+                        distance=min(abs(amount),max(0,metrics['down' if amount>0 else 'up']))
+                        initial=await page.evaluate('selector=>(selector?document.querySelector(selector):document.scrollingElement).scrollTop',selector)
+                        target=initial+(distance if amount>0 else -distance)
+                        strokes=0
+                        span=metrics['bottom']-metrics['top']
+                        while distance>2 and strokes<20:
+                            strokes+=1
+                            stroke=min(max(distance+30,60),span*.4,240)
+                            start=metrics['top']+span*(.75 if amount>0 else .25)
+                            direction=-1 if amount>0 else 1
+                            await cdp.send('Input.dispatchTouchEvent',{'type':'touchStart','touchPoints':[{'x':x,'y':start}]})
+                            for step in range(1,11):
+                                await cdp.send('Input.dispatchTouchEvent',{'type':'touchMove','touchPoints':[{'x':x,'y':start+direction*stroke*step/10}]})
+                                await page.wait_for_timeout(25)
+                            await page.wait_for_timeout(100)
+                            await cdp.send('Input.dispatchTouchEvent',{'type':'touchEnd','touchPoints':[]})
+                            current=await page.evaluate('selector=>(selector?document.querySelector(selector):document.scrollingElement).scrollTop',selector)
+                            distance=max(0,(target-current)*(1 if amount>0 else -1))
                     else:
                         await page.mouse.move(x,y);await page.mouse.wheel(0,amount)
                     await page.wait_for_timeout(150)
                 # Reproduce the normal front-matter Continue -> Introduction -> story path.
                 # Contents-only tests did not exercise the inactive-follower bug.
-                await page.locator('.beat-ending button').click();await source(book['scenes'][0]);await advance(300)
+                await page.locator('.beat-ending button').click();await source(book['scenes'][0]);await advance(600)
                 await page.locator('.beat-ending button').click();await source(book['scenes'][1]);await advance(12000)
                 await page.locator('#next').click();await advance(20000)
                 auto=await state()
@@ -65,7 +85,7 @@ async def run(build,origin,label):
                 await scroll(10000)
                 assert await page.locator('.beat-ending button').evaluate('e=>{const r=e.getBoundingClientRect();return r.top>=0 && r.bottom<=innerHeight}'),await state()
                 # Use Contents only now, for the long actual supporting note and matter.
-                await page.locator('#contents-toggle').click();await page.locator('#contents button').get_by_text('1 Introduction',exact=True).click();await source(book['scenes'][0]);await advance(300)
+                await page.locator('#contents-toggle').click();await page.locator('#contents button').get_by_text('1 Introduction',exact=True).click();await source(book['scenes'][0]);await advance(600)
                 await page.keyboard.press('Tab') # Switch from touch to keyboard focus previews.
                 link=page.locator('#beat button.wiki-link[data-story-target="The PRIME Novels"]:visible')
                 await link.focus();await page.wait_for_selector('#supporting-preview:not([hidden])')
@@ -90,8 +110,11 @@ async def run(build,origin,label):
                 assert (await state())['top']==0
                 await scroll(1000);down=await page.evaluate('scrollY');assert down>100
                 await scroll(-300);assert await page.evaluate('scrollY')<down-20
+                await page.locator('#previous').click();await source(book['scenes'][-1]);await advance(1200)
+                assert (await state())['top']==0,('Previous scene must remain at its start',await state())
+                assert 'completed' in (await state())['status']
                 assert not errors,errors
-                cases.append({'width':width,'height':height,'mobileTouchEmulation':mobile,'theme':theme,'autoAfterDocumentTurn':auto,'suspendedDuringNewContent':held,'followResumed':resumed,'preview':tip,'panel':panel,'contrast':contrast(panel['fg'],panel['bg']),'manualScrolling':True,'endControlReachable':True,'silentPreviousAtTop':True,'noteArticleScrollContained':True})
+                cases.append({'width':width,'height':height,'mobileTouchEmulation':mobile,'theme':theme,'autoAfterDocumentTurn':auto,'suspendedDuringNewContent':held,'followResumed':resumed,'preview':tip,'panel':panel,'contrast':contrast(panel['fg'],panel['bg']),'manualScrolling':True,'endControlReachable':True,'silentPreviousAtTop':True,'silentPreviousAcrossScenes':True,'noteArticleScrollContained':True})
                 print('PASS layout/follow/theme',width,theme,flush=True)
                 await ctx.close()
         await browser.close()
