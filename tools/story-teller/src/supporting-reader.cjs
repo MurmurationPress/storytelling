@@ -41,7 +41,7 @@ class SupportingReader {
     listen(document,'mouseout',event=>{ const link=event.target.closest?.('button.wiki-link'); if(link && !link.contains(event.relatedTarget)) this.scheduleHide(); });
     listen(document,'focusin',event=>{ if(!this.touchInput && event.target.matches?.('button.wiki-link')) this.hover(event.target); });
     listen(document,'focusout',event=>{ if(event.target.matches?.('button.wiki-link')) this.scheduleHide(); });
-    listen(this.preview,'mouseenter',()=>{this.pointerInPreview=true;this.cancelHide();const rect=this.preview.getBoundingClientRect();this.preview.style.maxHeight=`min(17rem, ${Math.max(80,this.window.innerHeight-rect.top-12)}px)`;});
+    listen(this.preview,'mouseenter',()=>{this.pointerInPreview=true;this.cancelHide();});
     listen(this.preview,'mouseleave',()=>{this.pointerInPreview=false;this.scheduleHide();});
     listen(document,'click',event=>{ const link=event.target.closest?.('button.wiki-link'); if(link) { event.preventDefault(); void this.open(link); } });
     listen(close,'click',()=>this.close());
@@ -104,7 +104,7 @@ class SupportingReader {
     const below=Math.max(0,this.window.innerHeight-rect.bottom-20), above=Math.max(0,rect.top-20);
     const useBelow=height<=below || (height>above && below>=above);
     const available=useBelow?below:above;
-    if(height>available)this.preview.style.maxHeight=`${available}px`;
+    this.preview.style.maxHeight=`min(17rem, ${available}px)`;
     const shown=Math.min(height,available);
     this.preview.style.top=`${Math.max(12,useBelow?rect.bottom+8:rect.top-shown-8)}px`;
   }

@@ -70,7 +70,7 @@ test('long supporting previews stay above/below the link and fit a short viewpor
   const reader=Object.create(SupportingReader.prototype),style={};
   Object.assign(reader,{preview:{hidden:false,style,getBoundingClientRect:()=>({height})},anchor:{},pointerInPreview:false,
    window:{innerWidth:390,innerHeight:viewport},find:()=>({getBoundingClientRect:()=>({left:16,top,bottom})})});
-  reader.position();const y=parseFloat(style.top),h=style.maxHeight?parseFloat(style.maxHeight):height;
+  reader.position();const y=parseFloat(style.top),h=Math.min(height,Number(style.maxHeight.match(/, ([\d.]+)px/)[1]));
   assert.ok(y+h<=top || y>=bottom);assert.ok(y>=12);assert.ok(y+h<=viewport-12);
  }
 });

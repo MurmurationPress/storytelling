@@ -43,6 +43,8 @@ async def run():
             await page.wait_for_timeout(400)
             rect=await link.bounding_box();await page.mouse.move(rect['x']+rect['width']/2,rect['y']+rect['height']/2)
             await page.wait_for_selector('#supporting-preview:not([hidden])')
+            tip=await page.locator('#supporting-preview').bounding_box()
+            await page.mouse.move(tip['x']+5,tip['y']+5)
             bounds=await page.evaluate('''()=>{const a=document.querySelector('#beat button.wiki-link').getBoundingClientRect(),b=document.getElementById('supporting-preview').getBoundingClientRect();return {overlap:!(b.bottom<=a.top || b.top>=a.bottom || b.right<=a.left || b.left>=a.right)}}''')
             assert not bounds['overlap']
             await link.click();await page.wait_for_selector('dialog[open]')
