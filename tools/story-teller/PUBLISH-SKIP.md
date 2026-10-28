@@ -1,7 +1,7 @@
 # Skip: one standalone web export
 
 This is a small publication trial, not a shared renderer or a new publishing
-platform. The existing exporter is unchanged; the 0.12.2 reader candidate fixes supporting-note activation/preview overlap without changing playback policy. Ghost remains the main
+platform. The existing exporter is unchanged; the 0.12.2 reader candidate repairs follow activation and supporting-note theme/touch behaviour while preserving authored timing and manual navigation. Ghost remains the main
 Murmuration Press website; the reader is an independent static directory.
 
 Review preview: **https://cfc10c44.murmuration-skip.pages.dev/skip/**.
@@ -303,3 +303,9 @@ hash-based preview URLs deliberately retain older builds. Check the normal
 Continue/Next scene route, scroll back during playback and use Follow story,
 then open a long note in the theme you normally use and read/scroll to its end.
 Production, DNS and Ghost still require Ted's approval.
+
+A final Python `urllib` spot check received Cloudflare 403/error 1010. The
+provided Node verifier and fresh normal Chrome contexts passed against both the
+immutable build and stable review alias, with matching reader bytes. Protection
+settings were not changed. Use the provided Node verifier for the documented
+byte/header check; actual-device testing remains a separate review step.

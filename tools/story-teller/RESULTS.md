@@ -1182,3 +1182,11 @@ Evidence: `test/evidence/skip-reader-layout.json` and updated
 as `skip-publication-0.12.1.json`. Actual iPad/Safari, screen-reader and human
 listening coverage is not inferred. No release, production deployment, DNS or
 Ghost publication is performed.
+
+Final provider-client observation: Python `urllib` requests returned HTTP 403 /
+Cloudflare error 1010 while the Node verifier and fresh Chrome returned 200 for
+both the current immutable preview and review alias, with exact bundle hashes.
+No security/protection setting was altered. This observation is recorded rather
+than represented as universal client compatibility; the actual-device check
+remains pending. The final APIs still show preview-only, no canonical production
+deployment/custom domain, and neither DNS nor Ghost was changed.

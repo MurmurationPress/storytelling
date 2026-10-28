@@ -430,5 +430,6 @@
   ],
   "productionDeployed": false,
   "dnsChanged": false,
-  "ghostPublished": false
+  "ghostPublished": false,
+  "httpClientObservation": "At the final spot check Cloudflare returned HTTP 403 / error 1010 to Python urllib requests. The provided Node HTTPS verifier and fresh ordinary Chrome contexts returned 200 and matched the same reader bytes on both current URLs. Cloudflare protection settings were not changed; actual-device coverage is still not inferred."
 }
