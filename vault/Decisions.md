@@ -356,3 +356,24 @@ titles, simple Contents, authored pacing versus reader speed, follow/rereading a
 Supporting Content. No auto-hiding/gestures, manuscript edits, theme selector or
 branding work. Re-export/test the book and deploy preview only. Production/DNS/
 Ghost and PR integration remain pending review.
+
+### 2026-10-29 — Accept Skip preview on actual iPad and iPhone; publish
+
+Ted reports that `https://f519ec23.murmuration-skip.pages.dev/skip/` “works well
+on my actual iPad and iPhone” and accepts the compact controls and reading
+experience. This is actual-device preview acceptance, distinct from automated
+Chrome/touch emulation. Device/browser versions, broader coverage and human
+listening are not specified. 0.75× remains Ted's personal preference; 1× default.
+
+Ted authorises final scoped review, expected-head integration, exact reviewed-build
+production promotion and necessary `read.murmurationpress.co.uk` configuration.
+Preserve unrelated DNS/Ghost/email settings and private work. Ghost editing and
+publication remain Ted's responsibility. If a payload fix is necessary, prepare
+a new preview and identify what needs acceptance before production.
+
+Source PR #1 advanced to `c841b2e` with a later editorial dialogue addition,
+outside the accepted preview. Preserve its branch/commit and leave that addition
+unmerged. Source PR #2 isolates the four accepted target-only repairs at `7c030a1`
+without changing displayed wording. Merge that dependency before renderer PR #23.
+The accepted artifact retains its pinned source/renderer revisions; integration
+records map them to merged trees instead of rebuilding the accepted content.

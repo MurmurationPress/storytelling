@@ -53,5 +53,6 @@ and “Checked all three tests, working well.” 0.75× is his reader preference
 1× stays the compatibility default. See [[Story Teller]] and [[Story Teller Web Reader]]
 for bounded acceptance and review evidence.
 
-- [[Skip Web Publication]] — one-book Cloudflare review preview;
-  production, DNS and Ghost publication remain subject to Ted's approval.
+- [[Skip Web Publication]] — accepted on Ted's actual iPad and iPhone;
+  scoped integration, production publication and reader-subdomain setup authorised.
+  Ghost page editing/publication remains Ted's responsibility.

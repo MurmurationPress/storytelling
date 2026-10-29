@@ -1,6 +1,6 @@
 ---
 type: publication-preparation
-status: cloudflare-preview-production-approval-pending
+status: accepted-production-authorised
 created: 2026-10-28
 ---
 
@@ -14,11 +14,13 @@ shared multi-book renderer, accounts, payments or new platform is authorised.
 
 **Review preview:** https://f519ec23.murmuration-skip.pages.dev/skip/ (0.12.4; supersedes the earlier previews below)
 
-**Proposed production address:** `https://read.murmurationpress.co.uk/skip/`.
+**Authorised production address:** `https://read.murmurationpress.co.uk/skip/`.
 Ted requested Cloudflare static hosting subject to inspecting the existing
 account/deployment arrangements; that inspection and the review deployment are
-now complete. Ted authorises a preview for review; production
-upload, DNS changes and Ghost publication remain subject to his later approval.
+now complete. Ted now accepts this preview on his actual iPad and iPhone and authorises scoped
+integration, production upload and reader-subdomain configuration. Ghost editing
+and publication remain his responsibility. Earlier pending-approval statements
+below are historical and superseded by this acceptance.
 
 **Book source:** committed Stories-Told main `bf92b8e`, plus four target-only
 wikilink repairs at `7c030a1` in [source review PR #1](https://github.com/tedwarddick/Stories-Told/pull/1).
@@ -102,3 +104,31 @@ Linux Chrome/emulated touch observations, not new actual-iPad/Safari acceptance.
 See extension RESULTS and `compact-controls-0.12.4.json` for evidence/limits.
 The current immutable preview is linked above; production/DNS/Ghost remain
 unchanged and the PR remains unmerged for Ted's iPad review.
+
+## Accepted preview and final integration
+
+Ted accepts the compact controls and reading experience at the exact immutable
+preview above, reporting that it works well on his actual iPad and iPhone. No
+device/browser versions, exhaustive coverage or human listening are inferred.
+Production/subdomain configuration is now authorised; Ghost remains untouched.
+
+Source PR #1 gained later editorial commit `c841b2e`, outside this accepted build.
+Its branch and content remain intact. [Source PR #2](https://github.com/tedwarddick/Stories-Told/pull/2)
+contains only accepted repairs at `7c030a1` and is the integration dependency for
+renderer PR #23. Review confirms all 92 snapshot files match that accepted source
+revision and both repaired files have unchanged displayed words. No manuscript
+or asset changes are introduced by publication.
+
+The accepted runtime is `2f2e5fb`, with later renderer commits containing records
+only. All 75 served preview files match the retained inventory. Current checks:
+278 unit tests, syntax/both builds and packaging pass. There are no reported
+GitHub status checks/check runs on the reviewed renderer head; a pending combined
+status with zero entries is not a running CI check. Cloudflare Pages access works;
+DNS API inspection returns 403 and public `read` lookups return NXDOMAIN. Complete
+independent integration/publication before requesting any needed dashboard step.
+
+Source PR #2 is merged at `fe8ebbb4acae2e35f16fe7643f75dc91a2bd9cef`; its full tree `a237266cf621f695cbcb4f916d5f7f1d6a690025` equals
+the accepted source tree, and `7c030a1` remains an ancestor. Original PR #1 and
+editorial head `c841b2e` remain open/untouched. Fresh synthetic control checks pass
+all 14 responsive cases and the four-phase/eight-action matrix. No renderer
+payload defect was found; no new reader payload or source export is required.

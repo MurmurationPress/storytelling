@@ -1,3 +1,8 @@
+> **Acceptance/publication update:** Ted accepts the f519ec23 preview on his actual
+> iPad and iPhone and authorises scoped integration, production promotion and
+> reader-subdomain setup. Ghost editing/publication remains his responsibility.
+> Earlier pending-approval statements below are historical.
+
 > **Current author workflow:** use [AUTHOR-PUBLISHING.md](AUTHOR-PUBLISHING.md) and
 > `scripts/publication.cjs`. Its separate publish command promotes the reviewed
 > retained artifact; do not re-export for production. The older manual preparation

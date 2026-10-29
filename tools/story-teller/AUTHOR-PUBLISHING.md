@@ -52,7 +52,8 @@ Do not modify an already reviewed build. Prepare a new directory for updates.
 
 ## Publish only after approval
 
-**Not authorised or run for the present Skip review.** After reviewing the exact
+**Skip publication is authorised following Ted's actual iPad/iPhone acceptance
+of the f519ec23 preview.** For subsequent updates, after reviewing the exact
 immutable preview, publishing is a separate explicit command:
 
 ```bash
@@ -96,8 +97,8 @@ neither has been exercised against live production during this preview task.
 
 ## Address and saved positions
 
-Initial custom-domain/DNS setup and the first Ghost link require separate Ted
-approval. Thereafter updates use the same `/skip/` address; no routine DNS or Ghost
+Ted has authorised the initial reader custom-domain/DNS setup. He will edit
+and publish the Ghost link himself. Thereafter updates use the same `/skip/` address; no routine DNS or Ghost
 edit is needed. The intended link is:
 
 ```html

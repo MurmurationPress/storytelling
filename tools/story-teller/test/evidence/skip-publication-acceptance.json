@@ -1,0 +1,60 @@
+{
+  "date": "2026-10-29",
+  "acceptedPreview": "https://f519ec23.murmuration-skip.pages.dev/skip/",
+  "acceptance": {
+    "report": "works well on my actual iPad and iPhone",
+    "scope": [
+      "compact controls",
+      "reading experience"
+    ],
+    "actualDevices": [
+      "iPad",
+      "iPhone"
+    ],
+    "browserOrDeviceVersions": "not provided",
+    "broaderPlatformCoverage": "not inferred",
+    "humanListening": "not inferred"
+  },
+  "artifactDigest": "8688e2f26cfb0faac777d5e1a192e2aa5678c64c48e2bddedeb71cd76aa36b9c",
+  "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+  "rendererRuntimeRevision": "2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a",
+  "reviewedInitialRendererHead": "027e9c773692ee0a397873f03f576d0c1b4264e5",
+  "sourceReview": {
+    "originalPR": 1,
+    "originalLatestHead": "c841b2ebaa755d1c08f80f31741eb919d5dd8bdc",
+    "unrelatedEditorialChangePreserved": true,
+    "cleanDependencyPR": 2,
+    "cleanHead": "7c030a14c8911f26d468e1d5de2b714445da9648",
+    "acceptedSnapshotFilesMatched": 92,
+    "displayedWordingUnchanged": true,
+    "mergedPR": 2,
+    "mergeSha": "fe8ebbb4acae2e35f16fe7643f75dc91a2bd9cef",
+    "mergedTree": "a237266cf621f695cbcb4f916d5f7f1d6a690025",
+    "mergedTreeMatchesAcceptedSource": true,
+    "acceptedSourceAncestorOfMain": true
+  },
+  "checks": {
+    "nodeTests": 278,
+    "syntax": "pass",
+    "bundles": "pass",
+    "package": "pass",
+    "previewPayloadHashesMatched": 75,
+    "githubRendererCheckRuns": 0,
+    "githubRendererStatusEntries": 0,
+    "freshSyntheticControlCases": 14,
+    "freshFourPhaseEightActionMatrix": "pass",
+    "githubSourceCheckRuns": 0,
+    "githubSourceStatusEntries": 0
+  },
+  "authorisation": [
+    "scoped PR integration",
+    "exact accepted artifact production promotion",
+    "necessary reader subdomain configuration"
+  ],
+  "excluded": [
+    "unrelated editorial changes",
+    "unrelated DNS/Ghost/email settings",
+    "Ghost page editing/publication",
+    "licence changes"
+  ]
+}
