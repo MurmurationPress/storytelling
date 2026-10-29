@@ -1,3 +1,9 @@
+> **Current author workflow:** use [AUTHOR-PUBLISHING.md](AUTHOR-PUBLISHING.md) and
+> `scripts/publication.cjs`. Its separate publish command promotes the reviewed
+> retained artifact; do not re-export for production. The older manual preparation
+> notes below are historical validation/context, not the update command sequence.
+> Latest review: https://b194aae5.murmuration-skip.pages.dev/skip/ (0.12.3).
+
 # Skip: one standalone web export
 
 This is a small publication trial, not a shared renderer or a new publishing

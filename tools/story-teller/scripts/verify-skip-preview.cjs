@@ -7,6 +7,7 @@ async function verify(build, origin) {
   const base = new URL(origin);
   if (base.protocol !== 'https:') throw Error('A hosted preview must use HTTPS');
   const manifest = JSON.parse(await fs.readFile(path.join(build, 'build-report.json'), 'utf8'));
+  const slug = manifest.slug || 'skip';
   const checked = [];
   for (const [name, expected] of Object.entries(manifest.publicFiles)) {
     if (['_headers', '_redirects', '404.html'].includes(name)) continue;
@@ -16,21 +17,21 @@ async function verify(build, origin) {
     const hash = crypto.createHash('sha256').update(bytes).digest('hex');
     if (bytes.length !== expected.bytes || hash !== expected.sha256) throw Error(`Hosted bytes differ: ${name}`);
     const cache = response.headers.get('cache-control') || '';
-    if (name.startsWith('skip/assets/')) {
+    if (name.startsWith(`${slug}/assets/`)) {
       if (!cache.includes('immutable') || cache.includes('no-cache')) throw Error(`Wrong image cache policy: ${name}`);
-    } else if ((['skip/index.html', 'skip/reader.js', 'skip/reader.css', 'skip/web.css', 'skip/publication.json'].includes(name) || name.startsWith('skip/content/')) && !cache.includes('no-cache')) throw Error(`Missing revalidation: ${name}`);
+    } else if (([`${slug}/index.html`, `${slug}/reader.js`, `${slug}/reader.css`, `${slug}/web.css`, `${slug}/publication.json`].includes(name) || name.startsWith(`${slug}/content/`)) && !cache.includes('no-cache')) throw Error(`Missing revalidation: ${name}`);
     if (!(response.headers.get('x-robots-tag') || '').includes('noindex')) throw Error(`Preview indexing header missing: ${name}`);
     checked.push({ file: name, bytes: bytes.length, sha256: hash, cacheControl: cache });
   }
-  for (const name of ['/skip/not-a-scene.json', '/skip/missing-image.png', '/build-report.json', '/snapshot/', '/skip/story-teller.project.json']) {
+  for (const name of [`/${slug}/not-a-scene.json`, `/${slug}/missing-image.png`, '/build-report.json', '/snapshot/', `/${slug}/story-teller.project.json`]) {
     const response = await fetch(base.origin + name);
     if (response.status !== 404) throw Error(`Expected 404, got ${response.status}: ${name}`);
   }
-  for (const [name, status] of [['/', 302], ['/skip', 301]]) {
+  for (const [name, status] of [['/', 302], [`/${slug}`, 301]]) {
     const response = await fetch(base.origin + name, { redirect: 'manual' });
-    if (response.status !== status || new URL(response.headers.get('location'), base).pathname !== '/skip/') throw Error(`Wrong canonical redirect: ${name}`);
+    if (response.status !== status || new URL(response.headers.get('location'), base).pathname !== `/${slug}/`) throw Error(`Wrong canonical redirect: ${name}`);
   }
-  const result = { previewUrl: base.origin + '/skip/', httpsCertificateValidated: true, publicFilesCompared: checked.length,
+  const result = { previewUrl: base.origin + `/${slug}/`, httpsCertificateValidated: true, publicFilesCompared: checked.length,
     sha256MatchesPreparedFiles: true, sourceSnapshotsAndReports404: true, missingContent404: true,
     canonicalRedirects: true, previewNoindex: true, revalidationAndImmutableAssets: true, checked };
   await fs.writeFile(path.join(build, 'http-preview-validation.json'), JSON.stringify(result, null, 2) + '\n');

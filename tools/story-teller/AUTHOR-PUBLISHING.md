@@ -42,7 +42,7 @@ Review `site/skip/` over HTTP, then the immutable HTTPS URL printed in the previ
 receipt. Test scene/beat navigation, refresh, position, speed, notes, images and
 animations on your intended devices. The existing Skip HTTP verifier compares
 all served payload files, checks caching/noindex/404s and writes a private report.
-For another slug adapt that verifier's Skip-specific route checks.
+The verifier reads the slug from the build report (the legacy filename is retained).
 
 Keep the preview receipt `preview-DEPLOYMENT_ID.json`, full build, upload ZIP and
 validation reports together. The receipt binds the file inventory, target,

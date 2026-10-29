@@ -42,7 +42,8 @@ async function prepare(repo, ref, destination, mode = 'preview', options = {}) {
   const rendererRevision = git(toolRoot, 'rev-parse', 'HEAD');
   if (options.renderer && git(toolRoot, 'rev-parse', `${options.renderer}^{commit}`) !== rendererRevision) throw Error('Checkout the intended renderer revision before exporting');
   // Refuse unstaged/staged reader changes: the record must identify committed code.
-  execFileSync('git', ['-C', toolRoot, 'diff', '--exit-code', 'HEAD', '--', 'src', 'media', 'package.json', 'package-lock.json']);
+  execFileSync('git', ['-C', toolRoot, 'diff', '--exit-code', 'HEAD', '--', 'src', 'media', 'package.json', 'package-lock.json', 'scripts']);
+  if (git(toolRoot, 'ls-files', '--others', '--exclude-standard', '--', 'src', 'media', 'scripts')) throw Error('Commit or remove untracked renderer files before exporting');
   const output = path.resolve(destination);
   const rendererRepo = git(toolRoot, 'rev-parse', '--show-toplevel');
   for (const sourceRoot of [await fs.realpath(repo), await fs.realpath(rendererRepo)]) {
@@ -85,7 +86,7 @@ async function prepare(repo, ref, destination, mode = 'preview', options = {}) {
   for (const [reference, item] of allMedia) {
     if (!item.url) { problems.push(`Missing image: ${reference}`); continue; }
     const bytes = await fs.readFile(path.join(site, slug, item.url));
-    if (!before.has(path.resolve(project, 'scenes', decodeURIComponent(reference))) && !before.has(path.resolve(project, 'Supporting Content', decodeURIComponent(reference)))) problems.push(`Unexpected image source: ${reference}`);
+    if (![...before.values()].includes(sha(bytes))) problems.push(`Unexpected image source: ${reference}`);
     if (!item.url.includes(sha(bytes))) problems.push(`Image digest mismatch: ${reference}`);
   }
   if (!options.project && !book.targets.Canvas?.id) problems.push('Canvas must resolve');
@@ -110,8 +111,8 @@ async function prepare(repo, ref, destination, mode = 'preview', options = {}) {
     if (/\.(json|html|js|css|txt)$/.test(name) && /\/home\/thawkins\/|file:\/\/|"provenance"\s*:|"sourceScope"\s*:/.test(bytes.toString('utf8'))) problems.push(`Authoring path/provenance in public output: ${name}`);
   }
   if (Object.keys(publicFiles).length > 20000) problems.push('Cloudflare Pages file limit exceeded');
-  const report = { sourceRepository: git(repo, 'config', '--get', 'remote.origin.url').replace(/https:\/\/[^/@]+@/, 'https://'), sourceRevision: revision, sourceProject: projectName, slug, rendererVersion: require('../package.json').version, publicationId: book.id, rendererRevision, mode,
-    readerUrl: 'https://read.murmurationpress.co.uk/${slug}/', ...exported, destination: `site/${slug}`,
+  const report = { sourceRepository: path.basename(repo), sourceRevision: revision, sourceProject: projectName, slug, rendererVersion: require('../package.json').version, publicationId: book.id, rendererRevision, mode,
+    readerPath: `/${slug}/`, ...exported, destination: `site/${slug}`,
     supportingNotes: Object.keys(book.notes).length, noteTargets: Object.keys(book.targets).length,
     readingOrder: book.readingOrder.map(({ id, kind, title, label }) => ({ id, kind, title, label })),
     imageReferences: allMedia.length, finalChapterIllustrations: Object.keys(final.media).length,

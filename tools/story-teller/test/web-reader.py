@@ -12,6 +12,8 @@ async def run(root):
     server=ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=str(root)))
     threading.Thread(target=server.serve_forever,daemon=True).start()
     url=f'http://127.0.0.1:{server.server_port}'
+    book=json.loads((root/'publication.json').read_text())
+    title_by_label={item['label']:item['title'] for item in book['scenes']}
     evidence={'method':'Actual exported directory served over HTTP; installed Chrome headless on Linux','unverified':['actual touch device','iPad/Safari','human listening','Windows/macOS'],'checks':{}}
     try:
       async with async_playwright() as p:
@@ -81,7 +83,7 @@ async def run(root):
         await page.locator('#reveal').click();assert '[[JANUS later|JANUS]]' in await page.locator('.typeout-progress').inner_text()
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         assert await page.locator('.story-image').count()==1
-        await page.locator('.beat-ending button').click();await page.wait_for_function("() => document.querySelector('#scene-title').textContent.includes('1.2')")
+        await page.locator('.beat-ending button').click();await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['1.2'])
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         assert await page.locator('.image-placeholder').count()>=2
         assert await page.evaluate('window.authoredScriptRan') is None
@@ -93,8 +95,8 @@ async def run(root):
           await gate.wait();await route.continue_()
         await page.route('**/'+first,delayed)
         await buttons.nth(0).click();await page.locator('#contents-toggle').click();await buttons.nth(2).click();gate.set()
-        await page.wait_for_function("() => document.querySelector('#scene-title').textContent.includes('2.1')")
-        await page.wait_for_timeout(300);assert '2.1' in await page.locator('#scene-title').inner_text()
+        await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['2.1'])
+        await page.wait_for_timeout(300);assert title_by_label['2.1']==await page.locator('#scene-title').inner_text()
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         assert await page.locator('.end-of-scene').inner_text()=='End of scene'
         # A failed local scene load must not leave outgoing story content/timers visible.
@@ -107,10 +109,10 @@ async def run(root):
         await page.locator('#contents-toggle').click();await buttons.nth(2).click()
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         evidence['checks']['scene_load_failure_recovery']=True
-        await page.locator('#autoplay').uncheck();await page.reload();await page.wait_for_selector('#beat');await page.wait_for_function("() => document.querySelector('#scene-title').textContent.includes('2.1')")
+        await page.locator('#autoplay').uncheck();await page.reload();await page.wait_for_selector('#beat');await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['2.1'])
         assert not await page.locator('#autoplay').is_checked();assert 'ready' in await page.locator('#status').inner_text()
         await page.locator('#contents-toggle').click();await page.locator('#contents button').nth(0).click()
-        await page.wait_for_function("() => document.querySelector('#scene-title').textContent.includes('1.1')")
+        await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['1.1'])
         await page.locator('#play').click();await page.wait_for_timeout(100)
         await page.goto(url+'/publication.json');await page.go_back();await page.wait_for_selector('#beat')
         await page.wait_for_timeout(200);assert 'playing' not in await page.locator('#status').inner_text()
@@ -131,7 +133,7 @@ async def run(root):
         await page.locator('#beat button[data-story-target="JANUS early"]').tap();await page.wait_for_selector('dialog[open]')
         await page.locator('#contents-toggle').evaluate('(button)=>button.click()')
         await page.locator('#contents button').nth(2).evaluate('(button)=>button.click()')
-        await page.wait_for_function("() => document.querySelector('#scene-title').textContent.includes('2.1')");assert not await page.locator('dialog').is_visible()
+        await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['2.1']);assert not await page.locator('dialog').is_visible()
         evidence['checks']['touch_reduced_motion_narrow_scene_cleanup_emulation']=True
         await browser.close()
     finally: server.shutdown()
