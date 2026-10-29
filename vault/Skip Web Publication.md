@@ -1,6 +1,6 @@
 ---
 type: publication-preparation
-status: production-published-reader-dns-pending
+status: published-verified
 created: 2026-10-28
 ---
 
@@ -14,7 +14,7 @@ shared multi-book renderer, accounts, payments or new platform is authorised.
 
 **Review preview:** https://f519ec23.murmuration-skip.pages.dev/skip/ (0.12.4; supersedes the earlier previews below)
 
-**Authorised production address:** `https://read.murmurationpress.co.uk/skip/`.
+**Live production address:** `https://read.murmurationpress.co.uk/skip/`.
 Ted requested Cloudflare static hosting subject to inspecting the existing
 account/deployment arrangements; that inspection and the review deployment are
 now complete. Ted now accepts this preview on his actual iPad and iPhone and authorises scoped
@@ -167,3 +167,32 @@ this accepted deployment becomes the rollback target for subsequent updates.
 See `test/evidence/skip-production.json` and AUTHOR-PUBLISHING for exact commands.
 Preview and final-domain storage are different origins: existing preview positions
 do not transfer automatically. Keep document IDs/order stable for later updates.
+
+## Final custom-domain verification
+
+`https://read.murmurationpress.co.uk/skip/` now resolves with valid HTTPS. Pages
+reports the domain, verification and HTTP validation active on production
+`42ffb0fd-152c-4e9b-9651-c388519fc002`. HTTP redirects to HTTPS; canonical slash
+redirects and private/missing-file 404s pass. Six unrelated root/www/mail public
+DNS checks remain unchanged. Ghost remains untouched.
+
+All 75 served payload files match the retained production build, including all
+74 accepted reader files. On the final origin, fresh automated Chrome checks
+pass all 144 beats, 44 assets, 23 supporting targets, four animations, refresh/
+reopening and saved position/preferences. Ten light/dark following/note cases
+pass, including tablet portrait/landscape and narrow emulated touch. These do
+not extend Ted's actual-device acceptance beyond the preview he reported.
+
+The initial custom-domain check found one configuration exception: the custom domain serves reader.js,
+reader.css and web.css with `Cache-Control: max-age=14400`, while Pages serves
+`no-cache`. HTML/publication JSON correctly revalidate. Current reading works,
+but repeat visitors can retain old renderer files for four hours after an update.
+The cache/settings/rules API returns 403, so no global or reader cache settings
+were changed by the agent. The requested dashboard fix is a new reader-only
+Cache Rule matching the read hostname and /skip/ path, Browser TTL “Respect
+origin”, placed after other matching rules. Preserve Ghost/global settings.
+Ted then reported the rule deployed. The subsequent strict verifier passes on
+the final hostname: mutable JS/CSS/HTML/JSON return no-cache and image assets
+retain immutable caching. All 75 payload hashes, route/privacy/indexing/TLS checks
+pass. No reader payload or source change was made. The final URL is verified and
+ready for Ted to link from Ghost; Ghost itself remains untouched.

@@ -37,7 +37,7 @@
     "reviewed": "f519ec23-3d85-4843-9f37-2dc96fadfa28",
     "action": "publish"
   },
-  "productionUrl": "https://murmuration-skip.pages.dev/skip/",
+  "productionUrl": "https://read.murmurationpress.co.uk/skip/",
   "intendedFinalUrl": "https://read.murmurationpress.co.uk/skip/",
   "postmerge": {
     "mergedMain": "437b70eac127fe6304dcb92d55c961f1a7a591c2",
@@ -103,15 +103,65 @@
   "domain": {
     "name": "read.murmurationpress.co.uk",
     "pagesAssociation": "created",
-    "status": "pending",
-    "verification": "CNAME record not set",
+    "status": "active",
+    "verification": {
+      "status": "active"
+    },
     "dnsApiStatus": 403,
-    "publicDNS": "NXDOMAIN",
+    "publicDNS": "resolves over proxied A/AAAA",
     "fullZoneDNSInventory": "unavailable with current OAuth scope",
     "agentDNSWrites": 0,
     "ghostChanges": 0,
     "unrelatedPublicDNSChecks": 6,
-    "unrelatedPublicDNSChanges": []
+    "unrelatedPublicDNSChanges": [],
+    "validation": {
+      "status": "active",
+      "method": "http"
+    },
+    "normalTLSVerification": true,
+    "httpRedirect": {
+      "status": 301,
+      "location": "https://read.murmurationpress.co.uk/skip/"
+    },
+    "routeChecks": [
+      {
+        "route": "/",
+        "status": 302,
+        "location": "/skip/"
+      },
+      {
+        "route": "/skip",
+        "status": 301,
+        "location": "/skip/"
+      },
+      {
+        "route": "/build-report.json",
+        "status": 404,
+        "location": null
+      },
+      {
+        "route": "/snapshot/",
+        "status": 404,
+        "location": null
+      },
+      {
+        "route": "/skip/story-teller.project.json",
+        "status": 404,
+        "location": null
+      },
+      {
+        "route": "/skip/not-a-scene.json",
+        "status": 404,
+        "location": null
+      },
+      {
+        "route": "/skip/missing-image.png",
+        "status": 404,
+        "location": null
+      }
+    ],
+    "cacheApiStatus": 403,
+    "cacheRuleStatus": "deployed by account holder and verified via HTTP headers"
   },
   "rollback": {
     "retainedAcceptedBuild": true,
@@ -124,8 +174,72 @@
   "limits": [
     "Production browser checks are automated Chrome/touch emulation, not actual-device tests",
     "User acceptance covers the preview on actual iPad/iPhone; browser versions and human listening unknown",
-    "Final custom hostname remains pending DNS; its HTTPS and origin-specific persistence cannot yet be verified",
     "Preview positions/preferences do not automatically transfer across origins",
     "No new Development Host/installed-VSIX run; fresh main package bytes equal accepted reader"
-  ]
+  ],
+  "customDomainVerification": {
+    "readerFilesExactlyAccepted": 74,
+    "filesCompared": 75,
+    "byteMismatches": [],
+    "browserOrigin": "https://read.murmurationpress.co.uk",
+    "allBeats": 144,
+    "supportingTargetsOpened": 23,
+    "animations": 4,
+    "pageErrors": [],
+    "failedRequests": [],
+    "externalRequests": [],
+    "followAndNoteCases": 10,
+    "savedPositionAndPreferences": "pass on final origin",
+    "checks": [
+      "All 14 scenes / 144 beats complete with virtual active time, exact message counts, resolved images and actual supporting panels/nested Back",
+      "Refresh restores scene/beat and speed/autoplay/mute preferences, ready without restarting sound",
+      "Authored front and back matter are both in Contents and displayed",
+      "All 44 content-addressed assets HTTP-load and browser-decode",
+      "Real-time authored chat delivery, 0.75\u00d7\u21920.5\u00d7 paused change, resume and no duplicate reveal",
+      "Every animated WebP shows changing frames in the browser; no frame rewriting",
+      "390px/320px mobile layout, emulated-touch Contents/Canvas panel, 44px select and no horizontal overflow"
+    ],
+    "cachePolicy": {
+      "result": "pass",
+      "initialObserved": [
+        {
+          "name": "skip/reader.css",
+          "cacheControl": "max-age=14400"
+        },
+        {
+          "name": "skip/reader.js",
+          "cacheControl": "max-age=14400"
+        },
+        {
+          "name": "skip/web.css",
+          "cacheControl": "max-age=14400"
+        }
+      ],
+      "accountHolderReportedRuleDeployed": true,
+      "expression": "(http.host eq \"read.murmurationpress.co.uk\" and starts_with(http.request.uri.path, \"/skip/\"))",
+      "browserTTL": "Respect origin",
+      "verifiedMutableReaderHeaders": "no-cache",
+      "verifiedAssetHeaders": "immutable, no no-cache",
+      "strictFinalOriginVerification": {
+        "origin": "https://read.murmurationpress.co.uk",
+        "productionDeployment": "42ffb0fd-152c-4e9b-9651-c388519fc002",
+        "acceptedPreview": "f519ec23-3d85-4843-9f37-2dc96fadfa28",
+        "readerFilesExactlyAccepted": 74,
+        "totalHostedFilesCompared": 75,
+        "indexingMetadataOnlyDelta": [
+          "_headers",
+          "robots.txt"
+        ],
+        "noProductionNoindex": true,
+        "canonicalRedirects": true,
+        "privateAndMissingPaths404": true,
+        "tlsCertificateVerified": true,
+        "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+        "rendererRevision": "2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a",
+        "artifact": "8688e2f26cfb0faac777d5e1a192e2aa5678c64c48e2bddedeb71cd76aa36b9c",
+        "result": "PASS"
+      }
+    }
+  },
+  "fallbackPagesUrl": "https://murmuration-skip.pages.dev/skip/"
 }
