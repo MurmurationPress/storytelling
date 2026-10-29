@@ -1330,3 +1330,26 @@ does not migrate across origins; same-origin production refresh/reopening passes
 Raw evidence/receipts/retained rollback build remain beside the private final
 build. Summary: `test/evidence/skip-production.json`. This first live deployment
 has no predecessor; its retained receipt is the future rollback target.
+
+## Final hostname checked — 29 October 2026
+
+`https://read.murmurationpress.co.uk/skip/` resolves and passes normal TLS with
+the correct active Pages production deployment. HTTP→HTTPS and canonical path
+redirects and private/missing-file 404s pass; six unrelated public DNS checks
+remain unchanged. All 75 payload hashes match, including all 74 accepted reader
+files. Final-origin browser checks pass all 144 beats, 44 assets, 23 note targets,
+four animations, refresh/reopening/saved position/preferences and ten light/dark
+follow/note layouts. These are automated Chrome/emulated-touch checks; Ted's
+iPad/iPhone acceptance remains scoped to his preview report. Ghost is untouched.
+
+Strict cache verification found a real exception: custom-host JS/CSS headers are
+`max-age=14400`, whereas the Pages origin supplies `no-cache`. HTML/book JSON
+revalidate correctly; no byte or functional-reader defect was found. The cache
+settings/rules API is 403, so a reader-only Cache Rule using Browser TTL Respect
+origin is requested from the account holder, preserving Ghost/global settings.
+Ted reported the reader-only rule deployed. The subsequent strict verifier passes
+on the final hostname: JS/CSS now revalidate, images retain immutable caching, all
+75 hashes and routing/privacy/indexing/TLS checks pass. No new reader build or
+deployment was needed; the accepted payload remains unchanged. Ghost is untouched.
+Raw final-origin byte/cache, domain/route/DNS, browser and layout reports remain
+beside the retained build; summary is in `test/evidence/skip-production.json`.

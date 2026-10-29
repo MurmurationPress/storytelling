@@ -124,11 +124,10 @@ Accepted artifact: f519ec23 preview, renderer 0.12.4 (`2f2e5fb`), source `7c030a
 Integrated by Stories-Told #2 (`fe8ebbb`) and storytelling #23 (`437b70e`), with
 reviewed/merged tree equality. The publish command created production deployment
 `42ffb0fd-152c-4e9b-9651-c388519fc002` without re-exporting reader content.
-Production Pages URL: https://murmuration-skip.pages.dev/skip/ . Custom-domain
-association is registered; reader DNS/HTTPS verification is pending. DNS API
-returns 403: the account holder must inspect/add only the CNAME `read` pointing
-to `murmuration-skip.pages.dev` (proxy on, TTL Auto), preserving all other records.
-The project’s Custom domains tab shows its pending/active validation status.
+Production Pages URL: https://murmuration-skip.pages.dev/skip/ . The final custom domain https://read.murmurationpress.co.uk/skip/ is active and
+verified, following the account-holder CNAME setup. The connected DNS/settings
+API returns 403; the account holder used the dashboard, preserving other records.
+The project’s Custom domains tab confirms active validation.
 
 For a future rollback after a later deployment, using the retained first build:
 
@@ -143,3 +142,29 @@ Do not run a rollback merely to test it on the live reader. Publication receipts
 and all source/renderer files stay outside the public `site/`. The original source
 PR #1 has later editorial work and remains open; the published source is the
 accepted snapshot, not those unreviewed additions. Ghost publication remains Ted's.
+
+## Custom-domain cache verification
+
+The final hostname is live at https://read.murmurationpress.co.uk/skip/. Its
+reader/content bytes, navigation, notes, storage and following pass. Initial verification
+found a custom-domain cache exception: JavaScript/CSS return `max-age=14400`
+instead of the export's `no-cache`; HTML/book JSON already revalidate. Correct
+this once at the reader hostname so subsequent renderer updates do not leave
+repeat visitors with old script/style files. Do not change global zone caching
+for the Ghost website.
+
+In Cloudflare Cache Rules, append a rule matching:
+
+```text
+(http.host eq "read.murmurationpress.co.uk" and starts_with(http.request.uri.path, "/skip/"))
+```
+
+Set Browser TTL to **Respect origin**, leaving unrelated settings/rules intact.
+The connected OAuth cache/settings API returns 403. Ted deployed this reader-only
+rule in the dashboard; the subsequent final-host header and full-payload checks
+pass. Keep the rule for routine updates and recheck headers after hosting changes. Expected outcomes:
+HTML, publication/content JSON and reader.js/reader.css/web.css revalidate;
+content-addressed images retain their long immutable cache. Existing browser
+caches may retain their previous TTL until expiration or a reload that bypasses
+the local cache; Cloudflare cache purging does not clear browser caches.
+See [Cloudflare Browser TTL settings](https://developers.cloudflare.com/cache/how-to/cache-rules/settings/#browser-ttl).
