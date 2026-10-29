@@ -21,3 +21,18 @@ The resolution/filesystem adapter is separate from VS Code, and the shared reade
 **Branch relationship:** this separate PR is stacked on PR #12's accepted `bf846888f0cbedc70328ff103eea12b9ea8b861e`; Ted subsequently authorised dependency-order integration of both PRs; licence terms remain unchanged. Ted's authored [[Component Types]] remains unchanged.
 
 **Standalone web trial:** [[Story Teller Web Reader]] exports these behaviours using the shared presentation module and a snapshot note loader. The authoring extension retains its filesystem/editor-buffer refresh; exported books are static snapshots, updated by a new export rather than access to the author's files. This web delivery is awaiting acceptance.
+
+## Editorial review rule: information at the point of access
+
+Agreed with Ted on 29 October 2026. Supporting Content is part of the storytelling and must be reviewed against what the reader can know when it first becomes accessible.
+
+For each authored link, check the hover/focus preview, the full reading panel, and every note reachable through onward links. Follow those links recursively, treating cycles as already visited; a safe direct note can still lead to a revealing later one. Include titles, aliases, images, captions and alternative text, not only the note's body.
+
+Review against the earliest access point to that specific note version. Flag later events, identities, relationships, outcomes and explanations which would disclose a reveal prematurely. Also flag information which assumes knowledge the reader has not yet acquired. Check links in front/back matter and supporting notes as well as story scenes. Repeat the check when a shared note or its onward links change.
+
+Use explicit earlier/later note versions with display aliases where needed, or revise/remove the premature material or link. A later version must not remain reachable through an earlier note's onward links. Preserve intentional mysteries and distinguish information the reader knows from information a particular character knows.
+
+Record the entry point, revealing content/link chain and proposed correction for findings. An intentional early disclosure is an editorial decision to record explicitly, not an automatic error to rewrite.
+
+The review is scoped to the book's own exported Supporting Content. Project scoping prevents access to unrelated vault material; it does not prevent spoilers within the publication. This is a human/editorial review rule using existing explicit links and note versions, not an implemented automatic spoiler filter, reader-progress gate or new engine.
+
