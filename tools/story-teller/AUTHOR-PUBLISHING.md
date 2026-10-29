@@ -145,9 +145,9 @@ node scripts/publication.cjs rollback \
 ```
 
 Do not run a rollback merely to test it on the live reader. Publication receipts
-and all source/renderer files stay outside the public `site/`. The original source
-PR #1 has later editorial work and remains open; the published source is the
-accepted snapshot, not those unreviewed additions. Ghost publication remains Ted's.
+and all source/renderer files stay outside the public `site/`. At that first publication, original source PR #1 had later editorial work and
+remained open. Those updates have since merged and are included in the approved
+b002eb1 edition below. Always publish the accepted snapshot, not later edits. Ghost publication remains Ted's.
 
 ## Custom-domain cache verification
 
@@ -174,3 +174,20 @@ content-addressed images retain their long immutable cache. Existing browser
 caches may retain their previous TTL until expiration or a reload that bypasses
 the local cache; Cloudflare cache purging does not clear browser caches.
 See [Cloudflare Browser TTL settings](https://developers.cloudflare.com/cache/how-to/cache-rules/settings/#browser-ttl).
+
+## Accepted b002eb1 update
+
+Ted approved preview `0bd22c55-2f79-4f26-b776-f6f610c25fb2` (“Reviewed and happy
+to publish”). The exact retained build was promoted without export/rebuild to
+production `bcc3d61e-81f1-4a33-a246-e17543e3d257`; source is b002eb1, renderer
+0.12.4 at d4e3601. https://read.murmurationpress.co.uk/skip/ remains unchanged.
+All 76 served hashes and final-origin functional/persistence/follow tests pass.
+The previous 42ffb0fd production and its retained first build are available for
+rollback using the earlier example with current-production expectation bcc3d61e.
+Use full deployment IDs from the receipts. The first build is not overwritten.
+
+Publication follows the point-of-access editorial review rule. All 23 notes and
+recursive onward paths were reviewed; no blocking finding required changing the
+approved snapshot. The minor early Clive/Companion terminology item is recorded
+for a future editorial update. This review is distinct from syntax/resource checks
+and does not add automatic filtering. Ghost remains Ted's responsibility.

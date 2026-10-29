@@ -377,3 +377,23 @@ unmerged. Source PR #2 isolates the four accepted target-only repairs at `7c030a
 without changing displayed wording. Merge that dependency before renderer PR #23.
 The accepted artifact retains its pinned source/renderer revisions; integration
 records map them to merged trees instead of rebuilding the accepted content.
+
+### 2026-10-29 — Accept and publish the cover/proofreading book update
+
+Ted reports “Reviewed and happy to publish” for the b002eb1 preview at
+https://0bd22c55.murmuration-skip.pages.dev/skip/. This authorises promotion of
+that exact retained snapshot, not a fresh export of later source changes. Devices
+and browsers for this acceptance are unspecified; retain earlier actual-device
+acceptance separately. Source b002eb1 uses approved renderer 0.12.4 at d4e3601.
+
+The point-of-access Supporting Content rule added at cfbfce7 is applied: inspect
+all 23 notes and recursive onward paths from earliest access, including preview/
+full titles, aliases and any images (none in these notes). No blocking premature
+plot outcome is identified. Clive's early profile uses the product term Companion
+before its dedicated story link; record this minor terminology issue for possible
+later expansion, without changing the accepted payload. This is manual editorial
+assessment, not an automatic spoiler filter.
+
+Production promotion preserves every accepted reader/content/asset byte; only
+preview indexing metadata changes. Keep the preceding live edition for rollback.
+Ghost, DNS/cache configuration, source files and renderer remain unchanged.

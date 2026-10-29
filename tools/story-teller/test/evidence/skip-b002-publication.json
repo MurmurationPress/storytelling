@@ -1,0 +1,153 @@
+{
+  "date": "2026-10-29",
+  "acceptance": {
+    "report": "Reviewed and happy to publish",
+    "previewUrl": "https://0bd22c55.murmuration-skip.pages.dev/skip/",
+    "deviceAndBrowserForThisAcceptance": "not specified; do not infer new actual-device coverage"
+  },
+  "production": {
+    "id": "bcc3d61e-81f1-4a33-a246-e17543e3d257",
+    "url": "https://bcc3d61e.murmuration-skip.pages.dev",
+    "environment": "production",
+    "artifact": "a1c534dacd95e793aa93042369d339256b6c74a41968c8a148d8afe3822758fa",
+    "sourceRevision": "b002eb1365c46fdb3b0b4bdffe831d850a53415f",
+    "rendererRevision": "d4e3601eb184ee2153842b860ac4adca2c6e5958",
+    "previousProduction": "42ffb0fd-152c-4e9b-9651-c388519fc002",
+    "reviewed": "0bd22c55-2f79-4f26-b776-f6f610c25fb2"
+  },
+  "finalUrl": "https://read.murmurationpress.co.uk/skip/",
+  "rendererVersion": "0.12.4",
+  "promotion": "Exact retained approved artifact; no re-export; only root indexing headers/robots differ",
+  "http": {
+    "origin": "https://read.murmurationpress.co.uk",
+    "productionDeployment": "bcc3d61e-81f1-4a33-a246-e17543e3d257",
+    "acceptedPreview": "0bd22c55-2f79-4f26-b776-f6f610c25fb2",
+    "readerFilesExactlyAccepted": 75,
+    "totalHostedFilesCompared": 76,
+    "indexingMetadataOnlyDelta": [
+      "_headers",
+      "robots.txt"
+    ],
+    "noProductionNoindex": true,
+    "canonicalRedirects": true,
+    "privateAndMissingPaths404": true,
+    "tlsCertificateVerified": true,
+    "sourceRevision": "b002eb1365c46fdb3b0b4bdffe831d850a53415f",
+    "rendererRevision": "d4e3601eb184ee2153842b860ac4adca2c6e5958",
+    "artifact": "a1c534dacd95e793aa93042369d339256b6c74a41968c8a148d8afe3822758fa",
+    "result": "PASS"
+  },
+  "browser": {
+    "origin": "https://read.murmurationpress.co.uk",
+    "method": "Actual book at /skip/ over HTTP(S); Chrome headless Linux",
+    "beats": 148,
+    "assets": 45,
+    "supportingTargets": 23,
+    "animations": 4,
+    "pageErrors": [],
+    "failedRequests": [],
+    "externalRequests": []
+  },
+  "layout": {
+    "cases": 10,
+    "widths": [
+      320,
+      390,
+      768,
+      1024,
+      1100
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "actualDeviceTest": false
+  },
+  "priorEditionPositionRestore": {
+    "method": "Simulate prior live-edition localStorage on the same final origin; automated Chrome/touch emulation",
+    "publicationIdentityUnchanged": true,
+    "cases": [
+      {
+        "scene": "The Last Word",
+        "previousBeatIndex": 12,
+        "restoredBeatIndex": 10,
+        "status": "Beat 11 of 11 \u00b7 ready \u00b7 Prose pacing On (book)",
+        "preferencesPreserved": true
+      },
+      {
+        "scene": "Gardener's Question Time",
+        "previousBeatIndex": 2,
+        "restoredBeatIndex": 2,
+        "status": "Beat 3 of 6 \u00b7 ready \u00b7 Prose pacing On (book)",
+        "preferencesPreserved": true
+      }
+    ]
+  },
+  "editorialReview": {
+    "policyRevision": "cfbfce7 (point-of-access editorial rule)",
+    "method": "Inspect every exported preview/full-note body, title, alias and recursively reachable note against its earliest story access; cycles visited once per earlier access point. Manual editorial assessment, not an automatic spoiler filter.",
+    "notesReviewed": 23,
+    "noteImages": 0,
+    "assessment": [
+      {
+        "entry": "Introduction \u2192 Skip \u2192 The Common Room \u2192 cast notes",
+        "assessment": "Character handles, artistic interests and ordinary traits provide cast context; no later incident resolution is stated."
+      },
+      {
+        "entry": "First Pip reference \u2192 Pip \u2192 Robin/Ruth",
+        "assessment": "The opening story already states Pip taught Skip to draw and has stopped answering. Notes provide household and friendship context, not the cause of the loss or a later resolution."
+      },
+      {
+        "entry": "Bad Influence \u2192 Mara",
+        "assessment": "The narrative names Nina and describes her burlesque work before the first Mara link, so the note does not reveal an unrevealed identity or profession."
+      },
+      {
+        "entry": "Whose Companion Is It Anyway? \u2192 Companion",
+        "assessment": "In-world promotional/service terms provide context for the new product; the note does not identify Nell or reveal Clive\u2019s final decision."
+      },
+      {
+        "entry": "Skip\u2019s Christmas Carol \u2192 Eleanor \u2192 JANUS/PRIME/Tobias",
+        "assessment": "Biographical/programme background precedes the chapter\u2019s following exposition. No outcome of the Christmas encounter or protected explanation of Skip\u2019s origin is disclosed."
+      },
+      {
+        "entry": "Fledglings and Canvas",
+        "assessment": "First links follow their on-page presentation; notes explain the observed presentation and drawing space, without future-event disclosures."
+      }
+    ],
+    "findings": [
+      {
+        "severity": "minor terminology",
+        "entry": "Introduction \u2192 Skip \u2192 The Common Room \u2192 Clive",
+        "content": "Clive profile uses the capitalised product term Companion before its dedicated first story link.",
+        "proposedCorrection": "If expanding the note in a later editorial update, add a short plain-language description. Leave the accepted snapshot unchanged for this publication.",
+        "blocking": false
+      }
+    ],
+    "materialPrematurePlotOutcomeFound": false,
+    "approvedPayloadChanged": false
+  },
+  "domain": {
+    "production": "bcc3d61e-81f1-4a33-a246-e17543e3d257",
+    "source": "b002eb1365c46fdb3b0b4bdffe831d850a53415f",
+    "domain": "read.murmurationpress.co.uk",
+    "status": "active",
+    "previousRetained": true
+  },
+  "rollback": {
+    "previousProduction": "42ffb0fd-152c-4e9b-9651-c388519fc002",
+    "previousRetained": true,
+    "liveRollbackExecuted": false,
+    "retainedBuildAndReceipts": true
+  },
+  "scope": {
+    "ghostEdits": false,
+    "dnsOrCacheRuleEdits": false,
+    "sourceEdits": false,
+    "rendererChanges": false
+  },
+  "limits": [
+    "Production checks are automated Chrome/touch emulation, not new actual-device testing",
+    "Changed beat boundaries restore prior positions best-effort; edited chapter clamping is verified",
+    "Manual supporting-note review does not implement an automatic spoiler filter"
+  ]
+}
