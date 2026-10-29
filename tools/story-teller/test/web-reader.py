@@ -6,6 +6,10 @@ import asyncio, json, pathlib, sys, threading, functools, time
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.async_api import async_playwright
 
+async def more_action(page, selector):
+    if not await page.locator('#more-options').is_visible(): await page.locator('#more-toggle').click()
+    await page.locator(selector).click()
+
 async def run(root):
     class Quiet(SimpleHTTPRequestHandler):
         def log_message(self,*args): pass
@@ -30,7 +34,7 @@ async def run(root):
         await page.emulate_media(color_scheme='dark');dark=await page.evaluate('getComputedStyle(document.body).color');assert light!=dark
         await page.emulate_media(color_scheme='light');evidence['checks']['theme_text_colours']={'light':light,'dark':dark}
         assert await page.locator('#beat button[data-story-target^="JANUS"]').all_text_contents()==['JANUS','JANUS']
-        await page.locator('#play').click();await page.wait_for_timeout(150)
+        await page.locator('#playback-toggle').click();await page.wait_for_timeout(150)
         await page.locator('#beat button[data-story-target="JANUS early"]').hover()
         await page.wait_for_selector('#supporting-preview:not([hidden])');assert 'unopened harbour ledger' in await page.locator('#supporting-preview').inner_text()
         await page.locator('#supporting-preview').hover();await page.wait_for_timeout(250);assert await page.locator('#supporting-preview').is_visible()
@@ -41,7 +45,7 @@ async def run(root):
         await page.keyboard.press('Escape');assert not await page.locator('dialog').is_visible();assert await page.evaluate('document.activeElement.dataset.storyTarget')=='JANUS later';assert 'paused' in await page.locator('#status').inner_text()
         await page.locator('#beat button[data-story-target="Ted"]').click();await page.wait_for_selector('dialog button[data-story-target="definitions/Accounts"]');await page.locator('dialog button[data-story-target="definitions/Accounts"]').click();assert 'Accounts' in await page.locator('dialog h2').inner_text()
         await page.locator('dialog header button').first.click();assert await page.locator('dialog img').count()==1
-        await page.locator('dialog header button').last.click();await page.locator('#pause').click()
+        await page.locator('dialog header button').last.click();await page.locator('#playback-toggle').click()
         await page.set_viewport_size({'width':600,'height':350})
         counts=[];chat_times=[];chat_started=time.monotonic()
         for _ in range(8):
@@ -71,16 +75,16 @@ async def run(root):
         await page.wait_for_selector('dialog[open]');await page.wait_for_timeout(100)
         assert audio.count('disconnect')>disconnects,audio
         await page.keyboard.press('Escape');assert 'paused' in await page.locator('#status').inner_text()
-        await page.locator('#pause').click();await page.wait_for_timeout(120)
-        await page.locator('#mute').click();await page.wait_for_timeout(80)
-        assert await page.locator('#mute').get_attribute('aria-pressed')=='true'
-        await page.locator('#mute').click()
-        await page.locator('#pause').click();held=await page.locator('.typeout-progress').inner_text();await page.wait_for_timeout(250);assert held==await page.locator('.typeout-progress').inner_text()
-        await page.locator('#reveal').click();await page.wait_for_selector('#beat button[data-story-target="Missing definition"]')
+        await page.locator('#playback-toggle').click();await page.wait_for_timeout(120)
+        await page.locator('#sound-toggle').click();await page.wait_for_timeout(80)
+        assert await page.locator('#sound-toggle').get_attribute('aria-pressed')=='true'
+        await page.locator('#sound-toggle').click()
+        await page.locator('#playback-toggle').click();held=await page.locator('.typeout-progress').inner_text();await page.wait_for_timeout(250);assert held==await page.locator('.typeout-progress').inner_text()
+        await more_action(page, '#reveal');await page.wait_for_selector('#beat button[data-story-target="Missing definition"]')
         await page.locator('#beat button[data-story-target="Missing definition"]').click();assert 'Missing note' in await page.locator('dialog article').inner_text()
         await page.keyboard.press('Escape');await page.locator('#previous').click();assert 'completed' in await page.locator('#status').inner_text()
-        await page.locator('#next').click();await page.locator('#reveal').click();await page.locator('#next').click();await page.wait_for_selector('.typeout-yaml')
-        await page.locator('#reveal').click();assert '[[JANUS later|JANUS]]' in await page.locator('.typeout-progress').inner_text()
+        await page.locator('#next').click();await more_action(page, '#reveal');await page.locator('#next').click();await page.wait_for_selector('.typeout-yaml')
+        await more_action(page, '#reveal');assert '[[JANUS later|JANUS]]' in await page.locator('.typeout-progress').inner_text()
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         assert await page.locator('.story-image').count()==1
         await page.locator('.beat-ending button').click();await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['1.2'])
@@ -109,11 +113,11 @@ async def run(root):
         await page.locator('#contents-toggle').click();await buttons.nth(2).click()
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         evidence['checks']['scene_load_failure_recovery']=True
-        await page.locator('#autoplay').uncheck();await page.reload();await page.wait_for_selector('#beat');await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['2.1'])
+        await page.locator('#more-toggle').click();await page.locator('#autoplay').uncheck();await page.keyboard.press('Escape');await page.reload();await page.wait_for_selector('#beat');await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['2.1'])
         assert not await page.locator('#autoplay').is_checked();assert 'ready' in await page.locator('#status').inner_text()
         await page.locator('#contents-toggle').click();await page.locator('#contents button').nth(0).click()
         await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['1.1'])
-        await page.locator('#play').click();await page.wait_for_timeout(100)
+        await page.locator('#playback-toggle').click();await page.wait_for_timeout(100)
         await page.goto(url+'/publication.json');await page.go_back();await page.wait_for_selector('#beat')
         await page.wait_for_timeout(200);assert 'playing' not in await page.locator('#status').inner_text()
         evidence['checks']['departure_return_no_resume']=True

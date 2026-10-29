@@ -19,7 +19,7 @@ async def run(build,origin,label):
     async with async_playwright() as p:
         browser=await p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--no-sandbox'])
         version=browser.version
-        for width,height,mobile in [(1100,780,False),(390,780,True),(320,568,True)]:
+        for width,height,mobile in [(1100,780,False),(768,1024,True),(1024,768,True),(390,780,True),(320,568,True)]:
             for theme in ['light','dark']:
                 ctx=await browser.new_context(viewport={'width':width,'height':height},is_mobile=mobile,has_touch=mobile,color_scheme=theme)
                 page=await ctx.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))

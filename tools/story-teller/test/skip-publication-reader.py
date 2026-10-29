@@ -5,6 +5,16 @@ Screenshots/reports stay beside the private build, outside the public site.
 import asyncio, hashlib, json, pathlib, sys, time
 from playwright.async_api import async_playwright
 
+
+async def preference(page, selector, value):
+    if not await page.locator('#more-options').is_visible():
+        await page.locator('#more-toggle').click()
+    if selector == '#autoplay':
+        await page.locator(selector).set_checked(value)
+    else:
+        await page.locator(selector).select_option(value)
+    await page.keyboard.press('Escape')
+
 async def run(build, origin, label=""):
     suffix = "-" + label if label else ""
     site = build / 'site' / 'skip'
@@ -29,7 +39,7 @@ async def run(build, origin, label=""):
         await page.wait_for_selector('#beat h1')
         assert (await page.locator('#beat h1').inner_text()) == book['title']
         assert await page.locator('#playback-speed').input_value() == '1'
-        await page.locator('#autoplay').uncheck()
+        await preference(page, '#autoplay', False)
         await page.clock.install()
 
         async def select(item):
@@ -65,7 +75,7 @@ async def run(build, origin, label=""):
             for index, beat in enumerate(scene['beats']):
                 if index:
                     await page.locator('#next').click()
-                await page.locator('#play').click()
+                await page.locator('#playback-toggle').click()
                 await page.clock.run_for(beat['reducedMotionDuration'] + 20)
                 await page.wait_for_function("() => document.getElementById('status').textContent.includes('completed')")
                 expected_messages = sum(block['messages'] for block in beat['blocks'])
@@ -87,15 +97,15 @@ async def run(build, origin, label=""):
         report['checks'].append('All 14 scenes / 144 beats complete with virtual active time, exact message counts, resolved images and actual supporting panels/nested Back')
 
         # Saved scene/beat/preferences survive reopening, without autoplay.
-        await page.locator('#playback-speed').select_option('0.75')
-        await page.locator('#mute').click()
+        await preference(page, '#playback-speed', '0.75')
+        await page.locator('#sound-toggle').click()
         state = await page.evaluate("Object.values(localStorage).map(v=>{try{return JSON.parse(v)}catch{return null}}).find(v=>v?.sourceUri)")
         await page.reload()
         await page.wait_for_function("expected => Object.values(localStorage).some(v=>{try{const s=JSON.parse(v);return s.sourceUri===expected.sourceUri && s.index===expected.index}catch{return false}})", arg=state)
         await page.wait_for_function("() => document.getElementById('status').textContent.includes('ready')")
         assert await page.locator('#playback-speed').input_value() == '0.75'
         assert not await page.locator('#autoplay').is_checked()
-        assert await page.locator('#mute').get_attribute('aria-pressed') == 'true'
+        assert await page.locator('#sound-toggle').get_attribute('aria-pressed') == 'true'
         report['savedPosition'] = {'scene': state['sourceUri'], 'beat': state['index'], 'speed': .75, 'autoplay': False, 'muted': True}
         report['checks'].append('Refresh restores scene/beat and speed/autoplay/mute preferences, ready without restarting sound')
         for item in [book['readingOrder'][0], book['readingOrder'][-1]]:
@@ -121,7 +131,7 @@ async def run(build, origin, label=""):
         page.on('pageerror', lambda e: errors.append(str(e)))
         await page.goto(origin + '/skip/')
         await page.wait_for_selector('#beat h1')
-        await page.locator('#autoplay').uncheck()
+        await preference(page, '#autoplay', False)
         scene = book['scenes'][1]
         await page.locator('#contents-toggle').click()
         await page.locator('#contents button').get_by_text(f"{scene['label']} {scene['title']}", exact=True).click()
@@ -129,18 +139,18 @@ async def run(build, origin, label=""):
         # Find the first fully chat-led beat in this actual scene (index 3).
         for _ in range(3):
             await page.locator('#next').click()
-        await page.locator('#playback-speed').select_option('0.75')
-        await page.locator('#play').click()
+        await preference(page, '#playback-speed', '0.75')
+        await page.locator('#playback-toggle').click()
         await page.wait_for_timeout(350)
         assert await page.locator('#beat .chat li').count() == 0
-        await page.locator('#pause').click()
-        await page.locator('#playback-speed').select_option('0.5')
+        await page.locator('#playback-toggle').click()
+        await preference(page, '#playback-speed', '0.5')
         await page.wait_for_timeout(500)
         assert await page.locator('#beat .chat li').count() == 0
         assert 'paused' in await page.locator('#status').inner_text()
-        await page.locator('#pause').click()
+        await page.locator('#playback-toggle').click()
         await page.locator('#beat .chat li').first.wait_for(timeout=10000)
-        await page.locator('#pause').click()
+        await page.locator('#playback-toggle').click()
         held = await page.locator('#beat .chat li').count()
         await page.wait_for_timeout(250)
         assert await page.locator('#beat .chat li').count() == held
@@ -176,7 +186,7 @@ async def run(build, origin, label=""):
         mobile = await browser.new_context(viewport={'width': 390, 'height': 844}, is_mobile=True, has_touch=True, device_scale_factor=1)
         page = await mobile.new_page(); page.on('pageerror', lambda e: errors.append(str(e)))
         await page.goto(origin + '/skip/'); await page.wait_for_selector('#beat h1')
-        await page.locator('#playback-speed').select_option('0.75')
+        await preference(page, '#playback-speed', '0.75')
         await page.locator('#contents-toggle').tap()
         assert await page.locator('#contents').is_visible()
         await page.locator('#contents button').get_by_text('14 A Spoonful of Explanation', exact=True).tap()
@@ -188,7 +198,9 @@ async def run(build, origin, label=""):
         for width in [390, 320]:
             await page.set_viewport_size({'width': width, 'height': 844})
             assert await page.evaluate('document.documentElement.scrollWidth <= document.documentElement.clientWidth+1')
+            await page.locator('#more-toggle').click()
             assert await page.locator('#playback-speed').evaluate('e=>e.getBoundingClientRect().height') >= 44
+            await page.keyboard.press('Escape')
         await page.screenshot(path=str(build / f'mobile-preview{suffix}.png'), full_page=False)
         report['checks'].append('390px/320px mobile layout, emulated-touch Contents/Canvas panel, 44px select and no horizontal overflow')
         await mobile.close()

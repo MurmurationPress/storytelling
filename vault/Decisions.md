@@ -344,3 +344,15 @@ editorial observation only; no automatic splitting or wording changes. Proceed
 with a technical per-book export/preview workflow and separate reviewed-build
 production/rollback commands. Production/DNS/Ghost approval remains pending.
 Explicit Light/Dark/System selection and branding refinement are deferred.
+
+### 2026-10-29 — Compact standalone reader controls
+
+Ted authorises a compact standalone-only toolbar in existing preview PR #23:
+Previous/Play-Pause/Next/Sound/More SVG controls, generous targets and accessible
+names. More retains text-labelled Reveal beat, Replay beat, Restart scene,
+speed and autoplay. Reveal uses the existing whole-beat completion operation,
+without advancing; native preview retains active-type-out reveal. Preserve actual
+titles, simple Contents, authored pacing versus reader speed, follow/rereading and
+Supporting Content. No auto-hiding/gestures, manuscript edits, theme selector or
+branding work. Re-export/test the book and deploy preview only. Production/DNS/
+Ghost and PR integration remain pending review.

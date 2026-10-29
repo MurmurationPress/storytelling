@@ -32,6 +32,31 @@ Open **http://127.0.0.1:8765/**. Choose a fresh destination on each export. Read
 
 ## Read
 
+The standalone toolbar contains Previous beat (left chevron), one state-aware
+Play/Pause/Resume button, Next beat (right chevron), Sound (muted/unmuted speaker)
+and More options (ellipsis). Icons have accessible names, mouse tooltips, visible
+keyboard focus and at least 44px touch targets. Completed beats disable Play;
+use the text-labelled Replay beat action to perform them again. Boundary rules
+are unchanged: Previous can cross scenes; Next scene remains the explicit action
+at the end of a completed scene. No automatic turns or control hiding are added.
+
+More options is a non-modal disclosure for mixed actions and form controls, not
+an ARIA menu. It contains **Reveal beat**, **Replay beat**, **Restart scene**,
+**Playback speed** and **Autoplay on beat turns** (plus Enable sound only when a
+browser gesture is needed). Opening focuses the first available action; native
+Tab/Shift+Tab moves through the controls. Escape and action selection close it
+and return focus to More options. Outside pointer dismissal returns focus unless
+you chose another interactive control; tabbing outside closes without moving
+focus back. Preferences stay open while edited. The panel fits the viewport and
+scrolls internally when necessary.
+
+Reveal beat uses the existing whole-beat reveal operation: complete all remaining
+prose, chat and type-out content in the current beat, cancel its timers/sound and
+leave it completed **without advancing**, including when ready or paused. Replay
+resets and plays the same beat; Restart scene returns to its first beat ready.
+The VS Code preview retains its existing controls and active-type-out reveal.
+
+
 - Initial opening/reopening selects the saved scene/beat **ready**, without starting sound or playback. **Play** starts it. Reopening restores location/preferences, not elapsed performance progress.
 - **Contents** collapses/expands an ordered Part–Scene panel. Selecting a scene starts its first beat when Autoplay is enabled; Off leaves it ready. Next turns beats manually; no beat or scene turns automatically. **Next scene →** appears after the last beat completes, including authored silence; the final scene ends with **End of scene**.
 - Previous shows a completed silent beat; Replay resets/plays it; Restart returns to the current scene's first beat ready. Pause/Resume preserves remaining waits. Mute and Autoplay are stored per publication in browser local storage; storage-disabled/private browsing still works without guaranteed persistence.
@@ -72,7 +97,7 @@ For the affected reading handoffs, use `STORY_TELLER_VSIX=... STORY_TELLER_HOST_
 
 ### Playback speed
 
-The compact **Playback speed** select offers 0.5×, 0.75×, 1× (default), 1.25×
+The **Playback speed** select in More options offers 0.5×, 0.75×, 1× (default), 1.25×
 and 1.5×. Smaller is slower. It adjusts calculated prose intervals, automatic
 chat delivery (after `@pace`), and type-out reveal (after `@speed`). Authored
 `@delay`/`@pause`, delivery ticks, audio pitch and animated-image frames remain

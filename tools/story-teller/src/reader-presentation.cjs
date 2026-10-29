@@ -66,7 +66,7 @@ function controls() {
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || (player.index === 0 && !documentNavigation.previous);
   document.getElementById('next').disabled = preparing || !beat || (isMatter ? !documentNavigation.next : player.index >= player.scene.beats.length - 1);
-  document.getElementById('next').textContent = isMatter ? 'Continue →' : 'Next';
+  if (!api.compactControls) document.getElementById('next').textContent = isMatter ? 'Continue →' : 'Next';
   for (const id of ['restart','play','pause','replay','mute','enable-sound']) document.getElementById(id).hidden = isMatter;
   document.getElementById('restart').disabled = preparing || !beat;
   document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented;
@@ -74,7 +74,8 @@ function controls() {
   document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
   document.getElementById('replay').disabled = preparing || !beat || !presented;
   const reveal = document.getElementById('reveal');
-  reveal.hidden = !active; reveal.disabled = preparing || !active || !presented;
+  reveal.hidden = api.compactControls ? false : !active;
+  reveal.disabled = preparing || !presented || (api.compactControls ? isMatter || !beat || player.phase === 'completed' : !active);
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
   document.getElementById('enable-sound').hidden = isMatter || !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
@@ -83,6 +84,7 @@ function controls() {
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
+  api.onControls?.({ phase: player.phase, preparing, presented, isMatter, muted });
   if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
 }
 function imageElement(src, alt, inline = false) {
@@ -332,7 +334,10 @@ document.getElementById('pause').addEventListener('click', () => {
   if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
 document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { resetNotes(); follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
-document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
+document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) {
+  if (api.compactControls) { sceneAutoplay.cancel(); sound.stop(); player.revealBeat(); }
+  else player.revealImmediately();
+} });
 document.getElementById('enable-sound').addEventListener('click', () => {
   if (!preparing && presented && !document.hidden) { unlockSound(player.scene.beats.find(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'))); render(); }
 });
