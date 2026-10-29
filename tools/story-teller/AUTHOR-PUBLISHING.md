@@ -50,6 +50,12 @@ source/renderer revisions and production deployment at preview time. Review the
 immutable URL: the friendly review branch alias moves on the next preview.
 Do not modify an already reviewed build. Prepare a new directory for updates.
 
+## Editorial Supporting Content check
+
+Before approving a publication or content update, review each supporting note from its earliest accessible point in the book, including hover previews, full panels and all onward note links. Check titles, images and captions as well as text for premature revelations or assumed knowledge. Recheck the reachable chain when a shared note changes; resolve unintended spoilers with existing explicit note versions/aliases or link/content edits, and record intentional disclosures. See [the editorial review rule](../../vault/Supporting%20Content.md#editorial-review-rule-information-at-the-point-of-access).
+
+Zero export warnings verify resources and syntax, not spoiler safety. This is an editorial check, not an automatic reader-progress filter.
+
 ## Publish only after approval
 
 **Skip publication is authorised following Ted's actual iPad/iPhone acceptance
