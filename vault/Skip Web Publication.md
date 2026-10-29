@@ -67,3 +67,19 @@ VS Code hide/return pixel drift also reproduces on the previous baseline and is
 recorded as a separate native-test limitation. See the procedure/results.
 The current review URL above supersedes the older immutable preview URLs;
 production/DNS/Ghost remain untouched pending approval.
+
+## Header and author update workflow (29 October)
+
+Ted requested the actual scene title below Contents, compact beat/state/authored
+prose-pacing context and a separate reader speed control. The web-only compact
+header suppresses a redundant matching opening H1 in presentation; manuscript,
+beat boundaries and timing remain unchanged. Contents remains a toggle. Ted's
+shorter-beats observation is editorial feedback, not permission to split text.
+Explicit theme selection and further visual branding are deferred to keep this
+publication task small; the current system theme and reading contrast remain.
+
+The [author CLI procedure](../tools/story-teller/AUTHOR-PUBLISHING.md) pins source
+and renderer revisions, validates an isolated snapshot and uploads a preview.
+Publishing the reviewed retained artifact and rollback are distinct explicit
+commands. Production, DNS and Ghost remain unapproved and untouched. Saved
+position limitations, including order-dependent publication identity, are stated.

@@ -28,6 +28,7 @@ let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
 let isMatter = false;
+let sceneTitle = '', hideMatchingHeading = false;
 let documentNavigation = {};
 let pacingWarning = null;
 let pacingLabel = 'Off (unchanged default)';
@@ -60,7 +61,7 @@ function resetNotes() {
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  status.textContent = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
+  status.textContent = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${!api.compactHeader && beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · ${api.compactHeader ? 'Prose pacing' : 'prose pacing'} ${pacingLabel}` : 'No beats';
   warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...supportingDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || (player.index === 0 && !documentNavigation.previous);
@@ -142,12 +143,21 @@ function render() {
   content.replaceChildren();
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
+  let openingTitle = player.index === 0 && hideMatchingHeading;
   for (const block of player.visibleBlocks) {
     if (block.type === 'prose') {
       const section = document.createElement('section');
       section.className = 'prose';
       // Only our configured, HTML-disabled Markdown renderer produces this HTML.
       section.innerHTML = block.html;
+      if (openingTitle) {
+        const heading = section.firstElementChild;
+        const text = value => value.replace(/\s+/gu, ' ').trim();
+        // Move only a redundant title's presentation. Preserve semantic links,
+        // different headings, source wording and all timing/parser steps.
+        if (heading?.tagName === 'H1' && text(heading.textContent) === text(sceneTitle) && !heading.querySelector('[data-story-target],a,img')) heading.remove();
+        openingTitle = false;
+      }
       for (const image of section.querySelectorAll('img[data-story-src]')) {
         image.replaceWith(imageOrPlaceholder(image.getAttribute('data-story-src'), image.alt, true));
       }
@@ -431,6 +441,8 @@ api.onMessage(async event => {
   pacingWarning = message.pacingWarning;
   pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
   isMatter = message.matter === true;
+  sceneTitle = typeof message.sceneTitle === 'string' ? message.sceneTitle : '';
+  hideMatchingHeading = api.compactHeader === true && message.sceneTitleInBody === true && !isMatter;
   documentNavigation = message.documentNavigation || {};
   player.update(isMatter ? matterScene(message.source) : parseScene(message.source, { prosePacing: message.prosePacing === true }));
   const saved = api.getState();

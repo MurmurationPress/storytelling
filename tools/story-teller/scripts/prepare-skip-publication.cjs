@@ -1,5 +1,5 @@
 'use strict';
-// One book, existing exporter, static /skip/ directory. Never deploys or changes source.
+// One book, existing exporter, static /${slug}/ directory. Never deploys or changes source.
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -22,9 +22,9 @@ async function files(root) {
   }
   return result.sort();
 }
-async function snapshot(repo, revision, destination) {
+async function snapshot(repo, revision, destination, projectName = PROJECT) {
   const archive = path.join(path.dirname(destination), 'snapshot.tar');
-  execFileSync('git', ['-C', repo, 'archive', '--output', archive, revision, '--', PROJECT]);
+  execFileSync('git', ['-C', repo, 'archive', '--output', archive, revision, '--', projectName]);
   try { execFileSync('tar', ['-xf', archive, '-C', destination]); }
   finally { await fs.unlink(archive); }
 }
@@ -32,11 +32,15 @@ function zipSite(site, destination) {
   const script = 'import pathlib,sys,zipfile\nroot=pathlib.Path(sys.argv[1])\nwith zipfile.ZipFile(sys.argv[2], "x", zipfile.ZIP_DEFLATED) as archive:\n for file in sorted(root.rglob("*")):\n  if file.is_file(): archive.write(file, file.relative_to(root).as_posix())\n';
   execFileSync('python3', ['-c', script, site, destination]);
 }
-async function prepare(repo, ref, destination, mode = 'preview') {
+async function prepare(repo, ref, destination, mode = 'preview', options = {}) {
   if (!['preview', 'production'].includes(mode)) throw Error('Mode must be preview or production');
+  const projectName = options.project || PROJECT;
+  const slug = options.slug || 'skip';
+  if (!/^[a-z0-9][a-z0-9-]*$/.test(slug) || path.isAbsolute(projectName) || projectName.split(/[\\/]/).includes('..')) throw Error('Invalid project path or slug');
   const revision = git(repo, 'rev-parse', '--verify', `${ref}^{commit}`);
   const toolRoot = path.resolve(__dirname, '..');
   const rendererRevision = git(toolRoot, 'rev-parse', 'HEAD');
+  if (options.renderer && git(toolRoot, 'rev-parse', `${options.renderer}^{commit}`) !== rendererRevision) throw Error('Checkout the intended renderer revision before exporting');
   // Refuse unstaged/staged reader changes: the record must identify committed code.
   execFileSync('git', ['-C', toolRoot, 'diff', '--exit-code', 'HEAD', '--', 'src', 'media', 'package.json', 'package-lock.json']);
   const output = path.resolve(destination);
@@ -47,20 +51,20 @@ async function prepare(repo, ref, destination, mode = 'preview') {
   }
   await fs.mkdir(output); // Exclusive new build; never overwrite a reviewed candidate.
   await fs.mkdir(path.join(output, 'snapshot'));
-  await snapshot(repo, revision, path.join(output, 'snapshot'));
-  const project = path.join(output, 'snapshot', PROJECT);
+  await snapshot(repo, revision, path.join(output, 'snapshot'), projectName);
+  const project = path.join(output, 'snapshot', projectName);
   const before = new Map(await Promise.all((await files(project)).map(async file => [file, sha(await fs.readFile(file))])));
   execFileSync('npm', ['run', 'build'], { cwd: toolRoot, stdio: 'inherit' });
   const site = path.join(output, 'site'); await fs.mkdir(site);
-  const exported = await exportWeb(project, path.join(site, 'skip'));
+  const exported = await exportWeb(project, path.join(site, slug));
   const manifest = JSON.parse(await fs.readFile(path.join(project, 'story-teller.project.json'), 'utf8'));
-  const book = JSON.parse(await fs.readFile(path.join(site, 'skip/publication.json'), 'utf8'));
+  const book = JSON.parse(await fs.readFile(path.join(site, slug + '/publication.json'), 'utf8'));
   const problems = [...exported.warnings];
   for (const [target, entry] of Object.entries(book.targets)) if (!entry.id || !book.notes[entry.id]) problems.push(`Unresolved note: ${target}`);
   const allMedia = [];
   const playbackPlan = [];
   for (const item of book.readingOrder) {
-    const data = JSON.parse(await fs.readFile(path.join(site, 'skip', item.file), 'utf8'));
+    const data = JSON.parse(await fs.readFile(path.join(site, slug, item.file), 'utf8'));
     const authored = manifest.scenes.find(scene => scene.id === item.id) || (item.kind === 'front' ? manifest.matter.front : manifest.matter.back);
     const original = await fs.readFile(path.join(project, authored.file), 'utf8');
     if (data.source !== publicationBody(original)) problems.push(`Scene wording changed: ${item.id}`);
@@ -80,22 +84,22 @@ async function prepare(repo, ref, destination, mode = 'preview') {
   for (const note of Object.values(book.notes)) allMedia.push(...Object.entries(note.media));
   for (const [reference, item] of allMedia) {
     if (!item.url) { problems.push(`Missing image: ${reference}`); continue; }
-    const bytes = await fs.readFile(path.join(site, 'skip', item.url));
+    const bytes = await fs.readFile(path.join(site, slug, item.url));
     if (!before.has(path.resolve(project, 'scenes', decodeURIComponent(reference))) && !before.has(path.resolve(project, 'Supporting Content', decodeURIComponent(reference)))) problems.push(`Unexpected image source: ${reference}`);
     if (!item.url.includes(sha(bytes))) problems.push(`Image digest mismatch: ${reference}`);
   }
-  if (!book.targets.Canvas?.id) problems.push('Canvas must resolve');
-  const final = JSON.parse(await fs.readFile(path.join(site, 'skip', book.scenes.at(-1).file), 'utf8'));
-  if (Object.keys(final.media).length !== 3) problems.push('Final chapter must retain its three illustrations');
+  if (!options.project && !book.targets.Canvas?.id) problems.push('Canvas must resolve');
+  const final = JSON.parse(await fs.readFile(path.join(site, slug, book.scenes.at(-1).file), 'utf8'));
+  if (!options.project && Object.keys(final.media).length !== 3) problems.push('Final chapter must retain its three illustrations');
   for (const [file, hash] of before) if (sha(await fs.readFile(file)) !== hash) problems.push('Snapshot changed during preparation');
-  await fs.writeFile(path.join(site, '_redirects'), '/ /skip/ 302\n/skip /skip/ 301\n');
-  await fs.writeFile(path.join(site, '404.html'), '<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Page not found</title><h1>Page not found</h1><p><a href="/skip/">Read The Curious Adventures of Skip</a></p></html>\n');
-  const revalidate = ['/skip/', '/skip/index.html', '/skip/reader.js', '/skip/reader.css', '/skip/web.css', '/skip/publication.json', '/skip/content/*'];
-  await fs.writeFile(path.join(site, '_headers'), `/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n${mode === 'preview' ? '  X-Robots-Tag: noindex, nofollow\n' : ''}${revalidate.map(route => `${route}\n  Cache-Control: no-cache\n`).join('')}/skip/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
-  await fs.writeFile(path.join(site, 'robots.txt'), `User-agent: *\n${mode === 'preview' ? 'Disallow: /' : 'Allow: /skip/'}\n`);
+  await fs.writeFile(path.join(site, '_redirects'), `/ /${slug}/ 302\n/${slug} /${slug}/ 301\n`);
+  await fs.writeFile(path.join(site, '404.html'), `<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Page not found</title><h1>Page not found</h1><p><a href="/${slug}/">Read the book</a></p></html>\n`);
+  const revalidate = ['/' + slug + '/', '/' + slug + '/index.html', '/' + slug + '/reader.js', '/' + slug + '/reader.css', '/' + slug + '/web.css', '/' + slug + '/publication.json', '/' + slug + '/content/*'];
+  await fs.writeFile(path.join(site, '_headers'), `/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: same-origin\n${mode === 'preview' ? '  X-Robots-Tag: noindex, nofollow\n' : ''}${revalidate.map(route => `${route}\n  Cache-Control: no-cache\n`).join('')}/${slug}/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n`);
+  await fs.writeFile(path.join(site, 'robots.txt'), `User-agent: *\n${mode === 'preview' ? 'Disallow: /' : `Allow: /${slug}/`}\n`);
   // Carry existing software notices; the book/artwork retain their separate copyright.
-  await fs.copyFile(path.join(toolRoot, 'LICENSE'), path.join(site, 'skip/licences/story-teller.txt'));
-  await fs.copyFile(path.join(rendererRepo, 'LICENSING.md'), path.join(site, 'skip/licences/story-teller-scope.txt'));
+  await fs.copyFile(path.join(toolRoot, 'LICENSE'), path.join(site, slug + '/licences/story-teller.txt'));
+  await fs.copyFile(path.join(rendererRepo, 'LICENSING.md'), path.join(site, slug + '/licences/story-teller-scope.txt'));
   const publicFiles = {};
   let totalBytes = 0;
   for (const file of await files(site)) {
@@ -106,8 +110,8 @@ async function prepare(repo, ref, destination, mode = 'preview') {
     if (/\.(json|html|js|css|txt)$/.test(name) && /\/home\/thawkins\/|file:\/\/|"provenance"\s*:|"sourceScope"\s*:/.test(bytes.toString('utf8'))) problems.push(`Authoring path/provenance in public output: ${name}`);
   }
   if (Object.keys(publicFiles).length > 20000) problems.push('Cloudflare Pages file limit exceeded');
-  const report = { sourceRepository: 'tedwarddick/Stories-Told', sourceRevision: revision, sourceProject: PROJECT, rendererRevision, mode,
-    readerUrl: 'https://read.murmurationpress.co.uk/skip/', ...exported, destination: 'site/skip',
+  const report = { sourceRepository: git(repo, 'config', '--get', 'remote.origin.url').replace(/https:\/\/[^/@]+@/, 'https://'), sourceRevision: revision, sourceProject: projectName, slug, rendererVersion: require('../package.json').version, publicationId: book.id, rendererRevision, mode,
+    readerUrl: 'https://read.murmurationpress.co.uk/${slug}/', ...exported, destination: `site/${slug}`,
     supportingNotes: Object.keys(book.notes).length, noteTargets: Object.keys(book.targets).length,
     readingOrder: book.readingOrder.map(({ id, kind, title, label }) => ({ id, kind, title, label })),
     imageReferences: allMedia.length, finalChapterIllustrations: Object.keys(final.media).length,
@@ -115,7 +119,7 @@ async function prepare(repo, ref, destination, mode = 'preview') {
   await fs.writeFile(path.join(output, 'playback-plan.json'), JSON.stringify(playbackPlan, null, 2) + '\n');
   await fs.writeFile(path.join(output, 'build-report.json'), JSON.stringify(report, null, 2) + '\n');
   if (report.problems.length) throw Error(`Publication blocked; inspect ${path.join(output, 'build-report.json')}`);
-  zipSite(site, path.join(output, `skip-${mode}-upload.zip`));
+  zipSite(site, path.join(output, `${slug}-${mode}-upload.zip`));
   console.log(JSON.stringify({ output, sourceRevision: revision, rendererRevision, mode, scenes: exported.scenes, pages: exported.pages, assets: exported.assets, supportingNotes: report.supportingNotes, warnings: exported.warnings, totalBytes }, null, 2));
   return report;
 }

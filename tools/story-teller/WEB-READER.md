@@ -104,3 +104,12 @@ and makes supporting hover previews inherit the current web palette. Static
 matter and silent Previous start at the top; scroll-back suspension and Follow
 story resumption are preserved. Current exported-book regressions/results are
 linked from PUBLISH-SKIP.md; these are not additional actual-device claims.
+
+The standalone header shows the actual scene title, beat position, playback state
+and authored prose-pacing setting (including whether inherited from the book).
+The separate Playback speed control is a reader multiplier, not an authoring
+setting. A matching opening H1 is presented in the header once; other headings
+and headings containing links/images remain in the content. This only changes
+presentation, not manuscript text or calculated timing. Contents remains a simple
+toggle. See [Author publishing commands](AUTHOR-PUBLISHING.md) for repeatable
+preview, separately approved production promotion and rollback.

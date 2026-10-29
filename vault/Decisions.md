@@ -335,3 +335,12 @@ and themes hover previews to match the page. Explicit reader-theme and note
 scrolling checks cover desktop and narrow emulation; no actual-device acceptance
 is inferred. The current review is https://cfc10c44.murmuration-skip.pages.dev/skip/ .
 The prior actual/native observation limits remain in the validation record.
+
+### 2026-10-29 — Skip review header and repeatable updates
+
+Ted requests actual scene titles and compact beat/playback/prose-pacing context,
+retaining simple Contents and distinct reader speed. Shorter beats are an
+editorial observation only; no automatic splitting or wording changes. Proceed
+with a technical per-book export/preview workflow and separate reviewed-build
+production/rollback commands. Production/DNS/Ghost approval remains pending.
+Explicit Light/Dark/System selection and branding refinement are deferred.
