@@ -1190,3 +1190,43 @@ No security/protection setting was altered. This observation is recorded rather
 than represented as universal client compatibility; the actual-device check
 remains pending. The final APIs still show preview-only, no canonical production
 deployment/custom domain, and neither DNS nor Ghost was changed.
+
+## Skip scene context and author updates — 29 October 2026
+
+0.12.3 renderer/workflow commit `9c4f469adeb778f31b46557c9b638b80c3b82813`,
+source `7c030a14c8911f26d468e1d5de2b714445da9648`.
+Preview: https://bae164b5.murmuration-skip.pages.dev/skip/.
+
+All 14 actual scene titles appear under Contents with beat count, playback state
+and authored prose-pacing context. Redundant matching opening titles are hidden
+only in web presentation; source, timing and boundaries are unchanged. Speed
+remains separate; 1× default and 0.75× reader preference behavior are retained.
+The simple Contents control remains; theme selection/branding are deferred.
+
+278/278 unit tests, syntax checks, both bundles and 0.12.3 VSIX packaging pass.
+The author CLI prepared an isolated committed snapshot, blocked warnings and
+uploaded a live preview. Automated workflow tests cover warning/tamper guards,
+renderer mismatch, separate preview branch, reviewed receipt, concurrent
+production change, copying reviewed content and explicit rollback expectations.
+Production/rollback are tested with mocked deployment, not live publication.
+
+Local HTTP actual-book checks pass: 144 beats, 23 opened supporting targets,
+44 decoded assets, four changing animated WebPs, saved preferences/position,
+real-time chat/pause/speed and narrow Canvas touch emulation. Six layout/follow/
+theme cases pass at 1100/390/320px in light/dark: document handoff auto-follow,
+scroll-back suspension while content grows, Follow resumption, Previous/manual
+scrolling, note contrast/bounds/contained scrolling and bottom controls.
+The final prepared inventory exactly equals that tested build (all 78 files).
+Final Cloudflare HTTPS verification compares all 75 served payload files and
+checks noindex, cache policy, redirects and private/missing-file 404s. A fresh
+live header check passes all scene titles, speed persistence and widths.
+The ZIP's 78 paths and SHA-256s match the final inventory.
+
+Raw source snapshots, browser reports/screenshots, deployment receipts and upload
+archive remain in the private `skip-preview-0.12.3-final-20261029` build directory.
+Summary: `test/evidence/skip-publication-0.12.3.json`; author instructions:
+`AUTHOR-PUBLISHING.md`. Native host evidence is not broadened: no new installed
+VSIX/Development Host pass is claimed for this web header update; the previously
+reported optional native hide/return drift remains documented. Actual iPad/Safari,
+screen-reader and human listening checks are not performed by these automated
+Linux Chrome tests. Production/DNS/Ghost remain unchanged, awaiting Ted's review.

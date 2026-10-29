@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-29",
+  "rendererRevision": "9c4f469adeb778f31b46557c9b638b80c3b82813",
+  "rendererVersion": "0.12.3",
+  "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+  "preview": "https://bae164b5.murmuration-skip.pages.dev/skip/",
+  "deploymentId": "bae164b5-2cc1-437c-8492-1e5370005fd1",
+  "artifactDigest": "1bd50a93b90ecaa809838cd1fe55893799383b8aa9e2da7c79c4639ab9a1c1af",
+  "export": {
+    "warnings": [],
+    "problems": [],
+    "scenes": 14,
+    "notes": 23,
+    "assets": 44,
+    "publicFiles": 78,
+    "totalBytes": 101600656,
+    "archiveSha256": "281663cbefa804bcad0c81b9daa770be31235b784a18c0cf89649fc8cde5c15d",
+    "archiveInventoryVerified": true
+  },
+  "validation": {
+    "nodeTests": 278,
+    "syntax": "pass",
+    "builds": "pass",
+    "package": "pass",
+    "header": {
+      "origin": "https://bae164b5.murmuration-skip.pages.dev",
+      "browser": "156.0.8078.47",
+      "allSceneTitles": [
+        "Introduction",
+        "A Funny Thing Happened on the Way to the Forum",
+        "The Last Word",
+        "Chat Rage",
+        "The Wrong Picture",
+        "Bad Influence",
+        "Helpline",
+        "Gardener's Question Time",
+        "Whose Companion Is It Anyway?",
+        "In Good Company",
+        "Private Messages",
+        "A Matter of Taste",
+        "Skip's Christmas Carol",
+        "A Spoonful of Explanation"
+      ],
+      "widths": [
+        1100,
+        390,
+        320
+      ],
+      "matchingBodyTitlesSuppressed": true,
+      "separateSpeedAndAuthoredPacing": true,
+      "errors": [],
+      "method": "Automated Linux Chrome; not actual device or screen reader testing"
+    },
+    "httpFilesCompared": 75,
+    "fullBook": {
+      "method": "Local HTTP, automated Chrome; public inventory exactly equals final hosted build",
+      "beats": 144,
+      "notesOpened": 23,
+      "assetsDecoded": 44,
+      "animatedWebPChangingFrames": 4,
+      "pageErrors": [],
+      "failedRequests": [],
+      "sourceReport": "browser-validation-local.json"
+    },
+    "followAndNotes": {
+      "method": "Local HTTP, automated Chrome wheel and emulated touch; same public inventory as final hosted build",
+      "widths": [
+        1100,
+        390,
+        320
+      ],
+      "themes": [
+        "light",
+        "dark"
+      ],
+      "cases": 6,
+      "result": "pass",
+      "sourceReport": "layout-follow-theme-local.json"
+    },
+    "workflow": {
+      "preview": "live success through new CLI",
+      "publishAndRollback": "guard and byte-copy unit tests only; never run live"
+    },
+    "currentHeadNativeHost": "not rerun; web-only compact header; previous native evidence remains scoped to earlier revisions"
+  },
+  "limitations": [
+    "Actual iPad/Safari and screen-reader testing not performed this turn",
+    "Touch is emulated; audio checks are not human listening",
+    "Book has no authored type-out or sound components",
+    "Previous optional native hide/return pixel drift remains separately documented",
+    "Production, DNS and Ghost approval pending",
+    "Publication identity currently changes when document IDs/order change"
+  ],
+  "editorial": {
+    "manuscriptAndBeatBoundariesChanged": false,
+    "themeControlAndBranding": "deferred"
+  }
+}

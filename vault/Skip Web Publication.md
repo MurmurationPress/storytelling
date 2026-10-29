@@ -12,7 +12,7 @@ to learn whether readers enjoy the presentation before investing in a shared
 architecture. Ghost remains the main website with a link to the reader. No
 shared multi-book renderer, accounts, payments or new platform is authorised.
 
-**Review preview:** https://cfc10c44.murmuration-skip.pages.dev/skip/
+**Review preview:** https://bae164b5.murmuration-skip.pages.dev/skip/ (0.12.3; supersedes the earlier previews below)
 
 **Proposed production address:** `https://read.murmurationpress.co.uk/skip/`.
 Ted requested Cloudflare static hosting subject to inspecting the existing
