@@ -13,3 +13,4 @@ The vault remains the project's thinking space. Ted has now authorised review/in
 - Do not turn conceptual references such as The Sandman and Watchmen into assets or adaptations without an explicit request and appropriate rights.
 - Keep all claims about prototypes, hosting, payment and reader demand tied to evidence. A proposed feature is not an implemented feature.
 - Keep the vault in this repository as it develops; do not create a competing canonical copy elsewhere.
+- When reviewing a Story Teller publication or Supporting Content changes, apply the point-of-access editorial rule in `vault/Supporting Content.md`: inspect previews, full notes and all onward links against the reader's earliest access, flagging spoilers and assumed knowledge. Book-local scope alone does not establish spoiler safety; do not claim an automatic spoiler filter exists.
