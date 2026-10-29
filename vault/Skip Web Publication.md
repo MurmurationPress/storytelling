@@ -1,6 +1,6 @@
 ---
 type: publication-preparation
-status: accepted-production-authorised
+status: production-published-reader-dns-pending
 created: 2026-10-28
 ---
 
@@ -132,3 +132,38 @@ the accepted source tree, and `7c030a1` remains an ancestor. Original PR #1 and
 editorial head `c841b2e` remain open/untouched. Fresh synthetic control checks pass
 all 14 responsive cases and the four-phase/eight-action matrix. No renderer
 payload defect was found; no new reader payload or source export is required.
+
+## Production promotion and domain setup
+
+Source PR #2 merged first at `fe8ebbb4acae2e35f16fe7643f75dc91a2bd9cef`;
+renderer PR #23 squash-merged at `437b70eac127fe6304dcb92d55c961f1a7a591c2`,
+reviewed head `489c262`. Both full merged trees match the reviewed trees. Later
+source editorial work (PR #1, now observed at `ec23a04`) is preserved/unmerged.
+
+The documented publish command promoted the retained accepted f519ec23 build
+without re-exporting. Production deployment `42ffb0fd-152c-4e9b-9651-c388519fc002`
+serves https://murmuration-skip.pages.dev/skip/ . Its source is `7c030a1` and
+renderer `2f2e5fb`, mapped to the merged trees above. All 74 reader files remain
+byte-identical; only root indexing headers and robots metadata differ. Ghost and
+licence terms are unchanged.
+
+Fresh checks on merged main: 278 tests, syntax, fresh-lockfile build/package and
+VSIX reader-byte equality pass; no GitHub status/check runs are configured. On
+production Pages HTTPS, 75 payload hashes/cache/indexing/redirect/privacy checks,
+all 144 beats, 23 notes, 44 assets, four animations, saved position/preferences
+and ten light/dark follow/note cases pass. Production observations are automated
+Chrome/emulated touch, distinct from Ted's actual-device preview acceptance.
+
+Pages custom-domain association for `read.murmurationpress.co.uk` is created,
+but validation says “CNAME record not set” and public DNS is NXDOMAIN. OAuth DNS
+API access returns 403; no DNS writes were attempted. The requested manual step
+is a CNAME `read` → `murmuration-skip.pages.dev`, proxy on, TTL Auto, after
+inspecting for any existing record. Preserve all other DNS/Ghost/email records.
+Custom-hostname HTTPS and persistence await DNS; Pages production is usable.
+
+Retain the original build/production receipt for rollback without re-export. This
+is the first production deployment, so there is no previous live book to restore;
+this accepted deployment becomes the rollback target for subsequent updates.
+See `test/evidence/skip-production.json` and AUTHOR-PUBLISHING for exact commands.
+Preview and final-domain storage are different origins: existing preview positions
+do not transfer automatically. Keep document IDs/order stable for later updates.

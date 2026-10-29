@@ -1294,3 +1294,39 @@ both repositories. Actual iPad/Safari and screen-reader testing remain for Ted;
 CSS viewport and touch emulation do not add actual-device coverage. No new native
 Development Host/installed-VSIX pass is claimed for this standalone layout change.
 Production, DNS, Ghost and PR integration remain pending review.
+
+## Accepted preview integrated and published — 29 October 2026
+
+Ted accepts the compact controls/reading experience at f519ec23 on his actual
+iPad and iPhone. This is preview acceptance; device/browser versions, exhaustive
+coverage and human listening are not inferred. Both scoped integrations used
+current-head guards and verified full merged-tree equality: source-only repairs
+via Stories-Told #2 (`fe8ebbb`), then renderer #23 (`437b70e`). Source PR #1’s
+later editorial changes remain open/preserved and are excluded from this build.
+
+Production promotion followed the documented command and retained-artifact
+receipt. Deployment `42ffb0fd-152c-4e9b-9651-c388519fc002` at
+https://murmuration-skip.pages.dev/skip/ retains accepted source `7c030a1`,
+renderer `2f2e5fb`, inventory digest
+`8688e2f26cfb0faac777d5e1a192e2aa5678c64c48e2bddedeb71cd76aa36b9c`.
+All 74 reader files are unchanged; only `_headers`/`robots.txt` indexing metadata
+differs. Fresh 278-test/syntax/build/package checks and installer-reader byte
+equality pass on merged main. GitHub reports zero checks/status entries.
+
+On production Pages HTTPS, all 75 served files match; caching, noindex removal,
+redirects and private/missing-file 404s pass. Fresh actual-book browser traversal
+passes 144 beats, 44 assets, 23 note targets, four changing animations, saved
+position/preferences and real-time chat/pause/speed. Ten light/dark follow/note
+cases pass including tablet portrait/landscape and narrow emulation. These are
+automated Linux Chrome/touch-emulation checks, not actual-device production tests.
+
+`read.murmurationpress.co.uk` is associated with Pages but pending DNS: public
+NXDOMAIN, validation “CNAME record not set”; connected DNS API access is 403. No
+DNS/Ghost/email changes have been made by the agent. The account-holder step is
+to inspect/add only CNAME `read` → `murmuration-skip.pages.dev` (proxied, Auto TTL).
+Final-host HTTPS/navigation/storage verification awaits that step. Preview storage
+does not migrate across origins; same-origin production refresh/reopening passes.
+
+Raw evidence/receipts/retained rollback build remain beside the private final
+build. Summary: `test/evidence/skip-production.json`. This first live deployment
+has no predecessor; its retained receipt is the future rollback target.

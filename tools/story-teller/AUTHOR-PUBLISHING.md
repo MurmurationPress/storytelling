@@ -92,8 +92,11 @@ node scripts/publication.cjs rollback \
 This creates a new production deployment containing the old artifact. It checks
 both the old receipt and expected current production. It does not change Git,
 DNS or Ghost. Previous Cloudflare deployments also remain available for dashboard
-inspection. Production promotion/rollback have automated guard/copy tests;
-neither has been exercised against live production during this preview task.
+inspection. Production promotion has now been executed and verified for accepted Skip build
+f519ec23 (deployment 42ffb0fd). Rollback has automated guard/copy tests and has not
+been invoked against live production. Retain that build and its production receipt
+as the rollback target for later updates; the first publication had no previous
+production deployment.
 
 ## Address and saved positions
 
@@ -114,3 +117,29 @@ mid-wait elapsed time. Preview and production origins do not share storage;
 neither do devices/browsers. Private browsing, cleared or unavailable storage
 cannot guarantee persistence. Rollback does not erase storage, but changed IDs or
 beat structure can affect where a previous position restores.
+
+## First Skip publication record
+
+Accepted artifact: f519ec23 preview, renderer 0.12.4 (`2f2e5fb`), source `7c030a1`.
+Integrated by Stories-Told #2 (`fe8ebbb`) and storytelling #23 (`437b70e`), with
+reviewed/merged tree equality. The publish command created production deployment
+`42ffb0fd-152c-4e9b-9651-c388519fc002` without re-exporting reader content.
+Production Pages URL: https://murmuration-skip.pages.dev/skip/ . Custom-domain
+association is registered; reader DNS/HTTPS verification is pending. DNS API
+returns 403: the account holder must inspect/add only the CNAME `read` pointing
+to `murmuration-skip.pages.dev` (proxy on, TTL Auto), preserving all other records.
+The project’s Custom domains tab shows its pending/active validation status.
+
+For a future rollback after a later deployment, using the retained first build:
+
+```bash
+node scripts/publication.cjs rollback \
+  --build '/path/to/private-builds/skip-preview-0.12.4-final-20261029' \
+  --reviewed 42ffb0fd-152c-4e9b-9651-c388519fc002 \
+  --expected CURRENT_PRODUCTION_DEPLOYMENT_ID
+```
+
+Do not run a rollback merely to test it on the live reader. Publication receipts
+and all source/renderer files stay outside the public `site/`. The original source
+PR #1 has later editorial work and remains open; the published source is the
+accepted snapshot, not those unreviewed additions. Ghost publication remains Ted's.

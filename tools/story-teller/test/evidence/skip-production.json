@@ -1,0 +1,131 @@
+{
+  "date": "2026-10-29",
+  "acceptedPreview": "https://f519ec23.murmuration-skip.pages.dev/skip/",
+  "actualDeviceAcceptance": {
+    "devices": [
+      "iPad",
+      "iPhone"
+    ],
+    "scope": "compact controls and reading experience at accepted preview",
+    "versions": "not provided",
+    "productionNativeDeviceTesting": "not inferred"
+  },
+  "integration": {
+    "rendererReviewedHead": "489c262db03999dda32716bc53294c152479cbd6",
+    "rendererMergedHead": "437b70eac127fe6304dcb92d55c961f1a7a591c2",
+    "rendererTree": "b8a7ce7b41e2ce5ea10d4a4898796cb8250005fa",
+    "fullMergedTreeEqualsReviewedTree": true,
+    "readerRuntimeEqualsAccepted2f2e5fb": true,
+    "sourceMergedHead": "fe8ebbb4acae2e35f16fe7643f75dc91a2bd9cef",
+    "sourceTree": "a237266cf621f695cbcb4f916d5f7f1d6a690025",
+    "sourceTreeEqualsAccepted7c030a1": true
+  },
+  "sourceOriginalPR": {
+    "number": 1,
+    "status": "open/draft; later editorial work not merged",
+    "latestObservedHead": "ec23a0479e062e4b2ecbc0fb38dd53d024bf8937",
+    "originalWorkingBranchPreserved": true
+  },
+  "production": {
+    "id": "42ffb0fd-152c-4e9b-9651-c388519fc002",
+    "url": "https://42ffb0fd.murmuration-skip.pages.dev",
+    "environment": "production",
+    "artifact": "8688e2f26cfb0faac777d5e1a192e2aa5678c64c48e2bddedeb71cd76aa36b9c",
+    "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+    "rendererRevision": "2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a",
+    "previousProduction": null,
+    "reviewed": "f519ec23-3d85-4843-9f37-2dc96fadfa28",
+    "action": "publish"
+  },
+  "productionUrl": "https://murmuration-skip.pages.dev/skip/",
+  "intendedFinalUrl": "https://read.murmurationpress.co.uk/skip/",
+  "postmerge": {
+    "mergedMain": "437b70eac127fe6304dcb92d55c961f1a7a591c2",
+    "nodeTests": 278,
+    "syntax": "pass",
+    "buildWithFreshLockfileDependencies": "pass",
+    "package": "pass",
+    "vsixReaderBytesExactlyMatchAcceptedProduction": true,
+    "vsixSha256": "cafbd9f8dbaef46204d9b69b713cd19c98694642efe84403fcc733bcb3b1e6a2"
+  },
+  "httpsVerification": {
+    "origin": "https://murmuration-skip.pages.dev",
+    "productionDeployment": "42ffb0fd-152c-4e9b-9651-c388519fc002",
+    "acceptedPreview": "f519ec23-3d85-4843-9f37-2dc96fadfa28",
+    "readerFilesExactlyAccepted": 74,
+    "totalHostedFilesCompared": 75,
+    "indexingMetadataOnlyDelta": [
+      "_headers",
+      "robots.txt"
+    ],
+    "noProductionNoindex": true,
+    "canonicalRedirects": true,
+    "privateAndMissingPaths404": true,
+    "tlsCertificateVerified": true,
+    "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+    "rendererRevision": "2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a",
+    "artifact": "8688e2f26cfb0faac777d5e1a192e2aa5678c64c48e2bddedeb71cd76aa36b9c",
+    "result": "PASS"
+  },
+  "browser": {
+    "origin": "https://murmuration-skip.pages.dev",
+    "allBeats": 144,
+    "supportingTargetsOpened": 23,
+    "animatedWebPChangingFrames": 4,
+    "pageErrors": [],
+    "failedRequests": [],
+    "externalRequests": [],
+    "method": "Actual book at /skip/ over HTTP(S); Chrome headless Linux"
+  },
+  "followingAndNotes": {
+    "origin": "https://murmuration-skip.pages.dev",
+    "cases": 10,
+    "viewportWidths": [
+      320,
+      390,
+      768,
+      1024,
+      1100
+    ],
+    "themes": [
+      "light",
+      "dark"
+    ],
+    "method": "Full committed book export; virtual playback time, real wheel/touch gestures, computed light/dark colours and contrast"
+  },
+  "githubCI": {
+    "rendererMergedCheckRuns": 0,
+    "rendererMergedStatusEntries": 0,
+    "sourceCheckRuns": 0,
+    "sourceStatusEntries": 0,
+    "configuredWorkflows": "none in reviewed trees"
+  },
+  "domain": {
+    "name": "read.murmurationpress.co.uk",
+    "pagesAssociation": "created",
+    "status": "pending",
+    "verification": "CNAME record not set",
+    "dnsApiStatus": 403,
+    "publicDNS": "NXDOMAIN",
+    "fullZoneDNSInventory": "unavailable with current OAuth scope",
+    "agentDNSWrites": 0,
+    "ghostChanges": 0,
+    "unrelatedPublicDNSChecks": 6,
+    "unrelatedPublicDNSChanges": []
+  },
+  "rollback": {
+    "retainedAcceptedBuild": true,
+    "retainedProductionReceipt": true,
+    "firstProductionDeployment": true,
+    "previousProductionToRestore": null,
+    "futureRollbackTarget": "42ffb0fd-152c-4e9b-9651-c388519fc002",
+    "rollbackLiveExecuted": false
+  },
+  "limits": [
+    "Production browser checks are automated Chrome/touch emulation, not actual-device tests",
+    "User acceptance covers the preview on actual iPad/iPhone; browser versions and human listening unknown",
+    "Final custom hostname remains pending DNS; its HTTPS and origin-specific persistence cannot yet be verified",
+    "Preview positions/preferences do not automatically transfer across origins",
+    "No new Development Host/installed-VSIX run; fresh main package bytes equal accepted reader"
+  ]
+}
