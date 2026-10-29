@@ -12,7 +12,7 @@ to learn whether readers enjoy the presentation before investing in a shared
 architecture. Ghost remains the main website with a link to the reader. No
 shared multi-book renderer, accounts, payments or new platform is authorised.
 
-**Review preview:** https://bae164b5.murmuration-skip.pages.dev/skip/ (0.12.3; supersedes the earlier previews below)
+**Review preview:** https://f519ec23.murmuration-skip.pages.dev/skip/ (0.12.4; supersedes the earlier previews below)
 
 **Proposed production address:** `https://read.murmurationpress.co.uk/skip/`.
 Ted requested Cloudflare static hosting subject to inspecting the existing
@@ -30,7 +30,7 @@ preparation task.
 
 **Prepared export:** 14 scenes / 144 beats, both matter pages, 23 supporting
 notes, 44 unique image assets, zero final export warnings. The reader runtime is
-0.12.2 review candidate (`6239345`), based on accepted 0.12.0. Animated WebP bytes are retained. The current book
+0.12.4 review candidate (`2f2e5fb`), based on accepted 0.12.0. Animated WebP bytes are retained. The current book
 has no authored type-out blocks; the reader retains that capability and sound
 controls without adding content. Timing/prose settings are resolved by the
 existing exporter; changing speed remains a reader preference (1× default).
@@ -83,3 +83,22 @@ and renderer revisions, validates an isolated snapshot and uploads a preview.
 Publishing the reviewed retained artifact and rollback are distinct explicit
 commands. Production, DNS and Ghost remain unapproved and untouched. Saved
 position limitations, including order-dependent publication identity, are stated.
+
+## Compact standalone controls review (0.12.4)
+
+Ted requests recovery of reading space, especially iPad portrait. The current
+preview uses five SVG toolbar controls and a text-labelled More disclosure,
+keeping actual scene titles, quieter beat/status/authored-pacing context and a
+separate speed setting. Reveal beat completes the current beat without advancing;
+native preview behavior stays separate. No auto-hiding, new gestures, manuscript
+edits or branding/theme work is introduced.
+
+Same actual book/scene/ready-state CSS viewport: 768×1024 reading starts at
+252.86 → 161.33 px, recovering 91.53 px (36.20% smaller header/control area).
+1024×768 recovers 43.89 px (21.39%). Measurements exclude browser chrome.
+Fourteen synthetic control cases, ten actual-book follow/note cases, the complete
+144-beat export, live file/header/space checks and 278 unit tests pass. These are
+Linux Chrome/emulated touch observations, not new actual-iPad/Safari acceptance.
+See extension RESULTS and `compact-controls-0.12.4.json` for evidence/limits.
+The current immutable preview is linked above; production/DNS/Ghost remain
+unchanged and the PR remains unmerged for Ted's iPad review.

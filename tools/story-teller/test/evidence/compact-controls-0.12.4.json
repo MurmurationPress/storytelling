@@ -1,0 +1,468 @@
+{
+  "date": "2026-10-29",
+  "rendererVersion": "0.12.4",
+  "rendererRevision": "2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a",
+  "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+  "previewUrl": "https://f519ec23.murmuration-skip.pages.dev/skip/",
+  "deploymentId": "f519ec23-3d85-4843-9f37-2dc96fadfa28",
+  "artifactDigest": "8688e2f26cfb0faac777d5e1a192e2aa5678c64c48e2bddedeb71cd76aa36b9c",
+  "productionAtPreview": null,
+  "export": {
+    "scenes": 14,
+    "beats": 144,
+    "notes": 23,
+    "assets": 44,
+    "animatedWebP": 4,
+    "warnings": [],
+    "problems": [],
+    "finalChapterIllustrations": 3,
+    "publicFileCount": 78,
+    "archiveInventoryAndHashesVerified": true,
+    "archiveSha256": "1f7f26dcbcdd523c5b6f8489680d1a11e7d669a9ebe22512c6ab6d9d6a695bd6"
+  },
+  "validation": {
+    "nodeTests": 278,
+    "syntax": "pass",
+    "bothBundles": "pass",
+    "vsixPackaging": "pass",
+    "vsixSha256": "8f6dbc7cbf42b5698f630f2a3b5d3c297a920f751bb218707fc6096f571fd42d",
+    "syntheticToolbar": {
+      "method": "Synthetic actual export, automated Linux Chrome, virtual playback time, keyboard/mouse/emulated touch",
+      "cases": [
+        {
+          "width": 768,
+          "height": 1024,
+          "theme": "light",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 768,
+          "height": 1024,
+          "theme": "dark",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "theme": "light",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "theme": "dark",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 820,
+          "height": 1180,
+          "theme": "light",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 820,
+          "height": 1180,
+          "theme": "dark",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 1180,
+          "height": 820,
+          "theme": "light",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 1180,
+          "height": 820,
+          "theme": "dark",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "light",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "theme": "dark",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 320,
+          "height": 568,
+          "theme": "light",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 320,
+          "height": 568,
+          "theme": "dark",
+          "touchEmulated": true,
+          "result": "pass"
+        },
+        {
+          "width": 1100,
+          "height": 780,
+          "theme": "light",
+          "touchEmulated": false,
+          "result": "pass"
+        },
+        {
+          "width": 1100,
+          "height": 780,
+          "theme": "dark",
+          "touchEmulated": false,
+          "result": "pass"
+        }
+      ],
+      "stateActionMatrix": {
+        "phases": [
+          "ready",
+          "playing",
+          "paused",
+          "completed"
+        ],
+        "actions": [
+          "reveal",
+          "replay",
+          "restart",
+          "previous",
+          "next",
+          "sound",
+          "speed",
+          "autoplay"
+        ],
+        "completedReveal": "disabled"
+      },
+      "coverage": [
+        "ready/playing/paused/completed controls",
+        "reveal whole beat without advance, Unicode, cancelled timers",
+        "replay versus restart",
+        "manual/autoplay turns, scene boundary previous and end-of-scene next",
+        "keyboard sequence, Escape, outside dismissal, focus return",
+        "44px targets, SVG names/tooltips, long title, light/dark narrow layouts",
+        "speed/autoplay persistence",
+        "active type-out has one oscillator; reveal stops it and cancelled work stays stopped"
+      ],
+      "limitations": [
+        "Not actual iPad/Safari or human audio listening"
+      ]
+    },
+    "actualBookFullSweep": {
+      "method": "Actual book at /skip/ over HTTP(S); Chrome headless Linux",
+      "origin": "http://127.0.0.1:8792",
+      "beats": 144,
+      "supportingTargets": 23,
+      "pageErrors": [],
+      "failedRequests": [],
+      "externalRequests": []
+    },
+    "actualBookFollowingAndNotes": {
+      "method": "Full committed book export; virtual playback time, real wheel/touch gestures, computed light/dark colours and contrast",
+      "origin": "http://127.0.0.1:8792",
+      "cases": [
+        {
+          "width": 1100,
+          "height": 780,
+          "theme": "light",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 14.44818807018736,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 1100,
+          "height": 780,
+          "theme": "dark",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 13.848967714681066,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 768,
+          "height": 1024,
+          "theme": "light",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 14.44818807018736,
+          "noteArticleScrollContained": null,
+          "noteContentFitsWithoutScroll": true
+        },
+        {
+          "width": 768,
+          "height": 1024,
+          "theme": "dark",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 13.848967714681066,
+          "noteArticleScrollContained": null,
+          "noteContentFitsWithoutScroll": true
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "theme": "light",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 14.44818807018736,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "theme": "dark",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 13.848967714681066,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 390,
+          "height": 780,
+          "theme": "light",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 14.44818807018736,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 390,
+          "height": 780,
+          "theme": "dark",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 13.848967714681066,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 320,
+          "height": 568,
+          "theme": "light",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 14.44818807018736,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        },
+        {
+          "width": 320,
+          "height": 568,
+          "theme": "dark",
+          "autoFollowAfterDocumentTurn": true,
+          "scrollBackSuspendsDuringNewContent": true,
+          "followResumes": true,
+          "silentPrevious": true,
+          "noteContrast": 13.848967714681066,
+          "noteArticleScrollContained": true,
+          "noteContentFitsWithoutScroll": false
+        }
+      ]
+    },
+    "hostedFilesCompared": 75,
+    "hostedHeaderAndPreferences": "pass",
+    "spaceComparison": {
+      "baseline": "https://bae164b5.murmuration-skip.pages.dev",
+      "candidate": "https://f519ec23.murmuration-skip.pages.dev",
+      "sceneId": "cbf03a00-8fd2-42e3-baa2-d0c2437fc08f",
+      "sceneTitle": "The Last Word",
+      "state": "ready, first beat; Contents/More closed; autoplay disabled; browser storage reset",
+      "method": "Automated Linux Chrome, CSS viewports and touch emulation; browser chrome not simulated",
+      "cases": [
+        {
+          "width": 768,
+          "height": 1024,
+          "before": {
+            "headerHeight": 130.625,
+            "toolbarHeight": 118.234375,
+            "readingStart": 252.859375,
+            "viewportHeight": 1024,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "after": {
+            "headerHeight": 96.34375,
+            "toolbarHeight": 62.59375,
+            "readingStart": 161.328125,
+            "viewportHeight": 1024,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "recoveredPixels": 91.53,
+          "controlAreaReductionPercent": 36.2,
+          "viewportRecoveredPercent": 8.94
+        },
+        {
+          "width": 1024,
+          "height": 768,
+          "before": {
+            "headerHeight": 130.625,
+            "toolbarHeight": 70.59375,
+            "readingStart": 205.21875,
+            "viewportHeight": 768,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "after": {
+            "headerHeight": 96.34375,
+            "toolbarHeight": 62.59375,
+            "readingStart": 161.328125,
+            "viewportHeight": 768,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "recoveredPixels": 43.89,
+          "controlAreaReductionPercent": 21.39,
+          "viewportRecoveredPercent": 5.71
+        },
+        {
+          "width": 820,
+          "height": 1180,
+          "before": {
+            "headerHeight": 130.625,
+            "toolbarHeight": 118.234375,
+            "readingStart": 252.859375,
+            "viewportHeight": 1180,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "after": {
+            "headerHeight": 96.34375,
+            "toolbarHeight": 62.59375,
+            "readingStart": 161.328125,
+            "viewportHeight": 1180,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "recoveredPixels": 91.53,
+          "controlAreaReductionPercent": 36.2,
+          "viewportRecoveredPercent": 7.76
+        },
+        {
+          "width": 1180,
+          "height": 820,
+          "before": {
+            "headerHeight": 130.625,
+            "toolbarHeight": 70.59375,
+            "readingStart": 205.21875,
+            "viewportHeight": 820,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "after": {
+            "headerHeight": 96.34375,
+            "toolbarHeight": 62.59375,
+            "readingStart": 161.328125,
+            "viewportHeight": 820,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "recoveredPixels": 43.89,
+          "controlAreaReductionPercent": 21.39,
+          "viewportRecoveredPercent": 5.35
+        },
+        {
+          "width": 390,
+          "height": 844,
+          "before": {
+            "headerHeight": 147.03125,
+            "toolbarHeight": 141.3125,
+            "readingStart": 292.34375,
+            "viewportHeight": 844,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "after": {
+            "headerHeight": 96.34375,
+            "toolbarHeight": 56.984375,
+            "readingStart": 155.71875,
+            "viewportHeight": 844,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "recoveredPixels": 136.62,
+          "controlAreaReductionPercent": 46.73,
+          "viewportRecoveredPercent": 16.19
+        },
+        {
+          "width": 320,
+          "height": 568,
+          "before": {
+            "headerHeight": 181.34375,
+            "toolbarHeight": 181.46875,
+            "readingStart": 366.8125,
+            "viewportHeight": 568,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "after": {
+            "headerHeight": 97.6875,
+            "toolbarHeight": 56.984375,
+            "readingStart": 157.0625,
+            "viewportHeight": 568,
+            "supportingHeaderPadding": "9.6px",
+            "bodyHeadingFontSize": "20.8px"
+          },
+          "recoveredPixels": 209.75,
+          "controlAreaReductionPercent": 57.18,
+          "viewportRecoveredPercent": 36.93
+        }
+      ]
+    },
+    "preservedBaselineContentHeadingAndNoteHeaderStyles": true
+  },
+  "semantics": {
+    "revealBeat": "Existing StoryPlayer.revealBeat completes current beat from ready/playing/paused; cancels timers/audio and never advances",
+    "completedPrimaryPlay": "Disabled; explicit Replay beat remains in More",
+    "navigation": "Existing previous/document/matter and explicit end-of-scene next semantics preserved",
+    "nativePreview": "Existing controls and type-out reveal retained; new controls enabled only by web adapter",
+    "manuscriptEdits": false,
+    "automaticHidingOrNewGestures": false,
+    "themeSelectorOrBrandingChanges": false
+  },
+  "limits": [
+    "Automated Linux Chrome and CSS iPad viewports/touch emulation, not actual iPad/Safari",
+    "No new screen-reader or native Development Host/installed-VSIX run",
+    "Oscillator start/stop is automated evidence, not human listening",
+    "Book itself has no authored type-out/sound blocks; synthetic fixture checks them",
+    "Measurements exclude browser chrome and depend on scene/title/wrapping",
+    "Production/DNS/Ghost remain unapproved and unchanged"
+  ]
+}

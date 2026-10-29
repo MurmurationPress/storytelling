@@ -1230,3 +1230,67 @@ VSIX/Development Host pass is claimed for this web header update; the previously
 reported optional native hide/return drift remains documented. Actual iPad/Safari,
 screen-reader and human listening checks are not performed by these automated
 Linux Chrome tests. Production/DNS/Ghost remain unchanged, awaiting Ted's review.
+
+## Compact standalone controls — 29 October 2026
+
+Runtime `2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a`, version 0.12.4; committed
+book source remains `7c030a14c8911f26d468e1d5de2b714445da9648`.
+Preview: https://f519ec23.murmuration-skip.pages.dev/skip/.
+
+The web toolbar now has five SVG controls: Previous, state-aware Play/Pause/Resume,
+Next, muted/unmuted Sound and More. More is a non-modal disclosure with labelled
+Reveal beat, Replay beat, Restart scene, Playback speed and Autoplay on beat
+turns. It uses native keyboard traversal and closes with Escape, action selection,
+focus leaving or outside pointer input. Focus returns appropriately; preferences
+remain open during editing. Whole-beat reveal uses the existing player operation,
+never advances and cancels sound/timers. The native preview keeps its existing
+controls and active-type-out reveal. No authoring/timing/default or manuscript
+changes, automatic hiding/gestures, theme selector or branding changes.
+
+**Same-viewport comparison:** actual Skip, The Last Word, first beat ready, fresh
+storage and autoplay disabled, Contents/More closed, light theme. Live old 0.12.3
+versus live 0.12.4, same Chrome/CSS viewport. Reading starts at 252.86 → 161.33 px
+at 768×1024: **91.53 px recovered, 36.20% smaller header/control area**.
+At 1024×768 it is 205.22 → 161.33 px (43.89 px, 21.39%). 820×1180 matches the
+portrait reduction; 1180×820 matches landscape. At 320×568 it is 366.81 → 157.06 px
+(209.75 px, 57.18%). Browser chrome is not included; device/text scaling and
+scene/title wrapping affect actual measurements. Before/after screenshots stay
+beside the private build. The code does not hide controls as the reader scrolls.
+
+**Executed:** 278/278 Node tests; syntax checks (including new web controls), both
+bundles and 0.12.4 VSIX packaging pass. Fourteen synthetic exported-reader cases
+cover light/dark at 768×1024, 1024×768, 820×1180, 1180×820, 390×844, 320×568 and
+1100×780. Checks include ready/playing/paused/completed, every toolbar/More action,
+whole-beat reveal from each incomplete state, stale-timer cancellation, Unicode,
+replay/restart distinction, existing scene boundaries, speed/autoplay persistence,
+keyboard traversal/focus/Escape/outside dismissal, SVG labels/tooltips, >=44px
+primary targets and contrasting controls/panel. An active type-out has one
+oscillator; reveal stops it and it remains stopped. This is automated audio graph
+behavior, not human listening. Long titles wrap without horizontal overflow. A four-phase × eight-action matrix
+additionally checks every toolbar/More action across ready/playing/paused/completed.
+The final comparison also verifies unchanged content-H1 font size and supporting
+header padding against the previous preview.
+
+The actual newly exported book passes all 144 beats, 44 assets, 23 supporting
+targets, four changing animated WebPs and real-time chat/pause/speed/persistence.
+Ten follow/note cases pass over local HTTP: 1100×780, 768×1024, 1024×768, 390×780,
+320×568 in light/dark, with wheel/emulated touch points. Auto-follow after the
+normal document handoff, scroll-back suspension while new content appears,
+Follow resumption, silent Previous, reachable bottom controls and theme-aware
+note bounds/contrast pass. Narrow/short viewports contain note scrolling; the
+longer tablet portrait fits that note without scrolling (reported separately).
+Tablet thresholds were adjusted to account for content fitting in the recovered
+space; this was a test expectation change, not a follow implementation fix.
+
+All 75 hosted payload files match the prepared candidate over HTTPS. Cache,
+noindex, redirects and private/missing-path 404s pass. The ZIP's 78 entries/hashes
+match the inventory. Fresh live actual-title/preferences/narrow-layout and
+before/after space checks pass. Public byte equality ties local book/follow
+coverage to this deployment. The source/scene order/settings remain unchanged.
+
+Summary: `test/evidence/compact-controls-0.12.4.json`. Private reports/screenshots,
+source snapshot, ZIP and receipts: `skip-preview-0.12.4-final-20261029`, outside
+both repositories. Actual iPad/Safari and screen-reader testing remain for Ted;
+CSS viewport and touch emulation do not add actual-device coverage. No new native
+Development Host/installed-VSIX pass is claimed for this standalone layout change.
+Production, DNS, Ghost and PR integration remain pending review.
