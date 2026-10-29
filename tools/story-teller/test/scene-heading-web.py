@@ -2,6 +2,10 @@
 import asyncio, functools, json, pathlib, sys, threading
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from playwright.async_api import async_playwright
+async def more_action(page, selector):
+    if not await page.locator('#more-options').is_visible(): await page.locator('#more-toggle').click()
+    await page.locator(selector).click()
+
 async def run(root):
     class Quiet(SimpleHTTPRequestHandler):
         def log_message(self,*args): pass
@@ -16,18 +20,18 @@ async def run(root):
         await page.goto(f'http://127.0.0.1:{server.server_port}');await page.wait_for_selector('#beat h1')
         assert await page.locator('#beat h1').inner_text()=='An authored opening'
         await page.locator('#next').click()
-        await page.wait_for_function('(title)=>document.querySelector("#beat h1")?.textContent===title',arg=scene['title'])
-        assert await page.locator('#beat h1').count()==1
+        await page.wait_for_function('(title)=>document.querySelector("#scene-title")?.textContent===title',arg=scene['title'])
+        assert await page.locator('#beat h1').count()==0
         assert await page.locator('#beat h1 em,#beat h1 a,#beat h1 img').count()==0
-        assert await page.locator('#scene-title').inner_text()==f'Scene {scene["label"]}'
+        assert await page.locator('#scene-title').inner_text()==scene['title']
         assert 'Mara watched' in await page.locator('#beat').inner_text()
         assert 'Beat 1 of 2' in await page.locator('#status').inner_text()
-        evidence['checks'].append('one literal body H1 with punctuation/Unicode, first prose in same beat, no repeated header title')
+        evidence['checks'].append('one literal header title with punctuation/Unicode, first prose in same beat, redundant matching body title suppressed')
         await page.locator('#contents-toggle').click();assert f'{scene["label"]} {scene["title"]}' in await page.locator('#contents button').all_text_contents();await page.locator('#contents-toggle').click()
         await page.locator('#next').click();await page.wait_for_function('()=>document.getElementById("beat").textContent.includes("She closed the ledger")')
         assert await page.locator('#beat h1').count()==0
-        await page.locator('#previous').click();assert await page.locator('#beat h1').inner_text()==scene['title'];assert 'completed' in await page.locator('#status').inner_text()
-        await page.locator('#restart').click();assert await page.locator('#beat h1').inner_text()==scene['title'];assert 'ready' in await page.locator('#status').inner_text()
+        await page.locator('#previous').click();assert await page.locator('#scene-title').inner_text()==scene['title'];assert await page.locator('#beat h1').count()==0;assert 'completed' in await page.locator('#status').inner_text()
+        await more_action(page, '#restart');assert await page.locator('#scene-title').inner_text()==scene['title'];assert await page.locator('#beat h1').count()==0;assert 'ready' in await page.locator('#status').inner_text()
         evidence['checks'].append('Contents retains full scene label/title; Next, silent Previous and Restart preserve existing beat semantics')
         await page.set_viewport_size({'width':390,'height':740});assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
         await page.screenshot(path=str(pathlib.Path(sys.argv[2]).with_suffix('.png')),full_page=True)

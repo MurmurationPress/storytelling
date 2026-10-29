@@ -295,3 +295,85 @@ merged-tree equality verification and closure of #13 after its criteria pass.
 Material changes to accepted behaviour require a new test build and focused
 acceptance. Private adaptations, unrelated branches/worktrees, licence terms and
 EPUB experiments remain untouched; no deployment or release is authorised.
+
+## 2026-10-28 — Prepare Skip as one standalone web publication
+
+Ted authorises preparing the latest committed Stories-Told adaptation of The
+Curious Adventures of Skip with the existing exporter, one self-contained book
+at proposed `read.murmurationpress.co.uk/skip/`. Ghost stays the main website.
+Cloudflare static hosting is subject to inspecting the account/deployment setup;
+a review preview is authorised, while production deployment, DNS and Ghost
+publication require later approval. No shared renderer/platform, accounts or
+payments are authorised. See [[Skip Web Publication]].
+
+Four broken supporting-note targets are repaired on a separate source branch,
+preserving displayed wording. Private source snapshots, reports and unrelated
+repository content stay outside the upload. Cloudflare CLI authentication is
+missing; local preparation/testing proceeds without claiming a hosted preview.
+
+### Skip preview completed; production remains subject to approval
+
+Ted completed the Cloudflare CLI login. Account inspection found no existing
+Pages/Workers deployments and confirmed the domain zone. Preview-only project
+`murmuration-skip` uses production branch `main` and review branch
+`skip-review-7c030a1`. The prepared preview is
+https://c548539c.murmuration-skip.pages.dev/skip/ . Cloudflare confirms no production
+deployment or custom domain. DNS API inspection returned 403; DNS and Ghost are
+untouched. The publication-blocking note-tap/overlap fix is a 0.12.1 review
+candidate; no reader redesign, timing change or licence change is introduced.
+Local/live automated checks are recorded separately from actual-device evidence.
+See [[Skip Web Publication]] and the linked procedure before approving production.
+
+### Skip preview feedback — follow/theme repairs for overnight review
+
+Ted clarified that manual scrolling works while automatic follow fails, and
+reported a black supporting popout. He authorises continued independent testing
+and reversible fixes while he is away; production, DNS and Ghost remain excluded.
+Both reports are reproduced in the full-book export. The 0.12.2 candidate restores
+following after document handoff, retains scroll-back suspension/Follow story,
+and themes hover previews to match the page. Explicit reader-theme and note
+scrolling checks cover desktop and narrow emulation; no actual-device acceptance
+is inferred. The current review is https://cfc10c44.murmuration-skip.pages.dev/skip/ .
+The prior actual/native observation limits remain in the validation record.
+
+### 2026-10-29 — Skip review header and repeatable updates
+
+Ted requests actual scene titles and compact beat/playback/prose-pacing context,
+retaining simple Contents and distinct reader speed. Shorter beats are an
+editorial observation only; no automatic splitting or wording changes. Proceed
+with a technical per-book export/preview workflow and separate reviewed-build
+production/rollback commands. Production/DNS/Ghost approval remains pending.
+Explicit Light/Dark/System selection and branding refinement are deferred.
+
+### 2026-10-29 — Compact standalone reader controls
+
+Ted authorises a compact standalone-only toolbar in existing preview PR #23:
+Previous/Play-Pause/Next/Sound/More SVG controls, generous targets and accessible
+names. More retains text-labelled Reveal beat, Replay beat, Restart scene,
+speed and autoplay. Reveal uses the existing whole-beat completion operation,
+without advancing; native preview retains active-type-out reveal. Preserve actual
+titles, simple Contents, authored pacing versus reader speed, follow/rereading and
+Supporting Content. No auto-hiding/gestures, manuscript edits, theme selector or
+branding work. Re-export/test the book and deploy preview only. Production/DNS/
+Ghost and PR integration remain pending review.
+
+### 2026-10-29 — Accept Skip preview on actual iPad and iPhone; publish
+
+Ted reports that `https://f519ec23.murmuration-skip.pages.dev/skip/` “works well
+on my actual iPad and iPhone” and accepts the compact controls and reading
+experience. This is actual-device preview acceptance, distinct from automated
+Chrome/touch emulation. Device/browser versions, broader coverage and human
+listening are not specified. 0.75× remains Ted's personal preference; 1× default.
+
+Ted authorises final scoped review, expected-head integration, exact reviewed-build
+production promotion and necessary `read.murmurationpress.co.uk` configuration.
+Preserve unrelated DNS/Ghost/email settings and private work. Ghost editing and
+publication remain Ted's responsibility. If a payload fix is necessary, prepare
+a new preview and identify what needs acceptance before production.
+
+Source PR #1 advanced to `c841b2e` with a later editorial dialogue addition,
+outside the accepted preview. Preserve its branch/commit and leave that addition
+unmerged. Source PR #2 isolates the four accepted target-only repairs at `7c030a1`
+without changing displayed wording. Merge that dependency before renderer PR #23.
+The accepted artifact retains its pinned source/renderer revisions; integration
+records map them to merged trees instead of rebuilding the accepted content.

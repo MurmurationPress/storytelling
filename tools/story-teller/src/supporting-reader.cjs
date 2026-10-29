@@ -31,11 +31,17 @@ class SupportingReader {
     this.article.tabIndex = 0; this.article.setAttribute('aria-label','Supporting note content'); this.dialog.append(header,this.article); document.body.append(this.preview,this.dialog);
     this.handlers = [];
     const listen = (target,type,fn,options) => { target.addEventListener(type,fn,options); this.handlers.push([target,type,fn,options]); };
-    listen(document,'mouseover',event=>{ const link=event.target.closest?.('button.wiki-link'); if(!this.pointerInPreview && link && !link.contains(event.relatedTarget)) this.hover(link); });
+    // Touch synthesises mouse/focus events before click. A hover overlay must
+    // not replace the tap target; real mouse and keyboard previews still work.
+    listen(document,'pointerdown',event=>{this.touchInput=event.pointerType==='touch';if(this.touchInput)this.hideHover();});
+    listen(document,'touchstart',()=>{this.touchInput=true;this.hideHover();},{passive:true});
+    listen(document,'pointerover',event=>{if(event.pointerType!=='touch')this.touchInput=false;});
+    listen(document,'keydown',()=>{this.touchInput=false;});
+    listen(document,'mouseover',event=>{ const link=event.target.closest?.('button.wiki-link'); if(!this.touchInput && !this.pointerInPreview && link && !link.contains(event.relatedTarget)) this.hover(link); });
     listen(document,'mouseout',event=>{ const link=event.target.closest?.('button.wiki-link'); if(link && !link.contains(event.relatedTarget)) this.scheduleHide(); });
-    listen(document,'focusin',event=>{ if(event.target.matches?.('button.wiki-link')) this.hover(event.target); });
+    listen(document,'focusin',event=>{ if(!this.touchInput && event.target.matches?.('button.wiki-link')) this.hover(event.target); });
     listen(document,'focusout',event=>{ if(event.target.matches?.('button.wiki-link')) this.scheduleHide(); });
-    listen(this.preview,'mouseenter',()=>{this.pointerInPreview=true;this.cancelHide();const rect=this.preview.getBoundingClientRect();this.preview.style.maxHeight=`min(17rem, ${Math.max(80,this.window.innerHeight-rect.top-12)}px)`;});
+    listen(this.preview,'mouseenter',()=>{this.pointerInPreview=true;this.cancelHide();});
     listen(this.preview,'mouseleave',()=>{this.pointerInPreview=false;this.scheduleHide();});
     listen(document,'click',event=>{ const link=event.target.closest?.('button.wiki-link'); if(link) { event.preventDefault(); void this.open(link); } });
     listen(close,'click',()=>this.close());
@@ -87,13 +93,20 @@ class SupportingReader {
   }
   position(force=false) {
     if(this.preview.hidden||!this.anchor||this.pointerInPreview&&!force)return;
-    if(force)this.preview.style.maxHeight='';
+    this.preview.style.maxHeight='';
     const link=this.find(this.anchor);if(!link){this.hideHover();return;}
     const rect=link.getBoundingClientRect(), width=Math.min(340,this.window.innerWidth-24);
     this.preview.style.width=`${width}px`;
     const height=this.preview.getBoundingClientRect().height;
     this.preview.style.left=`${Math.max(12,Math.min(rect.left,this.window.innerWidth-width-12))}px`;
-    this.preview.style.top=`${Math.max(12,Math.min(rect.bottom+8,this.window.innerHeight-height-12))}px`;
+    // Keep the originating link clickable, even when a long preview must flip
+    // above it or shrink to the available side of a narrow viewport.
+    const below=Math.max(0,this.window.innerHeight-rect.bottom-20), above=Math.max(0,rect.top-20);
+    const useBelow=height<=below || (height>above && below>=above);
+    const available=useBelow?below:above;
+    this.preview.style.maxHeight=`min(17rem, ${available}px)`;
+    const shown=Math.min(height,available);
+    this.preview.style.top=`${Math.max(12,useBelow?rect.bottom+8:rect.top-shown-8)}px`;
   }
   noteContent(note) {
     const section=this.document.createElement('section');

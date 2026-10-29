@@ -52,3 +52,7 @@ Add new ideas where they belong, link them, and retain unresolved alternatives. 
 and “Checked all three tests, working well.” 0.75× is his reader preference;
 1× stays the compatibility default. See [[Story Teller]] and [[Story Teller Web Reader]]
 for bounded acceptance and review evidence.
+
+- [[Skip Web Publication]] — accepted on Ted's actual iPad and iPhone;
+  scoped integration, production publication and reader-subdomain setup authorised.
+  Ghost page editing/publication remains Ted's responsibility.

@@ -1,5 +1,29 @@
+/* Supporting surfaces follow the same web palette as the reading page. */
+:root { --vscode-editorHoverWidget-background:var(--vscode-editor-background); --vscode-editorHoverWidget-foreground:var(--vscode-editor-foreground); }
 :root { --vscode-editor-foreground:#25252c; --vscode-editor-background:#faf9f5; --vscode-font-family:system-ui,sans-serif; --vscode-textBlockQuote-background:#e8e7e0; --vscode-textCodeBlock-background:#e8e7e0; --vscode-descriptionForeground:#55545c; --vscode-panel-border:#aaa; --vscode-textLink-foreground:#165878; --vscode-editorWarning-foreground:#845300; --vscode-focusBorder:#145eb0; }
 @media(prefers-color-scheme:dark){:root{--vscode-editor-foreground:#eee;--vscode-editor-background:#202126;--vscode-textBlockQuote-background:#30313a;--vscode-textCodeBlock-background:#30313a;--vscode-descriptionForeground:#c1c2cb;--vscode-panel-border:#747782;--vscode-textLink-foreground:#8dd1ff;--vscode-editorWarning-foreground:#f1c17b;--vscode-focusBorder:#8dd1ff;}}
-header {max-width:44rem;margin:auto;padding:1rem 1.5rem 0;box-sizing:border-box;}h1 {font-size:1.3rem;margin:.2rem 0;}#scene-title {font-size:1.05rem;font-weight:normal;}#contents {border:1px solid var(--vscode-panel-border);padding:.7rem;margin:.7rem 0;max-height:50vh;overflow:auto;}#contents button {display:block;margin:.4rem 0;max-width:100%;text-align:left;}#contents [aria-current=true]{outline:2px solid var(--vscode-focusBorder);}summary{cursor:pointer;}nav {justify-content:center;}#status{flex-basis:100%;text-align:center;}button{border-radius:.2rem;}[hidden]{display:none!important;}
-@media(max-width:480px){nav{gap:.4rem;padding:.5rem;}button{font-size:.9rem;}#beat{padding:1rem;}header{padding:.7rem 1rem 0;}}
-@media(forced-colors:active){button,.supporting-panel,.supporting-preview{border:1px solid ButtonText;}}
+header {max-width:44rem;margin:auto;padding:1rem 1.5rem 0;box-sizing:border-box;}
+body > header {padding:.55rem 1rem 0;}
+h1 {font-size:1.3rem;margin:.2rem 0;}
+.book-heading {display:flex;align-items:center;gap:.75rem;}
+.book-heading h1 {font-size:1.05rem;line-height:1.35;margin:0;flex:1;min-width:0;overflow-wrap:anywhere;}
+#contents-toggle {font-size:.85rem;min-height:44px;flex-shrink:0;}
+#contents {border:1px solid var(--vscode-panel-border);padding:.7rem;margin:.5rem 0;max-height:50vh;overflow:auto;}
+#contents button {display:block;margin:.4rem 0;max-width:100%;min-height:44px;text-align:left;}
+#contents [aria-current=true]{outline:2px solid var(--vscode-focusBorder);}summary{cursor:pointer;}
+button{border-radius:.2rem;}[hidden]{display:none!important;}
+.scene-context {margin:.3rem 0 .15rem;line-height:1.4;overflow-wrap:anywhere;}
+.scene-context #scene-title {display:block;margin:0;font-size:.95rem;font-weight:600;line-height:1.4;}
+.scene-context #status {display:block;margin:0;font-size:.78rem;color:var(--vscode-descriptionForeground);text-align:left;}
+.compact-controls {justify-content:center;gap:.6rem;padding:.35rem 1rem .5rem;flex-wrap:nowrap;}
+.icon-button {display:inline-flex;align-items:center;justify-content:center;min-width:48px;width:48px;min-height:48px;padding:.6rem;flex:0 0 auto;}
+.icon-button svg {width:24px;height:24px;pointer-events:none;}
+.icon-button:disabled {opacity:1;color:var(--vscode-descriptionForeground);background:var(--vscode-textBlockQuote-background);border-color:var(--vscode-panel-border);cursor:default;}
+.icon-button[aria-pressed=true] {border:2px solid currentColor;}
+#more-options {position:fixed;z-index:4;box-sizing:border-box;overflow:auto;overscroll-behavior:contain;padding:.65rem;border:1px solid var(--vscode-panel-border);border-radius:.35rem;background:var(--vscode-editor-background);color:var(--vscode-editor-foreground);box-shadow:0 4px 16px #0004;}
+#more-options > button {display:block;text-align:left;width:100%;min-height:44px;margin:0 0 .4rem;}
+#more-options .reader-preference {display:flex;justify-content:space-between;gap:.5rem;white-space:normal;min-height:44px;padding:.15rem 0;font-size:.9rem;}
+#more-options select {font:inherit;min-height:44px;max-width:55%;color:var(--vscode-editor-foreground);background:var(--vscode-editor-background);border:1px solid var(--vscode-panel-border);border-radius:.2rem;}
+#more-options input {width:24px;height:24px;flex-shrink:0;}
+@media(max-width:480px){header{padding:.7rem 1rem 0;}.compact-controls{gap:.5rem;padding:.3rem .7rem .45rem;}.icon-button{width:44px;min-width:44px;min-height:44px;padding:.5rem;}#beat{padding:1rem;}}
+@media(forced-colors:active){button,.supporting-panel,.supporting-preview,#more-options{border:1px solid ButtonText;}.icon-button:disabled{color:GrayText;border-color:GrayText;}}

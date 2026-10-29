@@ -40,9 +40,9 @@ async def run(root):
         assert await page.locator('.typeout-progress').count()==0
         held=await page.locator('#beat').inner_text(); await page.wait_for_timeout(450); assert held==await page.locator('#beat').inner_text()
         evidence['checks'].append('Continue starts scene automatically; Previous cancels active reveal')
-        await page.locator('#autoplay').uncheck();await page.locator('#next').click()
+        await page.locator('#more-toggle').click();await page.locator('#autoplay').uncheck();await page.keyboard.press('Escape');await page.locator('#next').click()
         await page.wait_for_function('()=>document.getElementById("status").textContent.includes("ready")')
-        await page.locator('#next').click();await page.locator('#play').click()
+        await page.locator('#next').click();await page.locator('#playback-toggle').click()
         await page.wait_for_function('()=>document.getElementById("status").textContent.includes("completed")')
         await page.locator('.beat-ending button').click()
         await page.wait_for_selector('#beat h2');assert 'authored ending' in await page.locator('#beat h2').inner_text()

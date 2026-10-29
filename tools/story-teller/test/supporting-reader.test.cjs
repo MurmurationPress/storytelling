@@ -64,3 +64,13 @@ test('supporting note speed changes retain explicit remaining time and do not re
  h.player.setPlaybackSpeed(.5);assert.equal(h.player.remaining,750);
  h.reader.close();assert.equal(h.player.phase,'paused');h.player.play();h.advance(749);assert.equal(h.player.phase,'playing');h.advance(1);assert.equal(h.player.phase,'completed');
 });
+
+test('long supporting previews stay above/below the link and fit a short viewport',()=>{
+ for(const [top,bottom,height,viewport] of [[50,80,100,800],[700,730,200,800],[150,180,250,300]]){
+  const reader=Object.create(SupportingReader.prototype),style={};
+  Object.assign(reader,{preview:{hidden:false,style,getBoundingClientRect:()=>({height})},anchor:{},pointerInPreview:false,
+   window:{innerWidth:390,innerHeight:viewport},find:()=>({getBoundingClientRect:()=>({left:16,top,bottom})})});
+  reader.position();const y=parseFloat(style.top),h=Math.min(height,Number(style.maxHeight.match(/, ([\d.]+)px/)[1]));
+  assert.ok(y+h<=top || y>=bottom);assert.ok(y>=12);assert.ok(y+h<=viewport-12);
+ }
+});

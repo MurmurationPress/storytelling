@@ -1039,3 +1039,258 @@ build/archive comparison and GitHub check inspection are reported on PR #22.
 Issue #13 closes only after those acceptance criteria and integration checks pass.
 No broader platform certification, manuscript change, release or deployment is
 part of this integration.
+
+## 2026-10-28 — Skip standalone publication preview
+
+Prepared the complete committed Stories-Told adaptation from main `bf92b8e`,
+with four explicit note-target repairs at `7c030a1` in source PR #1. Displayed
+wording, dialogue, editorial changes, settings, order, front/back matter and all
+artwork remain intact. Export uses a private committed snapshot, not a reimport
+from PrimeTrilogy or a dirty editor buffer. Initial missing-note warnings targeted
+the PRIME novels, Miranda Stubbs and Jo Ellis; their intended existing notes were
+confirmed and aliases preserve every displayed label. Final warnings: **zero**.
+
+Book: 14 scenes / 144 beats, both matter pages, 23 supporting notes, 44 unique
+assets (47 scene image placements), and four animated WebP files. Canvas and all
+three final-chapter illustrations resolve. The source contains no authored
+type-out blocks; renderer support/sound controls are retained, not demonstrated
+as new book content. No artwork or manuscript text is committed to this public
+repository. Upload inventory, snapshots, reports, credentials and unrelated files
+are separated; only `site/` is uploaded. Existing software/dependency notices and
+book copyright are retained without changing licence terms.
+
+**Publication blocker fixed:** a touch-generated mouseover could put a long
+supporting preview under the click target before the first tap completed. A
+captured event trace showed the click landing on the tooltip paragraph instead
+of Canvas. The 0.12.1 review candidate suppresses touch hover/focus previews while
+preserving keyboard/mouse previews. Preview placement flips/shrinks without
+covering its link; pinning preserves that clearance. Runtime commit `fa09c67`,
+based on accepted 0.12.0, changes no timing/navigation policy or authored content.
+Synthetic first-touch/nested/keyboard/mouse regression and bounds tests pass.
+
+**Validation:** 272/272 tests, syntax, both builds and VSIX packaging pass. Actual
+installed-VSIX note regressions pass in a disposable VS Code profile. Local Pages
+emulation and a live Cloudflare Chrome/Linux browser sweep each complete all 144
+beats with accelerated active time/reduced motion, verify message counts and
+images, and open all 23 supporting targets through real panels/nested navigation.
+Separate real-time checks exercise chat delivery, a paused 0.75×→0.5× change,
+resume, no duplicate reveal, saved scene/beat and speed/autoplay/mute, four changing
+frames for each animated WebP, and 390px/320px emulated touch including the first
+Canvas tap. No browser errors, failed resource requests or external content
+requests were observed. This is not actual iPad/Safari or human listening evidence.
+
+The final stage has 78 files (101,599,211 bytes). The last deployment adds only
+existing software licence/scope notices; every earlier public file remains
+byte-identical to the fully browser-tested deployment. A normal TLS-validating
+HTTPS probe matches all 75 served files against final SHA-256/length inventory;
+it also verifies canonical `/skip/` redirects, preview no-index, revalidation of
+reader/content, immutable hashed images, real missing-resource 404s and rejection
+of private snapshot/report/authoring paths. ZIP names and bytes match the same
+inventory. No private source or credentials were uploaded.
+
+**Deployment:** preview `c548539c-3169-41f5-b9d2-651459c64fe0`, project
+`murmuration-skip`, branch `skip-review-7c030a1`:
+https://c548539c.murmuration-skip.pages.dev/skip/ . Stable branch alias:
+https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/ . Cloudflare API confirms
+`environment: preview`, production branch `main`, no canonical production
+deployment and no custom domains. DNS-record inspection returned 403; DNS was
+not changed. Ghost was not modified. Production/DNS/Ghost require Ted's approval.
+
+**Historical harness/hosting observations:** initial snapshot streaming could
+close early; preparation now archives then extracts sequentially. Initial ZIP
+creation flattened paths; verification caught it and the corrected ZIP preserves
+them. Image-decode waits, CSP-safe function predicates and an unambiguous dialog
+header selector corrected probe races/ambiguity; those failed runs are not
+counted as passes. The first-touch failure was a separate reproduced product
+issue and is regression tested. Overlapping cache rules combined `no-cache` with
+immutable; the uploaded final rules have no overlap. Wrangler's automatic
+Workers delegation failed before creating/deploying anything; supported direct
+Pages project creation retained the requested preview-branch separation. The
+fresh preview hostname briefly failed TLS during provisioning, then normal
+certificate-validated requests passed. No TLS bypass or production upload was
+used. Existing preview deployments are retained.
+
+See [PUBLISH-SKIP.md](PUBLISH-SKIP.md) for exact pins, repeatable export, preview,
+update/rollback and approval steps and the exact Ghost link. Evidence:
+`test/evidence/skip-publication.json`. Full private build reports/screenshots and
+archive remain outside both repositories and the uploaded directory.
+
+### 0.12.2 — Ted's full-book follow/theme reports
+
+Ted reports automatic following fails while manual scrolling works, and that
+wikilinks produce a black scrollable popout. Both are reproduced in the actual
+0.12.1 Cloudflare book export. The normal front-matter Continue → Introduction →
+Next scene path calls `turnDocument`, which deactivates the follower during source
+loading. The web adapter supplies no new host-presentation event, and source
+commit did not reactivate it. At a completed overflowing beat, desktop stayed
+at scrollTop 0 with last-content bottom 1171.9px in a 720px viewport; manual
+scrolling moved to 500px. Mobile emulation likewise stayed at 0 with content
+bottom 1820.5px. The first sweep's Contents-centric traversal did not assert this
+handoff; passing playback/asset checks did not establish working auto-follow.
+
+The fix reactivates only an inactive follower after a visible source commit,
+without resetting one already active. Static matter and silent Previous remain
+at the top. It does not change timing, sound, authored content/settings or manual
+turns. Upward wheel/touch reading suspends following during new content and the
+Follow story button explicitly resumes it. New-content and end-control positions
+are asserted in the full-book regression.
+
+The hover preview computed `rgb(37,37,37)` background and `rgb(37,37,44)` text in
+light mode. Its missing web-theme widget variables now derive from the page
+palette. The full reading panel already used that palette; its size, contrast,
+contained article scrolling and restoration of the background reading position
+are now asserted, rather than assumed. Contrast is 14.45:1 light / 13.85:1 dark.
+
+Reader runtime `6239345f2b73a96163790400cf061da7068d8805`, 0.12.2 review candidate.
+Source remains `7c030a1`: no new source changes. The export remains zero-warning,
+14 scenes / 144 beats, both matter pages, 23 notes and 44 original assets.
+272/272 tests, syntax, builds and packaging pass. A synthetic single-touch,
+nested/Back/Close, keyboard/mouse hover regression also passes.
+
+The targeted exported-book regression passes all six local and live HTTPS cases:
+1100px desktop, 390px and 320px emulated touch, each light/dark. It follows the
+real document-turn route, proves movement while content appears, scrolls back
+with actual wheel/touch points, advances more content without pulling the reader
+down, resumes through Follow story, checks silent Previous within/across scenes,
+reaches bottom navigation, manually scrolls static matter and independently
+scrolls a long supporting note. The complete live 144-beat/44-asset/23-target/
+four-WebP-frame sweep passes again, with no page errors or failed/external content
+requests. All 75 served files match the final build over certificate-validated
+HTTPS; 404/privacy/cache/redirect checks pass. Screenshots and raw reports stay
+outside the uploaded site and public repository.
+
+Preview: https://cfc10c44.murmuration-skip.pages.dev/skip/ . Stable review alias
+remains https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/ . Cloudflare
+confirms preview environment, production branch main with no production
+snapshot or custom domains. Production, DNS and Ghost remain unchanged. Old hash
+URLs remain old builds; the current URL/alias should be used for tomorrow's test.
+
+**Separate native limitation:** an optional installed VSIX follow sweep passed
+initial following/rereading/resume but failed its exact hide/return pixel check
+on both the 0.12.1 baseline (1966→1987) and intermediate 0.12.2 (1966→2007).
+This is not counted as a complete native pass or treated as new platform
+certification. The final reactivation guard preserves the already-active source
+path; the publication fixes are validated in exported web readers. Earlier
+installed-note results retain their original 0.12.1 scope.
+
+The browser harness was corrected to respect the existing 400ms double-activation
+guard, emit real touchmove points (aggregate CDP scrolling emitted none under the
+virtual clock), and account for touch slop when reaching the bottom. These were
+probe corrections, not additional reader changes or manual-scroll defects.
+Evidence: `test/evidence/skip-reader-layout.json` and updated
+`test/evidence/skip-publication.json`; original publication evidence is retained
+as `skip-publication-0.12.1.json`. Actual iPad/Safari, screen-reader and human
+listening coverage is not inferred. No release, production deployment, DNS or
+Ghost publication is performed.
+
+Final provider-client observation: Python `urllib` requests returned HTTP 403 /
+Cloudflare error 1010 while the Node verifier and fresh Chrome returned 200 for
+both the current immutable preview and review alias, with exact bundle hashes.
+No security/protection setting was altered. This observation is recorded rather
+than represented as universal client compatibility; the actual-device check
+remains pending. The final APIs still show preview-only, no canonical production
+deployment/custom domain, and neither DNS nor Ghost was changed.
+
+## Skip scene context and author updates — 29 October 2026
+
+0.12.3 renderer/workflow commit `9c4f469adeb778f31b46557c9b638b80c3b82813`,
+source `7c030a14c8911f26d468e1d5de2b714445da9648`.
+Preview: https://bae164b5.murmuration-skip.pages.dev/skip/.
+
+All 14 actual scene titles appear under Contents with beat count, playback state
+and authored prose-pacing context. Redundant matching opening titles are hidden
+only in web presentation; source, timing and boundaries are unchanged. Speed
+remains separate; 1× default and 0.75× reader preference behavior are retained.
+The simple Contents control remains; theme selection/branding are deferred.
+
+278/278 unit tests, syntax checks, both bundles and 0.12.3 VSIX packaging pass.
+The author CLI prepared an isolated committed snapshot, blocked warnings and
+uploaded a live preview. Automated workflow tests cover warning/tamper guards,
+renderer mismatch, separate preview branch, reviewed receipt, concurrent
+production change, copying reviewed content and explicit rollback expectations.
+Production/rollback are tested with mocked deployment, not live publication.
+
+Local HTTP actual-book checks pass: 144 beats, 23 opened supporting targets,
+44 decoded assets, four changing animated WebPs, saved preferences/position,
+real-time chat/pause/speed and narrow Canvas touch emulation. Six layout/follow/
+theme cases pass at 1100/390/320px in light/dark: document handoff auto-follow,
+scroll-back suspension while content grows, Follow resumption, Previous/manual
+scrolling, note contrast/bounds/contained scrolling and bottom controls.
+The final prepared inventory exactly equals that tested build (all 78 files).
+Final Cloudflare HTTPS verification compares all 75 served payload files and
+checks noindex, cache policy, redirects and private/missing-file 404s. A fresh
+live header check passes all scene titles, speed persistence and widths.
+The ZIP's 78 paths and SHA-256s match the final inventory.
+
+Raw source snapshots, browser reports/screenshots, deployment receipts and upload
+archive remain in the private `skip-preview-0.12.3-final-20261029` build directory.
+Summary: `test/evidence/skip-publication-0.12.3.json`; author instructions:
+`AUTHOR-PUBLISHING.md`. Native host evidence is not broadened: no new installed
+VSIX/Development Host pass is claimed for this web header update; the previously
+reported optional native hide/return drift remains documented. Actual iPad/Safari,
+screen-reader and human listening checks are not performed by these automated
+Linux Chrome tests. Production/DNS/Ghost remain unchanged, awaiting Ted's review.
+
+## Compact standalone controls — 29 October 2026
+
+Runtime `2f2e5fb9583ff5f6038f23db0ae0e3c8ed220e7a`, version 0.12.4; committed
+book source remains `7c030a14c8911f26d468e1d5de2b714445da9648`.
+Preview: https://f519ec23.murmuration-skip.pages.dev/skip/.
+
+The web toolbar now has five SVG controls: Previous, state-aware Play/Pause/Resume,
+Next, muted/unmuted Sound and More. More is a non-modal disclosure with labelled
+Reveal beat, Replay beat, Restart scene, Playback speed and Autoplay on beat
+turns. It uses native keyboard traversal and closes with Escape, action selection,
+focus leaving or outside pointer input. Focus returns appropriately; preferences
+remain open during editing. Whole-beat reveal uses the existing player operation,
+never advances and cancels sound/timers. The native preview keeps its existing
+controls and active-type-out reveal. No authoring/timing/default or manuscript
+changes, automatic hiding/gestures, theme selector or branding changes.
+
+**Same-viewport comparison:** actual Skip, The Last Word, first beat ready, fresh
+storage and autoplay disabled, Contents/More closed, light theme. Live old 0.12.3
+versus live 0.12.4, same Chrome/CSS viewport. Reading starts at 252.86 → 161.33 px
+at 768×1024: **91.53 px recovered, 36.20% smaller header/control area**.
+At 1024×768 it is 205.22 → 161.33 px (43.89 px, 21.39%). 820×1180 matches the
+portrait reduction; 1180×820 matches landscape. At 320×568 it is 366.81 → 157.06 px
+(209.75 px, 57.18%). Browser chrome is not included; device/text scaling and
+scene/title wrapping affect actual measurements. Before/after screenshots stay
+beside the private build. The code does not hide controls as the reader scrolls.
+
+**Executed:** 278/278 Node tests; syntax checks (including new web controls), both
+bundles and 0.12.4 VSIX packaging pass. Fourteen synthetic exported-reader cases
+cover light/dark at 768×1024, 1024×768, 820×1180, 1180×820, 390×844, 320×568 and
+1100×780. Checks include ready/playing/paused/completed, every toolbar/More action,
+whole-beat reveal from each incomplete state, stale-timer cancellation, Unicode,
+replay/restart distinction, existing scene boundaries, speed/autoplay persistence,
+keyboard traversal/focus/Escape/outside dismissal, SVG labels/tooltips, >=44px
+primary targets and contrasting controls/panel. An active type-out has one
+oscillator; reveal stops it and it remains stopped. This is automated audio graph
+behavior, not human listening. Long titles wrap without horizontal overflow. A four-phase × eight-action matrix
+additionally checks every toolbar/More action across ready/playing/paused/completed.
+The final comparison also verifies unchanged content-H1 font size and supporting
+header padding against the previous preview.
+
+The actual newly exported book passes all 144 beats, 44 assets, 23 supporting
+targets, four changing animated WebPs and real-time chat/pause/speed/persistence.
+Ten follow/note cases pass over local HTTP: 1100×780, 768×1024, 1024×768, 390×780,
+320×568 in light/dark, with wheel/emulated touch points. Auto-follow after the
+normal document handoff, scroll-back suspension while new content appears,
+Follow resumption, silent Previous, reachable bottom controls and theme-aware
+note bounds/contrast pass. Narrow/short viewports contain note scrolling; the
+longer tablet portrait fits that note without scrolling (reported separately).
+Tablet thresholds were adjusted to account for content fitting in the recovered
+space; this was a test expectation change, not a follow implementation fix.
+
+All 75 hosted payload files match the prepared candidate over HTTPS. Cache,
+noindex, redirects and private/missing-path 404s pass. The ZIP's 78 entries/hashes
+match the inventory. Fresh live actual-title/preferences/narrow-layout and
+before/after space checks pass. Public byte equality ties local book/follow
+coverage to this deployment. The source/scene order/settings remain unchanged.
+
+Summary: `test/evidence/compact-controls-0.12.4.json`. Private reports/screenshots,
+source snapshot, ZIP and receipts: `skip-preview-0.12.4-final-20261029`, outside
+both repositories. Actual iPad/Safari and screen-reader testing remain for Ted;
+CSS viewport and touch emulation do not add actual-device coverage. No new native
+Development Host/installed-VSIX pass is claimed for this standalone layout change.
+Production, DNS, Ghost and PR integration remain pending review.

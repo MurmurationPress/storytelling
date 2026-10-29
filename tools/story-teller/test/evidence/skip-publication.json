@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-28",
+  "book": "The Curious Adventures of Skip",
+  "sourceBaseline": "bf92b8e0faa05db9fefde823054c465c428249f5",
+  "sourceCandidate": "7c030a14c8911f26d468e1d5de2b714445da9648",
+  "sourceReview": "https://github.com/tedwarddick/Stories-Told/pull/1",
+  "sourceCorrections": {
+    "files": 2,
+    "linkTargetRepairs": 4,
+    "displayedWordingUnchanged": true,
+    "settingsOrderMatterAndImagesUnchanged": true
+  },
+  "rendererRuntime": "6239345f2b73a96163790400cf061da7068d8805",
+  "rendererVersion": "0.12.2 review candidate",
+  "rendererFix": "Restore an inactive follower after a document snapshot commits; preserve existing active state and silent Previous/static matter; supply theme-aware supporting-preview colours. Includes the prior touch/link-clearance fix.",
+  "export": {
+    "scenes": 14,
+    "beats": 144,
+    "matterPages": 2,
+    "notes": 23,
+    "uniqueAssets": 44,
+    "renderedImageReferences": 47,
+    "animatedWebP": 4,
+    "typeoutBlocksAuthored": 0,
+    "warnings": [],
+    "publicFiles": 78,
+    "bytes": 101599601,
+    "largestFile": 3829148,
+    "licenceTermsChanged": false,
+    "existingSoftwareAndDependencyNoticesIncluded": true,
+    "archiveSha256": "904b1c30d7f3a3249381d4676c65506fd15fe31d3add27b0ca9a0c16632f15f8"
+  },
+  "deployment": {
+    "project": "murmuration-skip",
+    "previewBranch": "skip-review-7c030a1",
+    "deploymentId": "cfc10c44-1396-4ae8-9966-b7c8bdfe3b72",
+    "previewUrl": "https://cfc10c44.murmuration-skip.pages.dev/skip/",
+    "branchAlias": "https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/",
+    "environment": "preview",
+    "productionBranch": "main",
+    "productionDeployment": null,
+    "customDomains": [],
+    "dnsChanged": false,
+    "ghostPublished": false,
+    "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+    "rendererRevision": "6239345f2b73a96163790400cf061da7068d8805",
+    "rendererVersion": "0.12.2",
+    "archiveSha256": "904b1c30d7f3a3249381d4676c65506fd15fe31d3add27b0ca9a0c16632f15f8",
+    "publicFiles": 78,
+    "totalBytes": 101599601
+  },
+  "validation": {
+    "unitTestsPassed": 272,
+    "unitTestsFailed": 0,
+    "syntax": "pass",
+    "build": "pass",
+    "package": "pass",
+    "syntheticTouchKeyboardMouseRegression": "pass",
+    "installedVsixNotesRegression": "0.12.1 historical pass; not a new 0.12.2 run",
+    "fullBookVirtualTime": true,
+    "realTimeChatAndAnimationChecks": true,
+    "browser": {
+      "method": "Actual book at /skip/ over HTTP(S); Chrome headless Linux",
+      "origin": "https://cfc10c44.murmuration-skip.pages.dev",
+      "checks": [
+        "All 14 scenes / 144 beats complete with virtual active time, exact message counts, resolved images and actual supporting panels/nested Back",
+        "Refresh restores scene/beat and speed/autoplay/mute preferences, ready without restarting sound",
+        "Authored front and back matter are both in Contents and displayed",
+        "All 44 content-addressed assets HTTP-load and browser-decode",
+        "Real-time authored chat delivery, 0.75\u00d7\u21920.5\u00d7 paused change, resume and no duplicate reveal",
+        "Every animated WebP shows changing frames in the browser; no frame rewriting",
+        "390px/320px mobile layout, emulated-touch Contents/Canvas panel, 44px select and no horizontal overflow"
+      ],
+      "unverified": [
+        "Actual mobile/iPad/Safari device use",
+        "Screen reader use",
+        "Human audio listening",
+        "Production hostname DNS/TLS"
+      ],
+      "browser": "156.0.8078.47",
+      "allBeats": 144,
+      "renderedSceneImages": 47,
+      "visitedSupportingTargets": [
+        "Canvas",
+        "Celia",
+        "Clive",
+        "ColourStudy",
+        "Companion",
+        "Eleanor Marsh",
+        "Fledglings",
+        "JANUS",
+        "Jo",
+        "Laurence",
+        "LineAndLevel",
+        "Mara",
+        "Miranda",
+        "OpenQuestion",
+        "PRIME",
+        "Pip",
+        "Robin",
+        "Ruth Armstrong",
+        "Skip",
+        "The Common Room",
+        "The PRIME Novels",
+        "Tobias Hale",
+        "Victor"
+      ],
+      "savedPosition": {
+        "scene": "0da648cd-f564-4f4b-95b8-acab8dce944c",
+        "beat": 9,
+        "speed": 0.75,
+        "autoplay": false,
+        "muted": true
+      },
+      "decodedAssets": 44,
+      "animatedWebP": [
+        {
+          "asset": "93d51bae94550db37cc9e66a2b5fee8894bbfddf0d256fef296a55c640821a03.webp",
+          "distinctBrowserFrames": 4
+        },
+        {
+          "asset": "c81104672b33cf00609cdde1830998794d41fba749ae41b8aca06f073bc08a62.webp",
+          "distinctBrowserFrames": 4
+        },
+        {
+          "asset": "ccae0e4ab5467167b18529205a3474aafa830c369b5422efdee45907ee208b27.webp",
+          "distinctBrowserFrames": 4
+        },
+        {
+          "asset": "fb54f1333c847b86258f7037d344705c9dc375d46cb35b49d2b5c9892a08e8bc.webp",
+          "distinctBrowserFrames": 4
+        }
+      ],
+      "pageErrors": [],
+      "failedRequests": [],
+      "externalRequests": []
+    },
+    "http": {
+      "previewUrl": "https://cfc10c44.murmuration-skip.pages.dev/skip/",
+      "httpsCertificateValidated": true,
+      "publicFilesCompared": 75,
+      "sha256MatchesPreparedFiles": true,
+      "sourceSnapshotsAndReports404": true,
+      "missingContent404": true,
+      "canonicalRedirects": true,
+      "previewNoindex": true,
+      "revalidationAndImmutableAssets": true
+    },
+    "zipPathsAndAllBytesVerified": true,
+    "privateSnapshotsReportsAndCredentialsOutsideUpload": true,
+    "layoutFollowTheme": "6/6 live Chrome cases pass (1100/390/320px, light/dark)",
+    "nativeFollow": "Optional hide/return pixel check failed on both 0.12.1 baseline and intermediate 0.12.2; no complete native-follow pass claimed",
+    "currentCloudflareFullBookSweep": "0.12.2 final runtime: pass",
+    "priorLocalFullBookSweep": "0.12.1 historical pass",
+    "localLayoutCandidate": "0.12.2 intermediate 5f24fc4: 6/6 pass",
+    "currentCloudflareLayout": "0.12.2 final runtime 6239345: 6/6 pass"
+  },
+  "limitations": [
+    "Automated Chrome/Linux only; mobile/touch emulation is not actual iPad/Safari/device evidence",
+    "No human listening evidence; this book has no authored type-out/sound components",
+    "Production read hostname, DNS and Ghost are not published or validated; DNS API inspection returned 403",
+    "Preview is public/unlisted and no-index, not access control"
+  ],
+  "recordsAndBookAssets": "Build reports, screenshots, source snapshot and full hash inventory remain outside the public upload; no manuscript/artwork is committed to the tooling repository.",
+  "previousPreviews": [
+    {
+      "project": "murmuration-skip",
+      "productionBranch": "main",
+      "previewBranch": "skip-review-7c030a1",
+      "deploymentId": "c548539c-3169-41f5-b9d2-651459c64fe0",
+      "environment": "preview",
+      "previewUrl": "https://c548539c.murmuration-skip.pages.dev/skip/",
+      "branchAlias": "https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/",
+      "productionDeployment": null,
+      "customDomains": [],
+      "dnsChanged": false,
+      "ghostPublished": false,
+      "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+      "rendererRevision": "fa09c675900fecdd04cc9a846e628ec20e53ead2",
+      "archiveSha256": "4f743fbc1f4fecfe4ed4b9abe6fe96069da2bca3f4ca2443299a395db86ba633",
+      "publicFiles": 78,
+      "totalBytes": 101599211
+    }
+  ],
+  "httpClientObservation": "At the final spot check Cloudflare returned HTTP 403 / error 1010 to Python urllib requests. The provided Node HTTPS verifier and fresh ordinary Chrome contexts returned 200 and matched the same reader bytes on both current URLs. Cloudflare protection settings were not changed; actual-device coverage is still not inferred."
+}

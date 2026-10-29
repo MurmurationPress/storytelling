@@ -1,0 +1,435 @@
+{
+  "date": "2026-10-28",
+  "readerRuntime": "6239345f2b73a96163790400cf061da7068d8805",
+  "version": "0.12.2 review candidate",
+  "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+  "preview": {
+    "project": "murmuration-skip",
+    "previewBranch": "skip-review-7c030a1",
+    "deploymentId": "cfc10c44-1396-4ae8-9966-b7c8bdfe3b72",
+    "previewUrl": "https://cfc10c44.murmuration-skip.pages.dev/skip/",
+    "branchAlias": "https://skip-review-7c030a1.murmuration-skip.pages.dev/skip/",
+    "environment": "preview",
+    "productionBranch": "main",
+    "productionDeployment": null,
+    "customDomains": [],
+    "dnsChanged": false,
+    "ghostPublished": false,
+    "sourceRevision": "7c030a14c8911f26d468e1d5de2b714445da9648",
+    "rendererRevision": "6239345f2b73a96163790400cf061da7068d8805",
+    "rendererVersion": "0.12.2",
+    "archiveSha256": "904b1c30d7f3a3249381d4676c65506fd15fe31d3add27b0ca9a0c16632f15f8",
+    "publicFiles": 78,
+    "totalBytes": 101599601
+  },
+  "reported": {
+    "manualScrolling": "Working (clarified by Ted), retained",
+    "automaticFollowing": "Failed after front-matter/document handoff",
+    "supportingPopout": "Hover preview used near-black foreground on dark fallback in light mode"
+  },
+  "before": {
+    "desktop": {
+      "scrollTop": 0,
+      "scrollHeight": 1220,
+      "lastContentBottom": 1171.875,
+      "viewportHeight": 720,
+      "followButtonVisible": false,
+      "manualScrollTop": 500
+    },
+    "mobileEmulation": {
+      "scrollTop": 0,
+      "scrollHeight": 1837,
+      "lastContentBottom": 1820.546875,
+      "viewportHeight": 807,
+      "followButtonVisible": false,
+      "manualScrollTop": 513
+    },
+    "hoverLight": {
+      "background": "rgb(37, 37, 37)",
+      "foreground": "rgb(37, 37, 44)"
+    },
+    "readingPanelLight": "Already used page colours; its dimensions and internal scrolling are now explicitly checked"
+  },
+  "cause": "turnDocument deactivated the follower; the web adapter sends no fresh host-presentation event when the new source commits, so it stayed inactive. Initial Contents-centric sweeps missed this path.",
+  "fix": "Reactivate only an inactive, visible/presented follower after source commit. Keep Previous/static matter silent at the top. Web hover-widget colours derive from the reader palette.",
+  "validation": {
+    "origin": "https://cfc10c44.murmuration-skip.pages.dev",
+    "browser": "156.0.8078.47",
+    "cases": [
+      {
+        "width": 1100,
+        "height": 780,
+        "mobileTouchEmulation": false,
+        "theme": "light",
+        "autoAfterDocumentTurn": {
+          "top": 348,
+          "height": 1148,
+          "viewport": 780,
+          "last": 751.84375,
+          "followVisible": false,
+          "status": "Beat 2 of 7 \u00b7 Skips Fascination \u00b7 completed \u00b7 prose pacing On (book)"
+        },
+        "suspendedDuringNewContent": {
+          "top": 21,
+          "height": 1483,
+          "viewport": 780,
+          "last": 1396.359375,
+          "followVisible": true,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "followResumed": {
+          "top": 790,
+          "height": 1613,
+          "viewport": 780,
+          "last": 751.46875,
+          "followVisible": false,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "preview": {
+          "bg": "rgb(250, 249, 245)",
+          "fg": "rgb(37, 37, 44)",
+          "x": 222,
+          "y": 471.65625,
+          "right": 562,
+          "bottom": 743.65625
+        },
+        "panel": {
+          "bg": "rgb(250, 249, 245)",
+          "fg": "rgb(37, 37, 44)",
+          "x": 214,
+          "y": 33.875,
+          "right": 886,
+          "bottom": 746.109375,
+          "articleHeight": 652,
+          "articleScrollHeight": 681
+        },
+        "contrast": 14.44818807018736,
+        "manualScrolling": true,
+        "endControlReachable": true,
+        "silentPreviousAtTop": true,
+        "silentPreviousAcrossScenes": true,
+        "noteArticleScrollContained": true
+      },
+      {
+        "width": 1100,
+        "height": 780,
+        "mobileTouchEmulation": false,
+        "theme": "dark",
+        "autoAfterDocumentTurn": {
+          "top": 348,
+          "height": 1148,
+          "viewport": 780,
+          "last": 751.84375,
+          "followVisible": false,
+          "status": "Beat 2 of 7 \u00b7 Skips Fascination \u00b7 completed \u00b7 prose pacing On (book)"
+        },
+        "suspendedDuringNewContent": {
+          "top": 21,
+          "height": 1483,
+          "viewport": 780,
+          "last": 1396.359375,
+          "followVisible": true,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "followResumed": {
+          "top": 790,
+          "height": 1613,
+          "viewport": 780,
+          "last": 751.46875,
+          "followVisible": false,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "preview": {
+          "bg": "rgb(32, 33, 38)",
+          "fg": "rgb(238, 238, 238)",
+          "x": 222,
+          "y": 471.65625,
+          "right": 562,
+          "bottom": 743.65625
+        },
+        "panel": {
+          "bg": "rgb(32, 33, 38)",
+          "fg": "rgb(238, 238, 238)",
+          "x": 214,
+          "y": 33.875,
+          "right": 886,
+          "bottom": 746.109375,
+          "articleHeight": 652,
+          "articleScrollHeight": 681
+        },
+        "contrast": 13.848967714681066,
+        "manualScrolling": true,
+        "endControlReachable": true,
+        "silentPreviousAtTop": true,
+        "silentPreviousAcrossScenes": true,
+        "noteArticleScrollContained": true
+      },
+      {
+        "width": 390,
+        "height": 780,
+        "mobileTouchEmulation": true,
+        "theme": "light",
+        "autoAfterDocumentTurn": {
+          "top": 917,
+          "height": 1697,
+          "viewport": 780,
+          "last": 764.25,
+          "followVisible": false,
+          "status": "Beat 2 of 7 \u00b7 Skips Fascination \u00b7 completed \u00b7 prose pacing On (book)"
+        },
+        "suspendedDuringNewContent": {
+          "top": 13,
+          "height": 1377,
+          "viewport": 780,
+          "last": 1324.4375,
+          "followVisible": true,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "followResumed": {
+          "top": 895,
+          "height": 1870,
+          "viewport": 780,
+          "last": 942.078125,
+          "followVisible": false,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "preview": {
+          "bg": "rgb(250, 249, 245)",
+          "fg": "rgb(37, 37, 44)",
+          "x": 16,
+          "y": 264.21875,
+          "right": 356,
+          "bottom": 536.21875
+        },
+        "panel": {
+          "bg": "rgb(250, 249, 245)",
+          "fg": "rgb(37, 37, 44)",
+          "x": 20,
+          "y": 36.015625,
+          "right": 370,
+          "bottom": 743.96875,
+          "articleHeight": 652,
+          "articleScrollHeight": 1214
+        },
+        "contrast": 14.44818807018736,
+        "manualScrolling": true,
+        "endControlReachable": true,
+        "silentPreviousAtTop": true,
+        "silentPreviousAcrossScenes": true,
+        "noteArticleScrollContained": true
+      },
+      {
+        "width": 390,
+        "height": 780,
+        "mobileTouchEmulation": true,
+        "theme": "dark",
+        "autoAfterDocumentTurn": {
+          "top": 917,
+          "height": 1697,
+          "viewport": 780,
+          "last": 764.25,
+          "followVisible": false,
+          "status": "Beat 2 of 7 \u00b7 Skips Fascination \u00b7 completed \u00b7 prose pacing On (book)"
+        },
+        "suspendedDuringNewContent": {
+          "top": 13,
+          "height": 1377,
+          "viewport": 780,
+          "last": 1324.4375,
+          "followVisible": true,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "followResumed": {
+          "top": 847,
+          "height": 1870,
+          "viewport": 780,
+          "last": 990.078125,
+          "followVisible": false,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "preview": {
+          "bg": "rgb(32, 33, 38)",
+          "fg": "rgb(238, 238, 238)",
+          "x": 16,
+          "y": 264.21875,
+          "right": 356,
+          "bottom": 536.21875
+        },
+        "panel": {
+          "bg": "rgb(32, 33, 38)",
+          "fg": "rgb(238, 238, 238)",
+          "x": 20,
+          "y": 36.015625,
+          "right": 370,
+          "bottom": 743.96875,
+          "articleHeight": 652,
+          "articleScrollHeight": 1214
+        },
+        "contrast": 13.848967714681066,
+        "manualScrolling": true,
+        "endControlReachable": true,
+        "silentPreviousAtTop": true,
+        "silentPreviousAcrossScenes": true,
+        "noteArticleScrollContained": true
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "mobileTouchEmulation": true,
+        "theme": "light",
+        "autoAfterDocumentTurn": {
+          "top": 1456,
+          "height": 2024,
+          "viewport": 568,
+          "last": 552.140625,
+          "followVisible": false,
+          "status": "Beat 2 of 7 \u00b7 Skips Fascination \u00b7 completed \u00b7 prose pacing On (book)"
+        },
+        "suspendedDuringNewContent": {
+          "top": 117,
+          "height": 1467,
+          "viewport": 568,
+          "last": 1316.109375,
+          "followVisible": true,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "followResumed": {
+          "top": 1148,
+          "height": 1728,
+          "viewport": 568,
+          "last": 539.71875,
+          "followVisible": false,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "preview": {
+          "bg": "rgb(250, 249, 245)",
+          "fg": "rgb(37, 37, 44)",
+          "x": 12,
+          "y": 24.203125,
+          "right": 308,
+          "bottom": 296.203125
+        },
+        "panel": {
+          "bg": "rgb(250, 249, 245)",
+          "fg": "rgb(37, 37, 44)",
+          "x": 20,
+          "y": 25.203125,
+          "right": 300,
+          "bottom": 542.796875,
+          "articleHeight": 440,
+          "articleScrollHeight": 1550
+        },
+        "contrast": 14.44818807018736,
+        "manualScrolling": true,
+        "endControlReachable": true,
+        "silentPreviousAtTop": true,
+        "silentPreviousAcrossScenes": true,
+        "noteArticleScrollContained": true
+      },
+      {
+        "width": 320,
+        "height": 568,
+        "mobileTouchEmulation": true,
+        "theme": "dark",
+        "autoAfterDocumentTurn": {
+          "top": 1456,
+          "height": 2024,
+          "viewport": 568,
+          "last": 552.140625,
+          "followVisible": false,
+          "status": "Beat 2 of 7 \u00b7 Skips Fascination \u00b7 completed \u00b7 prose pacing On (book)"
+        },
+        "suspendedDuringNewContent": {
+          "top": 117,
+          "height": 1467,
+          "viewport": 568,
+          "last": 1316.109375,
+          "followVisible": true,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "followResumed": {
+          "top": 1148,
+          "height": 1728,
+          "viewport": 568,
+          "last": 539.71875,
+          "followVisible": false,
+          "status": "Beat 3 of 7 \u00b7 Onboarding \u00b7 playing \u00b7 prose pacing On (book)"
+        },
+        "preview": {
+          "bg": "rgb(32, 33, 38)",
+          "fg": "rgb(238, 238, 238)",
+          "x": 12,
+          "y": 24.203125,
+          "right": 308,
+          "bottom": 296.203125
+        },
+        "panel": {
+          "bg": "rgb(32, 33, 38)",
+          "fg": "rgb(238, 238, 238)",
+          "x": 20,
+          "y": 25.203125,
+          "right": 300,
+          "bottom": 542.796875,
+          "articleHeight": 440,
+          "articleScrollHeight": 1550
+        },
+        "contrast": 13.848967714681066,
+        "manualScrolling": true,
+        "endControlReachable": true,
+        "silentPreviousAtTop": true,
+        "silentPreviousAcrossScenes": true,
+        "noteArticleScrollContained": true
+      }
+    ],
+    "actualDeviceTest": false,
+    "method": "Full committed book export; virtual playback time, real wheel/touch gestures, computed light/dark colours and contrast",
+    "limitations": [
+      "No actual iPad/Safari or screen-reader testing",
+      "No human listening claim"
+    ]
+  },
+  "fullBookSweep": {
+    "beats": 144,
+    "assets": 44,
+    "supportingTargetsOpened": 23,
+    "animatedWebP": 4,
+    "failedRequests": [],
+    "pageErrors": []
+  },
+  "http": {
+    "previewUrl": "https://cfc10c44.murmuration-skip.pages.dev/skip/",
+    "httpsCertificateValidated": true,
+    "publicFilesCompared": 75,
+    "sha256MatchesPreparedFiles": true,
+    "sourceSnapshotsAndReports404": true,
+    "missingContent404": true,
+    "canonicalRedirects": true,
+    "previewNoindex": true,
+    "revalidationAndImmutableAssets": true
+  },
+  "unitTests": 272,
+  "nativeLimitations": {
+    "prior0.12.1InstalledNotes": "pass",
+    "followProbe0.12.1Baseline": {
+      "hideTop": 1966,
+      "returnTop": 1987,
+      "result": "fails exact-position tolerance"
+    },
+    "followProbe0.12.2Intermediate5f24fc4": {
+      "hideTop": 1966,
+      "returnTop": 2007,
+      "result": "fails exact-position tolerance"
+    },
+    "finalNativeFollowFullPassClaimed": false,
+    "scope": "This optional VS Code hide/return variance also occurs on the baseline and remains a separate recorded limitation; the exported-web checks are the acceptance evidence for these fixes."
+  },
+  "harnessCorrections": [
+    "Respect the existing 400ms double-activation guard between rapid document turns",
+    "Use explicit touchStart/touchMove/touchEnd; aggregate CDP scroll emitted no move events with Clock installed",
+    "Account for native touch slop when scrolling to an end control"
+  ],
+  "productionDeployed": false,
+  "dnsChanged": false,
+  "ghostPublished": false,
+  "httpClientObservation": "At the final spot check Cloudflare returned HTTP 403 / error 1010 to Python urllib requests. The provided Node HTTPS verifier and fresh ordinary Chrome contexts returned 200 and matched the same reader bytes on both current URLs. Cloudflare protection settings were not changed; actual-device coverage is still not inferred."
+}

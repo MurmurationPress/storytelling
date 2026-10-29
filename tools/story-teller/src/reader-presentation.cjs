@@ -28,6 +28,7 @@ let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
 let isMatter = false;
+let sceneTitle = '', hideMatchingHeading = false;
 let documentNavigation = {};
 let pacingWarning = null;
 let pacingLabel = 'Off (unchanged default)';
@@ -60,12 +61,12 @@ function resetNotes() {
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  status.textContent = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · prose pacing ${pacingLabel}` : 'No beats';
+  status.textContent = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${!api.compactHeader && beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · ${api.compactHeader ? 'Prose pacing' : 'prose pacing'} ${pacingLabel}` : 'No beats';
   warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...supportingDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || (player.index === 0 && !documentNavigation.previous);
   document.getElementById('next').disabled = preparing || !beat || (isMatter ? !documentNavigation.next : player.index >= player.scene.beats.length - 1);
-  document.getElementById('next').textContent = isMatter ? 'Continue →' : 'Next';
+  if (!api.compactControls) document.getElementById('next').textContent = isMatter ? 'Continue →' : 'Next';
   for (const id of ['restart','play','pause','replay','mute','enable-sound']) document.getElementById(id).hidden = isMatter;
   document.getElementById('restart').disabled = preparing || !beat;
   document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented;
@@ -73,7 +74,8 @@ function controls() {
   document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
   document.getElementById('replay').disabled = preparing || !beat || !presented;
   const reveal = document.getElementById('reveal');
-  reveal.hidden = !active; reveal.disabled = preparing || !active || !presented;
+  reveal.hidden = api.compactControls ? false : !active;
+  reveal.disabled = preparing || !presented || (api.compactControls ? isMatter || !beat || player.phase === 'completed' : !active);
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
   document.getElementById('enable-sound').hidden = isMatter || !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
@@ -82,6 +84,7 @@ function controls() {
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
+  api.onControls?.({ phase: player.phase, preparing, presented, isMatter, muted });
   if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
 }
 function imageElement(src, alt, inline = false) {
@@ -142,12 +145,21 @@ function render() {
   content.replaceChildren();
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
+  let openingTitle = player.index === 0 && hideMatchingHeading;
   for (const block of player.visibleBlocks) {
     if (block.type === 'prose') {
       const section = document.createElement('section');
       section.className = 'prose';
       // Only our configured, HTML-disabled Markdown renderer produces this HTML.
       section.innerHTML = block.html;
+      if (openingTitle) {
+        const heading = section.firstElementChild;
+        const text = value => value.replace(/\s+/gu, ' ').trim();
+        // Move only a redundant title's presentation. Preserve semantic links,
+        // different headings, source wording and all timing/parser steps.
+        if (heading?.tagName === 'H1' && text(heading.textContent) === text(sceneTitle) && !heading.querySelector('[data-story-target],a,img')) heading.remove();
+        openingTitle = false;
+      }
       for (const image of section.querySelectorAll('img[data-story-src]')) {
         image.replaceWith(imageOrPlaceholder(image.getAttribute('data-story-src'), image.alt, true));
       }
@@ -322,7 +334,10 @@ document.getElementById('pause').addEventListener('click', () => {
   if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
 });
 document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { resetNotes(); follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
-document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) player.revealImmediately(); });
+document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) {
+  if (api.compactControls) { sceneAutoplay.cancel(); sound.stop(); player.revealBeat(); }
+  else player.revealImmediately();
+} });
 document.getElementById('enable-sound').addEventListener('click', () => {
   if (!preparing && presented && !document.hidden) { unlockSound(player.scene.beats.find(beat => beat.blocks.some(block => block.type === 'typeout' && block.sound !== 'none'))); render(); }
 });
@@ -406,7 +421,7 @@ api.onMessage(async event => {
   const departure = message.revision === incomingRevision ? pendingDeparture : sceneAutoplay.departure;
   incomingRevision = message.revision;
   sceneAutoplay.cancel();
-  follower.beginTurn();
+  follower.beginTurn({ silent: message.documentPrevious === true || message.matter === true });
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
   preparing = true; render();
   const prepared = Object.create(null);
@@ -431,6 +446,8 @@ api.onMessage(async event => {
   pacingWarning = message.pacingWarning;
   pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
   isMatter = message.matter === true;
+  sceneTitle = typeof message.sceneTitle === 'string' ? message.sceneTitle : '';
+  hideMatchingHeading = api.compactHeader === true && message.sceneTitleInBody === true && !isMatter;
   documentNavigation = message.documentNavigation || {};
   player.update(isMatter ? matterScene(message.source) : parseScene(message.source, { prosePacing: message.prosePacing === true }));
   const saved = api.getState();
@@ -448,6 +465,9 @@ api.onMessage(async event => {
     player.reset();
   }
   preparing = false;
+  // A document turn suspends following while its snapshot loads. The browser
+  // has no new host presentation event to reactivate it after that turn.
+  if (!follower.active && presented && !document.hidden) follower.setActive(true);
   render();
   follower.endTurn();
   startSelectedScene();
