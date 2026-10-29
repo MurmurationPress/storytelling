@@ -1353,3 +1353,30 @@ on the final hostname: JS/CSS now revalidate, images retain immutable caching, a
 deployment was needed; the accepted payload remains unchanged. Ghost is untouched.
 Raw final-origin byte/cache, domain/route/DNS, browser and layout reports remain
 beside the retained build; summary is in `test/evidence/skip-production.json`.
+
+## Approved b002eb1 edition promoted — 29 October 2026
+
+Ted accepts the 0bd22c55 preview (“Reviewed and happy to publish”); device/browser
+for this approval is unspecified. The retained artifact, source b002eb1 / renderer
+d4e3601 (0.12.4), is promoted to production
+`bcc3d61e-81f1-4a33-a246-e17543e3d257` using the documented reviewed receipt.
+No re-export, source, renderer, Ghost, DNS or cache-rule changes occur. Only root
+indexing metadata differs; 75 reader files exactly match the accepted preview.
+
+On https://read.murmurationpress.co.uk/skip/, fresh checks pass all 76 served
+file hashes, TLS/redirect/privacy/indexing/cache checks, 148 beats, 45 assets,
+23 note targets, four animations and ten light/dark follow/note layouts. No page
+errors or failed/external requests occur. Prior-edition storage simulation keeps
+the publication identity and preferences; edited chapter positions clamp to valid
+beats and an unchanged chapter retains its index. Current-location refresh and
+reopening also pass. Browser/touch checks are automated, not new device evidence.
+
+Current point-of-access editorial guidance is applied to all 23 previews/full
+notes and onward chains (zero note images). No blocking premature outcome is
+identified. Clive's early use of Companion is flagged as minor terminology for
+a later update, without altering the accepted payload. The assessment is manual
+and does not imply an automatic spoiler filter.
+
+Previous deployment 42ffb0fd and its complete retained build/production receipt
+remain available for rollback; rollback is not exercised live. Full private reports
+are beside the b002eb1 build; summary is `test/evidence/skip-b002-publication.json`.

@@ -12,7 +12,7 @@ to learn whether readers enjoy the presentation before investing in a shared
 architecture. Ghost remains the main website with a link to the reader. No
 shared multi-book renderer, accounts, payments or new platform is authorised.
 
-**Review preview:** https://f519ec23.murmuration-skip.pages.dev/skip/ (0.12.4; supersedes the earlier previews below)
+**Latest accepted preview:** https://0bd22c55.murmuration-skip.pages.dev/skip/ (book source b002eb1; approved renderer 0.12.4)
 
 **Live production address:** `https://read.murmurationpress.co.uk/skip/`.
 Ted requested Cloudflare static hosting subject to inspecting the existing
@@ -196,3 +196,38 @@ the final hostname: mutable JS/CSS/HTML/JSON return no-cache and image assets
 retain immutable caching. All 75 payload hashes, route/privacy/indexing/TLS checks
 pass. No reader payload or source change was made. The final URL is verified and
 ready for Ted to link from Ghost; Ghost itself remains untouched.
+
+## Cover/proofreading edition published after acceptance
+
+Ted accepts the latest preview with “Reviewed and happy to publish.” No new
+device/browser claim is inferred. Source `b002eb1365c46fdb3b0b4bdffe831d850a53415f`
+includes the committed cover/front matter and beat-heading/caption/image-description
+edits; renderer stays at approved 0.12.4 (`d4e3601`). The static project is now
+14 scenes / 148 beats, both matter pages, 45 assets, 23 supporting targets and
+four animations. Source PR #1 and subsequent edits are included in this accepted
+edition; earlier statements that they remained unmerged are historical.
+
+The documented reviewed-build command promotes preview
+`0bd22c55-2f79-4f26-b776-f6f610c25fb2` to production
+`bcc3d61e-81f1-4a33-a246-e17543e3d257`, without re-exporting. The accepted inventory
+digest is `a1c534dacd95e793aa93042369d339256b6c74a41968c8a148d8afe3822758fa`.
+All 75 reader files are identical; only root indexing metadata differs. Final URL
+remains https://read.murmurationpress.co.uk/skip/ . The previous production
+`42ffb0fd-152c-4e9b-9651-c388519fc002` and its original build/receipt are retained
+as a rollback target. No live rollback is performed.
+
+Fresh final-origin checks pass 76 served hashes, HTTPS/cache/indexing/redirect/
+privacy rules, all 148 beats, 45 decoded assets, 23 targets, four animations and
+ten light/dark follow/note layout cases. Prior-edition bookmark simulation on the same origin verifies
+unchanged publication identity, preserved speed/mute/autoplay preferences and
+same-chapter restoration. Edited Last Word clamps an old final index to its new
+last beat; an unchanged chapter keeps the old index. Restoration is best-effort,
+not elapsed playback progress. These are automated Chrome/touch-emulation checks.
+
+The current Supporting Content editorial policy is applied to all 23 notes and
+all reachable onward chains from earliest access. No blocking finding requires a
+new payload. A minor unexplained product term in Clive's early profile is recorded
+for a possible later editorial update; the accepted text is preserved. Full private
+review/report and production receipts stay beside the retained b002eb1 build.
+Summary: `test/evidence/skip-b002-publication.json`. Ghost, DNS/cache settings,
+source and renderer are untouched.
