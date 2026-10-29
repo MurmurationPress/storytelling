@@ -88,11 +88,43 @@ async def run():
      await click('#previous');await page.wait_for_function('title=>document.querySelector("#scene-title").textContent===title',arg=title);await phase('completed')
      # Disclosure choices persist; the book remains authored, including Unicode.
      await page.reload();await page.wait_for_function('()=>document.querySelector("#status").textContent.includes("ready")');await options();assert await page.locator('#playback-speed').input_value()=='0.75';assert await page.locator('#autoplay').is_checked();await page.keyboard.press('Escape')
+     if width==1100 and theme=='light':
+      # Cross every available action with every player phase, beyond viewport smoke checks.
+      for initial in ['ready','playing','paused','completed']:
+       for choice in ['reveal','replay','restart','previous','next','sound','speed','autoplay']:
+        await action('#restart');await options();await page.locator('#autoplay').uncheck();await page.keyboard.press('Escape')
+        if choice=='previous':await click('#next')
+        if initial in ['playing','paused']:
+         await click('#playback-toggle')
+         if initial=='paused':await click('#playback-toggle')
+        elif initial=='completed':await action('#reveal')
+        await phase(initial)
+        if choice=='reveal':
+         if initial=='completed':
+          await options();assert await page.locator('#reveal').is_disabled();await page.keyboard.press('Escape')
+         else:await action('#reveal')
+         await phase('completed');assert 'Beat 1 of 2' in await page.locator('#status').inner_text()
+        elif choice=='replay':
+         await action('#replay');await phase('playing');assert await page.locator('#beat .chat li').count()==0
+        elif choice=='restart':
+         await action('#restart');await phase('ready');assert 'Beat 1 of 2' in await page.locator('#status').inner_text()
+        elif choice=='previous':
+         await click('#previous');await phase('completed');assert 'Beat 1 of 2' in await page.locator('#status').inner_text()
+        elif choice=='next':
+         await click('#next');await phase('ready');assert 'Beat 2 of 2' in await page.locator('#status').inner_text()
+        elif choice=='sound':
+         await click('#sound-toggle');await phase(initial);await click('#sound-toggle');await phase(initial)
+        else:
+         await options()
+         if choice=='speed':await page.locator('#playback-speed').select_option('1.25')
+         else:await page.locator('#autoplay').check()
+         await phase(initial);await page.keyboard.press('Escape')
+      print('PASS 4-phase × 8-action matrix',flush=True)
      assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
      await page.screenshot(path=str(root/f'controls-{width}-{theme}.png'),full_page=True)
      assert not errors,errors;cases.append({'width':width,'height':height,'theme':theme,'touchEmulated':touch,'result':'pass'});print('PASS',cases[-1],flush=True);await ctx.close()
    await browser.close()
  finally:server.shutdown()
- evidence={'method':'Synthetic actual export, automated Linux Chrome, virtual playback time, keyboard/mouse/emulated touch','cases':cases,'coverage':['ready/playing/paused/completed controls','reveal whole beat without advance, Unicode, cancelled timers','replay versus restart','manual/autoplay turns, scene boundary previous and end-of-scene next','keyboard sequence, Escape, outside dismissal, focus return','44px targets, SVG names/tooltips, long title, light/dark narrow layouts','speed/autoplay persistence','active type-out has one oscillator; reveal stops it and cancelled work stays stopped'],'limitations':['Not actual iPad/Safari or human audio listening'],'artifacts':str(root)}
+ evidence={'method':'Synthetic actual export, automated Linux Chrome, virtual playback time, keyboard/mouse/emulated touch','cases':cases,'stateActionMatrix':{'phases':['ready','playing','paused','completed'],'actions':['reveal','replay','restart','previous','next','sound','speed','autoplay'],'completedReveal':'disabled'},'coverage':['ready/playing/paused/completed controls','reveal whole beat without advance, Unicode, cancelled timers','replay versus restart','manual/autoplay turns, scene boundary previous and end-of-scene next','keyboard sequence, Escape, outside dismissal, focus return','44px targets, SVG names/tooltips, long title, light/dark narrow layouts','speed/autoplay persistence','active type-out has one oscillator; reveal stops it and cancelled work stays stopped'],'limitations':['Not actual iPad/Safari or human audio listening'],'artifacts':str(root)}
  destination=pathlib.Path(sys.argv[1]) if len(sys.argv)>1 else root/'compact-controls-validation.json';destination.write_text(json.dumps(evidence,indent=2)+'\n');print(json.dumps(evidence,indent=2))
 asyncio.run(run())

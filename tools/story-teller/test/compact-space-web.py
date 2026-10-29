@@ -13,7 +13,11 @@ async def run(build,origin,baseline):
     page=await ctx.new_page();await page.goto(url+'/skip/');await page.wait_for_function('title=>document.querySelector("#scene-title").textContent===title&&document.querySelector("#status").textContent.includes("ready")',arg=scene['title'])
     assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
     samples[label]=await page.evaluate('''()=>({headerHeight:document.querySelector('body>header').getBoundingClientRect().height,toolbarHeight:document.querySelector('nav').getBoundingClientRect().height,readingStart:document.querySelector('#beat').getBoundingClientRect().top+scrollY,viewportHeight:innerHeight})''')
+    samples[label]['supportingHeaderPadding']=await page.locator('dialog header').evaluate('e=>getComputedStyle(e).padding')
+    samples[label]['bodyHeadingFontSize']=await page.locator('#beat').evaluate('e=>{const h=document.createElement("h1");e.append(h);const size=getComputedStyle(h).fontSize;h.remove();return size;}')
     await page.screenshot(path=str(build/f'space-{width}-{height}-{label}.png'),full_page=False);await ctx.close()
+   assert samples['before']['supportingHeaderPadding']==samples['after']['supportingHeaderPadding'],samples
+   assert samples['before']['bodyHeadingFontSize']==samples['after']['bodyHeadingFontSize'],samples
    before=samples['before']['readingStart'];after=samples['after']['readingStart'];assert after<before,(width,samples)
    cases.append({'width':width,'height':height,**samples,'recoveredPixels':round(before-after,2),'controlAreaReductionPercent':round((before-after)/before*100,2),'viewportRecoveredPercent':round((before-after)/height*100,2)})
   await browser.close()
