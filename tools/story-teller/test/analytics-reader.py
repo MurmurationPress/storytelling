@@ -2,7 +2,7 @@
 Usage: python test/analytics-reader.py BUILD_ROOT [REPORT_PATH]
 Requires test-only Playwright and installed Chrome. Does not modify the artifact.
 """
-import asyncio, functools, json, pathlib, sys, threading, urllib.parse
+import asyncio, functools, json, pathlib, re, sys, threading, urllib.parse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from playwright.async_api import async_playwright
 
@@ -75,6 +75,10 @@ async def run(build):
         assert sum(c[1]=='reading_start' for c in events)==1,events
         assert any(c[1]=='reading_interaction' and c[2]['evidence']=='reader_action' for c in events)
         assert all('source' not in c[2] and 'raw' not in c[2] for c in events)
+        for _ in range(20):
+            if any('en=reading_start' in r['url']+r['body'] for r in requests): break
+            await page.wait_for_timeout(250)
+        assert any('en=reading_start' in r['url']+r['body'] for r in requests),requests
         position=await stored(page);index=position['index'];raw=position['raw']
         assert position['analyticsState']['stories'][story['id']]['displayed']==[index]
         await more(page,'#replay');await page.wait_for_timeout(100);await more(page,'#reveal')
@@ -114,6 +118,7 @@ async def run(build):
         await page.reload();await page.wait_for_timeout(500);assert len(requests)==before
         assert not errors,errors
         report['checks'].append('Withdrawn: frame terminated, prefixed GA cookies removed, no delayed/navigation/reload requests; position preserved')
+        report['observed_collection_events']=sorted(set(name for r in requests for name in re.findall(r'(?:[?&]|^)en=([^&\n]+)',r['url']+'\n'+r['body'])))
         report['remote_script_requests']=sum('googletagmanager.com' in r['url'] for r in requests)
         report['intercepted_collection_requests']=sum('google-analytics.com' in r['url'] for r in requests)
         await ctx.close()
@@ -123,6 +128,11 @@ async def run(build):
         await page.wait_for_timeout(600);assert await page.locator('iframe').count()==0
         assert 'declined' in await page.locator('.analytics-consent').inner_text()
         report['checks'].append('Cross-tab withdrawal stops active analytics')
+        await other.get_by_role('button',name='Analytics settings',exact=True).click();await other.get_by_role('button',name='Accept analytics',exact=True).click()
+        await page.wait_for_timeout(500);assert await page.locator('iframe').count()==1
+        await other.evaluate('localStorage.clear()');await page.wait_for_timeout(500)
+        assert await page.locator('iframe').count()==0
+        report['checks'].append('Clearing consent in another tab restores unset and stops active analytics')
         assert not errors,errors
         await ctx.close()
         # Real runtime timed exposure: every beat advances only on a reader turn;

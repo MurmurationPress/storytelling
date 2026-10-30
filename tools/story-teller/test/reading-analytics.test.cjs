@@ -51,3 +51,12 @@ test('optional analytics config validates stable identity, excludes matter and d
  assert.throws(()=>analyticsConfig({...value,stories:[...value.stories,...value.stories]},scenes));
  assert.throws(()=>analyticsConfig(value,[{...scenes[0],kind:'front'}]));
 });
+test('last story alone cannot complete a multi-story publication, and source revisions reset coverage without restore events',()=>{
+ let state;const events=[];const multi={...config,stories:[...config.stories,{id:'second',sceneId:'last'}]};
+ const make=c=>createReadingMeasurements({config:c,load:()=>state,save:value=>state=value,send:name=>events.push(name),allowed:()=>true});
+ const beat=sceneId=>({sceneId,index:0,count:1,visible:true,completed:true,source:'reveal',mode:'manual',interaction:true});
+ const tracker=make(multi);tracker.observe(beat('last'));assert.ok(!events.includes('publication_complete'));
+ tracker.observe(beat('scene'));assert.equal(events.filter(n=>n==='publication_complete').length,1);
+ const updated=make({...multi,revision:'v2'});updated.observe({...beat('scene'),source:'restore'});assert.equal(state.key,'skip:v1');
+ updated.observe(beat('last'));assert.equal(state.key,'skip:v2');assert.equal(events.filter(n=>n==='publication_complete').length,1);
+});

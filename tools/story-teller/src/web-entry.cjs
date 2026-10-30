@@ -9,7 +9,7 @@ applyTheme();theme.addEventListener('change',applyTheme);
 const title=document.getElementById('book-title'), contents=document.getElementById('contents');
 const notify=message=>receiver?.({data:{instance:'web',...message}});
 window.addEventListener('storage', event => {
-  if (book && event.key === `story-teller:${book.id}`) {
+  if (book && (event.key === null || event.key === `story-teller:${book.id}`)) {
     try { const stored = JSON.parse(event.newValue || '{}'); preference.analyticsConsent = stored.analyticsConsent; preference.analyticsState = stored.analyticsState; } catch { preference.analyticsConsent = undefined; }
   }
 });
