@@ -27,3 +27,7 @@ button{border-radius:.2rem;}[hidden]{display:none!important;}
 #more-options input {width:24px;height:24px;flex-shrink:0;}
 @media(max-width:480px){header{padding:.7rem 1rem 0;}.compact-controls{gap:.5rem;padding:.3rem .7rem .45rem;}.icon-button{width:44px;min-width:44px;min-height:44px;padding:.5rem;}#beat{padding:1rem;}}
 @media(forced-colors:active){button,.supporting-panel,.supporting-preview,#more-options{border:1px solid ButtonText;}.icon-button:disabled{color:GrayText;border-color:GrayText;}}
+
+.analytics-consent { padding: .5rem 1rem; border-bottom: 1px solid currentColor; }
+.analytics-consent p { margin: .25rem 0; max-width: 65ch; }
+.analytics-consent button { margin: .25rem .5rem .25rem 0; white-space: normal; }

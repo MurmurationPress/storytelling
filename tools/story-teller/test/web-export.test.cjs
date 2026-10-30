@@ -70,3 +70,15 @@ test('repeated resource reads cannot silently replace an earlier snapshot',async
  });
  await assert.rejects(prepareWeb(root),/source changed/i);
 });
+
+test('analytics export is optional, validates identities and adds only isolated tag resources/CSP',async t=>{
+ const {root,destination}=await fixture(t);
+ const analytics={measurementId:'G-TEST123',publicationId:'test-book',stories:[{id:'story-one',sceneId:'scene'}]};
+ await exportWeb(root,destination,{analytics});
+ const book=JSON.parse(await fs.readFile(path.join(destination,'publication.json')));
+ assert.equal(book.analytics.publicationId,'test-book');assert.equal(book.analytics.stories[0].sceneId,'scene');
+ assert.ok((await fs.readFile(path.join(destination,'index.html'),'utf8')).includes("frame-src 'self'"));
+ assert.ok(!(await fs.readFile(path.join(destination,'index.html'),'utf8')).includes('googletagmanager'));
+ assert.ok((await fs.readFile(path.join(destination,'analytics.html'),'utf8')).includes('https://www.googletagmanager.com'));
+ await assert.rejects(prepareWeb(root,{analytics:{...analytics,stories:[{id:'bad',sceneId:'not-exported'}]}}),/existing story/);
+});

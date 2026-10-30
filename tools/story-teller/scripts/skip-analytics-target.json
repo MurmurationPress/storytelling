@@ -1,0 +1,64 @@
+{
+  "project": "murmuration-skip",
+  "productionBranch": "main",
+  "previewBranch": "skip-analytics-review",
+  "slug": "skip",
+  "analytics": {
+    "measurementId": "G-HMESC2B6CC",
+    "publicationId": "curious-adventures-of-skip",
+    "stories": [
+      {
+        "id": "8b69fbea-cd14-45d5-9ed6-6fcbae67f04f",
+        "sceneId": "8b69fbea-cd14-45d5-9ed6-6fcbae67f04f"
+      },
+      {
+        "id": "cbf03a00-8fd2-42e3-baa2-d0c2437fc08f",
+        "sceneId": "cbf03a00-8fd2-42e3-baa2-d0c2437fc08f"
+      },
+      {
+        "id": "cb0ab69f-5745-463a-8de0-d5f2fe18130d",
+        "sceneId": "cb0ab69f-5745-463a-8de0-d5f2fe18130d"
+      },
+      {
+        "id": "54f5fb66-37d0-4741-aeb4-6eac84114c4f",
+        "sceneId": "54f5fb66-37d0-4741-aeb4-6eac84114c4f"
+      },
+      {
+        "id": "5230019c-c7db-46c7-9f72-68c579df0f3b",
+        "sceneId": "5230019c-c7db-46c7-9f72-68c579df0f3b"
+      },
+      {
+        "id": "74a07599-d687-4a48-9b0f-895d13a8a9b9",
+        "sceneId": "74a07599-d687-4a48-9b0f-895d13a8a9b9"
+      },
+      {
+        "id": "0a91ce34-81e6-4cf8-87d1-9b621827467e",
+        "sceneId": "0a91ce34-81e6-4cf8-87d1-9b621827467e"
+      },
+      {
+        "id": "5d953f5a-0e43-4a16-86bf-0e37d77ff47d",
+        "sceneId": "5d953f5a-0e43-4a16-86bf-0e37d77ff47d"
+      },
+      {
+        "id": "676e4663-5381-4713-b9ec-1cc9b2a36576",
+        "sceneId": "676e4663-5381-4713-b9ec-1cc9b2a36576"
+      },
+      {
+        "id": "70c3da1d-d104-45c5-a87b-b1f2cb192b21",
+        "sceneId": "70c3da1d-d104-45c5-a87b-b1f2cb192b21"
+      },
+      {
+        "id": "c55c2535-9348-474b-b332-3c62ce74e27e",
+        "sceneId": "c55c2535-9348-474b-b332-3c62ce74e27e"
+      },
+      {
+        "id": "b980e299-950e-4c31-adb6-2df05fc07b41",
+        "sceneId": "b980e299-950e-4c31-adb6-2df05fc07b41"
+      },
+      {
+        "id": "0da648cd-f564-4f4b-95b8-acab8dce944c",
+        "sceneId": "0da648cd-f564-4f4b-95b8-acab8dce944c"
+      }
+    ]
+  }
+}

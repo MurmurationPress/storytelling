@@ -23,7 +23,19 @@ function publicationBody(source) {
   if (structure.frontmatter && !structure.frontmatter.closed) throw Error('Close scene frontmatter before export');
   return source.slice(structure.lines[structure.start]?.start ?? source.length);
 }
-async function prepareWeb(projectRoot) {
+function analyticsConfig(value, scenes) {
+  if (value == null) return undefined;
+  const safeId = id => typeof id === 'string' && /^[a-zA-Z0-9][a-zA-Z0-9_-]{0,99}$/.test(id);
+  if (!/^G-[A-Z0-9]+$/.test(value.measurementId || '') || !safeId(value.publicationId) || !Array.isArray(value.stories) || !value.stories.length) throw Error('Invalid web analytics configuration');
+  const ids = new Set(), documents = new Set();
+  const stories = value.stories.map(item => {
+    if (!safeId(item.id) || !scenes.some(scene => scene.id === item.sceneId && scene.kind === 'scene') || ids.has(item.id) || documents.has(item.sceneId)) throw Error('Analytics stories need unique stable IDs and existing story scenes');
+    ids.add(item.id); documents.add(item.sceneId); return { id: item.id, sceneId: item.sceneId };
+  });
+  return { measurementId: value.measurementId, publicationId: value.publicationId, stories,
+    revision: digest(stories.map(item => scenes.find(scene => scene.id === item.sceneId).data.source).join('\n')) };
+}
+async function prepareWeb(projectRoot, options = {}) {
   const root = await fs.realpath(projectRoot);
   const manifestFile=await localFile(root,'story-teller.project.json'),manifestBytes=await fs.readFile(manifestFile);
   const manifest = JSON.parse(manifestBytes);
@@ -81,10 +93,12 @@ async function prepareWeb(projectRoot) {
   }
   for(const scene of scenes)Object.assign(targets,scene.data.supporting.links);
   const book={version:1,id:digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),sequence:orderedRoots(manifest).map(entry=>({kind:entry.kind,id:entry.item.id})),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
+  const analytics = analyticsConfig(options.analytics ?? manifest.webAnalytics, scenes);
+  if (analytics) book.analytics = analytics;
   return {root,book,scenes,assets,snapshots,warnings:[...new Set(warnings)]};
 }
-async function exportWeb(projectRoot,destination,{beforeWrite=()=>{}}={}) {
-  const prepared=await prepareWeb(projectRoot);
+async function exportWeb(projectRoot,destination,{beforeWrite=()=>{},analytics}={}) {
+  const prepared=await prepareWeb(projectRoot,{analytics});
   const parent=await fs.realpath(path.dirname(destination));destination=path.join(parent,path.basename(destination));
   if(inside(prepared.root,destination))throw Error('Choose an export destination outside the source project');
   try{await fs.lstat(destination);throw Error('Export destination already exists; choose a new folder');}catch(error){if(error.code!=='ENOENT')throw error;}
@@ -98,6 +112,11 @@ async function exportWeb(projectRoot,destination,{beforeWrite=()=>{}}={}) {
     await fs.writeFile(path.join(temp,'publication.json'),JSON.stringify(prepared.book));
     const base=path.join(__dirname,'..');
     for(const [source,target] of [['dist/web-reader.js','reader.js'],['media/reader.css','reader.css'],['media/web.css','web.css'],['media/web.html','index.html']])await fs.copyFile(path.join(base,source),path.join(temp,target));
+    if (prepared.book.analytics) {
+      for (const name of ['analytics.html', 'analytics.js']) await fs.copyFile(path.join(base, 'media', name), path.join(temp, name));
+      const html = await fs.readFile(path.join(temp, 'index.html'), 'utf8');
+      await fs.writeFile(path.join(temp, 'index.html'), html.replace("script-src 'self';", "script-src 'self'; frame-src 'self';"));
+    }
     // Only licences for code actually bundled; no extension licence is invented.
     await fs.mkdir(path.join(temp,'licences'));
     for(const module of ['markdown-it','argparse','entities','linkify-it','mdurl','punycode.js','uc.micro']) {
@@ -113,7 +132,7 @@ async function exportWeb(projectRoot,destination,{beforeWrite=()=>{}}={}) {
   } catch(error) {if(reserved)await fs.rmdir(destination);throw error;}
   finally {await fs.rm(temp,{recursive:true,force:true});}
 }
-module.exports={prepareWeb,exportWeb,publicationBody,localFile};
+module.exports={analyticsConfig,prepareWeb,exportWeb,publicationBody,localFile};
 if(require.main===module) {
   const [root,destination]=process.argv.slice(2);
   if(!root||!destination){console.error('Usage: node src/web-export.cjs PROJECT NEW_DESTINATION');process.exitCode=1;}
