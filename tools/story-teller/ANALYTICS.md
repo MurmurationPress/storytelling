@@ -57,14 +57,16 @@ Storage-disabled reading works; consent then lasts only in memory for that page.
 
 The isolated frame has a separate restricted CSP; the main reader allows only a
 same-origin frame, without adding Google to its script/connect policy. GA uses
-host-only, prefixed cookies, with Google signals and ad personalization disabled.
+host-only, prefixed cookies (reader visitor IDs are separate from website visitor
+IDs), with Google signals and ad personalization disabled.
 No user IDs, titles, manuscript text, beat raw text, supporting content or source
 paths enter the event API. Page location contains origin/path only (no query or
 fragment); referrer contains origin only. This preserves normal referral-domain
 reporting while deliberately omitting URL campaign parameters and referral paths,
 which can contain personal data. GA still processes normal connection/device
 metadata and its own consented identifiers. Disable unwanted enhanced measurement
-in the GA web stream; the frame contains no story DOM, links or forms to observe.
+in the GA web stream. Ignore any automatic GA `scroll` events: frame scrolling
+is not story progress. The frame contains no story DOM, links or forms to observe.
 
 ## Event contract
 
@@ -88,7 +90,7 @@ Custom parameters: `publication_id`, `story_id` (except publication completion),
 `replay`, `reveal`), `evidence` (`display_only` or `reader_action`).
 Progress adds `progress_percent`, `interacted_beats`; story completion adds
 `interacted_beats`, `total_beats`, `autoplay_beats`; interaction adds `beat_number`.
-`autoplay` means timed playback was used for that beat, even when initiated by a
+`autoplay` means timed playback was requested for that beat, even when initiated by a
 reader click. `manual` covers static navigation/reveal. Advancement source records
 the action initiating the current beat, not a fictitious new interaction for
 each timed paragraph/chat message. Pause, speed, sound and supporting panels do
@@ -127,6 +129,9 @@ updates. Analytics's stable publication ID does not replace the position key.
    Traffic acquisition** for sessions and Session source/medium; **User acquisition**
    for first-user origins. Filter Hostname to `read.murmurationpress.co.uk`.
    Reports → Engagement → Pages and screens shows consented reader visits.
+   GA can exclude same-root-domain self referrals; use Explore with **Page referrer**
+   to inspect website-to-reader handoffs rather than assuming they appear as
+   acquisition referrals.
 2. Reports → Engagement → Events: find `reading_start`, `story_progress`,
    `story_complete`, `publication_complete`, and `reading_interaction` by name.
    These are custom events, not recommended ecommerce/conversion events.

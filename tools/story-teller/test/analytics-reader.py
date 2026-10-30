@@ -6,15 +6,15 @@ import asyncio, functools, json, pathlib, re, sys, threading, urllib.parse
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from playwright.async_api import async_playwright
 
-async def run(build):
+async def run(build, origin_override=None):
     root=build/'site'; book=json.loads((root/'skip/publication.json').read_text())
     class Quiet(SimpleHTTPRequestHandler):
         def log_message(self,*args): pass
     server=ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=str(root)))
     threading.Thread(target=server.serve_forever,daemon=True).start()
-    origin=f'http://127.0.0.1:{server.server_port}'
+    origin=origin_override or f'http://127.0.0.1:{server.server_port}'
     url=origin+'/skip/';key='story-teller:'+book['id']
-    report={'method':'Retained actual Skip export, HTTP, Chrome headless Linux; live Google tag; ALL remote collection intercepted', 'checks':[], 'unverified':['GA dashboard ingestion', 'actual iPad/Safari', 'human audio', 'screen reader']}
+    report={'origin':origin, 'method':'Retained actual Skip export, HTTP(S), Chrome headless Linux; live Google tag; ALL remote collection intercepted', 'checks':[], 'unverified':['GA dashboard ingestion', 'actual iPad/Safari', 'human audio', 'screen reader']}
     try:
       async with async_playwright() as p:
         browser=await p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--no-sandbox'])
@@ -118,7 +118,7 @@ async def run(build):
         await page.reload();await page.wait_for_timeout(500);assert len(requests)==before
         assert not errors,errors
         report['checks'].append('Withdrawn: frame terminated, prefixed GA cookies removed, no delayed/navigation/reload requests; position preserved')
-        report['observed_collection_events']=sorted(set(name for r in requests for name in re.findall(r'(?:[?&]|^)en=([^&\n]+)',r['url']+'\n'+r['body'])))
+        report['observed_collection_events']=sorted(set(name for r in requests for name in re.findall(r'(?:[?&\n]|^)en=([^&\n]+)',r['url']+'\n'+r['body'])))
         report['remote_script_requests']=sum('googletagmanager.com' in r['url'] for r in requests)
         report['intercepted_collection_requests']=sum('google-analytics.com' in r['url'] for r in requests)
         await ctx.close()
@@ -168,7 +168,7 @@ async def run(build):
     finally:server.shutdown()
     return report
 
-result=asyncio.run(run(pathlib.Path(sys.argv[1])))
+result=asyncio.run(run(pathlib.Path(sys.argv[1]), sys.argv[3].rstrip('/') if len(sys.argv)>3 else None))
 text=json.dumps(result,indent=2)+'\n'
 if len(sys.argv)>2:pathlib.Path(sys.argv[2]).write_text(text)
 print(text)

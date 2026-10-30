@@ -1,0 +1,28 @@
+{
+  "method": "Retained actual Skip export, HTTP, Chrome headless Linux; live Google tag; ALL remote collection intercepted",
+  "checks": [
+    "Unset/declined including reload: no remote script, iframe or collection; 320px keyboard consent",
+    "Accepted: live tag and intercepted GA collect; clean page URL; intro excluded; explicit action; replay dedup; reload/resume ready without milestones",
+    "Existing position record: exact raw beat relocation after insertion, clamp after removal, restart first beat; no restore backfill",
+    "Withdrawn: frame terminated, prefixed GA cookies removed, no delayed/navigation/reload requests; position preserved",
+    "Cross-tab withdrawal stops active analytics",
+    "Clearing consent in another tab restores unset and stops active analytics",
+    "Actual timed autoplay completes every beat of first story; completion display_only, autoplay beat count exact, no timer-generated interactions or publication completion",
+    "Readable shared-site rejection wins over local acceptance"
+  ],
+  "unverified": [
+    "GA dashboard ingestion",
+    "actual iPad/Safari",
+    "human audio",
+    "screen reader"
+  ],
+  "browser": "156.0.8078.79",
+  "observed_collection_events": [
+    "page_view",
+    "reading_interaction",
+    "reading_start",
+    "scroll"
+  ],
+  "remote_script_requests": 5,
+  "intercepted_collection_requests": 9
+}
