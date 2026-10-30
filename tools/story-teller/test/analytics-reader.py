@@ -81,6 +81,12 @@ async def run(build, origin_override=None):
                 assert abs(a['width']-d['width'])<=1 and a['height']>=44 and d['height']>=44
                 geometry.append({'width':width,'height':height,'theme':theme,'panel':bounds})
         report['privacy_geometry']=geometry
+        await page.locator('#analytics-consent-title').focus()
+        for _ in range(3): await page.keyboard.press('Tab')
+        focused=await page.get_by_role('button',name='Decline analytics',exact=True).bounding_box()
+        bounds=await panel.bounding_box()
+        assert focused['y']>=bounds['y'] and focused['y']+focused['height']<=bounds['y']+bounds['height']
+        assert await panel.evaluate('(e)=>e.scrollTop>0')
         await page.set_viewport_size({'width':320,'height':740});await page.emulate_media(color_scheme='light')
         # Safe-area values are honored even when the desktop browser reports zero native insets.
         await page.locator('.analytics-privacy').evaluate("e=>{e.style.setProperty('--privacy-left','24px');e.style.setProperty('--privacy-bottom','34px')}")
@@ -88,12 +94,14 @@ async def run(build, origin_override=None):
         assert round((await badge.bounding_box())['y']+46)==740-34
         await page.locator('.analytics-privacy').evaluate("e=>e.removeAttribute('style')")
         await page.locator('#contents-toggle').click();assert not await panel.is_visible()
+        await badge.hover();assert await page.locator('.analytics-privacy-label').is_visible()
+        await page.mouse.move(160,100);assert not await page.locator('.analytics-privacy-label').is_visible()
         await badge.click();await page.keyboard.press('Tab')
         assert await page.get_by_role('button',name='Close privacy settings without changing consent').evaluate('(e)=>e===document.activeElement')
         await page.keyboard.press('Tab');assert await page.get_by_role('button',name='Accept analytics',exact=True).evaluate('(e)=>e===document.activeElement')
         await page.keyboard.press('Tab');assert await page.get_by_role('button',name='Decline analytics',exact=True).evaluate('(e)=>e===document.activeElement')
         assert not requests
-        report['checks'].append('Privacy badge only, no strip/menu entry or header displacement; unset dismiss/reopen via Enter/Space/Escape, focus return, equal targets, safe-area offsets, 10 viewport/theme cases')
+        report['checks'].append('Privacy badge only, no strip/menu entry or header displacement; unset dismiss/reopen via Enter/Space/Escape, focus return, hover label, equal targets, safe-area offsets, short-panel keyboard scrolling, 10 viewport/theme cases')
         await page.get_by_role('button',name='Decline analytics',exact=True).focus();await page.keyboard.press('Enter')
         await page.wait_for_timeout(600);assert not requests;assert await page.locator('iframe').count()==0
         assert not await panel.is_visible()

@@ -33,3 +33,23 @@ renderer and immutable preview. Automated Chrome results do not establish actual
 Safari/device, screen-reader, human listening or GA dashboard ingestion results.
 No manuscript changes, general platform backlog, production upload, merge or
 Ghost edit is included in this implementation task.
+
+## Compact privacy controls amendment
+
+Ted requests removal of the persistent full-width consent strip in PR #27. The
+0.13.1 candidate uses a small dark circular button at bottom left, following the
+main site's CookieScript badge treatment with a local icon. A compact nonmodal
+panel opens on an unset visit; either choice closes it. The button reopens it
+with the current effective choice inside. Close, Escape and outside interaction
+can dismiss without choosing; unset consent stays disabled. Keyboard focus,
+touch, short viewports and safe-area positioning are covered by browser checks.
+No analytics menu item, new position store or consent-policy change is introduced.
+
+Current immutable review preview:
+https://7121a489.murmuration-skip.pages.dev/skip/
+
+Runtime `c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674`, source still
+`b002eb1365c46fdb3b0b4bdffe831d850a53415f`. All 62 content/artwork/publication
+payload files match the preceding analytics export byte for byte. Supporting
+content and its reachable information are unchanged; no new spoiler-safety
+claim or editorial alteration is made. Merge/production remain pending review.

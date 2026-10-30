@@ -1444,3 +1444,61 @@ verify GA account access, ingestion/dashboard reporting, actual Safari/iPad,
 screen-reader use or human audio listening. See [ANALYTICS.md](ANALYTICS.md) for
 GA4 custom definitions/report instructions and existing saved-position limits.
 Merging and production deployment remain pending review.
+
+## Compact privacy controls amendment — 30 October 2026
+
+Supersedes the earlier analytics-strip preview above for PR #27 review.
+0.13.1 runtime: `c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674`.
+Current committed author source remains
+`b002eb1365c46fdb3b0b4bdffe831d850a53415f`.
+
+Immutable preview: https://7121a489.murmuration-skip.pages.dev/skip/
+
+Retained build: `/home/thawkins/Documents/skip-privacy-review-20261030`;
+public export: `site/skip/`; upload ZIP, source snapshot and receipts stay outside
+that public tree. Preview receipt `7121a489-8a63-40f8-9944-4d61b260fab3` pins
+source/runtime/inventory. Production remains
+`bcc3d61e-81f1-4a33-a246-e17543e3d257` at preview creation. No production command,
+merge, DNS or main-website edit was performed.
+
+The persistent strip is removed. A local 46px dark circular cookie/privacy icon
+follows the live website badge's size, color, bottom-left position and shadow.
+Its descriptive hover/focus label and accessible name open a compact nonmodal
+panel; status appears only inside that panel. First unset visits show the panel
+without taking keyboard focus. Accept and Decline have equal-sized targets;
+either closes it. Close/Escape return focus to the badge; outside interaction
+closes without stealing focus or recording consent. The button is separate from
+More. Responsive scrolling and safe-area offsets bound the panel; end padding
+allows content to scroll clear of the badge and Follow stays on the right.
+
+Validation:
+
+- 287 Node tests, syntax checks, both builds and VSIX packaging pass.
+- Updated focused tests pass on the retained export over local HTTP and the
+  immutable HTTPS preview. Checks include no header displacement/strip/menu
+  entry; keyboard Enter/Space opening, Escape/Close dismissal, focus return,
+  descriptive hover/focus label, current-choice display, outside dismissal,
+  equal Accept/Decline targets, short-panel keyboard scrolling, ten viewport/
+  theme cases (320×740, 390×844, 768×1024, 1024×768, 320×240 in light/dark),
+  simulated safe-area offsets and separate touch-emulated interactions.
+- Unset/dismissed/declined consent makes no Google requests. Acceptance loads
+  the real tag; all collection requests are intercepted, avoiding production
+  test data. Withdrawal, cross-tab withdrawal/clearing, cookie cleanup, saved
+  position independence, resume after simulated edits, milestone deduplication,
+  autoplay evidence and readable-site-rejection precedence continue to pass.
+- Full real-book sweep passes 148 beats, all 45 assets, four animated WebPs and
+  23 supporting targets, with no page errors, failed or remote requests while
+  unset. The unconfigured synthetic-reader suite passes and explicitly checks
+  that no privacy interface exists without analytics configuration.
+- All 62 public content/artwork/publication payload files match the preceding
+  reviewed analytics export byte for byte. Preparation has zero warnings/problems.
+  No author files, notes, links, timing or artwork were edited.
+- Hosted verification passes all 78 served payload-file comparisons and the
+  existing operational header/noindex/redirect/404 checks. Light/dark narrow
+  screenshots were visually inspected and retained privately beside the build.
+
+Updated observations: `test/evidence/analytics-reader-local.json` and
+`test/evidence/analytics-reader-https.json`. Browser evidence is Chrome 156 on
+Linux with emulation, not actual Safari/iPad, screen-reader use or human audio.
+GA4 dashboard ingestion remains unverified. Event semantics and consent gating
+are unchanged. Merge and production deployment remain pending review.

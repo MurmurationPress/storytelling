@@ -1,6 +1,8 @@
 {
-  "method": "Retained actual Skip export, HTTP, Chrome headless Linux; live Google tag; ALL remote collection intercepted",
+  "origin": "http://127.0.0.1:44681",
+  "method": "Retained actual Skip export, HTTP(S), Chrome headless Linux; live Google tag; ALL remote collection intercepted",
   "checks": [
+    "Privacy badge only, no strip/menu entry or header displacement; unset dismiss/reopen via Enter/Space/Escape, focus return, hover label, equal targets, safe-area offsets, short-panel keyboard scrolling, 10 viewport/theme cases",
     "Unset/declined including reload: no remote script, iframe or collection; 320px keyboard consent",
     "Accepted: live tag and intercepted GA collect; clean page URL; intro excluded; explicit action; replay dedup; reload/resume ready without milestones",
     "Existing position record: exact raw beat relocation after insertion, clamp after removal, restart first beat; no restore backfill",
@@ -8,7 +10,8 @@
     "Cross-tab withdrawal stops active analytics",
     "Clearing consent in another tab restores unset and stops active analytics",
     "Actual timed autoplay completes every beat of first story; completion display_only, autoplay beat count exact, no timer-generated interactions or publication completion",
-    "Readable shared-site rejection wins over local acceptance"
+    "Readable shared-site rejection wins over local acceptance",
+    "Touch-emulated dismissal/reopen/decline and current-choice display without analytics requests"
   ],
   "unverified": [
     "GA dashboard ingestion",
@@ -17,6 +20,118 @@
     "screen reader"
   ],
   "browser": "156.0.8078.79",
+  "privacy_geometry": [
+    {
+      "width": 320,
+      "height": 740,
+      "theme": "light",
+      "panel": {
+        "x": 10,
+        "y": 430.59375,
+        "width": 300,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 320,
+      "height": 740,
+      "theme": "dark",
+      "panel": {
+        "x": 10,
+        "y": 430.59375,
+        "width": 300,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "light",
+      "panel": {
+        "x": 10,
+        "y": 534.59375,
+        "width": 320,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "theme": "dark",
+      "panel": {
+        "x": 10,
+        "y": 534.59375,
+        "width": 320,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "light",
+      "panel": {
+        "x": 10,
+        "y": 714.59375,
+        "width": 320,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 768,
+      "height": 1024,
+      "theme": "dark",
+      "panel": {
+        "x": 10,
+        "y": 714.59375,
+        "width": 320,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "light",
+      "panel": {
+        "x": 10,
+        "y": 458.59375,
+        "width": 320,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 1024,
+      "height": 768,
+      "theme": "dark",
+      "panel": {
+        "x": 10,
+        "y": 458.59375,
+        "width": 320,
+        "height": 243.40625
+      }
+    },
+    {
+      "width": 320,
+      "height": 240,
+      "theme": "light",
+      "panel": {
+        "x": 10,
+        "y": 10,
+        "width": 300,
+        "height": 164
+      }
+    },
+    {
+      "width": 320,
+      "height": 240,
+      "theme": "dark",
+      "panel": {
+        "x": 10,
+        "y": 10,
+        "width": 300,
+        "height": 164
+      }
+    }
+  ],
   "observed_collection_events": [
     "page_view",
     "reading_interaction",
