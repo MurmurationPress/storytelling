@@ -163,8 +163,12 @@ updates. Analytics's stable publication ID does not replace the position key.
    needs a deliberately enabled debug session; the reader does not enable it by
    default. Do not mark display completion as a verified “read whole book” key event.
 
-GA dashboard access/ingestion has not been verified. Browser validation intercepts
-collection requests to avoid sending test data into the production property.
+Ted has accepted the revised privacy control and reports seeing his browsing
+activity in GA4 (30 October 2026). These are user-reported visual acceptance and
+basic ingestion confirmation. No independent GA dashboard check, individual
+custom-event ingestion or reporting/custom-definition configuration is established
+by that report. Browser validation intercepts collection requests to avoid sending
+automated test data into the production property.
 
 ## Preparing Skip for review
 

@@ -1,6 +1,6 @@
 ---
 type: implementation-review
-status: pending-review
+status: accepted-published
 created: 2026-10-30
 ---
 
@@ -53,3 +53,28 @@ Runtime `c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674`, source still
 payload files match the preceding analytics export byte for byte. Supporting
 content and its reachable information are unchanged; no new spoiler-safety
 claim or editorial alteration is made. Merge/production remain pending review.
+
+
+## Accepted integration and production publication
+
+Ted accepts the revised bottom-left privacy control at the 7121a489 preview and
+reports seeing his browsing activity in GA4. This is **user-reported visual
+acceptance and basic ingestion confirmation**, not independent verification of
+individual custom events or reporting definitions. No new device/browser versions,
+screen-reader, human audio or exhaustive actual-device coverage are inferred.
+
+PR #27 head `283ccbbd7a02f9c8b0aace7dddd9bebbdaa63f3a` was reviewed unchanged
+and squash-merged with an exact expected-head guard at
+`05a1d2c1c7ae104db1779f3142d4a91967cd379e`. Reviewed and merged trees both equal
+`bb3330ebcba7e3feb41807b295ef86dc1887fb9a`. No material defect required changing
+the accepted runtime. 287 tests, syntax/build/package and retained-preview checks
+pass; GitHub reports no status/check entries on the reviewed head.
+
+The accepted retained artifact was promoted, without rebuild or source changes,
+to production `0195b3ac-865d-45f2-ac5c-f7d46f2dc564` at
+https://read.murmurationpress.co.uk/skip/ . It retains runtime c627f94 (0.13.1)
+and source b002eb1. All 77 reader payload files match the accepted preview; only
+root indexing headers and robots change for production. Previous production
+`bcc3d61e-81f1-4a33-a246-e17543e3d257` and its retained build remain the rollback
+target. See the publication/validation records for receipts and final-origin checks.
+Main website, Ghost, DNS and analytics account configuration are unchanged.

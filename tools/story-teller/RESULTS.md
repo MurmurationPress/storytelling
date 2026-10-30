@@ -1502,3 +1502,84 @@ Updated observations: `test/evidence/analytics-reader-local.json` and
 Linux with emulation, not actual Safari/iPad, screen-reader use or human audio.
 GA4 dashboard ingestion remains unverified. Event semantics and consent gating
 are unchanged. Merge and production deployment remain pending review.
+
+## Accepted analytics/privacy integration and production — 30 October 2026
+
+Ted accepts the revised bottom-left privacy control at the 7121a489 preview and
+reports seeing browsing activity in GA4. Record these as **user-reported visual
+acceptance and basic ingestion confirmation**. Individual custom-event ingestion,
+reporting/custom definitions and an independent GA dashboard check are not verified
+by that report or by intercepted browser traffic. No analytics account configuration
+was changed; no new device/browser or exhaustive actual-device evidence is inferred.
+
+PR #27 remained at expected head
+`283ccbbd7a02f9c8b0aace7dddd9bebbdaa63f3a`. Final review found no material defect.
+GitHub reported clean/mergeable with no reviews/status/check entries; 287 Node
+tests, syntax checks (including new analytics modules/tag loader), both builds and
+VSIX packaging pass locally. Retained-preview inventory/HTTPS browser checks pass
+again, and rebuilt runtime bytes match the accepted artifact. No runtime change
+or re-export was needed.
+
+The exact expected-head guarded squash merge is
+`05a1d2c1c7ae104db1779f3142d4a91967cd379e`. Reviewed and merged trees both equal
+`bb3330ebcba7e3feb41807b295ef86dc1887fb9a`, independently compared before the
+subsequent documentation-only publication record commit.
+
+Established command used:
+
+```bash
+node tools/story-teller/scripts/publication.cjs publish \
+  --build /home/thawkins/Documents/skip-privacy-review-20261030 \
+  --reviewed 7121a489-8a63-40f8-9944-4d61b260fab3
+```
+
+Production receipt: `production-0195b3ac-865d-45f2-ac5c-f7d46f2dc564.json`, retained
+beside that build and its private snapshot/reports/upload ZIP. It records:
+
+- Production `0195b3ac-865d-45f2-ac5c-f7d46f2dc564` and previous production
+  `bcc3d61e-81f1-4a33-a246-e17543e3d257`.
+- Runtime **0.13.1** / `c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674`; source
+  `b002eb1365c46fdb3b0b4bdffe831d850a53415f`.
+- Accepted preview `7121a489-8a63-40f8-9944-4d61b260fab3`; artifact digest
+  `027305a6a61dee1c9a10176c2293a1e2c4ef303f44e00865a3545b6187299acd`.
+- Full 81-file production inventory. The preview artifact is copied, never
+  rebuilt; only root `_headers`/`robots.txt` change for production indexing.
+
+Final origin: https://read.murmurationpress.co.uk/skip/ . Independent checks:
+
+- All 78 served payload hashes (77 reader files plus robots) match the production
+  inventory. All 77 reader payload files match the accepted preview exactly,
+  including runtime, content, notes/targets, artwork and consent assets.
+- TLS, canonical redirects, private/missing paths returning 404, production
+  indexing headers/robots, runtime/content revalidation and immutable-asset
+  caching pass. Cloudflare read-only inspection confirms this deployment is
+  current/successful and the previous production remains successful/retained.
+- The final-origin privacy/analytics suite passes unset, dismissal, declined,
+  accepted, withdrawal and cross-tab withdrawal/clearing; keyboard/touch-emulated
+  controls, narrow/short light/dark panels, navigation, saved-position independence,
+  resume after simulated edits, restart, deduplication and autoplay evidence.
+  Real Google tag loads are allowed only after acceptance; all automated
+  collection is intercepted rather than sent to GA4.
+- The final-origin full-book sweep passes **148 beats, 45 assets, four animated
+  WebPs and 23 supporting targets**, including nested links/Back, pause/resume,
+  speed, saved scene/beat/preferences, front/back matter and mobile emulation.
+  No page errors, failed requests or external requests while unset. The existing
+  sweep was run with protective routing that would fulfill any external request
+  locally; the focused consent suite likewise intercepts all collection.
+- Source content/assets and publication order/notes/identity match the preceding
+  production; existing point-of-access editorial review remains applicable to
+  unchanged notes/links. No new spoiler filter or editorial change is claimed.
+
+Rollback target is the retained preceding b002eb1 build and receipt at
+`/home/thawkins/Documents/Publication Builds/skip-preview-source-b002eb1-renderer-0.12.4-20261029`.
+Neither old artifact nor deployment was overwritten/deleted; no live rollback was
+performed as a test. The author publishing guide provides the exact guarded
+rollback command. Main website, Ghost, DNS and analytics account configuration
+are untouched.
+
+Committed summary: `test/evidence/skip-analytics-production.json`. Private reports:
+`production-http-validation.json`, `production-account-verification.json`,
+`analytics-production-validation.json`, `browser-validation-production-final.json`.
+Remaining limits: independent GA4 event/report-definition verification, actual
+Safari/iPad coverage, screen-reader use and human audio listening. All completion
+events remain display-only evidence, not proof of reading.

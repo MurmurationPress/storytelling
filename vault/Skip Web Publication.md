@@ -231,3 +231,21 @@ for a possible later editorial update; the accepted text is preserved. Full priv
 review/report and production receipts stay beside the retained b002eb1 build.
 Summary: `test/evidence/skip-b002-publication.json`. Ghost, DNS/cache settings,
 source and renderer are untouched.
+
+## Accepted analytics/privacy reader publication (30 October)
+
+Ted accepts the revised bottom-left privacy control in PR #27 at the 7121a489
+preview and reports seeing browsing activity in GA4. Record this as user-reported
+visual acceptance and basic ingestion confirmation, not independent verification
+of individual custom events/reporting definitions or new actual-device coverage.
+
+Guarded squash merge `05a1d2c1c7ae104db1779f3142d4a91967cd379e` has exactly the
+reviewed head's tree (`283ccbbd7a02f9c8b0aace7dddd9bebbdaa63f3a`). Approved
+retained runtime 0.13.1/c627f94, author source b002eb1, is promoted unchanged to
+production `0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. All 77 reader files at
+https://read.murmurationpress.co.uk/skip/ match the accepted preview. The only
+promotion changes are root indexing headers/robots. Previous production bcc3d61e
+and its retained build are the rollback target. See [[Reader Analytics]] and
+the author publication/validation records for receipts and consent/position checks.
+No author/supporting-content edits, Ghost/main-site edits, DNS or analytics-account
+configuration changes are part of publication.

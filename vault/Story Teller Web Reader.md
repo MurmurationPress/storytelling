@@ -35,3 +35,10 @@ See the [validation records](../tools/story-teller/RESULTS.md).
 request and implemented export/runtime candidate for The Curious Adventures of
 Skip. Website consent does not currently carry to the reader. Completion means
 observed display coverage, not proof of reading. Merge/production remain pending.
+
+**Analytics/privacy accepted and published (2026-10-30):** Ted accepts the revised
+bottom-left control and reports seeing browsing activity in GA4. This is visual
+acceptance and basic ingestion confirmation reported by Ted; custom-event ingestion
+and reporting definitions remain independently unverified. PR #27 is squash-merged
+at `05a1d2c`; accepted 0.13.1/c627f94 is deployed as `0195b3ac`. See
+[[Reader Analytics]] for exact identities, guarded merge/tree checks and records.

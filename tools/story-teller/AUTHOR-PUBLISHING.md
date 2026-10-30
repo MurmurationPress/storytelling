@@ -191,3 +191,39 @@ recursive onward paths were reviewed; no blocking finding required changing the
 approved snapshot. The minor early Clive/Companion terminology item is recorded
 for a future editorial update. This review is distinct from syntax/resource checks
 and does not add automatic filtering. Ghost remains Ted's responsibility.
+
+## Accepted analytics/privacy update — 30 October 2026
+
+Ted accepts the revised bottom-left privacy control at
+https://7121a489.murmuration-skip.pages.dev/skip/ and reports seeing his browsing
+activity in GA4. These are user-reported visual acceptance and basic ingestion
+confirmation; individual custom events/reporting definitions remain independently
+unverified. Main website, Ghost, DNS and analytics account settings were not changed.
+
+PR #27 was squash-merged at `05a1d2c1c7ae104db1779f3142d4a91967cd379e`, guarded
+against exact head `283ccbbd7a02f9c8b0aace7dddd9bebbdaa63f3a`. Its merged tree
+matches the reviewed tree. Production uses the retained **0.13.1** runtime
+`c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674`, source
+`b002eb1365c46fdb3b0b4bdffe831d850a53415f`; no export/rebuild was performed for
+publication. The exact reviewed preview receipt was promoted through the existing
+`publication.cjs publish` command to production
+`0195b3ac-865d-45f2-ac5c-f7d46f2dc564`.
+
+Retained build: `/home/thawkins/Documents/skip-privacy-review-20261030`.
+Receipt: `production-0195b3ac-865d-45f2-ac5c-f7d46f2dc564.json`, including the full
+promoted inventory and previous deployment. Public URL:
+https://read.murmurationpress.co.uk/skip/ . All 77 reader payloads match the
+accepted preview; only root `_headers`/`robots.txt` differ for production indexing.
+The preceding b002eb1 production remains available for rollback. If a rollback
+is explicitly requested after checking the then-current production identity:
+
+```bash
+node scripts/publication.cjs rollback \
+  --build '/home/thawkins/Documents/Publication Builds/skip-preview-source-b002eb1-renderer-0.12.4-20261029' \
+  --reviewed bcc3d61e-81f1-4a33-a246-e17543e3d257 \
+  --expected 0195b3ac-865d-45f2-ac5c-f7d46f2dc564
+```
+
+No rollback was executed as a test. Retain both builds, their receipts and upload
+artifacts. Production browser/HTTP reports remain beside the new build; the
+sanitized release summary is `test/evidence/skip-analytics-production.json`.

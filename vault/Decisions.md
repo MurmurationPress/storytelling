@@ -397,3 +397,17 @@ assessment, not an automatic spoiler filter.
 Production promotion preserves every accepted reader/content/asset byte; only
 preview indexing metadata changes. Keep the preceding live edition for rollback.
 Ghost, DNS/cache configuration, source files and renderer remain unchanged.
+
+
+## 2026-10-30 — Accept reader privacy control and authorise analytics publication
+
+**Ted's acceptance and report:** accepts the revised bottom-left privacy control
+in PR #27 at the 7121a489 immutable Skip preview and reports seeing his browsing
+activity in GA4. Record this as visual acceptance and basic ingestion confirmation
+reported by Ted; individual custom events and reporting definitions are not
+independently verified. No new device/browser or exhaustive compatibility claim
+is implied.
+
+**Authorised and completed scope:** final review, exact-head guarded squash merge
+of PR #27 and promotion of the approved retained Skip artifact. See [[Reader Analytics]] for merge/deployment identities and evidence. Main website, Ghost,
+DNS and analytics account configuration remain outside this task.

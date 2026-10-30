@@ -1,0 +1,128 @@
+{
+  "date": "2026-10-30",
+  "acceptance": {
+    "source": "Ted, as reported in the publication request",
+    "previewUrl": "https://7121a489.murmuration-skip.pages.dev/skip/",
+    "visual": "User-reported acceptance of the revised bottom-left privacy control",
+    "ga4": "User reports seeing his browsing activity in GA4: basic ingestion confirmation",
+    "notEstablished": [
+      "Independent GA4 dashboard verification",
+      "Ingestion of each individual custom event",
+      "Reporting/custom-definition configuration",
+      "New device/browser-version or exhaustive actual-device coverage"
+    ]
+  },
+  "merge": {
+    "pr": "https://github.com/MurmurationPress/storytelling/pull/27",
+    "reviewedHead": "283ccbbd7a02f9c8b0aace7dddd9bebbdaa63f3a",
+    "headChanged": false,
+    "method": "squash",
+    "expectedHeadGuard": true,
+    "sha": "05a1d2c1c7ae104db1779f3142d4a91967cd379e",
+    "reviewedTree": "bb3330ebcba7e3feb41807b295ef86dc1887fb9a",
+    "mergedTree": "bb3330ebcba7e3feb41807b295ef86dc1887fb9a",
+    "treeEquality": true,
+    "gitHubChecks": [],
+    "materialDefectsFound": false
+  },
+  "validation": {
+    "nodeTests": 287,
+    "syntax": "PASS",
+    "bothBuilds": "PASS",
+    "packaging": "PASS",
+    "rebuiltRuntimeMatchesRetained": true,
+    "acceptedPreviewInventory": "PASS",
+    "acceptedPreviewFocusedBrowser": "PASS"
+  },
+  "production": {
+    "id": "0195b3ac-865d-45f2-ac5c-f7d46f2dc564",
+    "url": "https://0195b3ac.murmuration-skip.pages.dev",
+    "environment": "production",
+    "artifact": "027305a6a61dee1c9a10176c2293a1e2c4ef303f44e00865a3545b6187299acd",
+    "rendererVersion": "0.13.1",
+    "rendererRevision": "c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674",
+    "sourceRevision": "b002eb1365c46fdb3b0b4bdffe831d850a53415f",
+    "reviewed": "7121a489-8a63-40f8-9944-4d61b260fab3",
+    "previousProduction": "bcc3d61e-81f1-4a33-a246-e17543e3d257",
+    "createdAt": "2026-10-30T09:37:29.172Z",
+    "receiptFile": "production-0195b3ac-865d-45f2-ac5c-f7d46f2dc564.json",
+    "retainedBuild": "/home/thawkins/Documents/skip-privacy-review-20261030",
+    "finalUrl": "https://read.murmurationpress.co.uk/skip/",
+    "promotion": "Approved retained artifact copied unchanged; no export/rebuild; only _headers and robots.txt indexing differences"
+  },
+  "http": {
+    "origin": "https://read.murmurationpress.co.uk",
+    "deployment": "0195b3ac-865d-45f2-ac5c-f7d46f2dc564",
+    "acceptedPreview": "7121a489-8a63-40f8-9944-4d61b260fab3",
+    "sourceRevision": "b002eb1365c46fdb3b0b4bdffe831d850a53415f",
+    "rendererRevision": "c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674",
+    "compared": 78,
+    "readerFilesExactlyAccepted": 77,
+    "indexingMetadataOnlyDelta": [
+      "_headers",
+      "robots.txt"
+    ],
+    "noProductionNoindex": true,
+    "canonicalRedirects": true,
+    "privateAndMissingPaths404": true,
+    "tlsValidated": true
+  },
+  "focusedBrowser": {
+    "origin": "https://read.murmurationpress.co.uk",
+    "browser": "156.0.8078.79",
+    "method": "Retained actual Skip export, HTTP(S), Chrome headless Linux; live Google tag; ALL remote collection intercepted",
+    "checks": [
+      "Privacy badge only, no strip/menu entry or header displacement; unset dismiss/reopen via Enter/Space/Escape, focus return, hover label, equal targets, safe-area offsets, short-panel keyboard scrolling, 10 viewport/theme cases",
+      "Unset/declined including reload: no remote script, iframe or collection; 320px keyboard consent",
+      "Accepted: live tag and intercepted GA collect; clean page URL; intro excluded; explicit action; replay dedup; reload/resume ready without milestones",
+      "Existing position record: exact raw beat relocation after insertion, clamp after removal, restart first beat; no restore backfill",
+      "Withdrawn: frame terminated, prefixed GA cookies removed, no delayed/navigation/reload requests; position preserved",
+      "Cross-tab withdrawal stops active analytics",
+      "Clearing consent in another tab restores unset and stops active analytics",
+      "Actual timed autoplay completes every beat of first story; completion display_only, autoplay beat count exact, no timer-generated interactions or publication completion",
+      "Readable shared-site rejection wins over local acceptance",
+      "Touch-emulated dismissal/reopen/decline and current-choice display without analytics requests"
+    ],
+    "viewportThemeCases": 10,
+    "remoteCollectionIntercepted": true,
+    "observedCollectionEvents": [
+      "page_view",
+      "reading_interaction",
+      "reading_start",
+      "scroll"
+    ],
+    "independentlyUnverified": [
+      "GA dashboard ingestion",
+      "actual iPad/Safari",
+      "human audio",
+      "screen reader"
+    ]
+  },
+  "fullBookBrowser": {
+    "origin": "https://read.murmurationpress.co.uk",
+    "browser": "156.0.8078.79",
+    "beats": 148,
+    "assets": 45,
+    "supportingTargets": 23,
+    "animations": 4,
+    "pageErrors": [],
+    "failedRequests": [],
+    "externalRequests": [],
+    "protectiveRouting": "All external requests fulfilled locally, even though consent remains unset and no remote requests occurred"
+  },
+  "rollback": {
+    "project": "murmuration-skip",
+    "currentProduction": "0195b3ac-865d-45f2-ac5c-f7d46f2dc564",
+    "currentStatus": "success",
+    "previousDeploymentRetained": "bcc3d61e-81f1-4a33-a246-e17543e3d257",
+    "previousStatus": "success"
+  },
+  "unchanged": [
+    "Author content, artwork, timing, supporting notes/links, publication order and saved-position identity",
+    "Main website",
+    "Ghost",
+    "DNS",
+    "Analytics account configuration"
+  ],
+  "result": "PASS"
+}
