@@ -19,8 +19,8 @@ async def run(build, origin_override=None):
       async with async_playwright() as p:
         browser=await p.chromium.launch(executable_path='/usr/bin/google-chrome',headless=True,args=['--no-sandbox'])
         report['browser']=browser.version
-        async def context():
-            ctx=await browser.new_context(viewport={'width':320,'height':740},reduced_motion='reduce')
+        async def context(**options):
+            ctx=await browser.new_context(viewport={'width':320,'height':740},reduced_motion='reduce',**options)
             requests=[];errors=[]
             async def remote(route):
                 req=route.request
@@ -49,15 +49,61 @@ async def run(build, origin_override=None):
             return await frame.locator('body').evaluate('() => window.dataLayer.filter(x=>x && x.length).map(x=>Array.from(x))')
         ctx,page,requests,errors=await context()
         await page.wait_for_timeout(800);assert not requests,requests
-        assert await page.locator('.analytics-consent').is_visible()
-        assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+        panel=page.locator('#analytics-consent-panel');badge=page.get_by_role('button',name='Privacy and analytics settings',exact=True)
+        assert await panel.is_visible()
+        assert await page.locator('.analytics-consent').count()==0
+        assert await page.locator('#more-options #analytics-privacy-button').count()==0
+        header_top=await page.locator('body > header').evaluate('(e)=>e.getBoundingClientRect().top')
+        assert header_top==0,header_top
+        # Dismiss without recording a choice; reopening works by Enter and Space.
+        await page.get_by_role('button',name='Close privacy settings without changing consent').click()
+        assert not await panel.is_visible();assert await badge.evaluate('(e)=>e===document.activeElement')
+        assert (await stored(page)).get('analyticsConsent') is None
+        await page.keyboard.press('Enter');assert await panel.is_visible()
+        assert await page.locator('#analytics-consent-title').evaluate('(e)=>e===document.activeElement')
+        await page.keyboard.press('Escape');assert not await panel.is_visible()
+        assert await badge.evaluate('(e)=>e===document.activeElement')
+        assert await page.locator('.analytics-privacy-label').is_visible()
+        await page.keyboard.press('Space');assert await panel.is_visible()
+        # Compact geometry and both equally sized choice targets across themes/viewports.
+        geometry=[]
+        for width,height in [(320,740),(390,844),(768,1024),(1024,768),(320,240)]:
+            await page.set_viewport_size({'width':width,'height':height})
+            for theme in ['light','dark']:
+                await page.emulate_media(color_scheme=theme)
+                bounds=await panel.bounding_box();button=await badge.bounding_box()
+                assert bounds['x']>=0 and bounds['y']>=0 and bounds['x']+bounds['width']<=width
+                assert bounds['y']+bounds['height']<=button['y']-8
+                assert button['width']==46 and button['height']==46
+                assert await page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+                a=await page.get_by_role('button',name='Accept analytics',exact=True).bounding_box()
+                d=await page.get_by_role('button',name='Decline analytics',exact=True).bounding_box()
+                assert abs(a['width']-d['width'])<=1 and a['height']>=44 and d['height']>=44
+                geometry.append({'width':width,'height':height,'theme':theme,'panel':bounds})
+        report['privacy_geometry']=geometry
+        await page.set_viewport_size({'width':320,'height':740});await page.emulate_media(color_scheme='light')
+        # Safe-area values are honored even when the desktop browser reports zero native insets.
+        await page.locator('.analytics-privacy').evaluate("e=>{e.style.setProperty('--privacy-left','24px');e.style.setProperty('--privacy-bottom','34px')}")
+        assert (await badge.bounding_box())['x']==24
+        assert round((await badge.bounding_box())['y']+46)==740-34
+        await page.locator('.analytics-privacy').evaluate("e=>e.removeAttribute('style')")
+        await page.locator('#contents-toggle').click();assert not await panel.is_visible()
+        await badge.click();await page.keyboard.press('Tab')
+        assert await page.get_by_role('button',name='Close privacy settings without changing consent').evaluate('(e)=>e===document.activeElement')
+        await page.keyboard.press('Tab');assert await page.get_by_role('button',name='Accept analytics',exact=True).evaluate('(e)=>e===document.activeElement')
+        await page.keyboard.press('Tab');assert await page.get_by_role('button',name='Decline analytics',exact=True).evaluate('(e)=>e===document.activeElement')
+        assert not requests
+        report['checks'].append('Privacy badge only, no strip/menu entry or header displacement; unset dismiss/reopen via Enter/Space/Escape, focus return, equal targets, safe-area offsets, 10 viewport/theme cases')
         await page.get_by_role('button',name='Decline analytics',exact=True).focus();await page.keyboard.press('Enter')
         await page.wait_for_timeout(600);assert not requests;assert await page.locator('iframe').count()==0
-        await page.reload();await page.wait_for_selector('#beat h1');assert 'declined' in await page.locator('.analytics-consent').inner_text()
+        assert not await panel.is_visible()
+        await page.reload();await page.wait_for_selector('#beat h1');assert not await page.locator('#analytics-consent-panel').is_visible();assert 'declined' in await page.locator('#analytics-consent-choice').text_content()
         assert not requests
         report['checks'].append('Unset/declined including reload: no remote script, iframe or collection; 320px keyboard consent')
-        await page.get_by_role('button',name='Analytics settings',exact=True).click()
+        await page.get_by_role('button',name='Privacy and analytics settings',exact=True).click()
+        assert 'declined' in await page.locator('#analytics-consent-choice').inner_text()
         await page.get_by_role('button',name='Accept analytics',exact=True).click()
+        assert not await page.locator('#analytics-consent-panel').is_visible()
         await page.wait_for_timeout(3500)
         assert any('googletagmanager.com/gtag/js?' in r['url'] for r in requests),requests
         assert any('google-analytics.com/g/collect' in r['url'] for r in requests),requests
@@ -107,7 +153,8 @@ async def run(build, origin_override=None):
         assert 'ready' in await page.locator('#status').inner_text()
         report['checks'].append('Existing position record: exact raw beat relocation after insertion, clamp after removal, restart first beat; no restore backfill')
         # Withdrawal after real GA is active; keep page open to detect delayed sends.
-        await page.get_by_role('button',name='Analytics settings',exact=True).click()
+        await page.get_by_role('button',name='Privacy and analytics settings',exact=True).click()
+        assert 'accepted' in await page.locator('#analytics-consent-choice').inner_text()
         await page.get_by_role('button',name='Decline analytics',exact=True).click()
         before=len(requests);await page.wait_for_timeout(2500)
         assert len(requests)==before,requests[before:]
@@ -124,11 +171,11 @@ async def run(build, origin_override=None):
         await ctx.close()
         # Cross-tab withdrawal uses the same preference record.
         ctx,page,requests,errors=await context();await page.get_by_role('button',name='Accept analytics',exact=True).click();await page.wait_for_timeout(1000)
-        other=await ctx.new_page();await other.goto(url);await other.get_by_role('button',name='Analytics settings',exact=True).click();await other.get_by_role('button',name='Decline analytics',exact=True).click()
+        other=await ctx.new_page();await other.goto(url);await other.get_by_role('button',name='Privacy and analytics settings',exact=True).click();await other.get_by_role('button',name='Decline analytics',exact=True).click()
         await page.wait_for_timeout(600);assert await page.locator('iframe').count()==0
-        assert 'declined' in await page.locator('.analytics-consent').inner_text()
+        assert 'declined' in await page.locator('#analytics-consent-choice').text_content()
         report['checks'].append('Cross-tab withdrawal stops active analytics')
-        await other.get_by_role('button',name='Analytics settings',exact=True).click();await other.get_by_role('button',name='Accept analytics',exact=True).click()
+        await other.get_by_role('button',name='Privacy and analytics settings',exact=True).click();await other.get_by_role('button',name='Accept analytics',exact=True).click()
         await page.wait_for_timeout(500);assert await page.locator('iframe').count()==1
         await other.evaluate('localStorage.clear()');await page.wait_for_timeout(500)
         assert await page.locator('iframe').count()==0
@@ -160,10 +207,20 @@ async def run(build, origin_override=None):
         ctx,page,requests,errors=await context()
         await ctx.add_cookies([{'name':'CookieScriptConsent','value':json.dumps({'action':'reject','categories':'[]'}),'url':origin}])
         await page.reload();await page.wait_for_timeout(200)
-        assert 'declined' in await page.locator('.analytics-consent').inner_text()
-        await page.get_by_role('button',name='Analytics settings',exact=True).click();await page.get_by_role('button',name='Accept analytics',exact=True).click()
+        assert 'declined' in await page.locator('#analytics-consent-choice').text_content()
+        await page.get_by_role('button',name='Privacy and analytics settings',exact=True).click();await page.get_by_role('button',name='Accept analytics',exact=True).click()
         await page.wait_for_timeout(600);assert not requests
         report['checks'].append('Readable shared-site rejection wins over local acceptance')
+        await ctx.close()
+        ctx,page,requests,errors=await context(has_touch=True,is_mobile=True)
+        await page.tap('[aria-label="Close privacy settings without changing consent"]')
+        assert not await page.locator('#analytics-consent-panel').is_visible()
+        await page.tap('#analytics-privacy-button');assert await page.locator('#analytics-consent-panel').is_visible()
+        await page.get_by_role('button',name='Decline analytics',exact=True).tap()
+        assert not await page.locator('#analytics-consent-panel').is_visible()
+        await page.tap('#analytics-privacy-button');assert 'declined' in await page.locator('#analytics-consent-choice').inner_text()
+        assert not requests and not errors
+        report['checks'].append('Touch-emulated dismissal/reopen/decline and current-choice display without analytics requests')
         await ctx.close();await browser.close()
     finally:server.shutdown()
     return report

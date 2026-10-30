@@ -18,17 +18,50 @@ function websiteChoice(cookie) {
 function createWebAnalytics({ window, document, config, getState, setState }) {
   if (!config) return { observe() {} };
   let frame, ready = false, queue = [], current;
-  const region = document.createElement('section'); region.className = 'analytics-consent';
-  region.setAttribute('aria-label', 'Optional analytics');
-  const status = document.createElement('p'); status.setAttribute('role', 'status');
-  const details = document.createElement('div');
+  const region = document.createElement('div'); region.className = 'analytics-privacy';
+  const change = document.createElement('button'); change.type = 'button'; change.id = 'analytics-privacy-button';
+  change.setAttribute('aria-label', 'Privacy and analytics settings'); change.title = 'Privacy and analytics settings';
+  change.setAttribute('aria-controls', 'analytics-consent-panel'); change.setAttribute('aria-expanded', 'false');
+  change.setAttribute('aria-haspopup', 'dialog');
+  change.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="16" cy="16" r="12"/><circle cx="11" cy="11" r="2"/><circle cx="21" cy="12" r="1.5"/><circle cx="13" cy="22" r="1.5"/><circle cx="22" cy="21" r="2"/></svg>';
+  const tooltip = document.createElement('span'); tooltip.className = 'analytics-privacy-label';
+  tooltip.textContent = 'Privacy and analytics settings'; tooltip.setAttribute('aria-hidden', 'true');
+  const details = document.createElement('section'); details.id = 'analytics-consent-panel'; details.hidden = true;
+  details.setAttribute('role', 'dialog'); details.setAttribute('aria-modal', 'false');
+  details.setAttribute('aria-labelledby', 'analytics-consent-title');
+  details.setAttribute('aria-describedby', 'analytics-consent-choice');
+  const heading = document.createElement('h2'); heading.id = 'analytics-consent-title'; heading.tabIndex = -1; heading.textContent = 'Your privacy';
+  const dismiss = document.createElement('button'); dismiss.type = 'button'; dismiss.className = 'analytics-consent-close';
+  dismiss.textContent = '×'; dismiss.setAttribute('aria-label', 'Close privacy settings without changing consent');
+  const status = document.createElement('p'); status.id = 'analytics-consent-choice'; status.setAttribute('role', 'status');
   const text = document.createElement('p');
-  text.textContent = 'Allow optional Google Analytics to measure visits and story playback? This cannot tell us whether you read the words. Your reading position is saved independently. You can change this choice at any time.';
+  text.textContent = 'Allow Google Analytics to measure visits and story playback? It cannot tell whether you read the words. Reading positions are saved independently. You can change your choice here anytime.';
   const accept = document.createElement('button'); accept.type = 'button'; accept.textContent = 'Accept analytics';
   const decline = document.createElement('button'); decline.type = 'button'; decline.textContent = 'Decline analytics';
-  const change = document.createElement('button'); change.type = 'button'; change.textContent = 'Analytics settings';
-  details.append(text, accept, decline); region.append(status, details, change);
-  document.querySelector('header').before(region);
+  const actions = document.createElement('div'); actions.className = 'analytics-consent-actions'; actions.append(accept, decline);
+  details.append(heading, dismiss, status, text, actions); region.append(change, tooltip, details);
+  document.body.prepend(region); document.body.classList.add('has-analytics-consent');
+  function close(returnFocus = true) {
+    details.hidden = true; change.setAttribute('aria-expanded', 'false');
+    if (returnFocus) change.focus({preventScroll: true});
+  }
+  function open(focus = true) {
+    details.hidden = false; change.setAttribute('aria-expanded', 'true');
+    if (focus) heading.focus({preventScroll: true});
+  }
+  dismiss.addEventListener('click', () => close());
+  change.addEventListener('click', () => details.hidden ? open() : close());
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !details.hidden && (region.contains(document.activeElement) || document.activeElement === document.body)) {
+      event.preventDefault(); event.stopPropagation(); close();
+    }
+  });
+  document.addEventListener('pointerdown', event => {
+    if (!details.hidden && !region.contains(event.target)) close(false);
+  });
+  document.addEventListener('focusin', event => {
+    if (!details.hidden && !region.contains(event.target)) close(false);
+  });
   function choice() {
     const site = websiteChoice(document.cookie);
     const local = getState().analyticsConsent;
@@ -60,15 +93,12 @@ function createWebAnalytics({ window, document, config, getState, setState }) {
       }
     }
     status.textContent = `Analytics: ${next || 'not chosen'}.`;
-    details.hidden = next !== null;
-    change.hidden = next === null;
   }
   function choose(value) {
-    setState({ analyticsConsent: value }); refresh(); details.hidden = true; change.focus();
+    setState({ analyticsConsent: value }); refresh(); close();
   }
   accept.addEventListener('click', () => choose('accepted'));
   decline.addEventListener('click', () => choose('declined'));
-  change.addEventListener('click', () => { details.hidden = !details.hidden; if (!details.hidden) accept.focus(); });
   window.addEventListener('message', event => {
     if (!frame || event.source !== frame.contentWindow || event.origin !== window.location.origin || event.data?.type !== 'analytics-ready') return;
     refresh(); if (current !== 'accepted' || !frame) return;
@@ -95,6 +125,7 @@ function createWebAnalytics({ window, document, config, getState, setState }) {
     }
   });
   refresh();
+  if (current === null) open(false);
   return measurements;
 }
 module.exports = { createWebAnalytics, websiteChoice };

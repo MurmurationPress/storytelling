@@ -36,8 +36,23 @@ navigation to `https://read.murmurationpress.co.uk/skip/`. GA cookies were visib
 there, but **GA cookies are not evidence of consent**. No website changes were made.
 CookieScript documents [subdomain sharing as an explicit setting](https://help.cookie-script.com/en/articles/30175-setting-up-subdomains).
 
-The reader therefore provides its own accessible Accept/Decline/settings controls,
-with a plain explanation and no blocking modal. It remembers its choice in the
+The reader therefore provides a 46px dark circular privacy button fixed at the
+bottom left, following the website's small CookieScript badge treatment with a
+local SVG icon. No persistent status strip or extra More-menu entry is shown.
+On an unset visit, a compact nonmodal panel opens above the button without taking
+focus from the book. Accept and Decline have equal-sized, equally clear targets;
+either closes the panel, leaving only the privacy button. The button reopens the
+panel with the current effective consent choice displayed inside.
+
+The button has a descriptive accessible name, native title and visible hover/
+keyboard-focus label. Enter, Space and touch open it; deliberate opening focuses
+the panel heading. Close and Escape return focus to the button. Clicking/tapping
+or focusing elsewhere dismisses it without stealing focus. Dismissal never saves
+a consent choice: unset consent stays disabled, and reopening remains available.
+The panel uses reader theme colors, scrolls in short viewports and respects safe
+areas. The badge remains clear of the right-hand Follow control; bottom padding
+lets the final story content scroll fully clear of it. No playback/position state
+is changed by opening or dismissing the panel. It remembers its choice in the
 existing publication preference object. No choice means no analytics. The reader
 also conservatively understands a readable CookieScript `performance` choice if
 one becomes available: a site rejection or reader withdrawal always wins. A local

@@ -29,6 +29,7 @@ async def run(root):
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.on('request',lambda req:remote.append(req.url) if not req.url.startswith(url) else None)
         await page.goto(url);await page.wait_for_selector('#beat button[data-story-target="JANUS early"]')
+        assert await page.locator('.analytics-privacy').count()==0
         assert 'ready' in await page.locator('#status').inner_text()
         light=await page.evaluate('getComputedStyle(document.body).color')
         await page.emulate_media(color_scheme='dark');dark=await page.evaluate('getComputedStyle(document.body).color');assert light!=dark
