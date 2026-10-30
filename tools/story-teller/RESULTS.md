@@ -1380,3 +1380,125 @@ and does not imply an automatic spoiler filter.
 Previous deployment 42ffb0fd and its complete retained build/production receipt
 remain available for rollback; rollback is not exercised live. Full private reports
 are beside the b002eb1 build; summary is `test/evidence/skip-b002-publication.json`.
+
+## Optional reader analytics — 30 October 2026
+
+Implemented candidate 0.13.0; reusable runtime reviewed at
+`3c54c205360e2883c49a0e81e733d89a5fa84a60`. Later changes in this PR are test/report
+and documentation changes only. Source is current Stories-Told main
+`b002eb1365c46fdb3b0b4bdffe831d850a53415f`; no author files were changed.
+
+Retained build: `/home/thawkins/Documents/skip-analytics-review-20261030-final`;
+public artifact only: `site/skip/`; private snapshot, reports, target/receipt and
+`skip-preview-upload.zip` stay beside it. Established `publication.cjs prepare`
+checks passed: 14 scenes, 16 reading pages, 148 beats, 45 unique image assets,
+23 supporting notes, 81 public files; zero warnings/problems. Export checks
+compare every scene body and media hash with the committed source snapshot.
+Publication metadata/notes/link targets (excluding added analytics config) also
+match the live production publication JSON exactly.
+
+Immutable review preview:
+https://a52db61c.murmuration-skip.pages.dev/skip/
+
+Preview receipt `a52db61c-028d-4717-8018-d6b4ba568c6e` binds source/runtime and
+artifact inventory. `verify-skip-preview.cjs` passes all 78 served payload-file
+comparisons plus operational header/noindex/redirect/404 checks. Production at
+preview time remains `bcc3d61e-81f1-4a33-a246-e17543e3d257`. No production command,
+merge, DNS or Ghost modification was performed.
+
+Validation:
+
+- 287 Node tests pass; syntax checks, both bundles and VSIX packaging pass.
+- Focused measurement tests cover consent gates, intro/restore exclusions,
+  unique coverage versus furthest position, replay/back/reload deduplication,
+  autoplay display-only completion, explicit actions, withdrawal/no backfill,
+  multi-story completion and content-version reset.
+- Actual retained export, Chrome 156.0.8078.79 on Linux: unset, declined and
+  withdrawn consent produce no remote script/collection requests. Accepted
+  consent loads the real Google tag and generates collection requests, all
+  intercepted by test routing so production analytics receives no test data.
+  Collection payloads include `page_view`, `reading_start`, `reading_interaction`;
+  query/fragment information is absent. Automatic GA `scroll` also occurs in the
+  tag frame: it must not be interpreted as reading progress.
+- 320px keyboard consent controls, local consent reload, cross-tab withdrawal,
+  cross-tab consent clearing, readable CookieScript rejection precedence,
+  terminated-frame/cookie cleanup and navigation after withdrawal pass.
+- Resume opens ready without milestone emission. Simulated source insertion
+  relocates the saved beat by its unchanged raw text; removal clamps the index;
+  Restart returns to beat zero. No second position store exists.
+- Actual autoplay finishes every beat in the first story with exact autoplay
+  beat count, display-only completion, one explicit interaction per reader turn
+  and no timer-generated interactions or publication completion.
+- Existing full-book browser sweep passes all 148 beats, 45 decoded assets,
+  four animated WebPs and 23 actual supporting targets, including nested Back,
+  playback/speed/pause/resume, saved preferences, front/back matter, responsive
+  and follow behavior. No page errors, failed requests or remote requests while
+  consent remains unset. Existing unconfigured synthetic export/browser suite
+  also passes, including type-out/sound, notes, rapid navigation, reduced-motion
+  and narrow/touch emulation with no remote requests.
+
+Focused browser observations are retained in
+`test/evidence/analytics-reader-local.json` and `analytics-reader-https.json`.
+The full private book report is beside the retained build. These checks do not
+verify GA account access, ingestion/dashboard reporting, actual Safari/iPad,
+screen-reader use or human audio listening. See [ANALYTICS.md](ANALYTICS.md) for
+GA4 custom definitions/report instructions and existing saved-position limits.
+Merging and production deployment remain pending review.
+
+## Compact privacy controls amendment — 30 October 2026
+
+Supersedes the earlier analytics-strip preview above for PR #27 review.
+0.13.1 runtime: `c627f9475b5bbe7dd9456dcbcfcc0eeaf4651674`.
+Current committed author source remains
+`b002eb1365c46fdb3b0b4bdffe831d850a53415f`.
+
+Immutable preview: https://7121a489.murmuration-skip.pages.dev/skip/
+
+Retained build: `/home/thawkins/Documents/skip-privacy-review-20261030`;
+public export: `site/skip/`; upload ZIP, source snapshot and receipts stay outside
+that public tree. Preview receipt `7121a489-8a63-40f8-9944-4d61b260fab3` pins
+source/runtime/inventory. Production remains
+`bcc3d61e-81f1-4a33-a246-e17543e3d257` at preview creation. No production command,
+merge, DNS or main-website edit was performed.
+
+The persistent strip is removed. A local 46px dark circular cookie/privacy icon
+follows the live website badge's size, color, bottom-left position and shadow.
+Its descriptive hover/focus label and accessible name open a compact nonmodal
+panel; status appears only inside that panel. First unset visits show the panel
+without taking keyboard focus. Accept and Decline have equal-sized targets;
+either closes it. Close/Escape return focus to the badge; outside interaction
+closes without stealing focus or recording consent. The button is separate from
+More. Responsive scrolling and safe-area offsets bound the panel; end padding
+allows content to scroll clear of the badge and Follow stays on the right.
+
+Validation:
+
+- 287 Node tests, syntax checks, both builds and VSIX packaging pass.
+- Updated focused tests pass on the retained export over local HTTP and the
+  immutable HTTPS preview. Checks include no header displacement/strip/menu
+  entry; keyboard Enter/Space opening, Escape/Close dismissal, focus return,
+  descriptive hover/focus label, current-choice display, outside dismissal,
+  equal Accept/Decline targets, short-panel keyboard scrolling, ten viewport/
+  theme cases (320×740, 390×844, 768×1024, 1024×768, 320×240 in light/dark),
+  simulated safe-area offsets and separate touch-emulated interactions.
+- Unset/dismissed/declined consent makes no Google requests. Acceptance loads
+  the real tag; all collection requests are intercepted, avoiding production
+  test data. Withdrawal, cross-tab withdrawal/clearing, cookie cleanup, saved
+  position independence, resume after simulated edits, milestone deduplication,
+  autoplay evidence and readable-site-rejection precedence continue to pass.
+- Full real-book sweep passes 148 beats, all 45 assets, four animated WebPs and
+  23 supporting targets, with no page errors, failed or remote requests while
+  unset. The unconfigured synthetic-reader suite passes and explicitly checks
+  that no privacy interface exists without analytics configuration.
+- All 62 public content/artwork/publication payload files match the preceding
+  reviewed analytics export byte for byte. Preparation has zero warnings/problems.
+  No author files, notes, links, timing or artwork were edited.
+- Hosted verification passes all 78 served payload-file comparisons and the
+  existing operational header/noindex/redirect/404 checks. Light/dark narrow
+  screenshots were visually inspected and retained privately beside the build.
+
+Updated observations: `test/evidence/analytics-reader-local.json` and
+`test/evidence/analytics-reader-https.json`. Browser evidence is Chrome 156 on
+Linux with emulation, not actual Safari/iPad, screen-reader use or human audio.
+GA4 dashboard ingestion remains unverified. Event semantics and consent gating
+are unchanged. Merge and production deployment remain pending review.

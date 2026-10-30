@@ -27,3 +27,21 @@ button{border-radius:.2rem;}[hidden]{display:none!important;}
 #more-options input {width:24px;height:24px;flex-shrink:0;}
 @media(max-width:480px){header{padding:.7rem 1rem 0;}.compact-controls{gap:.5rem;padding:.3rem .7rem .45rem;}.icon-button{width:44px;min-width:44px;min-height:44px;padding:.5rem;}#beat{padding:1rem;}}
 @media(forced-colors:active){button,.supporting-panel,.supporting-preview,#more-options{border:1px solid ButtonText;}.icon-button:disabled{color:GrayText;border-color:GrayText;}}
+
+/* CookieScript's small dark circular badge, using a local icon and no third-party UI script. */
+.has-analytics-consent { padding-bottom:calc(72px + env(safe-area-inset-bottom, 0px)); }
+.analytics-privacy { --privacy-left:max(10px, env(safe-area-inset-left, 0px)); --privacy-bottom:max(10px, env(safe-area-inset-bottom, 0px)); }
+#analytics-privacy-button { position:fixed; z-index:5; left:var(--privacy-left); bottom:var(--privacy-bottom); display:flex; align-items:center; justify-content:center; width:46px; height:46px; min-height:46px; padding:9px; border:1px solid #777; border-radius:50%; background:#1c1c1c; color:#eee; box-shadow:1px 2px 8px #0003; }
+#analytics-privacy-button svg { width:28px; height:28px; pointer-events:none; }
+.analytics-privacy-label { display:none; position:fixed; z-index:6; left:calc(var(--privacy-left) + 54px); bottom:calc(var(--privacy-bottom) + 5px); max-width:calc(100vw - var(--privacy-left) - 72px); padding:4px 8px; border-radius:4px; background:#1c1c1c; color:#fff; font-size:.8rem; line-height:1.4; pointer-events:none; }
+#analytics-privacy-button:is(:hover,:focus-visible)[aria-expanded=false] + .analytics-privacy-label { display:block; }
+#analytics-consent-panel { position:fixed; z-index:6; box-sizing:border-box; left:var(--privacy-left); bottom:calc(var(--privacy-bottom) + 56px); width:320px; max-width:calc(100vw - var(--privacy-left) - max(10px, env(safe-area-inset-right, 0px))); max-height:calc(100dvh - var(--privacy-bottom) - 66px - env(safe-area-inset-top, 0px)); overflow:auto; overscroll-behavior:contain; padding:14px; border:1px solid var(--vscode-panel-border); border-radius:8px; background:var(--vscode-editor-background); color:var(--vscode-editor-foreground); box-shadow:1px 2px 12px #0004; font-size:.85rem; line-height:1.45; }
+#analytics-consent-panel h2 { margin:0 44px 8px 0; font-size:1rem; }
+#analytics-consent-panel p { margin:8px 0; }
+#analytics-consent-choice { color:var(--vscode-descriptionForeground); }
+.analytics-consent-close { position:absolute; right:4px; top:4px; width:44px; min-height:44px; padding:0; font-size:1.4rem; }
+.analytics-consent-actions { display:flex; gap:8px; margin-top:12px; }
+.analytics-consent-actions button { flex:1; min-width:0; min-height:44px; padding:6px; white-space:normal; font-size:inherit; }
+/* Follow stays clear of the privacy badge, including short/narrow safe-area viewports. */
+.has-analytics-consent #follow-story { right:max(10px, env(safe-area-inset-right, 0px)); bottom:max(10px, env(safe-area-inset-bottom, 0px)); max-width:calc(100vw - 82px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
+@media(forced-colors:active){#analytics-privacy-button,#analytics-consent-panel,.analytics-privacy-label{border:1px solid ButtonText;background:Canvas;color:CanvasText;}}

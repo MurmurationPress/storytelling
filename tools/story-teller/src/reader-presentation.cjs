@@ -24,6 +24,7 @@ let revision = -1;
 let incomingRevision = -1;
 let pendingDeparture = 0;
 let sourceUri = '';
+let readingSource = 'restore', readingMode = 'manual', readingInteraction = false;
 let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
@@ -84,6 +85,14 @@ function controls() {
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
+  if (!preparing && presented && !document.hidden && !isMatter && api.onReading) {
+    const blocks = player.visibleBlocks;
+    const visible = blocks.some(block => ['prose', 'image'].includes(block.type) || (block.type === 'typeout' ? block.revealCount > 0 : block.messages?.length > 0));
+    const fullyDisplayed = blocks.length > 0 && blocks.length === player.current?.blocks.length && blocks.every((block, index) =>
+      block.type === 'chat' ? block.messages.length === player.current.blocks[index].messages.length : block.type === 'typeout' ? block.complete : true);
+    api.onReading({ sceneId: sourceUri, index: player.index, count: player.scene.beats.length, visible, completed: fullyDisplayed,
+      source: readingSource, mode: readingMode, interaction: readingInteraction });
+  }
   api.onControls?.({ phase: player.phase, preparing, presented, isMatter, muted });
   if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
 }
@@ -309,12 +318,16 @@ function turnDocument(direction) {
   if (direction === 'next' && api.nextScene) api.nextScene();
   else api.postMessage({ type: 'project-turn', revision, direction });
 }
+function markInteraction(source) {
+  readingSource = source; readingMode = ['reveal', 'previous', 'restart'].includes(source) ? 'manual' : autoplayOnTurn ? 'autoplay' : 'manual'; readingInteraction = true;
+}
 function turnNext() {
   if (isMatter) { if(documentNavigation.next) turnDocument('next'); return; }
   if (preparing || !presented || document.hidden || player.index >= player.scene.beats.length - 1) return;
   resetNotes(); follower.beginTurn();
   sound.stop();
   if (autoplayOnTurn) unlockSound(player.scene.beats[player.index + 1]);
+  markInteraction('next');
   player.next({ autoplay: autoplayOnTurn }); render(); follower.endTurn();
 }
 document.getElementById('next').addEventListener('click', turnNext);
@@ -322,19 +335,22 @@ document.getElementById('previous').addEventListener('click', () => {
   lastEndTurnAt = -Infinity;
   if (preparing || !presented || document.hidden) return;
   if (player.index === 0 && documentNavigation.previous) { turnDocument('previous'); return; }
+  markInteraction('previous');
   resetNotes(); follower.beginTurn({ silent: true }); sound.stop(); player.previous(); render(); follower.endTurn();
 });
 document.getElementById('restart').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
+  markInteraction('restart');
   resetNotes(); follower.beginTurn(); sound.stop(); player.restart(); render(); follower.endTurn();
 });
-document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { unlockSound(); player.play(); } });
+document.getElementById('play').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { markInteraction('play'); readingMode = 'autoplay'; unlockSound(); player.play(); } });
 document.getElementById('pause').addEventListener('click', () => {
   if (preparing || !presented || document.hidden) return;
-  if (player.phase === 'playing') player.pause(); else { unlockSound(); player.play(); }
+  if (player.phase === 'playing') player.pause(); else { markInteraction('play'); readingMode = 'autoplay'; unlockSound(); player.play(); }
 });
-document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { resetNotes(); follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
+document.getElementById('replay').addEventListener('click', () => { if (!preparing && presented && !document.hidden) { markInteraction('replay'); readingMode = 'autoplay'; resetNotes(); follower.beginTurn(); sound.stop(); unlockSound(); player.replay(); follower.endTurn(); } });
 document.getElementById('reveal').addEventListener('click', () => { if (!preparing && presented && !document.hidden) {
+  markInteraction('reveal');
   if (api.compactControls) { sceneAutoplay.cancel(); sound.stop(); player.revealBeat(); }
   else player.revealImmediately();
 } });
@@ -464,6 +480,9 @@ api.onMessage(async event => {
     player.index = Math.max(0, Math.min(restored, player.scene.beats.length - 1));
     player.reset();
   }
+  readingSource = message.sceneStart === true ? (message.documentPrevious ? 'previous' : 'scene_selection') : 'restore';
+  readingMode = message.sceneStart === true && !message.documentPrevious && autoplayOnTurn ? 'autoplay' : 'manual';
+  readingInteraction = message.sceneStart === true;
   preparing = false;
   // A document turn suspends following while its snapshot loads. The browser
   // has no new host presentation event to reactivate it after that turn.

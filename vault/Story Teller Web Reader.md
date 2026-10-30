@@ -30,3 +30,8 @@ See the [validation records](../tools/story-teller/RESULTS.md).
 **Current task:** finish review/validation and integrate PR #15 using an exact-head squash guard if no material blocker remains. No hosting, EPUB work, component redesign or general platform is part of this trial.
 
 **Closeout corrections:** the installed cross-root preview could retain an old active iframe while a replacement reported ready; changing HTML and resource policy in-place was the unreliable integration path. A root change now disposes/replaces the panel in the same group, using public VS Code APIs and waiting for its own ready signal. Same-root reuse remains. Conflicting repeated export reads also abort. The standalone reader bundles, templates/styles and normal synthetic export bytes are unchanged from 0.10.0, so this is not a new iPad reading treatment. See the closeout RESULTS/evidence for exact native classifications and remaining limits.
+
+**Optional analytics review (2026-10-30):** [[Reader Analytics]] records Ted's
+request and implemented export/runtime candidate for The Curious Adventures of
+Skip. Website consent does not currently carry to the reader. Completion means
+observed display coverage, not proof of reading. Merge/production remain pending.

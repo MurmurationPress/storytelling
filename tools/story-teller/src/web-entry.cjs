@@ -1,12 +1,18 @@
 'use strict';
 const { createWebControls } = require('./web-controls.cjs');
+const { createWebAnalytics } = require('./web-analytics.cjs');
 const { createReader } = require('./reader-presentation.cjs');
-let receiver, book, generation=0, controller, preference={};
+let analytics, receiver, book, generation=0, controller, preference={};
 const theme=window.matchMedia('(prefers-color-scheme: dark)');
 const applyTheme=()=>document.body.classList.toggle('reader-dark',theme.matches);
 applyTheme();theme.addEventListener('change',applyTheme);
 const title=document.getElementById('book-title'), contents=document.getElementById('contents');
 const notify=message=>receiver?.({data:{instance:'web',...message}});
+window.addEventListener('storage', event => {
+  if (book && (event.key === null || event.key === `story-teller:${book.id}`)) {
+    try { const stored = JSON.parse(event.newValue || '{}'); preference.analyticsConsent = stored.analyticsConsent; preference.analyticsState = stored.analyticsState; } catch { preference.analyticsConsent = undefined; }
+  }
+});
 function save() {try{localStorage.setItem(`story-teller:${book.id}`,JSON.stringify(preference));}catch{/* Private/storage-disabled reading still works. */}}
 async function selectScene(index,autoplay=true,previous=false) {
   if(index<0||index>=book.readingOrder.length)return;
@@ -24,7 +30,7 @@ async function selectScene(index,autoplay=true,previous=false) {
   } catch(error){if(token===generation){notify({type:'source-error',revision:token,error:error.message});}}
 }
 const compactControls=createWebControls(document,window);
-const bridge={showSource:false,compactHeader:true,compactControls:true,onControls:state=>compactControls.update(state),getState:()=>preference,setState:state=>{preference={...preference,...state};save();},onMessage:listener=>{receiver=listener;},nextScene:null,
+const bridge={showSource:false,compactHeader:true,compactControls:true,onReading:snapshot=>analytics?.observe(snapshot),onControls:state=>compactControls.update(state),getState:()=>preference,setState:state=>{preference={...preference,...state};save();},onMessage:listener=>{receiver=listener;},nextScene:null,
   postMessage(message){
     if(message.type==='ready')return;
     if(message.type==='project-turn' && message.revision===generation) {
@@ -57,6 +63,7 @@ async function start() {
       contents.append(group);
     }
     for(const item of book.readingOrder.filter(item=>item.kind==='back'))entryButton(item);
+    analytics=createWebAnalytics({window,document,config:book.analytics,getState:()=>preference,setState:state=>{preference={...preference,...state};save();}});
     controller=createReader(bridge);
     notify({type:'presentation',visible:!document.hidden,epoch:0});
     const saved=book.readingOrder.findIndex(scene=>scene.id===preference.sourceUri);
