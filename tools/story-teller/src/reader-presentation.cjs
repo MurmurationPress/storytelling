@@ -85,7 +85,14 @@ function controls() {
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
   sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
-  if (!preparing && presented && !document.hidden && !isMatter) api.onReading?.({ sceneId: sourceUri, index: player.index, count: player.scene.beats.length, visible: player.visibleBlocks.length > 0, completed: player.phase === 'completed', source: readingSource, mode: readingMode, interaction: readingInteraction });
+  if (!preparing && presented && !document.hidden && !isMatter && api.onReading) {
+    const blocks = player.visibleBlocks;
+    const visible = blocks.some(block => ['prose', 'image'].includes(block.type) || (block.type === 'typeout' ? block.revealCount > 0 : block.messages?.length > 0));
+    const fullyDisplayed = blocks.length > 0 && blocks.length === player.current?.blocks.length && blocks.every((block, index) =>
+      block.type === 'chat' ? block.messages.length === player.current.blocks[index].messages.length : block.type === 'typeout' ? block.complete : true);
+    api.onReading({ sceneId: sourceUri, index: player.index, count: player.scene.beats.length, visible, completed: fullyDisplayed,
+      source: readingSource, mode: readingMode, interaction: readingInteraction });
+  }
   api.onControls?.({ phase: player.phase, preparing, presented, isMatter, muted });
   if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
 }

@@ -64,7 +64,7 @@ function createWebAnalytics({ window, document, config, getState, setState }) {
     change.hidden = next === null;
   }
   function choose(value) {
-    setState({ analyticsConsent: value }); refresh(); change.focus();
+    setState({ analyticsConsent: value }); refresh(); details.hidden = true; change.focus();
   }
   accept.addEventListener('click', () => choose('accepted'));
   decline.addEventListener('click', () => choose('declined'));

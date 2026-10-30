@@ -531,3 +531,5 @@ working well.” 0.75× is his personal preference; 1× remains the compatibilit
 default. This report does not identify specific device/browser versions or
 establish exhaustive platform or human audio coverage. See RESULTS.md for the
 separate acceptance and automated validation records.
+
+Optional standalone analytics: see [consent, event meanings and GA4 reporting](ANALYTICS.md).
