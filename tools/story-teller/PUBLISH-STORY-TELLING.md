@@ -12,10 +12,10 @@ of Skip. It uses one self-contained book per Pages project and the existing
 | Review branch | `story-telling-review` |
 | Export slug | `story-telling` |
 | Target configuration | `scripts/story-telling-target.json` |
-| Proposed production URL | `https://murmuration-story-telling.pages.dev/story-telling/` |
+| Live production URL | `https://murmuration-story-telling.pages.dev/story-telling/` |
 
-The dedicated Pages project has been created. **Stop at preview until Ted approves
-its exact immutable URL.** No guide production has been deployed by preparation.
+The dedicated Pages project is live following Ted’s explicit approval on 31 October
+2026. Future updates must stop at preview until Ted approves their exact immutable URL.
 Skip's project, domain and live reader must remain untouched. Never use
 `skip-target.json` for this guide or upload a guide-only site to `murmuration-skip`.
 
@@ -137,7 +137,7 @@ verification. Preserve `read`, root/www, Ghost, email and existing cache rules.
 Reader position/preferences are scoped to origin/publication ID; preview, Pages
 production and any future custom hostname do not automatically share them.
 
-## Current review candidate — 31 October 2026
+## Approved retained candidate — 31 October 2026 (pre-promotion evidence)
 
 - Review: https://e4a234d8.murmuration-story-telling.pages.dev/story-telling/
 - Source: `e199b1c7bd177fec75690d7e0f119fc8766389b4` (Stories-Told main).
@@ -189,5 +189,75 @@ node /path/to/pinned-renderer/tools/story-teller/scripts/publication.cjs publish
   --reviewed e4a234d8-aa08-4030-928f-e14999a4b20c
 ```
 
-This command has **not** been run. Keep the pinned worktree, artifact and receipt;
-future source edits require a new preview/build rather than changing this one.
+The command above was run after Ted’s approval; see the production record below.
+Keep the pinned worktree, artifact and receipts. Future source edits require a new
+preview/build rather than changing this one.
+
+
+## Production promotion — 31 October 2026
+
+Ted approved the exact preview: “Proceed, looks good.” PR #32 was squash-merged
+at `8375f79fc027aaeee40ded6e5ae93a7243eb92d7`; its tree matches the reviewed tree.
+The pinned 0.14.3 publisher promoted the retained artifact **without rebuilding**.
+The original `site/`, source and renderer pins and preview receipt remain intact.
+Only production staging indexing headers/robots differ, as the publisher specifies.
+
+- Live: https://murmuration-story-telling.pages.dev/story-telling/
+- Production deployment: `613f0696-0d0a-45c9-922b-688c32c22ad9`.
+- Immutable production: https://613f0696.murmuration-story-telling.pages.dev/story-telling/
+- Approved artifact inventory digest remains
+  `cb76bb2b3a66f00643dd6ab96e186b0cd48d6a8251f9b6c733fbf328f59792fa`.
+- Private receipt: `production-613f0696-0d0a-45c9-922b-688c32c22ad9.json`
+  beside the retained build, with full public-file hashes and `previousProduction: null`.
+- `production-delivery-verification.json` and `production-browser.log` stay beside
+  that build. Approved-preview browser reports/screenshots were preserved separately.
+
+All 22 served payload hashes match at **each** production origin; the 404 body is
+also compared. Live indexing headers/robots, root redirect and missing/private
+paths pass. Cloudflare adds noindex to the immutable deployment URL independently;
+the canonical production hostname is indexable. Full guide browser regression
+passes on live HTTPS: five documents, 17 beats, all notes/links, chats/type-outs,
+images, playback/replay/pause, restored preferences, rapid navigation, light/dark,
+1024/768/390/320px and keyboard diagram overflow. Actual computed SVG styles,
+connectors, «abstract», hand-drawn paths and absence of source controls pass.
+Chrome 156 on Linux; no real iPad/iPhone/Safari or new human audio/screen-reader
+coverage is claimed.
+
+Skip remains on `0195b3ac-865d-45f2-ac5c-f7d46f2dc564`, with identical domains
+and all 77 checked served hashes. No manuscripts, Ghost, DNS, router or Skip
+production changes were made. The existing website-link example now points to
+the live guide. Future updates follow the prepare/preview/approval/publish steps
+above, retaining their own artifact rather than rebuilding at promotion time.
+
+## Guide-only source download
+
+A separate ZIP was prepared from the pinned Stories-Told source, outside the
+approved reader artifact. It contains the guide project’s 13 committed files plus
+README: Markdown, three supporting notes, required metadata, manifest and PNG.
+Original content bytes are retained. Only recursive manifest `provenance` fields
+are removed to exclude machine-specific paths. README states source commit,
+Story Teller 0.14.3+ compatibility, opening instructions and existing copyright
+boundaries; no blanket MIT licence is applied to fiction/artwork.
+
+- Filename: `story-telling-guide-source-e199b1c-story-teller-0.14.3.zip`.
+- SHA-256: `317855880a1ede8670f40e3840ad89f091b2d87612bb7a9bb38a071df19ba237`.
+- Private retention directory:
+  `/home/thawkins/Documents/story-telling-source-e199b1c-20261031/`.
+- Extraction/CRC, single project/path boundaries, byte comparison, privacy scan
+  and the pinned renderer’s project preparation pass: five pages, three scenes,
+  three supporting notes, one asset and zero warnings.
+- The extracted project also opens in actual VS Code with the installed 0.14.3
+  VSIX in an isolated profile. Front/back matter and all three scene selections
+  are exercised; both diagrams render with passing computed-style checks.
+  Extracted file bytes still match the ZIP after opening. Native evidence and
+  the temporary probe are retained privately beside the ZIP.
+
+**Public upload blocker:** fresh GitHub visibility checks show both
+`MurmurationPress/storytelling` and `tedwarddick/Stories-Told` are private.
+Available public repositories distribute other products (including the distinct
+Obsidian/Pandoc `tedwarddick/codex-press` toolkit); no established public Story
+Teller/download destination was found. The ZIP and checksum are retained pending
+a suitable public destination; no repository visibility was changed and no
+release was attached to an unrelated product. A separate named release asset
+can be uploaded once that destination is specified, then downloaded and hashed
+against the retained ZIP. The live reader remains independent of this blocker.

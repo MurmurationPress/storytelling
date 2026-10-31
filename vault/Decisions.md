@@ -425,3 +425,19 @@ dedicated `murmuration-story-telling` target, pinned export, complete guide chec
 and immutable preview. Existing reader-hostname path sharing would need additional
 routing infrastructure; none is introduced. Pages production URL needs no DNS
 change and can be linked from the main website after approval/promotion.
+
+
+## 2026-10-31 — Approve and promote the Story Telling guide
+
+**Ted’s acceptance:** “Proceed, looks good.” Authorises promotion of the exact
+retained e4a234d8 guide preview after PR #32’s matching-tree squash merge, without
+rebuilding, plus a portable source-only download from the pinned source commit.
+
+**Completed:** [[Story Telling Guide Publication]] records production deployment
+613f0696, matching served hashes, complete browser checks and unchanged Skip
+production/domain/77-file baseline. No manuscripts, Ghost or DNS changes.
+
+**Remaining download constraint:** both Story Teller/source repositories are
+private. A verified guide-only ZIP is retained; no suitable existing public
+release destination is established. This does not authorise making a private
+repository public or applying the software MIT licence to fiction/artwork.
