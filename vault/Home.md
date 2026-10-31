@@ -57,4 +57,4 @@ for bounded acceptance and review evidence.
   scoped integration, production publication and reader-subdomain setup authorised.
   Ghost page editing/publication remains Ted's responsibility.
 
-- [[Story Telling Guide Publication]] — separate guide project and immutable review preview; production pending Ted’s review.
+- [[Story Telling Guide Publication]] — separate guide project, approved retained-artifact production and source-download status.

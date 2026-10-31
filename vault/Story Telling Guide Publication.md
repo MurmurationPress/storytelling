@@ -1,10 +1,12 @@
 ---
 type: publication-preparation
-status: awaiting-review
+status: published
 created: 2026-10-31
 ---
 
 # Story Telling Guide Publication
+
+## Initial preparation (before approval)
 
 **Ted's request:** prepare the examples/authoring guide from Stories-Told's
 `Story Teller - Story Telling`, using accepted main through the Mermaid fixes.
@@ -53,3 +55,37 @@ introduced. A new branded guide hostname is an optional later decision.
 Skip's production identity/domain and all 77 checked served payloads remain
 unchanged. The guide has no production deployment. Ted's review, production
 promotion and any Ghost/main-website link editing remain pending.
+
+
+## Approved promotion — 31 October 2026
+
+**Ted’s acceptance:** “Proceed, looks good.” PR #32 is squash-merged at
+`8375f79fc027aaeee40ded6e5ae93a7243eb92d7`, with the same reviewed tree.
+The retained preview was promoted without rebuilding to production deployment
+`613f0696-0d0a-45c9-922b-688c32c22ad9`.
+
+Live: https://murmuration-story-telling.pages.dev/story-telling/ .
+The preceding preparation-only statements record the earlier state; production
+is now approved and complete. All 22 served payload hashes match at both live
+and immutable production origins. Full browser checks pass in both themes and
+narrow layouts. No actual Apple-device testing is claimed. Receipt, production
+inventory and detailed browser evidence remain private beside the retained build.
+Skip’s deployment, domains and all 77 checked payload hashes are unchanged.
+No Ghost, DNS, manuscript or routing change was made.
+
+A portable guide-only source ZIP is retained separately, with manifest machine
+provenance removed and all committed Markdown/PNG bytes preserved. README keeps
+copyright boundaries explicit; software MIT does not automatically license fiction
+or artwork. Extracted project validation and actual VS Code opening with installed
+0.14.3 pass, including both rendered diagrams and computed-style checks.
+
+The initial public-download blocker is now resolved: Ted authorised the existing
+public `MurmurationPress/story-teller-examples` destination. Its visibility/README
+were inspected, the retained ZIP/checksum published as a clearly named source
+release, and both assets downloaded anonymously and verified against the original.
+
+[Public guide source download](https://github.com/MurmurationPress/story-teller-examples/releases/download/story-telling-guide-source-e199b1c/story-telling-guide-source-e199b1c-story-teller-0.14.3.zip).
+The public README includes release/download links and opening instructions.
+Existing copyright boundaries remain; no additional manuscripts, private reports
+or Git history were uploaded. The live reader remains unchanged. See the guide
+procedure for the checksum, release and future-update steps.
