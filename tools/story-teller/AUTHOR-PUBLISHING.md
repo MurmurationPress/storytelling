@@ -5,6 +5,12 @@ This is an author command line workflow, not a new publishing platform. Obsidian
 remains the writing environment. Keep every build directory outside both repos:
 its `snapshot/`, reports and receipts are private; **only `site/` is public**.
 
+For the **Story Telling examples/authoring guide**, use
+[PUBLISH-STORY-TELLING.md](PUBLISH-STORY-TELLING.md) and
+`scripts/story-telling-target.json`. It has its own `murmuration-story-telling`
+project and `/story-telling/` slug. Never deploy a guide-only artifact to Skip's
+project or reassign the live reader domain.
+
 ## Prepare and review
 
 Commit the book project first. Uncommitted edits are not exported. Checkout the
