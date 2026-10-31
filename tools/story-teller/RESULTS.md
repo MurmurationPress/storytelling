@@ -1618,3 +1618,12 @@ was performed. Large/exotic diagrams, main-thread render interruption and human
 accessibility review remain limitations. Runtime bundles are about 12 MB each
 uncompressed; package is about 5.5 MB. Review artifacts and preview receipt are
 retained outside the repository; merge and production publication await review.
+
+Immutable review preview: https://fb75133b.murmuration-skip.pages.dev/mermaid/ .
+The HTTPS browser suite also passes, and all 21 served payload hashes match the
+retained export. Receipt `fb75133b-1976-4746-a387-ef8e14f47e43` identifies renderer
+and source `26f4e2599c602aa3eba9bc994aea74cb27f4fb1b`. Production remains
+`0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Final installed-VSIX profile:
+`/tmp/story-teller-host-jzbO7s`; summary: `test/evidence/mermaid-28.json`.
+Installable artifact:
+`/home/thawkins/Documents/mermaid-issue-28-review-20261031/story-teller-0.14.0.vsix`.

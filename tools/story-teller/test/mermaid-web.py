@@ -7,19 +7,20 @@ async def run(root):
   def log_message(self,*args): pass
  server=ThreadingHTTPServer(('127.0.0.1',0),functools.partial(Quiet,directory=str(root)))
  threading.Thread(target=server.serve_forever,daemon=True).start()
+ origin=sys.argv[2].rstrip('/') if len(sys.argv)>2 else f'http://127.0.0.1:{server.server_port}'
  async with async_playwright() as p:
   browser=await p.chromium.launch(executable_path='/usr/bin/google-chrome',args=['--no-sandbox'])
   page=await browser.new_page(viewport={'width':1100,'height':850})
   errors=[];external=[]
   page.on('pageerror',lambda e:errors.append(str(e)))
   async def route(r):
-   if not r.request.url.startswith(f'http://127.0.0.1:{server.server_port}'):
+   if not r.request.url.startswith(origin):
     external.append(r.request.url);await r.abort()
    else: await r.continue_()
   await page.route('**/*',route)
   page.set_default_timeout(10000)
   page.on('console',lambda m:print('CONSOLE',m.text) if m.type=='error' else None)
-  await page.goto(f'http://127.0.0.1:{server.server_port}')
+  await page.goto(origin+'/')
   await page.wait_for_selector('#beat .diagram-surface svg')
   await page.locator('#next').click()
   await page.wait_for_timeout(1000)
