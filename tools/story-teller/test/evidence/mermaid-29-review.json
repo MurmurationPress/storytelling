@@ -1,0 +1,41 @@
+{
+  "pr": 29,
+  "issue": 28,
+  "version": "0.14.1",
+  "testedRendererRevision": "40feaf3b812e143fd0e3f5775e9fb3d06bd63779",
+  "unitTests": 295,
+  "productionDependencyAudit": "zero vulnerabilities",
+  "nativeDevelopmentProfile": "/tmp/story-teller-host-mxvpz1",
+  "nativeInstalledProfile": "/tmp/story-teller-host-1K9ulI",
+  "preview": "https://f1f5ddb1.murmuration-skip.pages.dev/mermaid/",
+  "receipt": "f1f5ddb1-81f8-4828-970b-7fc4951b7dc1",
+  "build": "/home/thawkins/Documents/mermaid-pr29-review-0.14.1-20261031",
+  "vsixSha256": "6bdc0ddd98245138a086a80f4814d040fea853447a1d7fe72883bc5ea3db4753",
+  "httpsPayloadHashesVerified": 21,
+  "browser": {
+    "browser": "156.0.8078.79",
+    "checks": "simplified beats/panels/front/back matter incl failures; explicit captions; accessible descriptions not prose; default and actual roughjs handDrawn SVG; isolation; ordinary text; code fences; replay and rapid scene/beat turns; 1024/768/390/320px; keyboard horizontal scrolling; light/dark refresh and reduced motion; author diagnostics; unique IDs; no external requests",
+    "errors": []
+  },
+  "checks": [
+    "unit tests",
+    "syntax",
+    "both bundles",
+    "VSIX packaging",
+    "VSIX runtime/style/docs equality",
+    "actual VS Code Development Host",
+    "actual installed VSIX",
+    "HTTP and immutable HTTPS browser suites",
+    "default/handDrawn SVG and configuration isolation",
+    "ordinary-label/message/description words",
+    "simplified beats/panels/front/back matter including failures",
+    "author output diagnostic routing and stale rejection"
+  ],
+  "productionAtPreview": "0195b3ac-865d-45f2-ac5c-f7d46f2dc564",
+  "limitations": [
+    "no actual iPad/iPhone/Safari tests",
+    "no human screen-reader validation",
+    "exotic diagram types not comprehensive",
+    "main-thread rendering has no worker timeout"
+  ]
+}

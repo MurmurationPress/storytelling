@@ -93,7 +93,8 @@ async def run(root):
   await page.wait_for_selector('#beat .diagram-surface svg')
   await page.wait_for_function('()=>document.querySelector("#beat .diagram-status:not([hidden])")?.textContent.includes("could not be displayed")')
   assert await page.locator('#beat details,#beat pre,#beat summary,.diagram-description').count()==0
-  await page.screenshot(path=str(root.parent/'mermaid-narrow.png'))
+  evidence_dir=root.parent.parent if root.parent.name=='site' else root.parent
+  await page.screenshot(path=str(evidence_dir/'mermaid-narrow.png'))
   print(json.dumps({'browser':browser.version,'checks':'simplified beats/panels/front/back matter incl failures; explicit captions; accessible descriptions not prose; default and actual roughjs handDrawn SVG; isolation; ordinary text; code fences; replay and rapid scene/beat turns; 1024/768/390/320px; keyboard horizontal scrolling; light/dark refresh and reduced motion; author diagnostics; unique IDs; no external requests','errors':errors}))
   await browser.close()
  server.shutdown()

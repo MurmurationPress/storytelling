@@ -1667,3 +1667,16 @@ failure examples. Supporting-note full content and hover scope were checked from
 opening-beat access: only introduced signals and neutral renderer examples,
 no plot disclosures or onward links. This is editorial review, not a spoiler
 filter. Manuscripts and production remain unchanged; no merge is authorised.
+
+Refreshed immutable preview:
+https://f1f5ddb1.murmuration-skip.pages.dev/mermaid/ . Same browser suite passes
+over HTTPS; all 21 served payload hashes match the retained export. Tested
+renderer/source commit: `40feaf3b812e143fd0e3f5775e9fb3d06bd63779`, runtime 0.14.1.
+Build, upload ZIP, private source snapshot and receipt:
+`/home/thawkins/Documents/mermaid-pr29-review-0.14.1-20261031/`.
+VSIX: `story-teller-0.14.1.vsix`, SHA-256
+`6bdc0ddd98245138a086a80f4814d040fea853447a1d7fe72883bc5ea3db4753`.
+Receipt: `f1f5ddb1-81f8-4828-970b-7fc4951b7dc1`; production stays
+`0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Final installed profile:
+`/tmp/story-teller-host-1K9ulI`. Summary: `test/evidence/mermaid-29-review.json`.
+The following closeout commit changes evidence/tests/documentation only.
