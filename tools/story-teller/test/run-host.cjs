@@ -190,11 +190,17 @@ async function until(fn, timeout = 60000) {
       await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===2);
       await evaluate('doc.querySelector("#beat .wiki-link").click()');
       await until(async()=>await evaluate('doc.querySelectorAll("dialog article .diagram-surface svg").length')===2);
+      await until(async()=>await evaluate('doc.querySelector("dialog .diagram-status:not([hidden])")?.textContent.includes("could not be displayed")'));
+      assert.ok(await evaluate('doc.querySelectorAll("dialog svg .rough-node path").length>0'));
+      assert.equal(await evaluate('doc.querySelectorAll("dialog details,dialog pre,dialog .diagram-description").length'),0);
       await evaluate('doc.querySelector("dialog").close()');
       await evaluate('doc.getElementById("next").click()');
-      await until(async()=>await evaluate('doc.querySelector("#beat .diagram-status")?.textContent.includes("unavailable")'));
+      await until(async()=>await evaluate('doc.querySelector("#beat .diagram-status")?.textContent.includes("could not be displayed")'));
       await evaluate('doc.getElementById("previous").click()');
       await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===2);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat details,#beat .diagram-description,#beat .diagram-source").length'),0);
+      assert.equal(await evaluate('doc.querySelector("#beat .diagram-status").hidden'),true);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat .story-diagram")[0].dataset.diagramLook'),'classic');
       await request('narrow-reader');
       assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
       for(let n=0;n<3;n++) {
@@ -203,6 +209,13 @@ async function until(fn, timeout = 60000) {
         await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Signal.md'});
       }
       await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===1);
+      for (const file of ['Front Matter.md','Back Matter.md']) {
+        await request('select-scene',undefined,{projectRoot:importProject,file});
+        await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===1);
+        await until(async()=>await evaluate('doc.querySelector("#beat .diagram-status:not([hidden])")?.textContent.includes("could not be displayed")'));
+        assert.equal(await evaluate('doc.querySelectorAll("#beat details,#beat pre,#beat .diagram-description").length'),0);
+        assert.equal(await evaluate('doc.querySelector("#beat figcaption").textContent'),'An explicitly authored diagram.');
+      }
       const ids=await evaluate('[...doc.querySelectorAll("[id]")].map(e=>e.id)');assert.equal(ids.length,new Set(ids).size);
       await fs.writeFile(path.join(directory,'mermaid.json'),JSON.stringify({mode:vsix?'installed VSIX':'Development Host',checks:'flowchart, sequence, supporting panel, malformed source, Previous, narrow layout, replay and scene changes during rendering, unique IDs'},null,2));
       console.log('PASS actual VS Code Mermaid: '+directory);

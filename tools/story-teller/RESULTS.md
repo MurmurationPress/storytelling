@@ -1627,3 +1627,43 @@ and source `26f4e2599c602aa3eba9bc994aea74cb27f4fb1b`. Production remains
 `/tmp/story-teller-host-jzbO7s`; summary: `test/evidence/mermaid-28.json`.
 Installable artifact:
 `/home/thawkins/Documents/mermaid-issue-28-review-20261031/story-teller-0.14.0.vsix`.
+
+# PR #29 review revision — Mermaid 0.14.1 (pending Ted's review)
+
+This supersedes 0.14.0's reader-facing source controls and description prose.
+Readers now see diagrams and explicit authored captions. SVG accessibility
+metadata remains available to assistive technology. Failure shows only “This
+diagram could not be displayed.” Source, fence location, diagram-body offset and
+parser details go to the VS Code diagram-diagnostics output channel and browser
+authoring diagnostics. Panels and front/back matter share this presentation.
+
+Mermaid 12.2.0's installed configuration types and initialization/preprocessing
+code were inspected alongside upstream configuration documentation. Standard YAML
+frontmatter and leading legacy JSON init directives accept a closed allowlist:
+classic/handDrawn looks, seed, bounded flowchart spacing/padding/curve, bounded
+sequence margins and mirrorActors. Headers are validated and removed before
+rendering; fresh settings are applied inside the serial queue. Pinned Mermaid's
+site configuration resets from defaults at each initialization. Reader colours,
+fonts and all security options remain reader-owned. Arbitrary CSS, HTML, links,
+resource nodes and unknown configuration keys remain rejected. Labels, messages
+and descriptions can freely contain words such as image/style/click. See
+MERMAID.md for exact syntax, allowlist and limits.
+
+Validation: 295 Node tests, syntax checks, both builds, packaging and clean
+production-dependency audit. Regression coverage includes all three review text
+examples, permitted frontmatter/init, unsafe/unknown configuration, nested-object
+isolation and stale authoring diagnostics. Actual Development Host and installed
+VSIX checks cover simplified beats/panels/matter including failures, hand-drawn
+SVG, captions, replay/revisiting, rapid scene changes and narrow layout. Chrome
+156/Linux HTTP export checks verify actual roughjs SVG, return to classic styling,
+ordinary text, accessible descriptions without prose, captions, failure-only
+messages, raw details in developer diagnostics, light/dark refresh, reduced motion,
+keyboard horizontal scrolling at 320px, 1024/768/390/320px layouts, unique IDs and
+no external requests/page errors. Package runtime/style/documentation bytes match
+the tested build. No real iPad/iPhone/Safari or human screen-reader test is claimed.
+
+The neutral publication now includes default and hand-drawn routes plus explicit
+failure examples. Supporting-note full content and hover scope were checked from
+opening-beat access: only introduced signals and neutral renderer examples,
+no plot disclosures or onward links. This is editorial review, not a spoiler
+filter. Manuscripts and production remain unchanged; no merge is authorised.

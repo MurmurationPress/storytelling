@@ -32,8 +32,20 @@ function createMarkdown() {
     const token = tokens[index];
     if (token.info.trim() !== 'mermaid') return fence(tokens, index, options, env, renderer);
     const line = (env?.firstLine || 1) + (token.map?.[0] || 0);
-    return `<figure class="story-diagram" data-diagram-line="${line}"><p class="diagram-status" role="status">Diagram · source line ${line}</p><div class="diagram-surface" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to inspect at full size"></div><details open><summary>Diagram source / readable fallback</summary><pre class="diagram-source">${md.utils.escapeHtml(token.content)}</pre></details></figure>`;
+    const caption = token.meta?.diagramCaption;
+    return `<figure class="story-diagram" data-diagram-line="${line}" data-diagram-source="${md.utils.escapeHtml(token.content)}"><p class="diagram-status" role="status" hidden></p><div class="diagram-surface" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to inspect at full size"></div>${caption ? `<figcaption>${md.utils.escapeHtml(caption)}</figcaption>` : ''}</figure>`;
   };
+  md.core.ruler.after('inline', 'diagram_caption', state => {
+    const tokens = state.tokens;
+    for (let i = 0; i < tokens.length - 3; i++) {
+      const token = tokens[i], inline = tokens[i + 2];
+      if (token.type !== 'fence' || token.info.trim() !== 'mermaid' || tokens[i + 1].type !== 'paragraph_open' || inline.type !== 'inline' || tokens[i + 3].type !== 'paragraph_close') continue;
+      const match = inline.content.match(/^\*Caption: (.+)\*$/);
+      if (!match || !inline.children?.every(child => ['em_open', 'em_close', 'text'].includes(child.type))) continue;
+      token.meta = { ...token.meta, diagramCaption: match[1] };
+      tokens.splice(i + 1, 3);
+    }
+  });
   md.renderer.rules.link_open = () => '<span class="link-text">';
   md.renderer.rules.link_close = () => '</span>';
   md.renderer.rules.image = (tokens, index) => {
@@ -86,10 +98,10 @@ function chatMessage(text) {
   return null;
 }
 const noteMarkdown = createMarkdown();
-function renderMarkdown(source) {
+function renderMarkdown(source, { firstLine = 1 } = {}) {
   const tokens = noteMarkdown.parse(source, {});
   const imageLines = Object.create(null);
   for (const token of tokens) for (const child of token.children || []) if (child.type === 'image') imageLines[child.attrGet('src') || ''] ??= (token.map?.[0] || 0) + 1;
-  return { imageLines, html: noteMarkdown.renderer.render(tokens, noteMarkdown.options, {}), images: imagesIn(tokens), references: references(tokens) };
+  return { imageLines, html: noteMarkdown.renderer.render(tokens, noteMarkdown.options, { firstLine }), images: imagesIn(tokens), references: references(tokens) };
 }
 module.exports = { inlineText, wikiLinks, createMarkdown, references, imagesIn, renderChat, renderMarkdown, chatMessage };

@@ -91,6 +91,4 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .diagram-surface { overflow: auto; max-width: 100%; padding: .5rem; border: 1px solid currentColor; }
 .diagram-surface:empty { display: none; }
 .diagram-surface svg { max-width: none !important; height: auto; display: block; }
-.diagram-source { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .9em; }
-.story-diagram summary { cursor: pointer; }
 .story-diagram * { animation: none !important; transition: none !important; }

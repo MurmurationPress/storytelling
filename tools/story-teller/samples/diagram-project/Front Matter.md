@@ -8,3 +8,10 @@ flowchart LR
   accDescr: A signal moves from sender to relay to receiver.
   A[Sender] --> B[Relay] --> C[Receiver]
 ```
+
+*Caption: An explicitly authored diagram.*
+
+```mermaid
+flowchart LR
+ broken [
+```

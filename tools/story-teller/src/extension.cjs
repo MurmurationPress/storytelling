@@ -29,6 +29,8 @@ function currentEditor() {
   return editor;
 }
 function activate(context) {
+  const diagramOutput = vscode.window.createOutputChannel('Story Teller diagram diagnostics');
+  context.subscriptions.push(diagramOutput);
   registerWebExport(vscode, context);
   registerConversion(vscode, context);
   registerPacing(vscode, context);
@@ -180,7 +182,12 @@ function activate(context) {
     });
     const ready = panel.webview.onDidReceiveMessage(async message => {
       if(entry.disposed)return;
-      if (message?.type === 'supporting-load') {
+      if (message?.type === 'diagram-diagnostic') {
+        if (message.instance !== entry.instance || message.revision !== entry.revision) return;
+        const diagnostic = message.diagnostic;
+        if (!diagnostic || typeof diagnostic.message !== 'string' || typeof diagnostic.source !== 'string' || diagnostic.source.length > 30000) return;
+        diagramOutput.appendLine(`${diagnostic.document || entry.document.uri.fsPath}: fence line ${diagnostic.line} (diagram body starts at diagram line ${diagnostic.bodyLine || 1}): ${diagnostic.message}\n${diagnostic.source}`);
+      } else if (message?.type === 'supporting-load') {
         const { instance, revision, request, target } = message;
         if (entry.disposed || instance !== entry.instance || revision !== entry.revision || !Number.isSafeInteger(request) || typeof target !== 'string' || target.length > 1024) return;
         let response;

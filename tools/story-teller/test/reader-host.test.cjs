@@ -4,7 +4,7 @@ const assert = require('node:assert/strict');
 const Module = require('node:module');
 const path = require('node:path');
 function host(savedAutoplay = true, project = null) {
-  const commands = new Map(), panels=[], changes=[], contexts=[], updates=[];
+  const commands = new Map(), panels=[], changes=[], contexts=[], updates=[], diagramDiagnostics=[];
   let integration, held;
   const noop=()=>({dispose(){}});
   const uri=file=>({fsPath:file,scheme:'file',toString:()=>`file://${file}`});
@@ -16,7 +16,7 @@ function host(savedAutoplay = true, project = null) {
     commands:{registerCommand:(id,callback)=>{commands.set(id,callback);return noop();},executeCommand:async(...args)=>{contexts.push(args);}},
     languages:{registerFoldingRangeProvider:noop},
     workspace:{textDocuments:[source],onDidChangeTextDocument:fn=>{changes.push(fn);return noop();},createFileSystemWatcher:()=>({onDidChange:noop,onDidCreate:noop,onDidDelete:noop,dispose(){}})},
-    window:{activeTextEditor:editor(source),showInformationMessage:noop,createWebviewPanel:(kind,title,column,options)=>{
+    window:{createOutputChannel:()=>({appendLine(line){diagramDiagnostics.push(line);},dispose(){}}),activeTextEditor:editor(source),showInformationMessage:noop,createWebviewPanel:(kind,title,column,options)=>{
       const panel={title,visible:true,active:true,viewColumn:2,webview:{options,html:'',asWebviewUri:value=>value.toString(),postMessage:message=>{panel.messages.push(message);return Promise.resolve(true);},onDidReceiveMessage:fn=>{panel.receive=fn;return noop();}},messages:[],
         onDidChangeViewState:fn=>{panel.viewState=fn;return noop();},onDidDispose:fn=>{panel.onDispose=fn;return noop();},reveal:()=>{panel.visible=true;panel.active=true;panel.viewState?.();},dispose:()=>{panel.disposed=true;panel.onDispose?.();}};
       panels.push(panel);return panel;
@@ -38,7 +38,7 @@ function host(savedAutoplay = true, project = null) {
   try {require(target).activate({subscriptions:[],extensionUri:uri('/extension'),globalState:{get:(key,fallback)=>key==='storyTeller.autoplayOnTurn'?savedAutoplay:fallback,update:async(...args)=>updates.push(args)}});} finally {Module._load=load;}
   const instance=panel=>panel.webview.html.match(/data-reader-instance="([^"]+)"/)[1];
   const ready=panel=>panel.receive({type:'ready',instance:instance(panel)});
-  return {vscode,commands,panels,source,doc,editor,changes,contexts,updates,instance,ready,get integration(){return integration;},hold:promise=>{held=promise;}};
+  return {vscode,commands,panels,source,doc,editor,changes,contexts,updates,diagramDiagnostics,instance,ready,get integration(){return integration;},hold:promise=>{held=promise;}};
 }
 test('cross-root outline retarget replaces the resource-policy lifetime and rejects disposed ready signals', async t=>{
   const h=host();t.after(()=>h.panels.forEach(p=>p.dispose()));
@@ -118,4 +118,14 @@ test('speed uses global reader preference and survives replacement without autho
  assert.equal(current.messages.find(m=>m.type==='source').playbackSpeed,.75);
  await current.receive({type:'speed-preference',playbackSpeed:99,instance:h.instance(current)});
  assert.deepEqual(h.updates.at(-1),['storyTeller.playbackSpeed',1]);
+});
+
+test('diagram parser details and source go to author output only; stale diagnostics are rejected',async t=>{
+ const h=host();t.after(()=>h.panels.forEach(p=>p.dispose()));
+ await h.commands.get('storyTeller.previewScene')();const panel=h.panels[0];await h.ready(panel);
+ const source=panel.messages.find(m=>m.type==='source');
+ const message={type:'diagram-diagnostic',instance:h.instance(panel),revision:source.revision,diagnostic:{line:7,bodyLine:1,source:'flowchart LR\n broken [',message:'Parse error on line 2'}};
+ await panel.receive({...message,revision:-1});assert.equal(h.diagramDiagnostics.length,0);
+ await panel.receive(message);assert.equal(h.diagramDiagnostics.length,1);assert.match(h.diagramDiagnostics[0],/fence line 7/);assert.match(h.diagramDiagnostics[0],/Parse error on line 2/);assert.match(h.diagramDiagnostics[0],/broken/);
+ assert.ok(!panel.messages.some(m=>m.type==='diagram-diagnostic'));
 });

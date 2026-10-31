@@ -89,6 +89,7 @@ class SupportingReader {
       for(const child of [...full.childNodes]) { excerpt.append(child);length+=child.textContent.length;if(length>650)break; }
       // Tooltip is read-only; nested links are available in the reading panel.
       for(const button of excerpt.querySelectorAll('button'))button.replaceWith(this.document.createTextNode(button.textContent));
+      for (const figure of excerpt.querySelectorAll('.story-diagram')) figure.remove();
       this.preview.replaceChildren(excerpt);this.position();
     } catch(error) { if(token===this.hoverToken) {this.preview.textContent=error.message;this.position();} }
   }
@@ -120,6 +121,7 @@ class SupportingReader {
         image.addEventListener('error',()=>{const text=this.document.createElement('span');text.textContent=`[Image unavailable: ${image.alt}]`;image.replaceWith(text);},{once:true});
       } else {const text=this.document.createElement('span');text.className='image-placeholder';text.textContent=`[Image unavailable: ${image.alt}${media?.error?' — '+media.error:''}]`;image.replaceWith(text);}
     }
+    for (const figure of section.querySelectorAll('.story-diagram')) figure.dataset.diagramDocument = note.id || note.title || 'Supporting note';
     upgradeLinks(section,note.links);
     if(note.diagnostics?.length) {const warning=this.document.createElement('p');warning.className='supporting-warning';warning.textContent=note.diagnostics.join('\n');section.append(warning);}
     return section;

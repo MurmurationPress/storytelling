@@ -7,3 +7,10 @@ sequenceDiagram
   Sender->>Receiver: Signal
   Receiver-->>Sender: Acknowledgement
 ```
+
+*Caption: An explicitly authored diagram.*
+
+```mermaid
+flowchart LR
+ broken [
+```
