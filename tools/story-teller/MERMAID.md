@@ -150,6 +150,54 @@ region: Tab to it and use arrow keys, or swipe/scroll. Text is not shrunk to fit
 a phone. Colours/fonts refresh with reader presentation changes. Diagrams remain
 static with all motion settings; no node animation is implemented.
 
+## VS Code styles (0.14.3)
+
+Earlier tests confirmed SVGs, paths and label text existed, but did not check
+whether CSP allowed their styles to apply. In 0.14.2 the real VS Code preview
+blocked Mermaid's embedded styles, leaving default black fills even in a dark
+editor theme. The exported reader's different CSP allowed those styles.
+
+The preview now grants a fresh style nonce per webview, separate from its script
+nonce. It does **not** enable `unsafe-inline`. Only validated renderer-generated
+styles receive that nonce, after SVG sanitisation and scope/resource checks and
+before insertion. Authored CSS/HTML/scripts remain disallowed. Selectors must stay
+inside their unique diagram ID, and CSS cannot fetch resources. Unneeded global
+keyframes/animations are removed; diagrams retain their static presentation.
+
+The pinned renderer inserts styles before measuring text. `scripts/build.cjs`
+integrates narrowly at Mermaid 12.2.0's style insertion/serialization points and
+D3's generated style-attribute setter. The build fails if those pinned paths
+change. These are bundle transformations, without editing installed dependencies
+or globally intercepting DOM methods. Measurement styles receive the same checks
+before drawing. Generated inline declarations are promoted to scoped style rules
+before serialization: even inert DOMParser parsing otherwise reports inline-
+attribute CSP violations. Final SVG sanitisation remains enabled, and all final
+styles are checked/nonced before attaching the SVG. Styles leave with their
+measurement container or diagram. No global stylesheet registry remains behind.
+The exported reader keeps its existing CSP and uses the same checked rendering
+path; no new external resources or wider content permissions are introduced.
+
+Regression fixtures in `samples/style-project` use the exact simple flowchart and
+hand-drawn class Mermaid sources requested from Stories-Told, plus clearly labelled
+look variants and a neutral authored sequence. Source provenance/hash is in that
+sample's README; the source repository was read only. The supporting panel
+intentionally offers all technical examples from its first link; these elaborate
+the opening map without story events or onward links. This is a manual editorial
+assessment, not an automatic spoiler filter.
+
+Run `STORY_TELLER_HOST_SCOPE=mermaid-style npm run test:host` (optionally with
+`STORY_TELLER_VSIX`). `STORY_TELLER_STYLE_BASELINE=1` is for the retained broken
+0.14.2 VSIX only: it confirms that the computed-style assertions fail and records
+CSP violations. Export `samples/style-project`, then run
+`python test/mermaid-style-web.py /new/output/path [IMMUTABLE_PREVIEW_URL]`.
+The shared probe checks applied stylesheet rules, computed text contrast, fills,
+strokes, node backgrounds, arrows, relationship labels and class annotations.
+Native tests inspect styles at measurement-time `getBBox` calls, actual Light
+Modern/Dark Modern theme changes, panels, matter and navigation. Deliberate
+unnonced style/attribute/script probes must still produce CSP violations, while
+normal rendering must produce none. These are native Linux VS Code and browser
+viewport checks, not actual iPad/iPhone/Safari or human screen-reader tests.
+
 ## Boundaries and validation
 
 Security remains fixed: strict mode, HTML labels disabled, no executable click

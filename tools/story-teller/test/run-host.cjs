@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'mermaid-style') {
+    importProject=path.join(directory,'style-project');
+    await fs.cp(path.join(root,'samples/style-project'),importProject,{recursive:true});
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'mermaid-class') {
     importProject = path.join(directory, 'class-project');
     await fs.cp(path.join(root,'samples/class-project'),importProject,{recursive:true});
@@ -186,6 +190,87 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='mermaid-style') {
+      const {sampleStyles,assertStyles}=require('./mermaid-style-probe.cjs');
+      const baseline=!!process.env.STORY_TELLER_STYLE_BASELINE;
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Empty.md'});await bringFront();
+      await until(async()=>await evaluate('doc?.body.textContent.includes("Ready for style checks")'));
+      await evaluate(`(()=>{
+        doc.styleViolations=[];doc.measurementStyles=[];
+        doc.addEventListener('securitypolicyviolation',e=>doc.styleViolations.push({directive:e.effectiveDirective,blocked:e.blockedURI,file:e.sourceFile,line:e.lineNumber}));
+        const proto=doc.defaultView.SVGGraphicsElement.prototype,original=proto.getBBox,seen=new Set();
+        proto.getBBox=function(...args){const svg=this.closest('svg');if(svg?.closest('.diagram-measurement')&&!seen.has(svg.id)){seen.add(svg.id);doc.measurementStyles.push({id:svg.id,active:[...svg.querySelectorAll('style')].every(s=>!!s.sheet),fill:doc.defaultView.getComputedStyle(svg).fill});}return original.apply(this,args);};
+      })()`);
+      const evidence={mode:vsix?'installed VSIX':'Development Host',baseline,themes:{},switches:[]};
+      async function sample(selector='#beat .diagram-surface',index=0) {
+        let result;await until(async()=>result=await evaluate(`(${sampleStyles.toString()})(doc,${JSON.stringify(selector)},${index})`));
+        if(baseline)assert.throws(()=>assertStyles(assert,result),/generated stylesheets/);
+        if(!baseline){try{assertStyles(assert,result);}catch(error){await fs.writeFile(path.join(directory,'failed-style-sample.json'),JSON.stringify(result,null,2));throw error;}}return result;
+      }
+      async function shot(name) {
+        const target=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page');
+        const ws=new WebSocket(target.webSocketDebuggerUrl);await new Promise(r=>ws.onopen=r);
+        const data=await new Promise(r=>{ws.onmessage=e=>r(JSON.parse(e.data).result?.data);ws.send(JSON.stringify({id:1,method:'Page.captureScreenshot',params:{format:'png'}}));});ws.close();
+        if(data)await fs.writeFile(path.join(directory,name+'.png'),Buffer.from(data,'base64'));
+      }
+      for(const [theme,kind] of [['Light Modern','vscode-light'],['Dark Modern','vscode-dark'],['Light Modern','vscode-light']]) {
+        const token=await evaluate('doc.querySelector("#beat .story-diagram")?.dataset.diagramToken');
+        await request('set-theme',undefined,{theme});
+        await until(async()=>await evaluate(`doc?.body.classList.contains(${JSON.stringify(kind)})`));
+        if(token&&!baseline){await until(async()=>await evaluate('doc.querySelector("#beat .story-diagram")?.dataset.diagramToken')!==token);evidence.switches.push({theme,sample:await sample()});}
+        await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Diagrams.md'});
+        const samples=[];
+        for(let index=0;index<6;index++) {
+          samples.push(await sample());
+          await evaluate(`(()=>{const el=[...doc.querySelectorAll('#beat svg text')].find(e=>e.textContent.includes('abstract'))||doc.querySelector('#beat svg');el?.scrollIntoView({block:'center',inline:'center'});})()`);
+          if([0,2,5].includes(index))await shot(theme.replace(' ','-')+'-'+index);
+          if(index<5)await evaluate('doc.getElementById("next").click()');
+        }
+        evidence.themes[theme]={beats:samples};
+        if(!baseline) {
+          await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Diagrams.md'});await sample();
+          await evaluate('doc.querySelector("#beat .wiki-link").click()');
+          await until(async()=>await evaluate('doc.querySelectorAll("dialog .diagram-surface svg").length')===6);
+          evidence.themes[theme].panel=[];for(let n=0;n<6;n++)evidence.themes[theme].panel.push(await sample('dialog .diagram-surface',n));
+          const panelIds=await evaluate('[...doc.querySelectorAll("[id]")].map(e=>e.id)');assert.equal(panelIds.length,new Set(panelIds).size);
+          await evaluate('doc.querySelector("dialog").close()');
+          evidence.themes[theme].matter=[];
+          for(const file of ['Front Matter.md','Back Matter.md']){
+            await request('select-scene',undefined,{projectRoot:importProject,file});
+            await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===3);
+            for(let n=0;n<3;n++)evidence.themes[theme].matter.push(await sample('#beat .diagram-surface',n));
+          }
+        }
+      }
+      if(!baseline){
+        await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Diagrams.md'});await sample();
+        await request('narrow-reader');assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+        for(let n=0;n<3;n++){
+          await evaluate('doc.getElementById("replay").click()');
+          await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Empty.md'});
+          await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Diagrams.md'});
+        }
+        await sample();await shot('narrow');
+        const ids=await evaluate('[...doc.querySelectorAll("[id]")].map(e=>e.id)');assert.equal(ids.length,new Set(ids).size);
+        assert.equal(await evaluate('doc.querySelectorAll("#beat pre,#beat details,#beat .diagram-status:not([hidden])").length'),0);
+      }
+      evidence.violations=await evaluate('doc.styleViolations');evidence.measurements=await evaluate('doc.measurementStyles');
+      evidence.resources=await evaluate('doc.defaultView.performance.getEntriesByType("resource").map(e=>e.name)');
+      if(baseline)assert.ok(evidence.violations.some(e=>e.directive==='style-src-elem'));
+      if(!baseline){
+        assert.equal(evidence.violations.length,0,JSON.stringify(evidence.violations.slice(0,3)));
+        assert.ok(evidence.measurements.length>0&&evidence.measurements.every(m=>m.active&&m.fill!=='rgb(0, 0, 0)'), 'measurement styles must apply before getBBox');
+        assert.ok(evidence.resources.every(url=>url.startsWith('https://file+.vscode-resource.vscode-cdn.net/')||url.startsWith('vscode-webview://')));
+        const csp=await evaluate('doc.querySelector("meta[http-equiv]").content');assert.ok(!csp.includes('unsafe-inline'));assert.ok(csp.includes("connect-src 'none'"));
+        await evaluate(`(()=>{const style=doc.createElement('style');style.textContent='body{color:rgb(1,2,3)!important}';doc.head.append(style);const script=doc.createElement('script');script.textContent='window.unauthorisedScript=true';doc.head.append(script);const div=doc.createElement('div');div.setAttribute('style','color:rgb(1,2,3)');doc.body.append(div);style.remove();script.remove();div.remove();})()`);
+        await sleep(100);evidence.negativeViolations=(await evaluate('doc.styleViolations')).slice(evidence.violations.length);
+        for(const directive of ['style-src-elem','style-src-attr','script-src-elem'])assert.ok(evidence.negativeViolations.some(e=>e.directive===directive),directive);
+        assert.equal(await evaluate('!!doc.defaultView.unauthorisedScript'),false);
+      }
+      await fs.writeFile(path.join(directory,'mermaid-style.json'),JSON.stringify(evidence,null,2));
+      console.log('PASS STYLE EVIDENCE '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='mermaid-class') {
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Structure.md'});
       await bringFront();

@@ -1741,3 +1741,68 @@ Receipt: `e7e07c4b-38d4-44d2-b76b-072d94f19bfb`; production at preview remains
 `0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Evidence summary:
 `test/evidence/mermaid-class-0.14.2.json`. PR #30 remains open for review;
 the following closeout commit changes documentation/evidence only.
+
+# Mermaid preview styles — 0.14.3 (pending review)
+
+**Earlier coverage gap:** SVG/path/text-existence checks in 0.14.1/0.14.2 did not
+prove that styles applied under the real VS Code CSP. Reproduced on main
+`956d470` and in the installed 0.14.2 VSIX, using exact Mermaid-fence extracts of
+the requested Stories-Told guide scene. In actual Light Modern and Dark Modern,
+stylesheet elements survived sanitisation but had no active `.sheet`; shapes and
+labels computed to black. CSP recorded both style-src-elem and style-src-attr
+violations. The normal new computed-style assertions fail against that installed
+baseline. Stories-Told was read only; fixture provenance/hash is in
+`samples/style-project/README.md`.
+
+**Fix:** a fresh, separate per-webview style nonce authorises only sanitised,
+resource-free, diagram-scoped generated styles. No unsafe-inline is added to the
+preview policy; script, connection, font, frame and other permissions stay the
+same. Pinned Mermaid 12.2.0 inserts a stylesheet before measuring text. Checked
+bundle transforms at that insertion/serialization path and D3's style-attribute
+setter apply the same safeguards during measurement. The build fails if those
+pinned integration points drift. No installed dependency or global DOM method
+is patched at runtime. Generated inline declarations are promoted into scoped
+styles before serialization, avoiding inline-attribute CSP violations even during
+inert DOMParser sanitisation. Global keyframes/animations are omitted; diagrams
+remain static. Final SVG sanitisation remains enabled; styles are revalidated and
+nonced before attachment, and leave with their measurement container/diagram.
+The exported reader's policy is unchanged. No author CSS/HTML/scripts, links or
+external-resource permission is introduced.
+
+**Validation:** 301 Node tests, syntax, both bundles, packaging and production
+dependency audit (zero findings). Existing source/HTML/resource/configuration
+negative tests remain, with additional selector/resource and nonce-policy checks.
+Actual Development Host and installed VSIX runs use real Light Modern/Dark Modern
+themes and switch while the preview remains open. For default/hand-drawn flow,
+sequence and full class diagrams they inspect active sheets, computed leaf-text
+contrast, fills/strokes, node backgrounds/hatching, arrows, relationship labels
+and annotations in beats, six-diagram panels and front/back matter. Text contrast
+is checked against actor/node/label backgrounds (or the page where appropriate),
+not by assuming every black fill is invalid in a light theme. Measurement-time
+getBBox probes confirm styles already apply before geometry is read. Replay,
+rapid scene changes, narrow layout, unique IDs (also with panels open), scope and
+clean reader presentation pass. Normal rendering produces **zero CSP violations**;
+deliberate unnonced style, inline attribute and script probes each remain blocked.
+Only virtual extension resources are requested by the preview.
+
+Chrome 156/Linux runs the same computed-style probe under the exported reader's
+real CSP in light/dark modes, with panels/matter, default/hand-drawn looks,
+replay/rapid navigation, keyboard overflow and 1024/768/390/320px viewports. No
+page errors, policy violations or external requests. Existing Mermaid and class
+browser suites also pass, retaining failure presentation, accessibility metadata,
+ordinary text, annotations and safe configuration regressions. Actual device,
+iPad/iPhone/Safari and human screen-reader coverage are **not** inferred.
+
+**Visual review:** before/after screenshots from installed VSIXs are committed at
+[test/evidence/mermaid-styles](test/evidence/mermaid-styles/README.md). Flowchart
+backgrounds/labels/arrows, sequence actors/messages, and the class's relationships,
+attributes, «abstract» and inheritance markers are visibly readable after the fix
+in both themes. Exact raw measurements/reports and additional screenshots remain
+with the retained build. No source disclosure or technical error prose is added.
+
+**Editorial scope:** the new technical supporting note intentionally offers all
+six examples at the first opening-beat link, elaborating the conceptual reading
+map with the class model and a neutral sequence. No story events, onward links or
+plot revelations are present. This is intentional early technical detail and a
+manual editorial review, not an automatic spoiler filter or a storage-schema
+commitment. Manuscripts, Stories-Told content and production remain unchanged.

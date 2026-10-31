@@ -1,6 +1,7 @@
 'use strict';
 const mermaid = require('mermaid').default;
 const purify = require('dompurify');
+const { authorizeDiagramStyle, applyGeneratedInlineStyle } = require('./mermaid-styles.cjs');
 let serial = 0;
 let observing = false;
 let queue = Promise.resolve();
@@ -27,6 +28,7 @@ function renderDiagrams(root, changed = () => {}) {
       const status = figure.querySelector('.diagram-status');
       const surface = figure.querySelector('.diagram-surface');
       const holder = document.createElement('div');
+      holder.className = 'diagram-measurement';
       holder.style.cssText = 'position:fixed;left:-100000px;top:0;visibility:hidden;pointer-events:none';
       let bodyLine = 1;
       try {
@@ -37,13 +39,16 @@ function renderDiagrams(root, changed = () => {}) {
         document.body.append(holder);
         const { svg } = await mermaid.render(id, renderSource, holder);
         if (!figure.isConnected || figure.dataset.diagramToken !== id) return;
-        surface.innerHTML = purify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true },
+        const fragment = purify.sanitize(svg, { RETURN_DOM_FRAGMENT: true, USE_PROFILES: { svg: true, svgFilters: true },
           FORBID_TAGS: ['a', 'image', 'foreignObject', 'script', 'animate', 'set'], FORBID_ATTR: ['href', 'xlink:href'] });
-        for (const element of surface.querySelectorAll('*')) for (const attribute of [...element.attributes]) {
+        for (const style of fragment.querySelectorAll('style')) authorizeDiagramStyle(style, id, 'display');
+        for (const element of fragment.querySelectorAll('[style]')) applyGeneratedInlineStyle(element, element.getAttribute('style'));
+        for (const element of fragment.querySelectorAll('*')) for (const attribute of [...element.attributes]) {
           if (/url\s*\(/i.test(attribute.value) && !/^url\(#[\w-]+\)$/.test(attribute.value)) element.removeAttribute(attribute.name);
         }
-        const diagram = surface.querySelector('svg');
-        if (!diagram) throw Error('No SVG produced');
+        const diagram = fragment.querySelector('svg');
+        if (!diagram || diagram.id !== id) throw Error('No matching SVG produced');
+        surface.replaceChildren(fragment);
         const width = Number(diagram.getAttribute('viewBox')?.split(/\s+/)[2]);
         if (width) diagram.style.width = `${Math.ceil(width)}px`;
         status.hidden = true; status.textContent = '';

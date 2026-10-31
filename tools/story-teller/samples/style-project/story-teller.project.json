@@ -1,0 +1,41 @@
+{
+  "schema": "story-teller-project",
+  "version": 1,
+  "title": "Mermaid style regression",
+  "parts": [
+    {
+      "id": "part",
+      "title": "Diagrams",
+      "scenes": [
+        "diagrams",
+        "empty"
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "diagrams",
+      "partId": "part",
+      "label": "1.1",
+      "title": "Diagrams",
+      "file": "scenes/Diagrams.md"
+    },
+    {
+      "id": "empty",
+      "partId": "part",
+      "label": "1.2",
+      "title": "Empty",
+      "file": "scenes/Empty.md"
+    }
+  ],
+  "matter": {
+    "front": {
+      "id": "front",
+      "file": "Front Matter.md"
+    },
+    "back": {
+      "id": "back",
+      "file": "Back Matter.md"
+    }
+  }
+}
