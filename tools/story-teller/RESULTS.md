@@ -1726,3 +1726,18 @@ VSIX runtime/style/docs bytes equal the current build. No actual iPad/iPhone,
 Safari or human screen-reader test is claimed. Existing limits on large/exotic
 diagrams and main-thread rendering remain. Manuscripts and production are
 unchanged; no merge or production publication is authorised.
+
+Reviewed artifacts: implementation commit
+`c2a3972c81d403bf6316a6b7e701d68044561540`, runtime **0.14.2**.
+Immutable preview: https://e7e07c4b.murmuration-skip.pages.dev/class-diagrams/ .
+The same class-diagram suite passes over HTTPS; all 19 served payload hashes
+match the retained export. A focused narrow capture visibly shows «abstract»
+above Component and intact inheritance markers. Build/report/upload ZIP,
+baseline 0.14.1 export and final logs are retained at
+`/home/thawkins/Documents/mermaid-class-review-0.14.2-20261031/`.
+Installable VSIX: `story-teller-0.14.2.vsix`; SHA-256
+`97e1a560b1ce242882f8f6eff1f56191ade72d94ff563cd0d51d60007832903c`.
+Receipt: `e7e07c4b-38d4-44d2-b76b-072d94f19bfb`; production at preview remains
+`0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Evidence summary:
+`test/evidence/mermaid-class-0.14.2.json`. PR #30 remains open for review;
+the following closeout commit changes documentation/evidence only.
