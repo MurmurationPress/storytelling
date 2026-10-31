@@ -1583,3 +1583,100 @@ Committed summary: `test/evidence/skip-analytics-production.json`. Private repor
 Remaining limits: independent GA4 event/report-definition verification, actual
 Safari/iPad coverage, screen-reader use and human audio listening. All completion
 events remain display-only evidence, not proof of reading.
+
+# Mermaid component — issue #28 (0.14.0, pending Ted's review)
+
+Standard Mermaid fences now use the shared renderer in beats, full supporting
+panels and book matter. Source remains editable and available in a native details
+fallback. Whole diagrams follow existing static prose playback steps, including
+explicit delays, Previous, Replay, Restart and Reveal beat. Asynchronous work is
+serialised, checks connected destinations, uses unique identities and removes
+measurement DOM. Existing diagrams survive subsequent playback renders. Theme
+changes refresh diagrams; no node animation is introduced.
+
+Security: Mermaid 12.2.0, DOMPurify 3.4.17, strict mode, no HTML labels, rejected
+configuration/link/resource/style syntax, sanitised SVG with external references
+removed, unchanged CSP, locally bundled runtime/licences. Production dependency
+audit reports zero vulnerabilities; development-tool audit findings remain.
+Authoring syntax, Insert helper, limits and reproduction: MERMAID.md.
+
+Validation: 290 Node tests; syntax, both browser bundles and VSIX packaging pass.
+Actual VS Code Development Host and installed 0.14.0 VSIX runs cover flowcharts,
+sequence diagrams, multiple diagrams, supporting panels, malformed source,
+Previous, replay/scene changes while rendering, narrow layout and unique IDs.
+The final browser suite uses the exported neutral project over HTTP and Chrome
+156 on Linux: front/back matter, full supporting panels, readable flowchart labels,
+sequence diagrams, code fences, malformed source, rapid turns/revisiting/replay,
+keyboard scroll-region access, dark/reduced-motion settings and desktop plus
+1024/768/390/320px viewports; no page errors or external requests.
+
+The neutral supporting note was reviewed at its earliest access in the opening
+beat, including its full contents: it describes only the introduced signal and
+has no onward links. No automatic spoiler filtering is claimed. Trilogy and
+published books are unchanged. No actual iPad/iPhone/Safari or screen-reader test
+was performed. Large/exotic diagrams, main-thread render interruption and human
+accessibility review remain limitations. Runtime bundles are about 12 MB each
+uncompressed; package is about 5.5 MB. Review artifacts and preview receipt are
+retained outside the repository; merge and production publication await review.
+
+Immutable review preview: https://fb75133b.murmuration-skip.pages.dev/mermaid/ .
+The HTTPS browser suite also passes, and all 21 served payload hashes match the
+retained export. Receipt `fb75133b-1976-4746-a387-ef8e14f47e43` identifies renderer
+and source `26f4e2599c602aa3eba9bc994aea74cb27f4fb1b`. Production remains
+`0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Final installed-VSIX profile:
+`/tmp/story-teller-host-jzbO7s`; summary: `test/evidence/mermaid-28.json`.
+Installable artifact:
+`/home/thawkins/Documents/mermaid-issue-28-review-20261031/story-teller-0.14.0.vsix`.
+
+# PR #29 review revision — Mermaid 0.14.1 (pending Ted's review)
+
+This supersedes 0.14.0's reader-facing source controls and description prose.
+Readers now see diagrams and explicit authored captions. SVG accessibility
+metadata remains available to assistive technology. Failure shows only “This
+diagram could not be displayed.” Source, fence location, diagram-body offset and
+parser details go to the VS Code diagram-diagnostics output channel and browser
+authoring diagnostics. Panels and front/back matter share this presentation.
+
+Mermaid 12.2.0's installed configuration types and initialization/preprocessing
+code were inspected alongside upstream configuration documentation. Standard YAML
+frontmatter and leading legacy JSON init directives accept a closed allowlist:
+classic/handDrawn looks, seed, bounded flowchart spacing/padding/curve, bounded
+sequence margins and mirrorActors. Headers are validated and removed before
+rendering; fresh settings are applied inside the serial queue. Pinned Mermaid's
+site configuration resets from defaults at each initialization. Reader colours,
+fonts and all security options remain reader-owned. Arbitrary CSS, HTML, links,
+resource nodes and unknown configuration keys remain rejected. Labels, messages
+and descriptions can freely contain words such as image/style/click. See
+MERMAID.md for exact syntax, allowlist and limits.
+
+Validation: 295 Node tests, syntax checks, both builds, packaging and clean
+production-dependency audit. Regression coverage includes all three review text
+examples, permitted frontmatter/init, unsafe/unknown configuration, nested-object
+isolation and stale authoring diagnostics. Actual Development Host and installed
+VSIX checks cover simplified beats/panels/matter including failures, hand-drawn
+SVG, captions, replay/revisiting, rapid scene changes and narrow layout. Chrome
+156/Linux HTTP export checks verify actual roughjs SVG, return to classic styling,
+ordinary text, accessible descriptions without prose, captions, failure-only
+messages, raw details in developer diagnostics, light/dark refresh, reduced motion,
+keyboard horizontal scrolling at 320px, 1024/768/390/320px layouts, unique IDs and
+no external requests/page errors. Package runtime/style/documentation bytes match
+the tested build. No real iPad/iPhone/Safari or human screen-reader test is claimed.
+
+The neutral publication now includes default and hand-drawn routes plus explicit
+failure examples. Supporting-note full content and hover scope were checked from
+opening-beat access: only introduced signals and neutral renderer examples,
+no plot disclosures or onward links. This is editorial review, not a spoiler
+filter. Manuscripts and production remain unchanged; no merge is authorised.
+
+Refreshed immutable preview:
+https://f1f5ddb1.murmuration-skip.pages.dev/mermaid/ . Same browser suite passes
+over HTTPS; all 21 served payload hashes match the retained export. Tested
+renderer/source commit: `40feaf3b812e143fd0e3f5775e9fb3d06bd63779`, runtime 0.14.1.
+Build, upload ZIP, private source snapshot and receipt:
+`/home/thawkins/Documents/mermaid-pr29-review-0.14.1-20261031/`.
+VSIX: `story-teller-0.14.1.vsix`, SHA-256
+`6bdc0ddd98245138a086a80f4814d040fea853447a1d7fe72883bc5ea3db4753`.
+Receipt: `f1f5ddb1-81f8-4828-970b-7fc4951b7dc1`; production stays
+`0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Final installed profile:
+`/tmp/story-teller-host-1K9ulI`. Summary: `test/evidence/mermaid-29-review.json`.
+The following closeout commit changes evidence/tests/documentation only.

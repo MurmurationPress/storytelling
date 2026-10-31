@@ -1,0 +1,29 @@
+{
+  "issue": 28,
+  "version": "0.14.0",
+  "rendererRevision": "26f4e2599c602aa3eba9bc994aea74cb27f4fb1b",
+  "unitTests": 290,
+  "checks": [
+    "syntax",
+    "both builds",
+    "VSIX packaging",
+    "VSIX runtime/style byte equality",
+    "production dependency audit: zero",
+    "actual VS Code Development Host",
+    "actual installed VSIX",
+    "exported reader over HTTP: Chrome 156/Linux, desktop/1024/768/390/320px, no errors or external requests",
+    "same browser suite against immutable HTTPS preview",
+    "21 HTTPS payload hashes match retained build"
+  ],
+  "nativeFinalProfile": "/tmp/story-teller-host-jzbO7s",
+  "preview": "https://fb75133b.murmuration-skip.pages.dev/mermaid/",
+  "receipt": "fb75133b-1976-4746-a387-ef8e14f47e43",
+  "build": "/home/thawkins/Documents/mermaid-issue-28-review-20261031",
+  "vsixSha256": "1dc24eb405acfcf4b1b83239afbe68794d2c70ebf7bae3e63c80ea7b5ba45ca0",
+  "limits": [
+    "No real Apple hardware/Safari validation",
+    "No human screen-reader review",
+    "No worker render timeout",
+    "Exotic diagram types not comprehensively tested"
+  ]
+}

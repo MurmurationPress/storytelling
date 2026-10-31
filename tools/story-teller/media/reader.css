@@ -86,3 +86,9 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .reader-preference { white-space: nowrap; }
 .reader-preference { flex-wrap: wrap; max-width: 100%; }
 .reader-preference select { min-width: 0; }
+
+.story-diagram { margin: 1rem 0; max-width: 100%; }
+.diagram-surface { overflow: auto; max-width: 100%; padding: .5rem; border: 1px solid currentColor; }
+.diagram-surface:empty { display: none; }
+.diagram-surface svg { max-width: none !important; height: auto; display: block; }
+.story-diagram * { animation: none !important; transition: none !important; }

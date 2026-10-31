@@ -69,7 +69,7 @@ async function loadSupporting(index, target, { readText = file => fs.readFile(fi
   if (structure.frontmatter && !structure.frontmatter.closed) throw Error(`Note ${id} has unclosed frontmatter; close its initial YAML block`);
   const first = structure.frontmatter?.end || 0;
   const body = source.slice(structure.lines[first]?.start ?? source.length);
-  const rendered = renderMarkdown(body);
+  const rendered = renderMarkdown(body, { firstLine: first + 1 });
   const refs = rendered.references.map(ref => ({ ...ref, line: ref.line + first }));
   return { id, file, title: path.posix.basename(id).replace(/\.md$/i, ''), html: rendered.html,
     images: rendered.images, imageLines: Object.fromEntries(Object.entries(rendered.imageLines).map(([src,line])=>[src,line+first])), ...(await describeLinks(index, refs)) };

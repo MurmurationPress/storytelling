@@ -533,3 +533,7 @@ establish exhaustive platform or human audio coverage. See RESULTS.md for the
 separate acceptance and automated validation records.
 
 Optional standalone analytics: see [consent, event meanings and GA4 reporting](ANALYTICS.md).
+
+## Mermaid diagrams
+
+See [authored diagram syntax, accessibility, security and examples](MERMAID.md).
