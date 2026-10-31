@@ -6,6 +6,8 @@ created: 2026-10-31
 
 # Story Telling Guide Publication
 
+## Initial preparation (before approval)
+
 **Ted's request:** prepare the examples/authoring guide from Stories-Told's
 `Story Teller - Story Telling`, using accepted main through the Mermaid fixes.
 Stop at an immutable review preview. Preserve manuscripts/local work and do not
@@ -74,8 +76,16 @@ No Ghost, DNS, manuscript or routing change was made.
 A portable guide-only source ZIP is retained separately, with manifest machine
 provenance removed and all committed Markdown/PNG bytes preserved. README keeps
 copyright boundaries explicit; software MIT does not automatically license fiction
-or artwork. Extracted project validation and actual VS Code opening with installed 0.14.3 pass,
-including both rendered diagrams and computed-style checks. Both relevant GitHub repositories
-are private; no suitable existing public Story Teller release destination was
-found. Public source download is pending that specific destination, not reader
-approval. See the procedure for ZIP checksum and private retention location.
+or artwork. Extracted project validation and actual VS Code opening with installed
+0.14.3 pass, including both rendered diagrams and computed-style checks.
+
+The initial public-download blocker is now resolved: Ted authorised the existing
+public `MurmurationPress/story-teller-examples` destination. Its visibility/README
+were inspected, the retained ZIP/checksum published as a clearly named source
+release, and both assets downloaded anonymously and verified against the original.
+
+[Public guide source download](https://github.com/MurmurationPress/story-teller-examples/releases/download/story-telling-guide-source-e199b1c/story-telling-guide-source-e199b1c-story-teller-0.14.3.zip).
+The public README includes release/download links and opening instructions.
+Existing copyright boundaries remain; no additional manuscripts, private reports
+or Git history were uploaded. The live reader remains unchanged. See the guide
+procedure for the checksum, release and future-update steps.

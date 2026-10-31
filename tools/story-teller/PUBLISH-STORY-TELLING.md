@@ -252,12 +252,26 @@ boundaries; no blanket MIT licence is applied to fiction/artwork.
   Extracted file bytes still match the ZIP after opening. Native evidence and
   the temporary probe are retained privately beside the ZIP.
 
-**Public upload blocker:** fresh GitHub visibility checks show both
-`MurmurationPress/storytelling` and `tedwarddick/Stories-Told` are private.
-Available public repositories distribute other products (including the distinct
-Obsidian/Pandoc `tedwarddick/codex-press` toolkit); no established public Story
-Teller/download destination was found. The ZIP and checksum are retained pending
-a suitable public destination; no repository visibility was changed and no
-release was attached to an unrelated product. A separate named release asset
-can be uploaded once that destination is specified, then downloaded and hashed
-against the retained ZIP. The live reader remains independent of this blocker.
+**Public source download — blocker resolved:** Ted authorised the existing public
+`MurmurationPress/story-teller-examples` repository. Its public visibility and
+existing README were inspected before publishing; no visibility changes were made.
+
+- [Guide source release](https://github.com/MurmurationPress/story-teller-examples/releases/tag/story-telling-guide-source-e199b1c).
+- [Download ZIP](https://github.com/MurmurationPress/story-teller-examples/releases/download/story-telling-guide-source-e199b1c/story-telling-guide-source-e199b1c-story-teller-0.14.3.zip).
+- [Checksum file](https://github.com/MurmurationPress/story-teller-examples/releases/download/story-telling-guide-source-e199b1c/story-telling-guide-source-e199b1c-story-teller-0.14.3.zip.sha256).
+
+The public repository README links the actual release/assets and explains opening
+the extracted folder in VS Code with Story Teller 0.14.3+. Existing rights remain
+explicit: no software MIT licence is applied to fiction/artwork. Only the verified
+ZIP and checksum were uploaded as release assets. Anonymous HTTPS downloads of
+both assets pass checksum verification against the retained original; ZIP CRC and
+entry/byte comparisons also pass. Release metadata and download evidence remain
+private beside the retained source package. The approved live reader is unchanged.
+
+For future source releases, pin a committed guide source, package only that
+project, remove machine provenance, retain copyright terms and verify extraction
+and actual opening. Use a distinct source-based release tag/asset name; never
+overwrite a reviewed ZIP. Upload ZIP/checksum to this public examples repository,
+download without credentials, verify bytes/checksum, then update its README and
+these publication records. Reader publication remains the separate approval and
+retained-artifact promotion workflow above.
