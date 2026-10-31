@@ -246,6 +246,7 @@ async function until(fn, timeout = 60000) {
         await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Diagrams.md'});await sample();
         await request('narrow-reader');assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
         for(let n=0;n<3;n++){
+          await sample();
           await evaluate('doc.getElementById("replay").click()');
           await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Empty.md'});
           await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Diagrams.md'});

@@ -1806,3 +1806,30 @@ map with the class model and a neutral sequence. No story events, onward links o
 plot revelations are present. This is intentional early technical detail and a
 manual editorial review, not an automatic spoiler filter or a storage-schema
 commitment. Manuscripts, Stories-Told content and production remain unchanged.
+
+Reviewed implementation: `983e581da664c62ee05d1e5577f9fa8122a3a408`, runtime 0.14.3.
+Actual host: VS Code 1.144.0 / 2c33b50b16c472efe58357d1d2a8a5414bc23fbf, Linux x64.
+Final Development Host: `/tmp/story-teller-host-GCVLTU`; final installed VSIX:
+`/tmp/story-teller-host-0hRPbp`. Both have 67 measured diagrams with applied styles,
+zero legitimate CSP violations and three expected blocked negative probes.
+The installed 0.14.2 baseline `/tmp/story-teller-host-vKfJ09` records 101 blocked
+style elements and 6462 blocked inline attributes across the theme/navigation
+matrix, with no active SVG stylesheets. Counts are observations of those runs,
+not per-diagram invariants. Normal computed-style assertions fail on that baseline.
+
+Immutable review preview:
+https://f187db9f.murmuration-skip.pages.dev/mermaid-styles/ . The computed-style
+suite also passes over HTTPS; all 21 served payload hashes match the retained
+export. Hosted navigation latency exposed a test sequencing race: Replay now
+waits for the destination render, while Empty→Diagrams selections remain rapid.
+This closeout changes only tests/evidence/documentation, not the tested runtime.
+
+Retained build, private raw reports, before/after screenshots, source snapshot,
+upload ZIP and receipt:
+`/home/thawkins/Documents/mermaid-style-review-0.14.3-20261031/`.
+Installable `story-teller-0.14.3.vsix` SHA-256:
+`affb793e6afcde7601e342d797f230429dfbff193c867a125c408bed23f742a2`.
+Receipt `f187db9f-6d82-494e-be55-96be27cb859d` identifies the same renderer/source
+commit. Production remains `0195b3ac-865d-45f2-ac5c-f7d46f2dc564`; Stories-Told's
+requested scene hash/status remain unchanged. Summary:
+`test/evidence/mermaid-style-0.14.3.json`. PR #31 remains open for review.

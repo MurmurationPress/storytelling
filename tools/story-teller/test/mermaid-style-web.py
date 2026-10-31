@@ -61,6 +61,7 @@ async def run(root):
   surface=page.locator('#beat .diagram-surface');await surface.evaluate('(el)=>el.scrollLeft=0');await surface.focus();await page.keyboard.press('ArrowRight');await page.wait_for_timeout(200)
   assert await surface.evaluate('(el)=>el.scrollLeft>0')
   for _ in range(3):
+   await sample()  # Wait for the destination; Contents changes below remain rapid.
    await page.locator('#more-toggle').click();await page.locator('#replay').click()
    await page.locator('#contents-toggle').click();await page.locator('#contents button',has_text='1.2 Empty').click()
    await page.locator('#contents-toggle').click();await page.locator('#contents button',has_text='1.1 Diagrams').click()
