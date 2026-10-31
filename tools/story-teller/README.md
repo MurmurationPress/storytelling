@@ -537,3 +537,5 @@ Optional standalone analytics: see [consent, event meanings and GA4 reporting](A
 ## Mermaid diagrams
 
 See [authored diagram syntax, accessibility, security and examples](MERMAID.md).
+
+Publication of the examples/authoring guide uses its [dedicated Story Telling target](PUBLISH-STORY-TELLING.md), independently of Skip.

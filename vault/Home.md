@@ -56,3 +56,5 @@ for bounded acceptance and review evidence.
 - [[Skip Web Publication]] — accepted on Ted's actual iPad and iPhone;
   scoped integration, production publication and reader-subdomain setup authorised.
   Ghost page editing/publication remains Ted's responsibility.
+
+- [[Story Telling Guide Publication]] — separate guide project and immutable review preview; production pending Ted’s review.

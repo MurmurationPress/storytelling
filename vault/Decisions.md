@@ -411,3 +411,17 @@ is implied.
 **Authorised and completed scope:** final review, exact-head guarded squash merge
 of PR #27 and promotion of the approved retained Skip artifact. See [[Reader Analytics]] for merge/deployment identities and evidence. Main website, Ghost,
 DNS and analytics account configuration remain outside this task.
+
+## 2026-10-31 — Prepare the Story Telling guide on its own publication target
+
+**Ted's direction:** prepare the examples/authoring guide (not Skip) from committed
+Stories-Told source and accepted current main through PR #31. Establish a separate
+Pages project, inspect actual account/domain state, preserve local work and stop
+at an immutable preview. Production promotion, manuscript edits, Ghost edits and
+changes to Skip's live deployment/domain are excluded.
+
+**Preparation awaiting review:** [[Story Telling Guide Publication]] records the
+dedicated `murmuration-story-telling` target, pinned export, complete guide checks
+and immutable preview. Existing reader-hostname path sharing would need additional
+routing infrastructure; none is introduced. Pages production URL needs no DNS
+change and can be linked from the main website after approval/promotion.
