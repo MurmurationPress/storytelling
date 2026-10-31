@@ -73,7 +73,13 @@ function prepareDiagram(source) {
   }
   // HTML labels stay disabled. Reject actual markup/resources as a second
   // boundary; ordinary words (image/style/src/etc.) are never reserved here.
-  if (/<\s*\/?[A-Za-z][^>]*>|!\[[^\]]*\]\s*\(|url\s*\(|@import/i.test(text)) throw Error('HTML and resource/CSS expressions are disabled');
+  // Class stereotypes use double angle delimiters, not HTML tags. Mask only
+  // complete, non-nested annotations containing plain text, and only for a class
+  // diagram. Keep the original source for Mermaid; never strip arbitrary tags
+  // or resource syntax from this inspection copy (including wrapped payloads).
+  const inspected = /^\s*(?:%%[^\n]*\n\s*)*classDiagram(?:-v2)?\b/.test(text)
+    ? text.replace(/(?<!<)<<[\p{L}\p{N}_ -]+>>(?!>)/gu, '') : text;
+  if (/<\s*\/?[A-Za-z][^>]*>|!\[[^\]]*\]\s*\(|url\s*\(|@import/i.test(inspected)) throw Error('HTML and resource/CSS expressions are disabled');
   return { text, config, title, offset };
 }
 function sourceError(source) { try { prepareDiagram(source); return null; } catch (error) { return error.message; } }

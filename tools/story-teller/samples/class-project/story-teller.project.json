@@ -1,0 +1,31 @@
+{
+  "schema": "story-teller-project",
+  "version": 1,
+  "title": "Story Teller structure \u2014 class annotation regression",
+  "parts": [
+    {
+      "id": "part",
+      "title": "Structure",
+      "scenes": [
+        "structure",
+        "return"
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "structure",
+      "partId": "part",
+      "label": "1.1",
+      "title": "Structure",
+      "file": "scenes/Structure.md"
+    },
+    {
+      "id": "return",
+      "partId": "part",
+      "label": "1.2",
+      "title": "Return",
+      "file": "scenes/Return.md"
+    }
+  ]
+}

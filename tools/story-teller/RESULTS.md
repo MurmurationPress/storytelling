@@ -1680,3 +1680,49 @@ Receipt: `f1f5ddb1-81f8-4828-970b-7fc4951b7dc1`; production stays
 `0195b3ac-865d-45f2-ac5c-f7d46f2dc564`. Final installed profile:
 `/tmp/story-teller-host-1K9ulI`. Summary: `test/evidence/mermaid-29-review.json`.
 The following closeout commit changes evidence/tests/documentation only.
+
+# Class annotation validation fix — 0.14.2 (pending review)
+
+Baseline: current main `6418b09` / 0.14.1 was built before changing the validator.
+The complete new structure fixture was exported and served to Chrome 156/Linux:
+both default and hand-drawn beats produced no SVG, displayed only “This diagram
+could not be displayed.”, and emitted the HTML/resource validation error to
+browser authoring diagnostics. This confirms the full rendering failure rather
+than only reproducing the regex match.
+
+The validator now masks complete, non-nested double-angle plain-text class
+annotations in its inspection copy, scoped to classDiagram/classDiagram-v2.
+Original source still goes unchanged to Mermaid. The pinned 12.2.0 parser's
+annotation productions/member handling and upstream class documentation were
+inspected. Nested, inline, separate-line and member forms are covered. Actual
+HTML, scripts and external-resource payloads, including annotation-like wrappers,
+remain rejected. Strict mode, SVG sanitisation, configuration isolation and
+reader presentation are unchanged.
+
+`samples/class-project/structure.mmd` is the representative illustrative fixture:
+Book/Part/Scene/Beat attributes; abstract Component; Image, MermaidDiagram, Text,
+Chat and Typeout subclasses; composition multiplicities and inheritance. Renderable
+and ComponentKind exercise interface and enumeration annotations. Default and
+hand-drawn versions appear in beats and in the opening supporting panel. The
+note repeats only the same structure available at its first link; no onward
+links or plot/manuscript material. This is an editorial check, not an automatic
+spoiler filter or a new settled platform schema.
+
+Validation: 298 Node tests; syntax, both builds, VSIX packaging and production
+npm audit (zero findings). The full class-diagram HTTP browser suite checks visible
+«abstract», «interface» and «enumeration» SVG text after sanitisation, attributes,
+multiplicities, actual hand-drawn paths, classic isolation, panels, replay/Previous,
+rapid scene changes, keyboard overflow, light/dark refresh and reduced motion,
+1024/768/390/320px viewports, unique IDs, unchanged reader presentation and no
+errors/author diagnostics/external requests. The existing Mermaid HTTP suite also
+passes, including flowcharts/sequences, ordinary text, safe configuration,
+front/back matter, failure presentation and supporting panels.
+
+Actual VS Code Development Host and installed 0.14.2 VSIX pass the complete class
+fixture, rendered annotation glyphs, both looks, panels, replay/Previous, rapid
+scenes, narrow layout and simulated inherited light/dark reader-palette changes.
+Profiles: `/tmp/story-teller-host-WwdhQ4` and `/tmp/story-teller-host-OnSzY1`.
+VSIX runtime/style/docs bytes equal the current build. No actual iPad/iPhone,
+Safari or human screen-reader test is claimed. Existing limits on large/exotic
+diagrams and main-thread rendering remain. Manuscripts and production are
+unchanged; no merge or production publication is authorised.
