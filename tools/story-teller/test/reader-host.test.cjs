@@ -129,3 +129,13 @@ test('diagram parser details and source go to author output only; stale diagnost
  await panel.receive(message);assert.equal(h.diagramDiagnostics.length,1);assert.match(h.diagramDiagnostics[0],/fence line 7/);assert.match(h.diagramDiagnostics[0],/Parse error on line 2/);assert.match(h.diagramDiagnostics[0],/broken/);
  assert.ok(!panel.messages.some(m=>m.type==='diagram-diagnostic'));
 });
+
+test('preview authorises styles with a separate per-webview nonce without broader permissions',async t=>{
+ const h=host();t.after(()=>h.panels.forEach(p=>p.dispose()));
+ await h.commands.get('storyTeller.previewScene')();const html=h.panels[0].webview.html;
+ const styleNonce=html.match(/name="story-diagram-style-nonce" content="([a-f0-9]{48})"/)[1];
+ assert.ok(html.includes(`style-src ${h.panels[0].webview.cspSource} 'nonce-${styleNonce}'`) || html.includes(`'nonce-${styleNonce}'; img-src`));
+ assert.notEqual(styleNonce,h.instance(h.panels[0]));assert.ok(!html.includes('unsafe-inline'));
+ for(const policy of ["default-src 'none'","connect-src 'none'","font-src 'none'","frame-src 'none'","base-uri 'none'","form-action 'none'"])assert.ok(html.includes(policy),policy);
+ assert.ok(html.includes(`script-src 'nonce-${h.instance(h.panels[0])}'`));
+});

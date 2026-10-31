@@ -1,0 +1,716 @@
+{
+  "pr": 31,
+  "version": "0.14.3",
+  "testedRendererRevision": "983e581da664c62ee05d1e5577f9fa8122a3a408",
+  "baselineMain": "956d470",
+  "baselineVersion": "0.14.2",
+  "baselineInstalled": {
+    "profile": "/tmp/story-teller-host-vKfJ09",
+    "mode": "installed VSIX",
+    "legitimatePolicyViolations": {
+      "style-src-attr": 6462,
+      "style-src-elem": 101
+    },
+    "measurementCount": 0,
+    "measurementStylesActive": null,
+    "negativeProbeViolations": {},
+    "themes": {
+      "Light Modern": [
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "rgb(234, 234, 234)"
+          ],
+          "backgroundStrokes": [
+            "rgb(102, 102, 102)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "rgb(234, 234, 234)"
+          ],
+          "backgroundStrokes": [
+            "rgb(102, 102, 102)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none"
+          ],
+          "arrowStrokes": [
+            "none"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        }
+      ],
+      "Dark Modern": [
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "rgb(234, 234, 234)"
+          ],
+          "backgroundStrokes": [
+            "rgb(102, 102, 102)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "rgb(234, 234, 234)"
+          ],
+          "backgroundStrokes": [
+            "rgb(102, 102, 102)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none"
+          ],
+          "arrowStrokes": [
+            "none"
+          ],
+          "allStylesApplied": false
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)"
+          ],
+          "allStylesApplied": false
+        }
+      ]
+    }
+  },
+  "development": {
+    "profile": "/tmp/story-teller-host-GCVLTU",
+    "mode": "Development Host",
+    "legitimatePolicyViolations": {},
+    "measurementCount": 67,
+    "measurementStylesActive": true,
+    "negativeProbeViolations": {
+      "style-src-elem": 1,
+      "script-src-elem": 1,
+      "style-src-attr": 1
+    },
+    "themes": {
+      "Light Modern": [
+        {
+          "textFills": [
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "rgb(147, 112, 219)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "rgb(147, 112, 219)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(19, 19, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "none"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(19, 19, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        }
+      ],
+      "Dark Modern": [
+        {
+          "textFills": [
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(211, 211, 211)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "rgb(204, 204, 204)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(211, 211, 211)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "rgb(204, 204, 204)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(204, 204, 204)",
+            "rgb(224, 223, 223)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "none"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(204, 204, 204)",
+            "rgb(224, 223, 223)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        }
+      ]
+    }
+  },
+  "installed": {
+    "profile": "/tmp/story-teller-host-0hRPbp",
+    "mode": "installed VSIX",
+    "legitimatePolicyViolations": {},
+    "measurementCount": 67,
+    "measurementStylesActive": true,
+    "negativeProbeViolations": {
+      "style-src-elem": 1,
+      "script-src-elem": 1,
+      "style-src-attr": 1
+    },
+    "themes": {
+      "Light Modern": [
+        {
+          "textFills": [
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "rgb(147, 112, 219)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "rgb(147, 112, 219)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(19, 19, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "rgb(236, 236, 255)"
+          ],
+          "backgroundStrokes": [
+            "none"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(19, 19, 0)",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(51, 51, 51)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(147, 112, 219)",
+            "rgb(236, 236, 255)"
+          ],
+          "arrowStrokes": [
+            "rgb(51, 51, 51)"
+          ],
+          "allStylesApplied": true
+        }
+      ],
+      "Dark Modern": [
+        {
+          "textFills": [
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(211, 211, 211)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "rgb(204, 204, 204)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(211, 211, 211)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "rgb(204, 204, 204)"
+          ],
+          "arrowStrokes": [
+            "none",
+            "rgb(0, 0, 0)",
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(204, 204, 204)",
+            "rgb(224, 223, 223)"
+          ],
+          "backgroundFills": [
+            "rgb(31, 32, 32)"
+          ],
+          "backgroundStrokes": [
+            "none"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        },
+        {
+          "textFills": [
+            "rgb(204, 204, 204)",
+            "rgb(224, 223, 223)"
+          ],
+          "backgroundFills": [
+            "none",
+            "rgb(204, 204, 204)"
+          ],
+          "backgroundStrokes": [
+            "none",
+            "rgb(204, 204, 204)",
+            "rgb(31, 32, 32)"
+          ],
+          "arrowStrokes": [
+            "rgb(211, 211, 211)"
+          ],
+          "allStylesApplied": true
+        }
+      ]
+    }
+  },
+  "vscode": {
+    "version": "1.144.0",
+    "commit": "2c33b50b16c472efe58357d1d2a8a5414bc23fbf",
+    "platform": "Linux x64"
+  },
+  "unitTests": 301,
+  "productionDependencyAudit": "zero findings",
+  "https": {
+    "browser": "156.0.8078.79",
+    "violations": [],
+    "errors": [],
+    "external": [],
+    "checks": "computed leaf-text contrast, fills, strokes, backgrounds, arrows, relationship labels and annotations; default/handDrawn flow/sequence/class; light/dark refresh; beats/panels/matter; replay/rapid scenes; keyboard overflow at 320px; unique IDs; real exported CSP unchanged"
+  },
+  "httpsPayloadHashesVerified": 21,
+  "preview": "https://f187db9f.murmuration-skip.pages.dev/mermaid-styles/",
+  "receipt": "f187db9f-6d82-494e-be55-96be27cb859d",
+  "artifactDigest": "da1c7cb83490a32e5a1951c4b353adef0d0a33f5a9162f4ba64f7b83946d05c3",
+  "build": "/home/thawkins/Documents/mermaid-style-review-0.14.3-20261031",
+  "vsixSha256": "affb793e6afcde7601e342d797f230429dfbff193c867a125c408bed23f742a2",
+  "productionAtPreview": "0195b3ac-865d-45f2-ac5c-f7d46f2dc564",
+  "storiesTold": {
+    "revision": "e199b1c7bd177fec75690d7e0f119fc8766389b4",
+    "sceneSha256": "eaca88ceb07c500c4fe669886ea8ab1256d6b08c520e358a437cc7cd03c9d405",
+    "unchanged": true
+  },
+  "limits": [
+    "No real iPad/iPhone/Safari validation",
+    "No human screen-reader validation",
+    "Pinned Mermaid/D3 build integrations must be reviewed on upgrades",
+    "Existing large/exotic-diagram and main-thread rendering limits"
+  ]
+}

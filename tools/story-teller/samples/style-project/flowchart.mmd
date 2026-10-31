@@ -1,0 +1,8 @@
+flowchart TD
+  accTitle: Story Teller reading structure
+  accDescr: A book contains scenes, optionally grouped into parts. Scenes contain beats, and beats contain components.
+  Book --> Part["Part (optional)"]
+  Book --> Scene
+  Part --> Scene
+  Scene --> Beat
+  Beat --> Component
