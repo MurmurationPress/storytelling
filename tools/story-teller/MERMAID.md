@@ -76,6 +76,51 @@ References: [Mermaid configuration](https://mermaid.js.org/config/configuration)
 The installed `node_modules/mermaid/dist/config.type.d.ts` and implementation
 were also inspected; online documentation may describe a newer release.
 
+## Class annotations (0.14.2)
+
+Class diagrams preserve Mermaid annotations such as `<<abstract>>`,
+`<<interface>>` and `<<enumeration>>`. The pinned 12.2.0 parser accepts annotations
+inside class bodies, inline with a class declaration, on a separate line naming
+the class, and as a colon-style class member:
+
+````markdown
+```mermaid
+classDiagram
+  class Component {
+    <<abstract>>
+    +String label
+  }
+  class Renderable <<interface>>
+  class ComponentKind
+  <<enumeration>> ComponentKind
+  Component <|-- Image
+```
+````
+
+The HTML check exempts only complete, non-nested double-angle annotations with
+plain letter/number/space/underscore/hyphen text, and only in `classDiagram` or
+`classDiagram-v2` source. Original source is passed unchanged to Mermaid. Single
+HTML tags, nested/triple-angle wrappers and HTML/resource expressions embedded
+in or after annotations still fail validation. This is not a general exemption
+for angle-bracket content. See [Mermaid class annotation syntax](https://mermaid.js.org/syntax/classDiagram#annotations-on-classes);
+the pinned parser's annotation productions and member handling were inspected too.
+
+The neutral `samples/class-project` regression publication contains Book, Part,
+Scene, Beat, an abstract Component and five concrete subclasses, with attributes,
+composition multiplicities and inheritance. An interface and enumeration exercise
+the other annotation forms. Both default and hand-drawn versions are available in
+beats and a supporting panel. These are illustrative content relationships, not
+a new settled platform design. The supporting note repeats only the structure
+available at its first opening-beat link and has no onward links or manuscript
+content.
+
+For this regression, use `STORY_TELLER_HOST_SCOPE=mermaid-class npm run test:host`
+(optionally with `STORY_TELLER_VSIX`), export `samples/class-project`, and run
+`python test/mermaid-class-web.py /new/output/path [IMMUTABLE_PREVIEW_URL]`.
+`--baseline` instead asserts the complete 0.14.1 rendering failure; run it only
+against the retained unmodified-main export. The normal suite asserts visible
+annotation glyphs in sanitised SVG, not just validator acceptance.
+
 ## Reader behaviour and diagnostics
 
 Diagrams reveal whole at their authored position. Top-level diagrams are separate

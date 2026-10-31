@@ -1,0 +1,41 @@
+{
+  "pr": 30,
+  "version": "0.14.2",
+  "testedRendererRevision": "c2a3972c81d403bf6316a6b7e701d68044561540",
+  "baseline": {
+    "mainRevision": "6418b09",
+    "version": "0.14.1",
+    "result": {
+      "mode": "unmodified main 0.14.1 complete exported reader failure",
+      "svgCount": 0,
+      "readerMessage": "This diagram could not be displayed.",
+      "diagnostics": [
+        "HTML and resource/CSS expressions are disabled",
+        "HTML and resource/CSS expressions are disabled"
+      ],
+      "browser": "156.0.8078.79"
+    },
+    "runtimeSha256": "a1846b2e1051f6ef30932abbc9f9b7704c0a0508cae7085372247518af4901d8"
+  },
+  "unitTests": 298,
+  "productionDependencyAudit": "zero findings",
+  "nativeDevelopmentProfile": "/tmp/story-teller-host-WwdhQ4",
+  "nativeInstalledProfile": "/tmp/story-teller-host-OnSzY1",
+  "preview": "https://e7e07c4b.murmuration-skip.pages.dev/class-diagrams/",
+  "receipt": "e7e07c4b-38d4-44d2-b76b-072d94f19bfb",
+  "artifactDigest": "bc8b65a5a64b39834a4a61e96b73a90162cd48ce25a673dad8eb040842962362",
+  "build": "/home/thawkins/Documents/mermaid-class-review-0.14.2-20261031",
+  "vsixSha256": "97e1a560b1ce242882f8f6eff1f56191ade72d94ff563cd0d51d60007832903c",
+  "httpsPayloadHashesVerified": 19,
+  "browser": {
+    "browser": "156.0.8078.79",
+    "checks": "complete default and hand-drawn class fixture; annotation glyphs and attributes/multiplicities survive SVG sanitization; panels; replay/Previous; rapid scene changes; classic isolation; keyboard overflow; light/dark/reduced motion; 1024/768/390/320px; unique IDs; unchanged presentation; no errors/diagnostics/external requests"
+  },
+  "existingMermaidBrowserSuite": "passes on patched runtime",
+  "productionAtPreview": "0195b3ac-865d-45f2-ac5c-f7d46f2dc564",
+  "limitations": [
+    "No actual iPad/iPhone/Safari validation",
+    "No human screen-reader validation",
+    "Existing large/exotic-diagram and main-thread-render limits"
+  ]
+}

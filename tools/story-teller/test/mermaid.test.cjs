@@ -53,3 +53,30 @@ test('reader markup has only a diagram surface and explicit caption; no source c
  assert.ok(!/details|summary|<pre|readable fallback|Diagram ·/.test(html));
  assert.match(html,/tabindex="0"/);
 });
+
+test('class annotations in all pinned Mermaid forms retain their original source',()=>{
+ for(const annotation of ['abstract','interface','enumeration','Abstract','Service','custom stereotype','Δομή']) {
+  for(const body of [`class Example <<${annotation}>>`,`class Example\n<<${annotation}>> Example`,`class Example {\n <<${annotation}>>\n +String title\n}`,`Example : <<${annotation}>>`]) {
+   const source='classDiagram\n'+body;assert.equal(sourceError(source),null,source);assert.equal(prepareDiagram(source).text,source);
+  }
+ }
+ assert.equal(sourceError('%% A comment\nclassDiagram-v2\nclass Example <<abstract>>'),null);
+});
+test('annotation exceptions never exempt real HTML or wrapped resource payloads',()=>{
+ for(const payload of ['<img src="https://example.com/x">','<script>alert(1)</script>','<<img src=x onerror=alert(1)>>','<<<script>>>alert(1)<<< /script>>>','<<abstract><img src=x>>','<<abstract>> <script>alert(1)</script>','<<abstract>> ![x](https://example.com/x)','<<abstract url(https://example.com/x)>>','<<abstract @import "x">>','<<abstract>> <svg onload="alert(1)">','<<abstract>> <image href="https://example.com/x">']) {
+  assert.ok(sourceError('classDiagram\nclass Example {\n '+payload+'\n}'),payload);
+ }
+ assert.ok(sourceError('flowchart LR\n A[<<abstract>>] --> B'));
+ assert.ok(sourceError('classDiagram\nclass Example <abstract>'));
+});
+test('complete structure fixture and both presentations pass unchanged into the renderer',()=>{
+ const fs=require('node:fs'),path=require('node:path');
+ const body=fs.readFileSync(path.join(__dirname,'../samples/class-project/structure.mmd'),'utf8');
+ const scene=parseScene(fs.readFileSync(path.join(__dirname,'../samples/class-project/scenes/Structure.md'),'utf8'));
+ assert.equal(scene.beats.length,2);
+ for(const beat of scene.beats) {
+  const html=beat.blocks.find(block=>block.html?.includes('story-diagram')).html;
+  assert.match(html,/&lt;&lt;abstract&gt;&gt;/);
+ }
+ for(const header of ['', '---\nconfig: {look: handDrawn, handDrawnSeed: 42}\n---\n']) assert.equal(prepareDiagram(header+body).text,body);
+});

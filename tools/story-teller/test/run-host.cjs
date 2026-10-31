@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'mermaid-class') {
+    importProject = path.join(directory, 'class-project');
+    await fs.cp(path.join(root,'samples/class-project'),importProject,{recursive:true});
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'mermaid') {
     importProject = path.join(directory, 'diagram-project');
     await fs.cp(path.join(root,'samples/diagram-project'), importProject, {recursive:true});
@@ -182,6 +186,43 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='mermaid-class') {
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Structure.md'});
+      await bringFront();
+      async function classDiagram(selector='#beat .diagram-surface') {
+        await until(async()=>await evaluate(`Boolean(doc.querySelector(${JSON.stringify(selector+' svg')}))`));
+        const text=await evaluate(`[...doc.querySelectorAll(${JSON.stringify(selector+' svg text')})].map(e=>e.textContent).join('\\n')`);
+        for(const label of ['Book','Part','Scene','Beat','Component','Image','MermaidDiagram','Text','Chat','Typeout','Renderable','ComponentKind','«abstract»','«interface»','«enumeration»','0..*','1..*']) assert.ok(text.includes(label),label+': '+text);
+      }
+      await classDiagram();
+      await evaluate('doc.querySelector("#beat .wiki-link").click()');
+      await until(async()=>await evaluate('doc.querySelectorAll("dialog .diagram-surface svg").length')===2);
+      const panelText=await evaluate('[...doc.querySelectorAll("dialog svg text")].map(e=>e.textContent).join(" ")');
+      for(const label of ['abstract','interface','enumeration']) assert.equal(panelText.split('«'+label+'»').length-1,2);
+      await evaluate('doc.querySelector("dialog").close()');
+      await evaluate('doc.getElementById("next").click()');await classDiagram();
+      assert.ok(await evaluate('doc.querySelectorAll("#beat svg .rough-node path").length>0'));
+      await evaluate('doc.getElementById("replay").click()');await classDiagram();
+      await evaluate('doc.getElementById("previous").click()');await classDiagram();
+      assert.equal(await evaluate('doc.querySelectorAll("#beat svg .rough-node").length'),0);
+      await request('narrow-reader');assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+      for(const colour of ['#25252c','#eeeeee']) {
+        const token=await evaluate('doc.querySelector("#beat .story-diagram").dataset.diagramToken');
+        await evaluate(`doc.body.style.setProperty('--vscode-editor-foreground',${JSON.stringify(colour)})`);
+        await until(async()=>await evaluate('doc.querySelector("#beat .story-diagram").dataset.diagramToken')!==token);await classDiagram();
+      }
+      for(let n=0;n<3;n++) {
+        await evaluate('doc.getElementById("replay").click()');
+        await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Return.md'});
+        await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Structure.md'});
+      }
+      await classDiagram();
+      const ids=await evaluate('[...doc.querySelectorAll("[id]")].map(e=>e.id)');assert.equal(ids.length,new Set(ids).size);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat pre,#beat details,#beat .diagram-status:not([hidden])").length'),0);
+      await fs.writeFile(path.join(directory,'mermaid-class.json'),JSON.stringify({mode:vsix?'installed VSIX':'Development Host',checks:'complete class fixture; rendered annotations; default/handDrawn; panel; replay/Previous; rapid scenes; narrow layout; light/dark palette refresh; unique IDs; unchanged presentation'},null,2));
+      console.log('PASS actual VS Code class diagram: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='mermaid') {
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Signal.md'});
       await bringFront();
