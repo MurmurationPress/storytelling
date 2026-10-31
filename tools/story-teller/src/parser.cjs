@@ -101,6 +101,12 @@ function parseScene(source, { prosePacing = false } = {}) {
         images.add(src);
         imageLines[src] ??= first + (token.map?.[0] || 0) + 1;
       }
+      if (token.type === 'fence' && token.info.trim() === 'mermaid' && token.level === 0) {
+        flush();
+        add({ type: 'prose', line: first + token.map[0] + 1,
+          html: md.renderer.render([token], md.options, { firstLine: first + 1 }) });
+        continue;
+      }
       const image = standaloneImage(tokens, i);
       if (image && token.level === 0) {
         images.add(image.attrGet('src') || '');

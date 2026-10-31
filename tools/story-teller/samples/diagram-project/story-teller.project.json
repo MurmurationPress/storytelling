@@ -1,0 +1,41 @@
+{
+  "schema": "story-teller-project",
+  "version": 1,
+  "title": "Signal diagrams \u2014 neutral component example",
+  "parts": [
+    {
+      "id": "part",
+      "title": "Signals",
+      "scenes": [
+        "signal",
+        "other"
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "signal",
+      "partId": "part",
+      "label": "1.1",
+      "title": "Signal",
+      "file": "scenes/Signal.md"
+    },
+    {
+      "id": "other",
+      "partId": "part",
+      "label": "1.2",
+      "title": "Other",
+      "file": "scenes/Other.md"
+    }
+  ],
+  "matter": {
+    "front": {
+      "id": "front",
+      "file": "Front Matter.md"
+    },
+    "back": {
+      "id": "back",
+      "file": "Back Matter.md"
+    }
+  }
+}

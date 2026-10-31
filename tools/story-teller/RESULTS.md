@@ -1583,3 +1583,38 @@ Committed summary: `test/evidence/skip-analytics-production.json`. Private repor
 Remaining limits: independent GA4 event/report-definition verification, actual
 Safari/iPad coverage, screen-reader use and human audio listening. All completion
 events remain display-only evidence, not proof of reading.
+
+# Mermaid component — issue #28 (0.14.0, pending Ted's review)
+
+Standard Mermaid fences now use the shared renderer in beats, full supporting
+panels and book matter. Source remains editable and available in a native details
+fallback. Whole diagrams follow existing static prose playback steps, including
+explicit delays, Previous, Replay, Restart and Reveal beat. Asynchronous work is
+serialised, checks connected destinations, uses unique identities and removes
+measurement DOM. Existing diagrams survive subsequent playback renders. Theme
+changes refresh diagrams; no node animation is introduced.
+
+Security: Mermaid 12.2.0, DOMPurify 3.4.17, strict mode, no HTML labels, rejected
+configuration/link/resource/style syntax, sanitised SVG with external references
+removed, unchanged CSP, locally bundled runtime/licences. Production dependency
+audit reports zero vulnerabilities; development-tool audit findings remain.
+Authoring syntax, Insert helper, limits and reproduction: MERMAID.md.
+
+Validation: 290 Node tests; syntax, both browser bundles and VSIX packaging pass.
+Actual VS Code Development Host and installed 0.14.0 VSIX runs cover flowcharts,
+sequence diagrams, multiple diagrams, supporting panels, malformed source,
+Previous, replay/scene changes while rendering, narrow layout and unique IDs.
+The final browser suite uses the exported neutral project over HTTP and Chrome
+156 on Linux: front/back matter, full supporting panels, readable flowchart labels,
+sequence diagrams, code fences, malformed source, rapid turns/revisiting/replay,
+keyboard scroll-region access, dark/reduced-motion settings and desktop plus
+1024/768/390/320px viewports; no page errors or external requests.
+
+The neutral supporting note was reviewed at its earliest access in the opening
+beat, including its full contents: it describes only the introduced signal and
+has no onward links. No automatic spoiler filtering is claimed. Trilogy and
+published books are unchanged. No actual iPad/iPhone/Safari or screen-reader test
+was performed. Large/exotic diagrams, main-thread render interruption and human
+accessibility review remain limitations. Runtime bundles are about 12 MB each
+uncompressed; package is about 5.5 MB. Review artifacts and preview receipt are
+retained outside the repository; merge and production publication await review.

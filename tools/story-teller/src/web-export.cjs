@@ -111,7 +111,7 @@ async function exportWeb(projectRoot,destination,{beforeWrite=()=>{},analytics}=
     for(const scene of prepared.scenes)await fs.writeFile(path.join(temp,scene.file),JSON.stringify(scene.data));
     await fs.writeFile(path.join(temp,'publication.json'),JSON.stringify(prepared.book));
     const base=path.join(__dirname,'..');
-    for(const [source,target] of [['dist/web-reader.js','reader.js'],['media/reader.css','reader.css'],['media/web.css','web.css'],['media/web.html','index.html']])await fs.copyFile(path.join(base,source),path.join(temp,target));
+    for(const [source,target] of [['dist/web-reader.js','reader.js'],['media/reader.css','reader.css'],['media/web.css','web.css'],['media/web.html','index.html'],['dist/THIRD-PARTY.txt','licences-mermaid.txt']])await fs.copyFile(path.join(base,source),path.join(temp,target));
     if (prepared.book.analytics) {
       for (const name of ['analytics.html', 'analytics.js']) await fs.copyFile(path.join(base, 'media', name), path.join(temp, name));
       const html = await fs.readFile(path.join(temp, 'index.html'), 'utf8');

@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'mermaid') {
+    importProject = path.join(directory, 'diagram-project');
+    await fs.cp(path.join(root,'samples/diagram-project'), importProject, {recursive:true});
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'speed') {
     importProject = path.join(directory, 'speed-project');
     await require('./speed-fixture.cjs').create(importProject);
@@ -178,6 +182,32 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if(process.env.STORY_TELLER_HOST_SCOPE==='mermaid') {
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Signal.md'});
+      await bringFront();
+      await until(async()=>await evaluate('doc?.querySelectorAll("#beat .diagram-surface svg").length')===1);
+      await evaluate('doc.getElementById("play").click()');
+      await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===2);
+      await evaluate('doc.querySelector("#beat .wiki-link").click()');
+      await until(async()=>await evaluate('doc.querySelectorAll("dialog article .diagram-surface svg").length')===2);
+      await evaluate('doc.querySelector("dialog").close()');
+      await evaluate('doc.getElementById("next").click()');
+      await until(async()=>await evaluate('doc.querySelector("#beat .diagram-status")?.textContent.includes("unavailable")'));
+      await evaluate('doc.getElementById("previous").click()');
+      await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===2);
+      await request('narrow-reader');
+      assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+      for(let n=0;n<3;n++) {
+        await evaluate('doc.getElementById("replay").click()');
+        await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Other.md'});
+        await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Signal.md'});
+      }
+      await until(async()=>await evaluate('doc.querySelectorAll("#beat .diagram-surface svg").length')===1);
+      const ids=await evaluate('[...doc.querySelectorAll("[id]")].map(e=>e.id)');assert.equal(ids.length,new Set(ids).size);
+      await fs.writeFile(path.join(directory,'mermaid.json'),JSON.stringify({mode:vsix?'installed VSIX':'Development Host',checks:'flowchart, sequence, supporting panel, malformed source, Previous, narrow layout, replay and scene changes during rendering, unique IDs'},null,2));
+      console.log('PASS actual VS Code Mermaid: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='speed') {
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Speed.md'});
       await bringFront();

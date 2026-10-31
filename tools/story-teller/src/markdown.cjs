@@ -27,6 +27,13 @@ function inlineText(md, tokens) {
 function createMarkdown() {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
   wikiLinks(md);
+  const fence = md.renderer.rules.fence;
+  md.renderer.rules.fence = (tokens, index, options, env, renderer) => {
+    const token = tokens[index];
+    if (token.info.trim() !== 'mermaid') return fence(tokens, index, options, env, renderer);
+    const line = (env?.firstLine || 1) + (token.map?.[0] || 0);
+    return `<figure class="story-diagram" data-diagram-line="${line}"><p class="diagram-status" role="status">Diagram · source line ${line}</p><div class="diagram-surface" tabindex="0" role="region" aria-label="Diagram; scroll horizontally to inspect at full size"></div><details open><summary>Diagram source / readable fallback</summary><pre class="diagram-source">${md.utils.escapeHtml(token.content)}</pre></details></figure>`;
+  };
   md.renderer.rules.link_open = () => '<span class="link-text">';
   md.renderer.rules.link_close = () => '</span>';
   md.renderer.rules.image = (tokens, index) => {

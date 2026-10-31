@@ -2,6 +2,7 @@
 const { inspectStructure, contextAt } = require('./structure.cjs');
 const { parseScene } = require('./parser.cjs');
 const choices = [
+  { id: 'mermaid', label: 'Mermaid diagram', description: 'Whole-diagram reveal with an authored accessible description.' },
   { id: 'chat', label: 'Chat block', description: 'Title, viewer and two messages; optional features off.' },
   { id: 'boundary', label: 'Beat boundary', description: 'A standalone ---; progression stays manual.' },
   { id: 'delay', label: 'Delay', description: 'Replaces the next item’s normal delay.' },
@@ -16,6 +17,7 @@ const choices = [
   { id: 'wrap', label: 'Wrap Selection as Chat', description: 'Keep selected text verbatim; does not convert its syntax.' }
 ];
 const templates = {
+  mermaid: '```mermaid\nflowchart LR\n  accTitle: ${1:Signal route}\n  accDescr: ${2:A signal passes from the sender to the receiver.}\n  A[Sender] --> B[Receiver]\n```\n$0',
   chat: '```chat\n# ${1:Conversation title}\n@viewer ${2:Viewer}\n${2}: ${3:First message.}\n${4:Other participant}: ${5:Reply.}\n```\n$0',
   boundary: '---\n$0', delay: '@delay ${1:1200}ms\n$0', pause: '@pause ${1:800}ms\n$0', responding: '@responding\n$0', ticks: '@ticks\n$0',
   image: '![${1:Describe the image}](<__STORY_IMAGE_PATH__>)\n$0', typeout: '__STORY_TYPEOUT__'
@@ -32,7 +34,7 @@ function planInsertion(source, selection, kind) {
   const overlaps = kind === 'wrap' ? structure.spans.filter(span => structure.lines[span.start].start < end && (structure.lines[span.end]?.start ?? source.length) > start) : [];
   const fullContainers = overlaps.length && overlaps.every(span => ['blockquote_open', 'bullet_list_open', 'ordered_list_open'].includes(span.type) && start <= structure.lines[span.start].start && end >= structure.lines[span.end - 1].start + structure.lines[span.end - 1].text.length);
   if (context.kind === 'literal' && !(kind === 'wrap' && fullContainers)) return fail('Move outside code examples, fence delimiters, quotes or lists before inserting story syntax.');
-  if (context.kind === 'chat' && ['chat', 'boundary', 'wrap', 'image', 'typeout'].includes(kind)) return fail('Place this component outside the chat fence.');
+  if (context.kind === 'chat' && ['chat', 'boundary', 'wrap', 'image', 'typeout', 'mermaid'].includes(kind)) return fail('Place this component outside the chat fence.');
   if (context.kind !== 'chat' && ['responding', 'ticks'].includes(kind)) return fail(`@${kind} is chat-only. Place the caret inside a chat fence.`);
   const eol = structure.lines.find(l => l.eol)?.eol || '\n';
   const before = source.slice(0, start);

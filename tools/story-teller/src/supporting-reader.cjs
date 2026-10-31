@@ -1,4 +1,5 @@
 'use strict';
+const { renderDiagrams } = require('./mermaid-reader.cjs');
 // Shared reader presentation. Loading, playback and host messaging are injected.
 function upgradeLinks(root, links = {}, progressive = false) {
   for (const node of [...root.querySelectorAll('[data-story-target]')]) {
@@ -139,7 +140,7 @@ class SupportingReader {
     try {
       const note=await this.load(current.target);
       if(token!==this.panelToken||!this.dialog.open||this.disposed)return;
-      this.heading.textContent=note.title||current.target;this.article.replaceChildren(this.noteContent(note));this.article.scrollTop=preserve?current.scroll:0;
+      this.heading.textContent=note.title||current.target;this.article.replaceChildren(this.noteContent(note));this.article.scrollTop=preserve?current.scroll:0;renderDiagrams(this.article);
     } catch(error) {if(token===this.panelToken&&this.dialog.open)this.article.textContent=error.message;}
   }
   close(restoreFocus=true) {

@@ -12,7 +12,7 @@ test('publication follows manifest identity/order and excludes author metadata a
 });
 test('portable export includes local runtime/licences and exact animated bytes, not source files',async t=>{
  const {root,destination}=await fixture(t);const before=await fs.readFile(path.join(root,'scenes/Two accounts.md'));
- await exportWeb(root,destination);const names=await fs.readdir(destination);assert.deepEqual(names.sort(),['assets','content','index.html','licences','publication.json','reader.css','reader.js','web.css']);
+ await exportWeb(root,destination);const names=await fs.readdir(destination);assert.deepEqual(names.sort(),['assets','content','index.html','licences','licences-mermaid.txt','publication.json','reader.css','reader.js','web.css']);
  const book=JSON.parse(await fs.readFile(path.join(destination,'publication.json'),'utf8'));const data=JSON.parse(await fs.readFile(path.join(destination,book.scenes[0].file),'utf8'));
  const source=await fs.readFile(path.join(root,'assets/harbour-lamp.webp'));assert.ok(source.includes(Buffer.from('ANIM')));assert.deepEqual(await fs.readFile(path.join(destination,data.media['../assets/harbour-lamp.webp'].url)),source);
  assert.deepEqual(await fs.readFile(path.join(root,'scenes/Two accounts.md')),before);assert.ok(!(await fs.readFile(path.join(destination,'reader.js'),'utf8')).includes('acquireVsCodeApi'));

@@ -1,4 +1,5 @@
 'use strict';
+const { renderDiagrams } = require('./mermaid-reader.cjs');
 const { matterScene } = require('./matter-presentation.cjs');
 const { parseScene } = require('./parser.cjs');
 const { beatAtOffset } = require('./structure.cjs');
@@ -18,6 +19,7 @@ const sound = new TypeoutSound();
 let muted = Boolean(api.getState()?.muted);
 let autoplayOnTurn = api.getState()?.autoplayOnTurn !== false;
 let lastTypeoutRender = null;
+let diagramContext = null;
 let presented = false;
 let presentationEpoch = -1;
 let revision = -1;
@@ -151,6 +153,9 @@ function render() {
     }
   }
   lastTypeoutRender = null;
+  const diagramKey = `${sourceUri}:${revision}:${player.index}`;
+  const retainedDiagrams = diagramContext === diagramKey ? [...content.querySelectorAll('.story-diagram')] : [];
+  diagramContext = diagramKey;
   content.replaceChildren();
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
@@ -279,6 +284,13 @@ function render() {
     }
     content.append(ending);
   }
+  const candidates = [...retainedDiagrams];
+  for (const figure of content.querySelectorAll('.story-diagram')) {
+    const index = candidates.findIndex(old => old.dataset.diagramLine === figure.dataset.diagramLine &&
+      old.querySelector('.diagram-source').textContent === figure.querySelector('.diagram-source').textContent);
+    if (index >= 0) figure.replaceWith(candidates.splice(index, 1)[0]);
+  }
+  renderDiagrams(content, () => follower.changed());
   notes.afterRender();
   if (focusedLink) notes.find(focusedLink)?.focus({ preventScroll: true });
   controls();
