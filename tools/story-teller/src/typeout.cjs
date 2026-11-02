@@ -2,7 +2,7 @@
 const DEFAULT_SPEED = 30; // Unicode grapheme clusters per second.
 const MIN_SPEED = 1;
 const MAX_SPEED = 120;
-const FORMATS = Object.freeze(['yaml', 'annotation']);
+const FORMATS = Object.freeze(['yaml', 'annotation', 'janus', 'janus-log']);
 const SOUNDS = Object.freeze(['modem', 'keyboard', 'typewriter', 'none']);
 const BORDERS = Object.freeze(['none', 'grey']);
 const FILLS = Object.freeze(['none', 'grey', 'yellow']);

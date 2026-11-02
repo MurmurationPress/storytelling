@@ -6,6 +6,7 @@ const { beatAtOffset } = require('./structure.cjs');
 const { readerSpeed } = require('./reader-speed.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
+const { prepareDocument, revealDocument } = require('./janus-reader.cjs');
 const { graphemes } = require('./typeout.cjs');
 const { SceneAutoplay, currentReaderMessage } = require('./scene-navigation.cjs');
 const { SupportingReader } = require('./supporting-reader.cjs');
@@ -68,7 +69,8 @@ function resetNotes() {
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  status.textContent = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${!api.compactHeader && beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · ${api.compactHeader ? 'Prose pacing' : 'prose pacing'} ${pacingLabel}` : 'No beats';
+  const statusText = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${!api.compactHeader && beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · ${api.compactHeader ? 'Prose pacing' : 'prose pacing'} ${pacingLabel}` : 'No beats';
+  if (status.textContent !== statusText) status.textContent = statusText;
   warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...supportingDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
   document.getElementById('previous').disabled = preparing || (player.index === 0 && !documentNavigation.previous);
@@ -142,24 +144,37 @@ function revealAnnotation(progress, count) {
   for (const block of progress.querySelectorAll('p, li, blockquote, pre'))
     block.style.visibility = block.querySelector('[data-revealed="true"]') ? '' : 'hidden';
 }
+function refreshDocumentLinks() {
+  notes.afterRender();
+  // The complete reading copy provides keyboard/screen-reader links. Visual
+  // links still accept pointer input, without a second hidden tab sequence.
+  for (const link of content.querySelectorAll('.janus-document .typeout-progress button.wiki-link')) link.tabIndex = -1;
+}
 function render() {
   if(preparing){lastTypeoutRender=null;content.replaceChildren();controls();return;}
   const focusedLink = document.activeElement?.matches?.('button.wiki-link') && content.contains(document.activeElement) ? notes.key(document.activeElement) : null;
   const active = player.activeTypeout;
   if (active && lastTypeoutRender?.scene === player.scene && lastTypeoutRender.index === player.index && lastTypeoutRender.blockIndex === active.blockIndex) {
-    const progress = content.querySelector('.typeout-progress');
+    const progress = content.querySelector(`[data-typeout-line="${active.block.line}"] .typeout-progress`);
     if (progress) {
       const shown = player.visibleBlocks.find(block => block.type === 'typeout' && block.line === active.block.line);
-      if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
+      if (shown?.document) revealDocument(progress, shown.revealCount);
+      else if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
       else progress.textContent = shown?.visibleText || '';
       progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
-      notes.afterRender(); controls(); follower.changed(); return;
+      refreshDocumentLinks(); controls(); follower.changed(); return;
     }
   }
   lastTypeoutRender = null;
   const diagramKey = `${sourceUri}:${revision}:${player.index}`;
   const retainedDiagrams = diagramContext === diagramKey ? [...content.querySelectorAll('.story-diagram')] : [];
   diagramContext = diagramKey;
+  const retainedDocuments = new Map([...content.querySelectorAll('[data-janus-line]')].map(node => {
+    // Detaching even a retained node can reset nested scrolling in Chromium.
+    node.storyScroll = [...node.querySelectorAll('.janus-table-scroll, .janus-accessible')]
+      .map(surface => ({ surface, left: surface.scrollLeft, top: surface.scrollTop }));
+    return [node.dataset.janusLine, node];
+  }));
   content.replaceChildren();
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
@@ -193,8 +208,38 @@ function render() {
       }
       content.append(figure);
     } else if (block.type === 'typeout') {
+      if (block.document) {
+        let section = retainedDocuments.get(String(block.line));
+        if (section?.storyDocument !== block.document) section = null;
+        if (!section) {
+          section = document.createElement('section');
+          section.className = `typeout typeout-${block.format} janus-document${block.border === null ? '' : ` typeout-border-${block.border}`}${block.fill === null ? '' : ` typeout-fill-${block.fill}`}`;
+          section.dataset.typeoutLine = String(block.line);
+          section.dataset.janusLine = String(block.line); section.storyDocument = block.document;
+          if (beat.title) { const heading = document.createElement('h2'); heading.className = 'janus-title'; heading.innerHTML = block.document.titleHtml; section.append(heading); }
+          section.setAttribute('aria-label', block.format === 'janus' ? 'JANUS report' : 'JANUS internal analysis');
+          const accessible = document.createElement('div'); accessible.className = 'visually-hidden janus-accessible';
+          accessible.innerHTML = block.document.html;
+          for (const unit of accessible.querySelectorAll('[data-janus-unit]')) unit.removeAttribute('data-janus-unit');
+          const surface = document.createElement('div'); surface.className = 'typeout-surface';
+          const progress = document.createElement('div'); progress.className = 'typeout-progress';
+          progress.innerHTML = block.document.html;
+          // Complete semantic content is available once, without live row announcements.
+          for (const child of progress.children) child.setAttribute('aria-hidden', 'true');
+          surface.append(progress); section.append(accessible, surface); content.append(section);
+          prepareDocument(progress);
+        } else content.append(section);
+        revealDocument(section.querySelector('.typeout-progress'), block.revealCount);
+        for (const position of section.storyScroll || []) {
+          position.surface.scrollLeft = position.left; position.surface.scrollTop = position.top;
+        }
+        delete section.storyScroll;
+        if (active && active.block.line === block.line) lastTypeoutRender = { scene: player.scene, index: player.index, blockIndex: active.blockIndex };
+        continue;
+      }
       const section = document.createElement('section');
       section.className = `typeout typeout-${block.format}${block.border === null ? '' : ` typeout-border-${block.border}`}${block.fill === null ? '' : ` typeout-fill-${block.fill}`}`;
+      section.dataset.typeoutLine = String(block.line);
       section.setAttribute('aria-label', block.format === 'yaml' ? 'PRIME state output' : 'Annotation');
       const accessible = document.createElement(block.format === 'annotation' ? 'div' : 'span');
       accessible.className = 'visually-hidden';
@@ -295,7 +340,7 @@ function render() {
     if (index >= 0) figure.replaceWith(candidates.splice(index, 1)[0]);
   }
   renderDiagrams(content, () => follower.changed());
-  notes.afterRender();
+  refreshDocumentLinks();
   if (focusedLink) notes.find(focusedLink)?.focus({ preventScroll: true });
   controls();
   follower.changed();

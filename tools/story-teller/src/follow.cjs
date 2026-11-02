@@ -8,6 +8,10 @@ function latestRect(content, document) {
   if (!last) return null;
   if (!last.classList.contains('typeout')) return last.getBoundingClientRect();
   const progress = last.querySelector('.typeout-progress');
+  if (last.classList.contains('janus-document')) {
+    const shown = [...progress.querySelectorAll('[data-janus-unit]')].filter(unit => !unit.hidden);
+    return shown.at(-1)?.getBoundingClientRect() || null;
+  }
   let text;
   if (last.classList.contains('typeout-annotation')) {
     const shown = [...progress.querySelectorAll('[data-story-segment] > span:first-child')].filter(node => node.firstChild?.length);
@@ -34,8 +38,8 @@ class ScrollFollower {
     this.handlers = [
       [window, 'scroll', () => this.onScroll(), { passive: true }],
       [window, 'resize', () => this.changed(), { passive: true }],
-      [document, 'wheel', event => { if (!inAside(event) && event.deltaY < -1) this.suspend(); }, { passive: true }],
-      [document, 'touchstart', event => { this.touchY = inAside(event) ? null : event.touches[0]?.clientY ?? null; }, { passive: true }],
+      [document, 'wheel', event => { if (!inAside(event) && (event.deltaY < -1 || (event.target?.closest?.('.janus-table-scroll') && Math.abs(event.deltaX) > 1))) this.suspend(); }, { passive: true }],
+      [document, 'touchstart', event => { if (!inAside(event) && event.target?.closest?.('.janus-table-scroll')) this.suspend(); this.touchY = inAside(event) ? null : event.touches[0]?.clientY ?? null; }, { passive: true }],
       [document, 'touchmove', event => {
         if (inAside(event)) return;
         const y = event.touches[0]?.clientY;
@@ -43,12 +47,12 @@ class ScrollFollower {
         this.touchY = y ?? null;
       }, { passive: true }],
       [document, 'touchend', () => { this.touchY = null; }, { passive: true }],
-      [document, 'pointerdown', event => { this.scrollbarDrag = !inAside(event) && event.clientX >= window.innerWidth - 20; }, { passive: true }],
+      [document, 'pointerdown', event => { if (!inAside(event) && event.target?.closest?.('.janus-table-scroll')) this.suspend(); this.scrollbarDrag = !inAside(event) && event.clientX >= window.innerWidth - 20; }, { passive: true }],
       [document, 'pointerup', () => { this.scrollbarDrag = false; }, { passive: true }],
       [document, 'keydown', event => {
         if (inAside(event)) return;
         if (event.target?.matches?.('input, textarea, select, [contenteditable="true"]')) return;
-        if (['ArrowUp', 'PageUp', 'Home'].includes(event.key) || (event.key === ' ' && event.shiftKey)) this.suspend();
+        if ((event.target?.closest?.('.janus-table-scroll') && ['ArrowLeft', 'ArrowRight'].includes(event.key)) || ['ArrowUp', 'PageUp', 'Home'].includes(event.key) || (event.key === ' ' && event.shiftKey)) this.suspend();
       }],
       [button, 'click', () => this.resume()]
     ];

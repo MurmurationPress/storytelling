@@ -39,3 +39,17 @@ See [[Chat Performance]] and [[Art Prototype]].
 Ted accepts the prototype typing as excellent, with good pace and the alien quality sought. Preserve its restrained printout and default burst timing as the reference for reusable PRIME. This does not select JANUS's presentation or require sound. Chat is the next new component to test the common lifecycle against real manuscript dialogue. See [[Managed EPUB Foundation]].
 
 **2026-10-23 direction:** JANUS will use existing supporting Markdown notes and directives; no separate JANUS component is required. Ted has accepted the explicit note-link/preview/panel experience.
+
+
+## JANUS document profiles — 2026-11-02
+
+**Ted's implementation request:** distinguish circulated `[!janus]` reports from
+restricted `[!janus-log]` analysis in callout conversion, Story Teller preview and
+web export. This extends the earlier notes/directives direction with two profiles
+of the existing type-out component, not live generative dialogue. Preserve all
+authored content; reveal metadata, paragraphs, list items and complete table rows
+in source order, with silence by default.
+
+The implementation and synthetic review examples are documented in
+[the JANUS guide](../tools/story-teller/JANUS.md). Author acceptance and
+actual-device/accessibility verification remain separate from automated checks.
