@@ -6,6 +6,16 @@ created: 2026-10-21
 
 # Story Teller
 
+**Chat subtext review (2026-11-02, 0.18.0):** Ted requested lossless conversion
+of legacy third fields. The focused candidate adds message-owned optional subtext
+using bare `@subtext` plus the existing continuation lines. It enters beneath the
+completed message without a separate wait or sound; existing whole-message chat
+playback remains. [Guide and synthetic example](../tools/story-teller/CHAT-SUBTEXT.md)
+and [validation](../tools/story-teller/test/evidence/chat-subtext/README.md) distinguish
+installed/HTTP evidence from author acceptance, which remains open. Native chat
+conversion Apply/Undo is checked separately from the previously unresolved
+component-metadata migration Undo scope. No manuscript or production reader changed.
+
 **PR #36 sizing follow-up (2026-11-02, 0.17.1):** Ted identified a standalone
 relationship graph still constrained by the inline thumbnail height cap. Document
 figures and block reveal wrappers now fill the component width with natural

@@ -195,6 +195,8 @@ function parseScene(source, { prosePacing = false } = {}) {
         let responding = false;
         let respondingForChat = false;
         let canContinue = false;
+        let subtextLines = 0;
+        const subtextSources = new Map();
         let title = null;
         let titleLine = null;
         let viewer = null;
@@ -210,10 +212,21 @@ function parseScene(source, { prosePacing = false } = {}) {
           const continuation = line.match(/^ {2}\|(?: (.*))?$/);
           if (continuation) {
             if (!canContinue) { invalid = 'message continuation needs an immediately preceding message'; break; }
-            messages[messages.length - 1].text += '\n' + (continuation[1] ?? '');
+            const message=messages[messages.length - 1], value=continuation[1] ?? '';
+            if(canContinue==='subtext') {
+              message.subtext += (subtextLines++ ? '\n':'') + value;
+              subtextSources.get(message).push({text:value,line:invalidLine});
+            } else message.text += '\n' + value;
             continue;
           }
           if (!line.trim()) continue;
+          if(line.trim()==='@subtext') {
+            const message=messages.at(-1);
+            if(!canContinue || !message) {invalid='@subtext needs an immediately preceding message';break;}
+            if(message.subtext!==undefined) {invalid='@subtext must appear only once per message';break;}
+            message.subtext='';subtextLines=0;subtextSources.set(message,[]);
+            canContinue='subtext';continue;
+          }
           canContinue = false;
           const titleHeader = line.trim().match(/^(?:@title(?:\s+(.*))?|#(?:\s+(.*))?)$/);
           if (titleHeader) {
@@ -291,6 +304,11 @@ function parseScene(source, { prosePacing = false } = {}) {
         } else {
           flush();
           for (const [index, message] of messages.entries()) {
+            if(message.subtext!==undefined) {
+              const subtext=renderChat(message.subtext);
+              if(subtext.references.length)message.subtextHtml=subtext.html;
+              for(const source of subtextSources.get(message))wikiReferences.push(...renderChat(source.text).references.map(ref=>({...ref,line:source.line})));
+            }
             const rendered = renderChat(message.text);
             if (rendered.references.length) { message.html = rendered.html; message.timingText = rendered.visibleText; }
             wikiReferences.push(...rendered.references.map(ref => ({ ...ref, line: ref.line + messageLines[index] - 1 })));

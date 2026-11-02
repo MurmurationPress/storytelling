@@ -20,7 +20,7 @@ test('chat header and positional contexts share parser syntax and suppress singl
   assert.ok(!labels(first).includes('@viewer'));
   assert.ok(!labels(first).includes('@pace'));
   const after = suggestionsAt(chat, chat.lastIndexOf('@\nIvo') + 1, true);
-  assert.deepEqual(labels(after), ['@delay', '@pause', '@responding']);
+  assert.deepEqual(labels(after), ['@delay', '@pause', '@responding', '@subtext']);
   const edit = '```chat\n@pace br\nMara: Hello.\n```';
   assert.deepEqual(labels(at(edit, '@pace br')), ['brisk']);
   assert.equal(apply(edit, at(edit, '@pace br')[0]), '```chat\n@pace brisk\nMara: Hello.\n```');

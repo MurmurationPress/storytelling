@@ -9,8 +9,8 @@ const chats = source => parseScene(source).beats.flatMap(b => b.blocks).filter(b
 test('fictional representative containers preserve content/title/viewer, multiline and inherited speaker', () => {
   const source = readFileSync('samples/conversion-example.md', 'utf8');
   const result = convertChats(source);
-  assert.equal(result.count, 2); assert.equal(result.warnings.length, 1);
-  assert.match(result.warnings[0].message, /subtext/);
+  assert.equal(result.count, 3); assert.equal(result.warnings.length, 0);
+  assert.equal(chats(result.text)[2].messages[0].subtext, "quietly");
   const blocks = chats(result.text);
   assert.equal(blocks[0].title, 'Harbour link'); assert.equal(blocks[0].viewer, 'Ari'); assert.equal(blocks[0].ticks, false);
   assert.deepEqual(blocks[0].messages.map(m => [m.speaker, m.text]), [
@@ -51,7 +51,7 @@ test('all existing valid Story Teller syntax remains exactly unchanged', () => {
 });
 test('ambiguous and unsupported containers are retained whole with review warnings', () => {
   for (const body of [
-    '{{Ari|Hi|quietly}}', '{{|Unresolved speaker|}}', '# One\n# Two\n{{Ari|Hi|}}',
+    '{{|Unresolved speaker|}}', '# One\n# Two\n{{Ari|Hi|}}',
     '> Ari, Bo\n{{Ari|Hi|}}', '^ System\n{{System|Hi|}}', '{{Ari|Hi|}}\n...\n{{Bo|Bye|}}',
     '{{Ari|Hi|}}\n# A later comment', '{{Ari|Unclosed',
     '{{Ari|![[image.png]]|}}', '{{Ari|Hi|}} trailing prose', '{{Ari|Hi|}}\n@unknown yes',

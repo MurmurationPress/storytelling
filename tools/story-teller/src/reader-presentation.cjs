@@ -86,8 +86,8 @@ function controls() {
   document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
   document.getElementById('replay').disabled = preparing || !beat || !presented;
   const reveal = document.getElementById('reveal');
-  reveal.hidden = api.compactControls ? false : !active;
-  reveal.disabled = preparing || !presented || (api.compactControls ? isMatter || !beat || player.phase === 'completed' : !active);
+  reveal.hidden = api.compactControls ? false : !(active || player.activeMessage);
+  reveal.disabled = preparing || !presented || (api.compactControls ? isMatter || !beat || player.phase === 'completed' : !(active || player.activeMessage));
   const mute = document.getElementById('mute');
   mute.textContent = muted ? 'Unmute sound' : 'Mute sound'; mute.setAttribute('aria-pressed', String(muted));
   document.getElementById('enable-sound').hidden = isMatter || !needsAudioGesture || muted || player.reducedMotion || sound.unavailable || sound.context?.state === 'running';
@@ -320,6 +320,11 @@ function render() {
         const text = document.createElement('p');
         if (message.html) text.innerHTML = message.html; else text.textContent = message.text;
         item.append(speaker, text);
+        if(message.subtext?.trim()) {
+          const subtext=document.createElement('p');subtext.className='chat-subtext';
+          if(message.subtextHtml)subtext.innerHTML=message.subtextHtml;else subtext.textContent=message.subtext;
+          item.append(subtext);
+        }
         if (message.speaker === block.viewer) item.className = 'outgoing';
         if (message.status) {
           const ticks = document.createElement('span');

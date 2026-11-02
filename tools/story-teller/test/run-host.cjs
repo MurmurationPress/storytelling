@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'chat-subtext') {
+    importProject=path.join(directory,'chat-subtext-project');
+    await fs.cp(path.join(root,'samples/chat-subtext-project'),importProject,{recursive:true});
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'formatted-sizing') {
     importProject=path.join(directory,'formatted-sizing-project');
     await fs.cp(path.join(root,'samples/formatted-sizing-project'),importProject,{recursive:true});
@@ -141,7 +145,7 @@ async function until(fn, timeout = 60000) {
     `--extensionDevelopmentPath=${developmentPath}`, `--extensionTestsPath=${path.join(__dirname, 'host.cjs')}`,
     // Keep native CDP timing independent of desktop occlusion; application
     // visibility/pause handling is still exercised by the reader itself.
-    ...(['formatted-media','formatted-sizing'].includes(process.env.STORY_TELLER_HOST_SCOPE) ? ['--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-backgrounding-occluded-windows'] : []),
+    ...(['formatted-media','formatted-sizing','chat-subtext'].includes(process.env.STORY_TELLER_HOST_SCOPE) ? ['--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-backgrounding-occluded-windows'] : []),
     `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window', ...(importProject ? [importProject] : [])
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
@@ -209,6 +213,67 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'chat-subtext') {
+      const {probeChatSubtext}=require('./chat-subtext-probe.cjs'),report={mode:vsix?'installed VSIX':'Development Host',layouts:{}};
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Chat.md'});await bringFront();
+      await until(async()=>await evaluate('Boolean(doc?.getElementById("status")?.textContent.includes("Retained exchange"))'));
+      const main=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page');
+      const mainSocket=new WebSocket(main.webSocketDebuggerUrl);await new Promise(r=>mainSocket.onopen=r);let mainId=0;
+      const mainCommand=(method,params)=>new Promise((resolve,reject)=>{const id=++mainId;mainSocket.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===id)v.error?reject(Error(JSON.stringify(v.error))):resolve(v.result);};mainSocket.send(JSON.stringify({id,method,params}));});
+      const mainEval=async expression=>(await mainCommand('Runtime.evaluate',{expression,returnByValue:true,userGesture:true}))?.result?.value;
+      const screenshot=async name=>{const data=(await mainCommand('Page.captureScreenshot',{format:'png'}))?.data;assert.ok(data);await fs.writeFile(path.join(directory,name+'.png'),Buffer.from(data,'base64'));};
+      for(const narrow of [false,true]){
+        await request('component-reader-layout',undefined,{narrow});
+        await evaluate('doc.getElementById("restart").click()');await evaluate('doc.getElementById("play").click()',true);
+        await until(async()=>await evaluate('Boolean(doc.querySelector(".responding"))'));
+        assert.equal(await evaluate('doc.querySelectorAll(".chat-subtext").length'),0);
+        await screenshot(narrow?'subtext-narrow-waiting':'subtext-desktop-waiting');
+        await evaluate('doc.getElementById("pause").click()');await sleep(400);assert.equal(await evaluate('doc.querySelectorAll(".chat li").length'),0);
+        await evaluate('doc.getElementById("pause").click()');
+        await until(async()=>await evaluate('doc.querySelectorAll(".chat li").length')===1);
+        await evaluate('doc.getElementById("pause").click()');
+        assert.equal(await evaluate('doc.querySelector(".chat-subtext").textContent'),'local state');
+        await screenshot(narrow?'subtext-narrow-message':'subtext-desktop-message');
+        // Native Reveal completes the next pending message and its metadata in
+        // one existing player transition; it never runs a separate subtext timer.
+        assert.ok(!await evaluate('doc.getElementById("reveal").hidden'));
+        await evaluate('doc.getElementById("reveal").click()');
+        assert.equal(await evaluate('doc.querySelectorAll(".chat li").length'),2);
+        assert.equal(await evaluate('doc.querySelectorAll(".chat-subtext").length'),2);
+        await evaluate('(()=>{const s=doc.getElementById("playback-speed");s.value="1.5";s.dispatchEvent(new doc.defaultView.Event("change",{bubbles:true}));doc.getElementById("pause").click();})()');
+        await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+        const rows=await evaluate(`(${probeChatSubtext})(doc)`);assert.equal(rows.length,5);
+        assert.deepEqual(rows.map(r=>r.subtext!==null),[true,true,false,false,true]);assert.ok(rows[2].outgoing);assert.equal(rows[2].status,'✓✓');
+        for(const row of rows)if(row.subtext!==null){assert.ok(row.associated&&row.inside&&!row.ariaHidden&&!row.live);assert.ok(row.contrast>=4.5&&row.fontSize>=14&&row.fontSize<row.bodySize,JSON.stringify(row));}
+        assert.equal(await evaluate('doc.querySelectorAll(".chat script").length'),0);
+        assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+        await evaluate('doc.scrollingElement.scrollTop=0');await screenshot(narrow?'subtext-narrow-complete':'subtext-desktop-complete');
+        report.layouts[narrow?'narrow':'desktop']=rows;
+      }
+      await evaluate('doc.querySelector(".chat-subtext button.wiki-link").click()');
+      await until(async()=>await evaluate('doc.querySelector("dialog[open] article")?.textContent.includes("labels information retained")'));
+      await evaluate('doc.querySelector("dialog").close()');
+      await evaluate('doc.getElementById("replay").click()');assert.equal(await evaluate('doc.querySelectorAll(".chat-subtext").length'),0);
+      await evaluate('doc.getElementById("next").click()');await sleep(2200);assert.equal(await evaluate('doc.querySelectorAll(".chat-subtext").length'),0);
+      await evaluate('doc.getElementById("previous").click()');assert.equal(await evaluate('doc.querySelectorAll(".chat-subtext").length'),3);
+      // Exercise the real conversion review on the disposable generic source.
+      await request('close-preview');
+      const legacy=await fs.readFile(path.join(importProject,'Legacy.md'),'utf8');
+      await request('edit',legacy);await request('snapshot');const before=JSON.parse(await fs.readFile(path.join(directory,'snapshot.json'),'utf8'));
+      await request('start-conversion');await request('show-notifications');
+      await until(async()=>await mainEval('[...document.querySelectorAll(".monaco-button")].some(b=>b.textContent==="Apply")'));
+      await mainEval('[...document.querySelectorAll(".monaco-button")].find(b=>b.textContent==="Apply").click()');
+      await until(async()=>{const r=JSON.parse(await fs.readFile(path.join(directory,'conversion-result.json'),'utf8'));return r.status==='applied';});
+      await request('snapshot');const applied=JSON.parse(await fs.readFile(path.join(directory,'snapshot.json'),'utf8'));
+      assert.ok(applied.text.includes('@subtext'));assert.equal(applied.disk,before.disk);assert.ok(applied.dirty);
+      await request('hide-notifications');await request('undo');await request('snapshot');
+      const undone=JSON.parse(await fs.readFile(path.join(directory,'snapshot.json'),'utf8'));
+      report.conversion={status:'applied',count:1,diskUnchanged:applied.disk===before.disk,undoRestored:undone.text===legacy};
+      await fs.writeFile(path.join(directory,'chat-subtext.json'),JSON.stringify(report,null,2));
+      mainSocket.close();assert.equal(undone.text,legacy,'native chat conversion Undo must restore the legacy source');
+      console.log('PASS actual VS Code chat subtext: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'formatted-sizing') {
       const {measureSizing,captureSizingPreparation}=require('./formatted-sizing-probe.cjs');
       const baseline=process.env.STORY_TELLER_SIZING_BASELINE==='1',report={mode:vsix?'installed VSIX':'Development Host',baseline,layouts:{}};

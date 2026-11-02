@@ -69,7 +69,7 @@ test('legacy alias pipes are shielded, with inheritance, escapes and exact conti
   assert.equal(convertChats(wrap('{{[[Celia]]|Hello [[Skip|friend]]}}')).count, 1);
 });
 test('legacy malformed, ambiguous and unsupported input stays unchanged with warnings', () => {
-  for (const body of ['{{[[Celia|Handle]|Hello}}','{{[[Celia|]]|Hello}}','{{Celia|One|Two|}}','{{Celia|Hello|whisper}}','{{**Celia**|Hello}}','{{Celia|[[broken|alias}}']) {
+  for (const body of ['{{[[Celia|Handle]|Hello}}','{{[[Celia|]]|Hello}}','{{Celia|One|Two|}}','{{**Celia**|Hello}}','{{Celia|[[broken|alias}}']) {
     const source = wrap(body), result = convertChats(source);
     assert.equal(result.text, source); assert.equal(result.count, 0); assert.equal(result.warnings.length, 1);
   }

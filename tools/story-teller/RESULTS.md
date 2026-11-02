@@ -1952,3 +1952,32 @@ desktop/narrow widths. Before/after captures and executed results are retained i
 The existing native migration Undo verification limitation recorded for 0.17.0
 remains unresolved and is not reclassified by these sizing checks; migration code
 is unchanged. No merge, deployment, extension publication or real-book edit occurs.
+
+## Legacy chat message subtext — 2026-11-02 (0.18.0)
+
+Review candidate from main `5aea18c` (merged #36). The legacy converter now carries
+the optional third field into message-owned subtext rather than blocking the
+whole chat. A bare `@subtext` after a message, followed by `  | text` lines, reuses
+the existing continuation grammar without treating metadata as speech or changing
+previously valid speaker lines. Multiline whitespace, escaped delimiters, Unicode
+and explicit supporting links follow chat's existing conventions. Genuine wrapper/
+field ambiguity still produces review warnings. No discard setting was added.
+
+The shared renderer appends one subordinate, safely rendered paragraph only when
+the message is complete. There is no separate timer, sound or hidden copy. Normal
+chat waits, alignment, ticks and body formatting stay. The extension's existing
+Reveal Immediately now also completes a pending chat message (including subtext);
+web Reveal retains its whole-beat policy. Reduced-motion preference changes keep
+existing chat waits and only immediately finish typeout animation.
+
+The full deterministic suite passes 356 tests; syntax checks, both reader bundles
+and packaging pass. The authoring guide, review fixture and
+[validation evidence](test/evidence/chat-subtext/README.md) record grammar, scope,
+screenshots and actual HTTP/native platforms. Document/selection review,
+Cancel/stale-source guards, one-edit Apply and idempotence have focused coverage;
+there is no project-wide legacy-chat conversion command. The installed native
+chat scope verifies real diff/Apply/Undo with disk unchanged. This does not resolve
+the separately recorded component-metadata migration Undo verification limitation.
+No actual adaptation, PrimeTrilogy manuscript, merge, deployment or publication is
+included. Author acceptance remains open; Safari/iPad and human screen-reader
+acceptance are not inferred from DOM/keyboard/contrast checks.

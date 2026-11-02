@@ -1,0 +1,247 @@
+{
+  "layouts": {
+    "1100": {
+      "light": [
+        {
+          "speaker": "Companion",
+          "text": "Limited continuity. External context unavailable.",
+          "subtext": "local state",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.042674218774026,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Companion",
+          "text": "A retained observation remains available.",
+          "subtext": "retained context \u2014 \u03b1 \u2192 \u03b2",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.042674218774026,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Operator",
+          "text": "Confirm the retained account.",
+          "subtext": null,
+          "outgoing": true,
+          "status": "\u2713\u2713"
+        },
+        {
+          "speaker": "Companion",
+          "text": "An empty third field remains a normal message.",
+          "subtext": null,
+          "outgoing": false,
+          "status": null
+        },
+        {
+          "speaker": "Companion",
+          "text": "No external account has been inferred.",
+          "subtext": "Source: retained record\nA literal | divider. **Literal emphasis**, <script>literal</script>.\n@pause 900ms is metadata text.\nRead the state note.",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.042674218774026,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        }
+      ],
+      "dark": [
+        {
+          "speaker": "Companion",
+          "text": "Limited continuity. External context unavailable.",
+          "subtext": "local state",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.517572129349787,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Companion",
+          "text": "A retained observation remains available.",
+          "subtext": "retained context \u2014 \u03b1 \u2192 \u03b2",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.517572129349787,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Operator",
+          "text": "Confirm the retained account.",
+          "subtext": null,
+          "outgoing": true,
+          "status": "\u2713\u2713"
+        },
+        {
+          "speaker": "Companion",
+          "text": "An empty third field remains a normal message.",
+          "subtext": null,
+          "outgoing": false,
+          "status": null
+        },
+        {
+          "speaker": "Companion",
+          "text": "No external account has been inferred.",
+          "subtext": "Source: retained record\nA literal | divider. **Literal emphasis**, <script>literal</script>.\n@pause 900ms is metadata text.\nRead the state note.",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.517572129349787,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        }
+      ],
+      "firstMessageAccessibility": "- list \"Continuity exchange\":\n  - listitem:\n    - strong: Companion\n    - paragraph: Limited continuity. External context unavailable.\n    - paragraph: local state",
+      "errors": [],
+      "checks": "responding wait; no early subtext; atomic completion; pause/speed; no extra delay; consecutive speakers; alignment/ticks; literal HTML; note keyboard/focus; reveal/replay/restart/Next/Previous/autoplay; restored beat; reduced motion; overflow; contrast"
+    },
+    "375": {
+      "light": [
+        {
+          "speaker": "Companion",
+          "text": "Limited continuity. External context unavailable.",
+          "subtext": "local state",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.042674218774026,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Companion",
+          "text": "A retained observation remains available.",
+          "subtext": "retained context \u2014 \u03b1 \u2192 \u03b2",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.042674218774026,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Operator",
+          "text": "Confirm the retained account.",
+          "subtext": null,
+          "outgoing": true,
+          "status": "\u2713\u2713"
+        },
+        {
+          "speaker": "Companion",
+          "text": "An empty third field remains a normal message.",
+          "subtext": null,
+          "outgoing": false,
+          "status": null
+        },
+        {
+          "speaker": "Companion",
+          "text": "No external account has been inferred.",
+          "subtext": "Source: retained record\nA literal | divider. **Literal emphasis**, <script>literal</script>.\n@pause 900ms is metadata text.\nRead the state note.",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.042674218774026,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        }
+      ],
+      "dark": [
+        {
+          "speaker": "Companion",
+          "text": "Limited continuity. External context unavailable.",
+          "subtext": "local state",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.517572129349787,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Companion",
+          "text": "A retained observation remains available.",
+          "subtext": "retained context \u2014 \u03b1 \u2192 \u03b2",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.517572129349787,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        },
+        {
+          "speaker": "Operator",
+          "text": "Confirm the retained account.",
+          "subtext": null,
+          "outgoing": true,
+          "status": "\u2713\u2713"
+        },
+        {
+          "speaker": "Companion",
+          "text": "An empty third field remains a normal message.",
+          "subtext": null,
+          "outgoing": false,
+          "status": null
+        },
+        {
+          "speaker": "Companion",
+          "text": "No external account has been inferred.",
+          "subtext": "Source: retained record\nA literal | divider. **Literal emphasis**, <script>literal</script>.\n@pause 900ms is metadata text.\nRead the state note.",
+          "outgoing": false,
+          "status": null,
+          "contrast": 8.517572129349787,
+          "fontSize": 14.96,
+          "bodySize": 17,
+          "associated": true,
+          "inside": true,
+          "ariaHidden": false,
+          "live": false
+        }
+      ],
+      "firstMessageAccessibility": "- list \"Continuity exchange\":\n  - listitem:\n    - strong: Companion\n    - paragraph: Limited continuity. External context unavailable.\n    - paragraph: local state",
+      "errors": [],
+      "checks": "responding wait; no early subtext; atomic completion; pause/speed; no extra delay; consecutive speakers; alignment/ticks; literal HTML; note keyboard/focus; reveal/replay/restart/Next/Previous/autoplay; restored beat; reduced motion; overflow; contrast"
+    }
+  },
+  "browser": "156.0.8078.79"
+}

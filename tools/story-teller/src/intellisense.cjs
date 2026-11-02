@@ -1,5 +1,6 @@
 'use strict';
 const { inspectStructure, contextAt } = require('./structure.cjs');
+const { chatMessage } = require('./markdown.cjs');
 const { choices: settingChoices, values, DEFAULT_SPEED, MIN_SPEED, MAX_SPEED } = require('./settings.cjs');
 const { choices: insertChoices } = require('./insert.cjs');
 
@@ -8,6 +9,7 @@ const settingText = (kind, name) => settingChoices[kind].find(choice => choice.i
 const insertText = name => insertChoices.find(choice => choice.id === name).description;
 const help = Object.freeze({
   title: { scope: 'Component header', detail: 'Type-out: single-line safe Markdown heading, separate from beat navigation. Chat: use # Title or @title.' },
+  subtext: { scope: 'After a chat message', detail: 'Bare @subtext starts optional metadata for the preceding message. Put each line under it as two spaces, | and a space. Reveals with the completed message; adds no wait or sound.' },
   timestamp: { scope: 'Type-out header', detail: 'Exact single-line authored wording, rendered outside the animated body. No date parsing or timezone inference.' },
   identity: { scope: 'Type-out header', detail: 'Use component to suppress legacy JANUS beat-title inheritance, including intentionally untitled components.' },
   viewer: { scope: 'Chat header', detail: `${settingText('chat', 'viewer')} Exact name; required for ticks and incoming responding cues.` },
@@ -65,7 +67,10 @@ function scopeAt(source, offset) {
       if (/^@pause\b/.test(text) || /^[^@#:\n][^:\n]*:[ \t]+/.test(text)) laterEvents = true;
       if (/^[^@#:\n][^:\n]*:[ \t]+/.test(text)) laterMessages = true;
     }
-    return { kind: 'chat', structure, line, record, column, fence, events, messages, declared };
+    const preceding=structure.lines.slice(fence.start+1,line).filter(record=>record.text.trim());
+    const previous=preceding.at(-1), anchor=preceding.findLast(record=>!/^ {2}\|/.test(record.text));
+    const messageScope=Boolean(anchor && !/^(?:#|@title)(?:\s|$)/.test(anchor.text.trim()) && chatMessage(anchor.text) && (previous===anchor || /^ {2}\|/.test(previous.text)));
+    return { kind: 'chat', structure, line, record, column, fence, events, messages, declared, messageScope };
   }
   if (contextAt(structure, offset).kind !== 'root') return null;
   const prefix = record.text.slice(0, column);
@@ -79,6 +84,7 @@ function permitted(scope) {
   if (scope.kind === 'root') return timing;
   if (scope.kind === 'typeout') return header.typeout;
   const names = [...timing, 'responding'];
+  if(scope.messageScope || scope.record.text.trim()==='@subtext')names.push('subtext');
   if (!scope.events) names.push('title', 'viewer', 'ticks');
   if (!scope.messages) names.push('pace');
   return names;
@@ -103,6 +109,7 @@ function insertion(name, hasValue) {
   if (hasValue) return `@${name}`;
   if (valueChoices[name]) return `@${name} \${1:${valueChoices[name][0]}}`;
   if (numeric[name]) return `@${name} \${1:${numeric[name].example}}${numeric[name].suffix}`;
+  if (name === 'subtext') return '@subtext\n  | ${1:Message subtext}';
   if (name === 'viewer') return '@viewer ${1:Participant}';
   if (name === 'title') return '@title ${1:Component title}';
   if (name === 'timestamp') return '@timestamp ${1:Authored timestamp}';
