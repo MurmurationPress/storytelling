@@ -1,0 +1,23 @@
+{
+  "schema": "story-teller-project",
+  "version": 1,
+  "title": "Document media sizing \u2014 synthetic review",
+  "parts": [
+    {
+      "id": "p",
+      "title": "Review",
+      "scenes": [
+        "s"
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s",
+      "partId": "p",
+      "label": "1",
+      "title": "Document media sizing",
+      "file": "scenes/Sizing.md"
+    }
+  ]
+}

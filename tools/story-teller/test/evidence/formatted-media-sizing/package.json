@@ -1,0 +1,7 @@
+{
+  "version": "0.17.1",
+  "sha256": "adb8df643976d00d287d8b1916b63a079ca7476260ea7cc67bbb1824e47b87a7",
+  "bytes": 5918774,
+  "entries": 416,
+  "checks": "both bundles, CSS, guide, parser and migration source match tested build; synthetic samples/tests excluded"
+}

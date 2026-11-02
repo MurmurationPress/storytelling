@@ -1934,3 +1934,21 @@ for exact scope, package digest, screenshots, native migration results and test
 harness findings. The [guide](FORMATTED-MEDIA.md) documents syntax and timing;
 [sample](samples/formatted-media-project/) is wholly synthetic. No actual book,
 production reader, merge, Marketplace publication or author acceptance is implied.
+
+### PR #36 sizing refinement — 2026-11-02 (0.17.1)
+
+A large portrait graph exposed a missed inline-image cap: standalone formatted
+figures still inherited `max-height:12rem`, and annotation's atomic image wrapper
+also inherited `inline-block`. Standalone document figures and their block reveal
+wrappers now fill the component width, retain aspect ratio and use natural height
+with normal page scrolling. The inline/table-cell cap stays. Mermaid keeps its
+intrinsic width and readable text inside local horizontal scrolling.
+
+The dedicated synthetic sizing workshop uses a 1000×1800 graph and wide diagram
+in JANUS, JANUS log and annotation. Rendered-dimension regressions measure hidden
+preparation as well as visible playback in HTTP and installed VSIX readers at
+desktop/narrow widths. Before/after captures and executed results are retained in
+[test/evidence/formatted-media-sizing](test/evidence/formatted-media-sizing/README.md).
+The existing native migration Undo verification limitation recorded for 0.17.0
+remains unresolved and is not reclassified by these sizing checks; migration code
+is unchanged. No merge, deployment, extension publication or real-book edit occurs.

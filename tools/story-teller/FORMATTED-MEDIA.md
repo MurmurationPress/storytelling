@@ -76,6 +76,24 @@ scene/line diagnostic. Unsafe export paths remain export errors rather than
 being silently ignored. Images fit their component, retain their aspect ratio,
 and table-cell images are bounded; wide tables and diagrams scroll locally.
 
+Standalone figures fill the available component-body width, keep their natural
+aspect ratio and have no height cap. A portrait document can span several screens:
+normal vertical reading scroll keeps graph labels legible instead of shrinking
+the whole document to a thumbnail or viewport height. Its block reveal wrapper
+fills that same width during hidden preparation and visible playback. Captions
+remain below the figure. Genuine inline images and table-cell images retain the
+compact `12rem` height maximum; table-cell width also stays bounded to `12rem`.
+Mermaid retains its readable intrinsic SVG width and font size inside a focusable
+horizontal scroll region, without scaling all its text down to fit the page.
+
+The [sizing workshop](samples/formatted-sizing-project/) tests a substantial
+1000×1800 portrait relationship graph and a wide eight-stage Mermaid diagram in
+all three formats. Use `python test/formatted-sizing-web.py /tmp/new-sizing-reader
+/tmp/sizing-evidence` after exporting that project; the installed-extension scope
+is `STORY_TELLER_HOST_SCOPE=formatted-sizing` with the normal `test:host` command.
+Both tests assert actual image/wrapper/SVG dimensions in hidden preparation and
+visible playback at desktop and narrow widths, not just successful asset loads.
+
 ## Reveal and preparation
 
 JANUS keeps its paragraph, explicit statement, list-item and whole-table-row
@@ -132,6 +150,6 @@ directory with `node src/web-export.cjs samples/formatted-media-project /tmp/new
 then run `python test/formatted-media-web.py /tmp/new-reader /tmp/media-evidence`
 in an environment with Python Playwright and `/usr/bin/google-chrome`.
 Use `STORY_TELLER_HOST_SCOPE=formatted-media npm run test:host` for actual VS Code;
-add `STORY_TELLER_VSIX=/absolute/path/story-teller-0.17.0.vsix` for the installed
+add `STORY_TELLER_VSIX=/absolute/path/story-teller-0.17.1.vsix` for the installed
 package. Tests use disposable synthetic projects, not actual adaptations.
 See [RESULTS.md](RESULTS.md) and retained evidence for executed platforms and limits.

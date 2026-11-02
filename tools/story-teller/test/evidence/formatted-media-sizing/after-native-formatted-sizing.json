@@ -1,0 +1,648 @@
+{
+  "mode": "installed VSIX",
+  "baseline": false,
+  "layouts": {
+    "desktop": {
+      "preparation": [
+        {
+          "viewportWidth": 595,
+          "format": "typeout-janus",
+          "image": {
+            "width": 469.3125,
+            "height": 844.75,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 469.3125,
+            "height": 1652.203125
+          },
+          "figure": {
+            "width": 469.3125,
+            "height": 874.109375
+          },
+          "wrapper": {
+            "width": 469.3125,
+            "height": 874.109375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 469.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "viewportWidth": 595,
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 469.3125,
+            "height": 844.75,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 469.3125,
+            "height": 1652.203125
+          },
+          "figure": {
+            "width": 469.3125,
+            "height": 874.109375
+          },
+          "wrapper": {
+            "width": 469.3125,
+            "height": 874.109375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 469.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "viewportWidth": 595,
+          "format": "typeout-annotation",
+          "image": {
+            "width": 470,
+            "height": 846,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 470,
+            "height": 1614.8125
+          },
+          "figure": {
+            "width": 470,
+            "height": 873.921875
+          },
+          "wrapper": {
+            "width": 470,
+            "height": 873.921875,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 309.546875,
+            "height": 279.9375
+          },
+          "columns": [
+            "112.062px",
+            "125.844px",
+            "71.6406px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 470,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          },
+          "stageVisibility": "hidden"
+        }
+      ],
+      "visible": [
+        {
+          "viewportWidth": 580,
+          "format": "typeout-janus",
+          "image": {
+            "width": 454.3125,
+            "height": 817.75,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 454.3125,
+            "height": 1679.4375
+          },
+          "figure": {
+            "width": 454.3125,
+            "height": 847.109375
+          },
+          "wrapper": {
+            "width": 454.3125,
+            "height": 847.109375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 454.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          }
+        },
+        {
+          "viewportWidth": 580,
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 454.3125,
+            "height": 817.75,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 454.3125,
+            "height": 1679.4375
+          },
+          "figure": {
+            "width": 454.3125,
+            "height": 847.109375
+          },
+          "wrapper": {
+            "width": 454.3125,
+            "height": 847.109375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 454.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          }
+        },
+        {
+          "viewportWidth": 580,
+          "format": "typeout-annotation",
+          "image": {
+            "width": 455,
+            "height": 819,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 455,
+            "height": 1637.40625
+          },
+          "figure": {
+            "width": 455,
+            "height": 846.921875
+          },
+          "wrapper": {
+            "width": 455,
+            "height": 846.921875,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 309.546875,
+            "height": 279.9375
+          },
+          "columns": [
+            "112.062px",
+            "125.844px",
+            "71.6406px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 455,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          }
+        }
+      ]
+    },
+    "narrow": {
+      "preparation": [
+        {
+          "viewportWidth": 379,
+          "format": "typeout-janus",
+          "image": {
+            "width": 257,
+            "height": 462.59375,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 257,
+            "height": 1406
+          },
+          "figure": {
+            "width": 257,
+            "height": 515.71875
+          },
+          "wrapper": {
+            "width": 257,
+            "height": 515.71875,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 257,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "viewportWidth": 379,
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 257,
+            "height": 462.59375,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 257,
+            "height": 1406
+          },
+          "figure": {
+            "width": 257,
+            "height": 515.71875
+          },
+          "wrapper": {
+            "width": 257,
+            "height": 515.71875,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 257,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "viewportWidth": 379,
+          "format": "typeout-annotation",
+          "image": {
+            "width": 254,
+            "height": 457.1875,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 254,
+            "height": 1397.109375
+          },
+          "figure": {
+            "width": 254,
+            "height": 507.4375
+          },
+          "wrapper": {
+            "width": 254,
+            "height": 507.4375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 254,
+            "height": 329.53125
+          },
+          "columns": [
+            "75.0938px",
+            "125.844px",
+            "53.0625px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 254,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          },
+          "stageVisibility": "hidden"
+        }
+      ],
+      "visible": [
+        {
+          "viewportWidth": 364,
+          "format": "typeout-janus",
+          "image": {
+            "width": 242,
+            "height": 435.59375,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 242,
+            "height": 1433.234375
+          },
+          "figure": {
+            "width": 242,
+            "height": 488.71875
+          },
+          "wrapper": {
+            "width": 242,
+            "height": 488.71875,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 242,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          }
+        },
+        {
+          "viewportWidth": 364,
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 242,
+            "height": 435.59375,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 242,
+            "height": 1433.234375
+          },
+          "figure": {
+            "width": 242,
+            "height": 488.71875
+          },
+          "wrapper": {
+            "width": 242,
+            "height": 488.71875,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 242,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          }
+        },
+        {
+          "viewportWidth": 364,
+          "format": "typeout-annotation",
+          "image": {
+            "width": 239,
+            "height": 430.1875,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "none"
+          },
+          "body": {
+            "width": 239,
+            "height": 1459.5
+          },
+          "figure": {
+            "width": 239,
+            "height": 480.4375
+          },
+          "wrapper": {
+            "width": 239,
+            "height": 480.4375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 254,
+            "height": 329.53125
+          },
+          "columns": [
+            "75.0938px",
+            "125.844px",
+            "53.0625px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 239,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": 16
+          }
+        }
+      ]
+    }
+  }
+}

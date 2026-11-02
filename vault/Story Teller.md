@@ -6,6 +6,16 @@ created: 2026-10-21
 
 # Story Teller
 
+**PR #36 sizing follow-up (2026-11-02, 0.17.1):** Ted identified a standalone
+relationship graph still constrained by the inline thumbnail height cap. Document
+figures and block reveal wrappers now fill the component width with natural
+aspect-ratio height; inline/cell images stay compact. A substantial synthetic
+portrait graph and wide Mermaid diagram have rendered-dimension checks and
+[before/after evidence](../tools/story-teller/test/evidence/formatted-media-sizing/README.md)
+in installed VS Code and HTTP export. This remains for review; the documented
+native migration Undo verification limitation is unchanged. No actual adaptation,
+production reader or extension publication is involved.
+
 **Formatted component media review (2026-11-02, 0.17.0):** Ted requested local
 images and Mermaid inside JANUS reports, internal logs and annotations after
 merged #34/#35. The review candidate now discovers nested assets through the
