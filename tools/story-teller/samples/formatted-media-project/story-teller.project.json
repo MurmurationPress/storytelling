@@ -1,0 +1,5 @@
+{
+ "schema":"story-teller-project","version":1,"title":"Formatted media — synthetic review",
+ "parts":[{"id":"p","title":"Review","scenes":["mixed"]}],
+ "scenes":[{"id":"mixed","partId":"p","label":"1","title":"Media inside components","file":"scenes/Media.md"}]
+}

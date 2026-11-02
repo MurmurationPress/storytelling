@@ -11,7 +11,9 @@ function upgradeLinks(root, links = {}, progressive = false) {
       button.dataset.storyTarget = node.dataset.storyTarget;
       button.append(...node.childNodes); node.replaceWith(button);
     }
-    const label = button.textContent;
+    const reading = button.cloneNode(true);
+    for (const visual of reading.querySelectorAll('[aria-hidden="true"]')) visual.remove();
+    const label = reading.textContent;
     const error = links[button.dataset.storyTarget]?.error;
     button.classList.toggle('note-unavailable', Boolean(error));
     button.setAttribute('aria-label', error ? `${label} (supporting note unavailable)` : label);

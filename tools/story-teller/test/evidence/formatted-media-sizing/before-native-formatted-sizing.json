@@ -1,0 +1,636 @@
+{
+  "mode": "installed VSIX",
+  "baseline": true,
+  "layouts": {
+    "desktop": {
+      "preparation": [
+        {
+          "format": "typeout-janus",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 469.3125,
+            "height": 999.453125
+          },
+          "figure": {
+            "width": 469.3125,
+            "height": 221.359375
+          },
+          "wrapper": {
+            "width": 469.3125,
+            "height": 221.359375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 469.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 469.3125,
+            "height": 999.453125
+          },
+          "figure": {
+            "width": 469.3125,
+            "height": 221.359375
+          },
+          "wrapper": {
+            "width": 469.3125,
+            "height": 221.359375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 469.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "format": "typeout-annotation",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 470,
+            "height": 992.8125
+          },
+          "figure": {
+            "width": 428.609375,
+            "height": 219.921875
+          },
+          "wrapper": {
+            "width": 428.609375,
+            "height": 251.921875,
+            "display": "inline-block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 309.546875,
+            "height": 279.9375
+          },
+          "columns": [
+            "112.062px",
+            "125.844px",
+            "71.6406px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 470,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          },
+          "stageVisibility": "hidden"
+        }
+      ],
+      "visible": [
+        {
+          "format": "typeout-janus",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 454.3125,
+            "height": 1038.6875
+          },
+          "figure": {
+            "width": 454.3125,
+            "height": 221.359375
+          },
+          "wrapper": {
+            "width": 454.3125,
+            "height": 221.359375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 454.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          }
+        },
+        {
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 454.3125,
+            "height": 1053.6875
+          },
+          "figure": {
+            "width": 454.3125,
+            "height": 221.359375
+          },
+          "wrapper": {
+            "width": 454.3125,
+            "height": 221.359375,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 469.3125,
+            "height": 279.71875
+          },
+          "columns": [
+            "156.438px",
+            "156.438px",
+            "156.438px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 454.3125,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          }
+        },
+        {
+          "format": "typeout-annotation",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 455,
+            "height": 1017.609375
+          },
+          "figure": {
+            "width": 428.609375,
+            "height": 219.921875
+          },
+          "wrapper": {
+            "width": 428.609375,
+            "height": 251.921875,
+            "display": "inline-block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 309.546875,
+            "height": 279.9375
+          },
+          "columns": [
+            "112.062px",
+            "125.844px",
+            "71.6406px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 455,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          }
+        }
+      ]
+    },
+    "narrow": {
+      "preparation": [
+        {
+          "format": "typeout-janus",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 257,
+            "height": 1135.40625
+          },
+          "figure": {
+            "width": 257,
+            "height": 245.125
+          },
+          "wrapper": {
+            "width": 257,
+            "height": 245.125,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 257,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 257,
+            "height": 1135.40625
+          },
+          "figure": {
+            "width": 257,
+            "height": 245.125
+          },
+          "wrapper": {
+            "width": 257,
+            "height": 245.125,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 257,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          },
+          "stageVisibility": "hidden"
+        },
+        {
+          "format": "typeout-annotation",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 254,
+            "height": 1163.921875
+          },
+          "figure": {
+            "width": 254,
+            "height": 242.25
+          },
+          "wrapper": {
+            "width": 254,
+            "height": 274.25,
+            "display": "inline-block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 254,
+            "height": 329.53125
+          },
+          "columns": [
+            "75.0938px",
+            "125.844px",
+            "53.0625px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 254,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          },
+          "stageVisibility": "hidden"
+        }
+      ],
+      "visible": [
+        {
+          "format": "typeout-janus",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 242,
+            "height": 1189.640625
+          },
+          "figure": {
+            "width": 242,
+            "height": 245.125
+          },
+          "wrapper": {
+            "width": 242,
+            "height": 245.125,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 242,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          }
+        },
+        {
+          "format": "typeout-janus-log",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 242,
+            "height": 1189.640625
+          },
+          "figure": {
+            "width": 242,
+            "height": 245.125
+          },
+          "wrapper": {
+            "width": 242,
+            "height": 245.125,
+            "display": "block"
+          },
+          "inline": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 392.90625,
+            "height": 279.71875
+          },
+          "columns": [
+            "130.969px",
+            "130.969px",
+            "130.969px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 242,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          }
+        },
+        {
+          "format": "typeout-annotation",
+          "image": {
+            "width": 106.65625,
+            "height": 192,
+            "naturalWidth": 1000,
+            "naturalHeight": 1800,
+            "maxHeight": "192px"
+          },
+          "body": {
+            "width": 239,
+            "height": 1228.515625
+          },
+          "figure": {
+            "width": 239,
+            "height": 242.25
+          },
+          "wrapper": {
+            "width": 239,
+            "height": 274.25,
+            "display": "inline-block"
+          },
+          "inline": {
+            "width": 106.640625,
+            "height": 191.96875
+          },
+          "cell": {
+            "width": 106.65625,
+            "height": 192
+          },
+          "table": {
+            "width": 254,
+            "height": 329.53125
+          },
+          "columns": [
+            "75.0938px",
+            "125.844px",
+            "53.0625px"
+          ],
+          "diagram": {
+            "width": 1736,
+            "height": 81.59375,
+            "viewBox": 1736,
+            "surface": {
+              "width": 239,
+              "height": 114.59375
+            },
+            "scrollWidth": 1752,
+            "textSize": null
+          }
+        }
+      ]
+    }
+  }
+}

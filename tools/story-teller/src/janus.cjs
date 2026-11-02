@@ -2,11 +2,12 @@
 // Document structure is parsed once. Playback units are editorial Markdown
 // boundaries, never viewport lines or individual table cells.
 const { createMarkdown, references } = require('./markdown.cjs');
+const { bodyTokens, imageFigure, isDiagram } = require('./formatted-media.cjs');
 const md = createMarkdown();
-md.renderer.rules.fence = (tokens, index) => `<pre><code>${md.utils.escapeHtml(tokens[index].content)}</code></pre>\n`;
+md.renderer.rules.formatted_image = (tokens,index) => imageFigure(md,tokens[index]);
 const isJanus = format => format === 'janus' || format === 'janus-log';
 function visibleInline(children = []) {
-  return children.map(token => ['softbreak', 'hardbreak'].includes(token.type) ? ' ' : token.type === 'image' ? visibleInline(token.children) : token.nesting === 0 ? token.content : '').join('');
+  return children.map(token => ['softbreak', 'hardbreak'].includes(token.type) ? ' ' : token.type === 'image' ? '' : token.nesting === 0 ? token.content : '').join('');
 }
 function statementGroups(children, fields) {
   const groups = [[]], active = [];
@@ -40,8 +41,8 @@ function documentWarning(source) {
   }
   return null;
 }
-function renderJanus(source) {
-  const tokens = md.parse(source, {}), units = [];
+function renderJanus(source, {firstLine = 1} = {}) {
+  const {tokens,...info} = bodyTokens(md, source), units = [];
   let listDepth = 0, tableDepth = 0, inHead = false, current = null;
   const stack = [], paragraphs = [];
   function mark(token, text = '') {
@@ -75,10 +76,17 @@ function renderJanus(source) {
       if (fields || children.some(child => child.type === 'hardbreak')) {
         current = null;
         const groups = statementGroups(children, fields);
-        inline.meta = { janusGroups: groups.map(group => ({ index: units.push({ text: visibleInline(group), afterTable: false }) - 1, group })) };
+        inline.meta = { janusGroups: groups.map(group => ({ index: units.push({ text: visibleInline(group), afterTable: false, ...(group.some(token=>token.type==='image') ? {media:true} : {}) }) - 1, group })) };
       } else current = mark(token);
-    } else if (['fence', 'code_block', 'hr'].includes(token.type)) mark(token, token.content);
-    if (token.type === 'inline' && current !== null) units[current].text += visibleInline(token.children) + ' ';
+    } else if (['fence', 'code_block', 'hr', 'formatted_image'].includes(token.type)) {
+      if(token.type==='formatted_image' && current !== null && listDepth && !units[current].text.trim()) {units[current].media=true;token.meta.parentUnit=true;continue;}
+      const index = mark(token, isDiagram(token) || token.type === 'formatted_image' ? '' : token.content);
+      if (isDiagram(token) || token.type === 'formatted_image') units[index].media = true;
+    }
+    if (token.type === 'inline' && current !== null) {
+      units[current].text += visibleInline(token.children) + ' ';
+      if (token.children?.some(child => child.type === 'image')) units[current].media = true;
+    }
     if (token.type === 'table_close') { tableDepth--; if (units.length) units.at(-1).afterTable = true; }
     if (token.type === 'list_item_close') { listDepth--; current = stack.pop() ?? null; }
     if (token.type === 'thead_close') { inHead = false; current = stack.pop() ?? null; }
@@ -96,10 +104,10 @@ function renderJanus(source) {
       if (token.meta?.janusGroups) return token.meta.janusGroups.map(({ index, group }) => `<span class="janus-statement" data-janus-unit="${index}">${renderInline(group, md.options, {})}</span>`).join('\n');
       return renderInline(token.children, md.options, {});
     }
-    const rendered = md.renderer.render([token], md.options, {});
-    return ['fence', 'code_block'].includes(token.type) ? `<div data-janus-unit="${token.attrGet('data-janus-unit')}">${rendered}</div>` : rendered;
+    const rendered = md.renderer.render([token], md.options, {firstLine});
+    return ['fence', 'code_block', 'formatted_image'].includes(token.type) && !token.meta?.parentUnit ? `<div data-janus-unit="${token.attrGet('data-janus-unit')}">${rendered}</div>` : rendered;
   }).join('');
-  return { html, units, references: references(tokens) };
+  return { html, units, ...info, hasMedia: units.some(unit => unit.media) };
 }
 function readingTime(unit) {
   return Math.min(9000, Math.max(650, unit.text.trim().split(/\s+/u).length * 190));

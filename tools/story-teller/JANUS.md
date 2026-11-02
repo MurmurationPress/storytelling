@@ -123,3 +123,10 @@ STORY_TELLER_HOST_SCOPE=janus npm run test:host
 
 The optional browser check requires Python Playwright and the installed Chrome
 used by the other browser regressions. All sample wording is synthetic.
+
+## Images and diagrams (0.17.0)
+
+JANUS bodies can mix local images and nested Mermaid fences with prose and tables.
+They enter as complete units; table rows and authored component identity retain
+their existing behaviour. See [Formatted media](FORMATTED-MEDIA.md) for copyable
+four-backtick syntax, image boundaries, preparation, export and annotation behaviour.

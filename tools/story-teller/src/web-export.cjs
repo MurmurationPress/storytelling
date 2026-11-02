@@ -52,7 +52,7 @@ async function prepareWeb(projectRoot, options = {}) {
   const read = async file=>{const bytes=await fs.readFile(file);recordSnapshot(file,bytes);return bytes.toString('utf8');};
   const index = await indexSupporting(root, manifest);
   const adapter = { Uri:{file:fsPath=>({fsPath,scheme:'file'})}, FileType:{File:1}, workspace:{getWorkspaceFolder:()=>({uri:{fsPath:root}}),fs:{stat:async uri=>({type:(await fs.stat(uri.fsPath)).isFile()?1:0}),readFile:uri=>fs.readFile(uri.fsPath)}} };
-  async function mediaFor(file, images) {
+  async function mediaFor(file, images, imageLines = {}) {
     const result=Object.create(null);
     for(const src of images) {
       try {
@@ -63,7 +63,7 @@ async function prepareWeb(projectRoot, options = {}) {
         // Missing/unsupported resources remain readable placeholders. Escapes are fatal.
         if(error.code==='ESTORYSTALE')throw error;
         if (/outside|permitted resource root/.test(error.message)) throw Error('An image escapes the permitted project resource root');
-        result[src]={error:error.message};warnings.push(`Image unavailable: ${src}: ${error.message}`);
+        result[src]={error:error.message};warnings.push(`${path.relative(root,file)}:${imageLines[src] || '?'}: Image unavailable: ${src}: ${error.message}`);
       }
     }
     return result;
@@ -78,7 +78,7 @@ async function prepareWeb(projectRoot, options = {}) {
     if (isMatter && !source.replace(/<!--[\s\S]*?-->/g, '').trim()) continue;
     const parsed=isMatter ? matterScene(original) : parseScene(original,{prosePacing:pacing.enabled});
     const links=await describeLinks(index,parsed.wikiReferences);
-    const media=await mediaFor(file,parsed.images);
+    const media=await mediaFor(file,parsed.images,parsed.imageLines);
     const data={source,matter:isMatter,sceneTitleInBody:!isMatter && item.kind!=='part-content' && hasSceneHeading(original, String(item.title)),media,supporting:{links:links.links,diagnostics:links.diagnostics},prosePacing:pacing.enabled,pacingSource:pacing.source};
     warnings.push(...parsed.diagnostics,...links.diagnostics);
     scenes.push({id:item.id,kind:isMatter?item.kind:'scene',partId:item.partId,label:String(item.label || ''),title:String(item.title),file:`content/${digest(item.id)}.json`,data});
@@ -86,7 +86,7 @@ async function prepareWeb(projectRoot, options = {}) {
   const notes=Object.create(null), targets=Object.create(null);
   for(const id of index.files) {
     const note=await loadSupporting(index,`./${id}`,{readText:read});
-    const media=await mediaFor(note.file,note.images);
+    const media=await mediaFor(note.file,note.images,note.imageLines);
     notes[id]={id,title:note.title,html:note.html,links:note.links,diagnostics:note.diagnostics,media};
     Object.assign(targets,note.links);
     warnings.push(...note.diagnostics);

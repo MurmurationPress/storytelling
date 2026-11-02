@@ -55,7 +55,7 @@ async def run(root, evidence):
         assert await page.locator('.component-header').count()==5
         await page.emulate_media(reduced_motion='reduce')
         if not await page.locator('#replay').is_visible():await page.locator('#more-toggle').click()
-        await page.locator('#replay').click();await page.clock.run_for(0)
+        await page.locator('#replay').click();await page.clock.run_for(100)
         assert await page.locator('.component-header').count()==5
         assert 'completed' in await page.locator('#status').text_content()
         assert errors==[],errors

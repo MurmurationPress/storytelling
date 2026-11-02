@@ -41,6 +41,14 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'formatted-sizing') {
+    importProject=path.join(directory,'formatted-sizing-project');
+    await fs.cp(path.join(root,'samples/formatted-sizing-project'),importProject,{recursive:true});
+  }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'formatted-media') {
+    importProject = path.join(directory,'formatted-media-project');
+    await fs.cp(path.join(root,'samples/formatted-media-project'),importProject,{recursive:true});
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'component-identity') {
     importProject = path.join(directory,'component-project');
     await fs.cp(path.join(root,'samples/component-identity-project'),importProject,{recursive:true});
@@ -131,6 +139,9 @@ async function until(fn, timeout = 60000) {
   const code = spawn(executable, [
     `--user-data-dir=${path.join(directory, 'profile')}`, `--extensions-dir=${path.join(directory, 'extensions')}`,
     `--extensionDevelopmentPath=${developmentPath}`, `--extensionTestsPath=${path.join(__dirname, 'host.cjs')}`,
+    // Keep native CDP timing independent of desktop occlusion; application
+    // visibility/pause handling is still exercised by the reader itself.
+    ...(['formatted-media','formatted-sizing'].includes(process.env.STORY_TELLER_HOST_SCOPE) ? ['--disable-background-timer-throttling','--disable-renderer-backgrounding','--disable-backgrounding-occluded-windows'] : []),
     `--remote-debugging-port=${port}`, '--skip-welcome', '--skip-release-notes', '--disable-updates', '--disable-workspace-trust', '--disable-telemetry', '--new-window', ...(importProject ? [importProject] : [])
   ], { env: { ...process.env, STORY_TELLER_TEST_DIR: directory }, stdio: ['ignore', log.fd, log.fd] });
   let socket;
@@ -198,6 +209,109 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'formatted-sizing') {
+      const {measureSizing,captureSizingPreparation}=require('./formatted-sizing-probe.cjs');
+      const baseline=process.env.STORY_TELLER_SIZING_BASELINE==='1',report={mode:vsix?'installed VSIX':'Development Host',baseline,layouts:{}};
+      const measure=()=>evaluate(`(${measureSizing})(doc.getElementById('beat'))`);
+      const verify=rows=>{assert.equal(rows.length,3);for(const r of rows){
+        assert.equal(r.image.naturalWidth,1000);assert.equal(r.image.naturalHeight,1800);
+        assert.ok(Math.abs(r.image.width-r.body.width)<=2,JSON.stringify(r));
+        assert.ok(Math.abs(r.wrapper.width-r.body.width)<=2,JSON.stringify(r));
+        assert.ok(Math.abs(r.image.height/r.image.width-1.8)<.02,JSON.stringify(r));
+        assert.equal(r.image.maxHeight,'none');assert.ok(r.image.height>192);
+        assert.ok(r.inline.height<=192.1&&r.cell.height<=192.1);
+        assert.ok(r.diagram.width>=r.diagram.viewBox-2&&r.diagram.width>1200);
+        assert.ok(r.diagram.textSize>=15&&r.diagram.surface.width<=r.body.width+2);
+      }};
+      const main=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page');
+      const screenshot=async name=>{
+        const ws=new WebSocket(main.webSocketDebuggerUrl);await new Promise(r=>ws.onopen=r);
+        const data=await new Promise(r=>{ws.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===1)r(v.result?.data);};ws.send(JSON.stringify({id:1,method:'Page.captureScreenshot',params:{format:'png'}}));});ws.close();assert.ok(data);
+        await fs.writeFile(path.join(directory,name+'.png'),Buffer.from(data,'base64'));
+      };
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Sizing.md'});await bringFront();
+      await until(async()=>await evaluate('Boolean(doc?.getElementById("status")?.textContent.includes("Sizing workshop"))'));
+      for(const narrow of [false,true]){
+        await request('component-reader-layout',undefined,{narrow});
+        await evaluate(`(()=>{const measureSizing=${measureSizing};(${captureSizingPreparation})(doc);})()`);
+        await evaluate('doc.getElementById("restart").click()');
+        await until(async()=>await evaluate('doc.querySelectorAll("[data-media-ready=true]").length')===3);
+        const prepared=await evaluate('doc.sizingPreparation');assert.equal(prepared.length,3);
+        assert.ok(prepared.every(r=>r.stageVisibility==='hidden'));if(!baseline)verify(prepared);
+        await evaluate('doc.getElementById("play").click()',true);
+        await until(async()=>await evaluate('Boolean(doc.querySelector("#beat .story-figure")&&!doc.querySelector("#beat .story-figure").closest(".formatted-future"))'));
+        await evaluate('doc.getElementById("pause").click()');
+        const columns=await evaluate('[...doc.querySelectorAll("#beat col")].map(c=>c.style.width)');
+        await evaluate('doc.getElementById("reveal").click()');
+        await evaluate('(()=>{const s=doc.getElementById("playback-speed");s.value="1.5";s.dispatchEvent(new doc.defaultView.Event("change",{bubbles:true}));doc.getElementById("pause").click();})()');
+        await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+        const visible=await measure();if(!baseline)verify(visible);
+        assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+        assert.equal(await evaluate('doc.querySelectorAll("#beat figcaption").length'),6);
+        assert.deepEqual(await evaluate('[...doc.querySelector("#beat .formatted-component").querySelectorAll("col")].map(c=>c.style.width)'),columns);
+        await evaluate('(()=>{doc.dispatchEvent(new doc.defaultView.WheelEvent("wheel",{deltaY:-100}));doc.querySelector(".typeout-janus-log").scrollIntoView();})()');
+        await screenshot(narrow?'portrait-narrow':'portrait-desktop');
+        await evaluate('doc.querySelector(".typeout-janus-log .story-diagram").scrollIntoView()');
+        await screenshot(narrow?'diagram-narrow':'diagram-desktop');
+        const scroll=await evaluate('(()=>{const e=doc.querySelector(".typeout-janus-log .diagram-surface");e.scrollLeft=80;return e.scrollLeft;})()');assert.ok(scroll>0);
+        await sleep(200);assert.equal(await evaluate('doc.querySelector(".typeout-janus-log .diagram-surface").scrollLeft'),scroll);
+        report.layouts[narrow?'narrow':'desktop']={preparation:prepared,visible};
+      }
+      await fs.writeFile(path.join(directory,'formatted-sizing.json'),JSON.stringify(report,null,2));
+      console.log((baseline?'RECORDED baseline':'PASS')+' actual VS Code formatted sizing: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'formatted-media') {
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Media.md'});await bringFront();
+      await until(async()=>await evaluate('Boolean(doc?.getElementById("play"))'));
+      await request('component-reader-layout');
+      await evaluate('doc.getElementById("restart").click()');
+      await until(async()=>await evaluate('doc.querySelectorAll("[data-media-ready=true]").length')===3);
+      await evaluate('doc.getElementById("play").click()',true);
+      await until(async()=>await evaluate('doc.querySelectorAll("#beat .formatted-component").length')===1);
+      await evaluate('doc.getElementById("pause").click()');
+      assert.ok(await evaluate('[...doc.querySelectorAll("#beat img")].every(i=>i.complete&&i.naturalWidth===720)'));
+      assert.equal(await evaluate('doc.querySelectorAll("#beat svg").length'),2);
+      const ids=await evaluate('[...doc.querySelectorAll("#beat svg")].map(s=>s.id)');
+      await sleep(400);
+      assert.deepEqual(await evaluate('[...doc.querySelectorAll("#beat svg")].map(s=>s.id)'),ids);
+      await evaluate('doc.getElementById("reveal").click()');
+      await evaluate('(()=>{const s=doc.getElementById("playback-speed");s.value="1.5";s.dispatchEvent(new doc.defaultView.Event("change",{bubbles:true}));doc.getElementById("pause").click();})()');
+      await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+      assert.equal(await evaluate('doc.querySelectorAll("#beat .formatted-component").length'),3);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat svg").length'),6);
+      assert.equal(await evaluate('doc.querySelectorAll("#beat img").length'),12);
+      assert.ok(await evaluate('[...doc.querySelectorAll("#beat img")].every(i=>i.complete&&i.naturalWidth>0)'));
+      assert.ok(await evaluate('(()=>{const ids=[...doc.querySelectorAll("[id]")].map(n=>n.id);return ids.length===new Set(ids).size;})()'));
+      assert.equal(await evaluate('doc.querySelectorAll("#beat .component-title").length'),3);
+      assert.equal(await evaluate('doc.querySelector("#beat .typeout-janus-log .story-diagram").dataset.diagramLook'),'handDrawn');
+      const main=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page');
+      const screenshot=async name=>{
+        const ws=new WebSocket(main.webSocketDebuggerUrl);await new Promise(r=>ws.onopen=r);
+        const data=await new Promise(r=>{ws.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===1)r(v.result?.data);};ws.send(JSON.stringify({id:1,method:'Page.captureScreenshot',params:{format:'png'}}));});ws.close();
+        assert.ok(data);await fs.writeFile(path.join(directory,name+'.png'),Buffer.from(data,'base64'));
+      };
+      await evaluate('(()=>{doc.dispatchEvent(new doc.defaultView.WheelEvent("wheel",{deltaY:-100}));doc.querySelector(".typeout-janus-log").scrollIntoView();})()');
+      await screenshot('media-desktop');
+      await request('component-reader-layout',undefined,{narrow:true});
+      assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+      assert.ok(await evaluate('[...doc.querySelectorAll(".component-header")].every(h=>h.scrollWidth<=h.clientWidth+1)'));
+      await evaluate('doc.querySelector(".typeout-annotation").scrollIntoView()');
+      await screenshot('media-narrow');
+      for(const [theme,kind] of [['Light Modern','vscode-light'],['Dark Modern','vscode-dark']]){
+        await request('set-theme',undefined,{theme});await until(async()=>await evaluate(`doc.body.classList.contains(${JSON.stringify(kind)})`));
+        await until(async()=>await evaluate('[...doc.querySelectorAll("#beat .story-diagram")].every(f=>f.querySelector("svg")&&f.querySelector(".diagram-status").hidden)'));
+      }
+      await evaluate('doc.getElementById("replay").click()');await evaluate('doc.getElementById("next").click()');await evaluate('doc.getElementById("play").click()',true);
+      await until(async()=>await evaluate('doc.querySelector("#beat .component-title")?.textContent.includes("Failures remain readable")'));
+      await evaluate('doc.getElementById("reveal").click()');
+      await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+      assert.ok(await evaluate('doc.getElementById("beat").textContent.includes("This diagram could not be displayed")'));
+      assert.equal(await evaluate('doc.querySelectorAll("#beat .component-title").length'),1);
+      await fs.writeFile(path.join(directory,'formatted-media.json'),JSON.stringify({mode:vsix?'installed VSIX':'Development Host',checks:'12 PNG/JPEG/WebP images loaded; six SVG; metadata/order; pause/speed/reveal; stable SVG IDs; light/dark; desktop/narrow; navigation cancels preparation; readable missing/invalid fallback'},null,2));
+      console.log('PASS actual VS Code formatted media: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'component-identity') {
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Mixed.md'});await bringFront();
       await until(async()=>await evaluate('Boolean(doc?.getElementById("beat")?.textContent.includes("All the documents below"))'));
@@ -221,6 +335,7 @@ async function until(fn, timeout = 60000) {
       const mainEval=expression=>new Promise((resolve,reject)=>{const id=++mainId;mainSocket.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===id)v.error?reject(Error(JSON.stringify(v.error))):resolve(v.result?.result?.value);};mainSocket.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression,returnByValue:true,userGesture:true}}));});
       const file=path.join(importProject,'scenes/Legacy.md'), before=await fs.readFile(file,'utf8');
       await request('start-component-migration',undefined,{file});
+      await request('show-notifications');
       await until(async()=>await mainEval('[...document.querySelectorAll(".monaco-button")].some(b=>b.textContent==="Apply")'));
       await mainEval('[...document.querySelectorAll(".monaco-button")].find(b=>b.textContent==="Apply").click()');
       await until(async()=>{const r=JSON.parse(await fs.readFile(path.join(directory,'component-migration-result.json'),'utf8'));return r.result?.status==='applied';});
