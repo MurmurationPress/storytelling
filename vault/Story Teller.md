@@ -133,3 +133,20 @@ Ted has accepted keyboard IntelliSense and State metadata conversion. The earlie
 Ted reports that he successfully imported and ran the project. His corrupted screencast was a recording problem, not evidence of a product defect. The earlier importer acceptance status above was the status before his report; his report confirms use, while editorial review of every imported scene remains open.
 
 For Ted's current CONSTRAINT adaptation, an **optional** book setting in `story-teller.project.json` (`settings.prosePacing: "on"|"off"`) and initial scene frontmatter override (`story_teller_prose_pacing: on|off|inherit`) now control paragraph pacing. Absence remains Off. This is Story Teller presentation metadata in a separate adaptation, not a manuscript source change or EPUB rule. Top-level paragraphs appear fully formatted in sequence; each preceding paragraph adds a bounded visible-word reading interval before another item. Outside `@delay` replaces that boundary interval; `@pause` adds silence; a chat message keeps its own timing. The import review panel and one-shot destination outline reveal were improved for authoring. These new enhancements await Ted's acceptance, and the initial 60ms/word formula is tunable after real-scene review. See README/RESULTS for exact semantics and evidence.
+
+## Component-owned identity — 2026-11-02 review candidate
+
+**Ted's implementation request:** separate callout identity from reading rhythm
+across the existing converters, typeout formats and migration of adaptations.
+Optional fenced `@title` and `@timestamp` identify components; conversion preserves
+beat boundaries/titles. Explicit `@identity component` separates intentional
+untitled components from legacy JANUS beat-heading compatibility.
+
+The 0.16.0 review candidate adds document/selection migration and a deliberate
+manifest-bounded project review, with per-file diff/Apply/Undo. A beat title or
+single fence alone is not ownership evidence; ambiguous cases require individual
+author attribution. Actual book adaptations remain untouched. See the
+[component identity guide](../tools/story-teller/COMPONENT-IDENTITY.md) and
+[validation](../tools/story-teller/test/evidence/component-identity/README.md).
+Implementation/test evidence is separate from author acceptance; no merge or
+production deployment is authorised by this implementation task.

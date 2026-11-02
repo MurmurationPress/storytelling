@@ -144,3 +144,10 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .janus-document.typeout-fill-yellow { --janus-surface: #fff1bd; --janus-ink: #29220d; --janus-heading: #153756; --janus-emphasis: #68480f; }
 :is(body.vscode-dark, body.reader-dark) .janus-document:is(.typeout-fill-grey,.typeout-fill-yellow) { --janus-surface: #34383c; --janus-ink: #f0f0f0; --janus-heading: #a2dce6; --janus-emphasis: #efcd91; }
 .janus-document .typeout-surface { color: var(--janus-ink); }
+
+.typeout .component-header { position: static; background: transparent; color: inherit; padding: 0; margin: 0 0 .8rem; border: 0; }
+.typeout .component-title { margin: 0 0 .4rem; font-size: 1.2em; line-height: 1.35; }
+.typeout .component-timestamp { margin: 0; font-size: .9em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.typeout-yaml .component-header { font-family: var(--vscode-editor-font-family, monospace); }
+.janus-document .component-header { padding-bottom: .7rem; border-bottom: 1px solid var(--janus-rule); margin-bottom: 1rem; }
+.janus-document .component-title { color: var(--janus-heading); font-size: 1.35em; }

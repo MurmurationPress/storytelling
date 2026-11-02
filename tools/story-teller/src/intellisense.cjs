@@ -7,7 +7,9 @@ const { choices: insertChoices } = require('./insert.cjs');
 const settingText = (kind, name) => settingChoices[kind].find(choice => choice.id === name).description;
 const insertText = name => insertChoices.find(choice => choice.id === name).description;
 const help = Object.freeze({
-  title: { scope: 'Chat header', detail: `${settingText('chat', 'title')} Use # Title for new chats; @title is also supported.` },
+  title: { scope: 'Component header', detail: 'Type-out: single-line safe Markdown heading, separate from beat navigation. Chat: use # Title or @title.' },
+  timestamp: { scope: 'Type-out header', detail: 'Exact single-line authored wording, rendered outside the animated body. No date parsing or timezone inference.' },
+  identity: { scope: 'Type-out header', detail: 'Use component to suppress legacy JANUS beat-title inheritance, including intentionally untitled components.' },
   viewer: { scope: 'Chat header', detail: `${settingText('chat', 'viewer')} Exact name; required for ticks and incoming responding cues.` },
   pace: { scope: 'Chat header before the first message', detail: `${settingText('chat', 'pace')} Normal (default), brisk (0.7×) or deliberate (1.3×); explicit delay and pause do not scale.` },
   ticks: { scope: 'Chat header', detail: `Bare flag. ${settingText('chat', 'ticks')} Off by default.` },
@@ -22,7 +24,7 @@ const help = Object.freeze({
 });
 const header = { chat: settingChoices.chat.map(choice => choice.id), typeout: settingChoices.typeout.map(choice => choice.id) };
 const timing = ['delay', 'pause'];
-const valueChoices = { pace: values.pace, format: values.format, sound: values.sound, border: values.border, fill: values.fill };
+const valueChoices = { pace: values.pace, identity: values.identity, format: values.format, sound: values.sound, border: values.border, fill: values.fill };
 const numeric = { speed: { example: String(DEFAULT_SPEED), suffix: '', detail: help.speed.detail }, delay: { example: '1000', suffix: 'ms', detail: help.delay.detail }, pause: { example: '1000', suffix: 'ms', detail: help.pause.detail } };
 function lineAt(structure, offset) {
   const line = Math.max(0, structure.lines.findLastIndex(record => record.start <= offset));
@@ -87,7 +89,7 @@ function declaredTypeout(scope) {
     if (i === scope.line) continue;
     const text = scope.structure.lines[i].text;
     if (!text.trim()) break;
-    const match = text.trim().match(/^@(format|sound|speed|border|fill)\b/);
+    const match = text.trim().match(/^@(format|title|timestamp|identity|sound|speed|border|fill)\b/);
     if (match) found.add(match[1]);
   }
   return found;
@@ -102,7 +104,8 @@ function insertion(name, hasValue) {
   if (valueChoices[name]) return `@${name} \${1:${valueChoices[name][0]}}`;
   if (numeric[name]) return `@${name} \${1:${numeric[name].example}}${numeric[name].suffix}`;
   if (name === 'viewer') return '@viewer ${1:Participant}';
-  if (name === 'title') return '@title ${1:Conversation}';
+  if (name === 'title') return '@title ${1:Component title}';
+  if (name === 'timestamp') return '@timestamp ${1:Authored timestamp}';
   return `@${name}`;
 }
 function suggestionsAt(source, offset, manual = false) {

@@ -150,6 +150,20 @@ function refreshDocumentLinks() {
   // links still accept pointer input, without a second hidden tab sequence.
   for (const link of content.querySelectorAll('.janus-document .typeout-progress button.wiki-link')) link.tabIndex = -1;
 }
+function componentHeader(block, legacyTitleHtml = null) {
+  const titleHtml = block.titleHtml ?? legacyTitleHtml;
+  if (titleHtml == null && block.timestampHtml == null) return null;
+  const header = document.createElement('header'); header.className = 'component-header';
+  if (titleHtml != null) {
+    const heading = document.createElement('h2'); heading.className = 'component-title';
+    heading.innerHTML = titleHtml; header.append(heading);
+  }
+  if (block.timestampHtml != null) {
+    const timestamp = document.createElement('p'); timestamp.className = 'component-timestamp';
+    timestamp.innerHTML = block.timestampHtml; header.append(timestamp);
+  }
+  return header;
+}
 function render() {
   if(preparing){lastTypeoutRender=null;content.replaceChildren();controls();return;}
   const focusedLink = document.activeElement?.matches?.('button.wiki-link') && content.contains(document.activeElement) ? notes.key(document.activeElement) : null;
@@ -216,7 +230,8 @@ function render() {
           section.className = `typeout typeout-${block.format} janus-document${block.border === null ? '' : ` typeout-border-${block.border}`}${block.fill === null ? '' : ` typeout-fill-${block.fill}`}`;
           section.dataset.typeoutLine = String(block.line);
           section.dataset.janusLine = String(block.line); section.storyDocument = block.document;
-          if (beat.title) { const heading = document.createElement('h2'); heading.className = 'janus-title'; heading.innerHTML = block.document.titleHtml; section.append(heading); }
+          const header = componentHeader(block, block.document.titleHtml);
+          if (header) section.append(header);
           section.setAttribute('aria-label', block.format === 'janus' ? 'JANUS report' : 'JANUS internal analysis');
           const accessible = document.createElement('div'); accessible.className = 'visually-hidden janus-accessible';
           accessible.innerHTML = block.document.html;
@@ -241,6 +256,8 @@ function render() {
       section.className = `typeout typeout-${block.format}${block.border === null ? '' : ` typeout-border-${block.border}`}${block.fill === null ? '' : ` typeout-fill-${block.fill}`}`;
       section.dataset.typeoutLine = String(block.line);
       section.setAttribute('aria-label', block.format === 'yaml' ? 'PRIME state output' : 'Annotation');
+      const header = componentHeader(block);
+      if (header) section.append(header);
       const accessible = document.createElement(block.format === 'annotation' ? 'div' : 'span');
       accessible.className = 'visually-hidden';
       if (block.format === 'annotation') {

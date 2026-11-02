@@ -3,6 +3,7 @@ const vscode = require('vscode');
 const path = require('node:path');
 const { registerInsert } = require('./insert-command.cjs');
 const { registerIntelliSense } = require('./intellisense-command.cjs');
+const { registerProjectMigration } = require('./migration-project.cjs');
 const { registerConversion } = require('./conversion-command.cjs');
 const { registerWebExport } = require('./web-export-command.cjs');
 const { registerImport } = require('./import-command.cjs');
@@ -33,6 +34,7 @@ function activate(context) {
   context.subscriptions.push(diagramOutput);
   registerWebExport(vscode, context);
   registerConversion(vscode, context);
+  registerProjectMigration(vscode, context);
   registerPacing(vscode, context);
   registerInsert(vscode, context);
   registerIntelliSense(vscode, context);

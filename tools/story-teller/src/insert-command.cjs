@@ -25,10 +25,10 @@ function registerInsert(vscode, context) {
       const chosen = await vscode.window.showQuickPick(settingChoices[located.kind], { title: `${located.kind === 'chat' ? 'Chat' : 'Type-out'} settings`, placeHolder: 'Edit this component header', matchOnDescription: true });
       if (!chosen) return { status: 'cancelled' };
       const key = chosen.id;
-      const existing = currentSetting(located, key).map(line => located.lines[line].text.trim());
+      const existing = currentSetting(located, key).map(line => located.lines[line].text);
       if (existing.length > 1) { vscode.window.showWarningMessage(`Duplicate ${key} declarations need direct review first.`); return { status: 'refused' }; }
       let value;
-      if (key === 'title' || key === 'viewer') {
+      if (key === 'title' || key === 'timestamp' || key === 'viewer') {
         const picked = await vscode.window.showQuickPick([
           { label: 'Edit…', value: 'edit', description: `Set this ${key}` },
           { label: 'Default', value: null, description: `Remove explicit ${key}` }
@@ -36,9 +36,9 @@ function registerInsert(vscode, context) {
         if (!picked) return { status: 'cancelled' };
         if (picked.value === null) value = null;
         else {
-          const current = existing[0]?.replace(key === 'title' ? /^(?:#|@title)\s*/ : /^@viewer\s*/, '') || '';
-          value = await vscode.window.showInputBox({ title: `Chat ${key}`, value: current,
-            prompt: `Single-line ${key}; this edits only the chat header.`,
+          const current = existing[0]?.replace(key === 'title' && located.kind === 'chat' ? /^(?:#|@title)\s*/ : new RegExp('^@' + key + '[ \t]'), '') || '';
+          value = await vscode.window.showInputBox({ title: `${located.kind} ${key}`, value: current,
+            prompt: `Single-line ${key}; this edits only the component header.`,
             validateInput: input => !input.trim() || /[\r\n]/.test(input) ? 'Enter nonempty text on one line.' : null });
           if (value === undefined) return { status: 'cancelled' };
         }

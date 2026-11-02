@@ -139,14 +139,18 @@ function parseScene(source, { prosePacing = false } = {}) {
         let errorLine = openLine + 1;
         if (separator < 0) error = 'typeout needs a blank line between its header and literal body';
         else for (let header = 0; header < separator; header++) {
-          const line = contentLines[header].trim();
+          const rawLine = contentLines[header].replace(/\r$/, '');
+          const line = rawLine.trim();
           errorLine = openLine + header + 2;
-          const setting = line.match(/^@(format|sound|speed|border|fill)\s+(.+)$/);
-          if (!setting) { error = 'typeout header accepts only @format, @sound, @speed, @border and @fill before the blank line'; break; }
+          const metadata = rawLine.match(/^@(title|timestamp)[ \t](.*)$/);
+          const setting = metadata || line.match(/^@(format|sound|speed|border|fill|identity)\s+(.+)$/);
+          if (!setting) { error = 'typeout header accepts only @format, @identity, @title, @timestamp, @sound, @speed, @border and @fill before the blank line'; break; }
           const [, name, value] = setting;
           if (seen.has(name)) { error = `duplicate @${name} in typeout header`; break; }
           seen.add(name);
-          if (name === 'format' && !FORMATS.includes(value)) error = '@format requires yaml, annotation, janus or janus-log';
+          if (metadata && !value.trim()) error = `@${name} needs nonempty single-line text`;
+          else if (name === 'format' && !FORMATS.includes(value)) error = '@format requires yaml, annotation, janus or janus-log';
+          else if (name === 'identity' && value !== 'component') error = '@identity requires component (no beat-title inheritance)';
           else if (name === 'sound' && !SOUNDS.includes(value)) error = '@sound requires modem, keyboard, typewriter or none';
           else if (name === 'speed' && (!/^[1-9][0-9]*$/.test(value) || Number(value) < MIN_SPEED || Number(value) > MAX_SPEED)) error = `@speed requires ${MIN_SPEED}–${MAX_SPEED} graphemes per second`;
           else if (name === 'border' && !BORDERS.includes(value)) error = '@border requires none or grey';
@@ -169,12 +173,17 @@ function parseScene(source, { prosePacing = false } = {}) {
           prose.push(token);
         } else {
           flush();
-          const document = isJanus(settings.format) ? { ...renderJanus(body), titleHtml: range.title ? md.renderInline(range.title) : null } : null;
-          if (document && range.title) wikiReferences.push(...references(md.parseInline(range.title), (range.titleLine ?? first) + 1));
+          const identity = {};
+          for (const key of ['title', 'timestamp']) if (settings[key] !== undefined) {
+            identity[key + 'Html'] = md.renderInline(settings[key]);
+            wikiReferences.push(...references(md.parseInline(settings[key]), openLine + 1 + contentLines.findIndex(line => line.startsWith('@' + key)) + 1));
+          }
+          const document = isJanus(settings.format) ? { ...renderJanus(body), titleHtml: settings.title !== undefined ? identity.titleHtml : settings.identity !== 'component' && settings.timestamp === undefined && range.title ? md.renderInline(range.title) : null } : null;
+          if (document && settings.title === undefined && settings.timestamp === undefined && settings.identity !== 'component' && range.title) wikiReferences.push(...references(md.parseInline(range.title), (range.titleLine ?? first) + 1));
           if (document) wikiReferences.push(...document.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
           const annotation = settings.format === 'annotation' ? renderAnnotation(body) : null;
           if (annotation) wikiReferences.push(...annotation.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
-          add({ type: 'typeout', ...settings, text: body, ...(document ? { document } : {}), ...(annotation ? { annotation } : {}), line: openLine + 1 });
+          add({ type: 'typeout', ...settings, ...identity, text: body, ...(document ? { document } : {}), ...(annotation ? { annotation } : {}), line: openLine + 1 });
         }
       } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];

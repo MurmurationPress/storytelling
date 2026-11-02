@@ -29,13 +29,13 @@ test('JANUS converter accepts both cases and markers, prose/tables/mixed, CRLF a
     const converted = convertCallouts(source);
     assert.equal(converted.count, 1); assert.deepEqual(converted.warnings, []);
     const scene = parseScene(converted.text), block = scene.beats[0].blocks[0];
-    assert.equal(scene.beats[0].title, 'Report'); assert.equal(block.format, label.toLowerCase()); assert.equal(block.sound, 'none');
+    assert.equal(scene.beats[0].title, null); assert.equal(block.title, 'Report'); assert.equal(block.format, label.toLowerCase()); assert.equal(block.sound, 'none');
     assert.equal(block.text, content.replaceAll('\n','\r\n') + '\r\n');
     assert.equal(convertCallouts(converted.text).text, converted.text);
   }
 });
 test('ambiguous JANUS is unchanged with source warnings; conflicts, nested callouts, structure and malformed headers', () => {
-  for (const source of ['> [!janus Broken\n> A\n', '> [!janus] A --> B\n> A\n', '> [!janus] X\n> > [!annotation] Nested\n> A\n', '> [!janus]\n> ```yaml\n> a: b\n', '> [!janus]\n> ---\n> A\n', '<!-- beat: Other -->\n\n> [!janus] X\n> A\n']) {
+  for (const source of ['> [!janus Broken\n> A\n', '> [!janus] X\n> > [!annotation] Nested\n> A\n', '> [!janus]\n> ```yaml\n> a: b\n', '> [!janus]\n> ---\n> A\n']) {
     const result = convertCallouts(source); assert.equal(result.text, source); assert.equal(result.count, 0); assert.ok(result.warnings.length);
   }
 });
@@ -99,7 +99,7 @@ test('JANUS titles preserve authored inline formatting without executable HTML',
   const result = convertCallouts('> [!janus] **Review** & <script>literal</script>\n> Body.\n');
   assert.equal(result.count, 1);
   const scene = parseScene(result.text);
-  assert.equal(scene.beats[0].title, '**Review** & <script>literal</script>');
+  assert.equal(scene.beats[0].blocks[0].title, '**Review** & <script>literal</script>');
   assert.match(scene.beats[0].blocks[0].document.titleHtml, /<strong>Review<\/strong>/);
   assert.ok(!scene.beats[0].blocks[0].document.titleHtml.includes('<script>'));
 });

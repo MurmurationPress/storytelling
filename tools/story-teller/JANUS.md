@@ -1,3 +1,11 @@
+> **Component identity update:** new conversion no longer creates beat titles or
+> boundaries. Use optional `@title`/`@timestamp` inside each typeout header and
+> `@identity component` for intentional component scope. Unmarked legacy JANUS
+> fences retain their beat-heading display until explicitly migrated. See
+> [COMPONENT-IDENTITY.md](COMPONENT-IDENTITY.md) for current conversion, migration
+> rules and all before/after examples. The original review description below is
+> retained where it describes legacy examples.
+
 # JANUS documents
 
 The extension preview and exported web reader share these two type-out formats:
@@ -38,9 +46,9 @@ Copyable source:
 ```
 
 Separate adjacent callouts with an unquoted blank line, as above. Conversion
-retains the displayed title as the beat title, preserves body Markdown and line
+retains the displayed title as component `@title`, preserves body Markdown and line
 endings, chooses a safe containing fence, and sets `@sound none`. Existing
-boundaries and title conflicts follow the other callout conversion rules.
+beat boundaries and beat titles stay unchanged.
 Nested callouts, ambiguous structure, unclosed fences and table rows with extra
 cells that Markdown would discard remain unchanged with line-located warnings.
 Existing type-out blocks are unaffected by repeated conversion.
@@ -67,8 +75,8 @@ A complete paragraph with **emphasis**.
 ````
 
 Change only `@format janus` to `@format janus-log` to select internal analysis.
-The beat title appears as the document heading; no title or classification text
-is generated. Ordinary Markdown headings inside the body are also retained.
+An explicit component title appears as the document heading. Only unmarked
+legacy JANUS fences fall back to a beat title; no classification text is generated. Ordinary Markdown headings inside the body are also retained.
 
 Paragraphs and list items reveal together. Consecutive `Key: value` metadata
 lines (including bold keys) reveal individually. Separate analytical statements
