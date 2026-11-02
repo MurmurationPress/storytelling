@@ -88,6 +88,10 @@ class StoryPlayer {
     const message = block.messages[step.message];
     return message.responding && block.viewer && message.speaker !== block.viewer ? { blockIndex: step.blockIndex, speaker: message.speaker } : null;
   }
+  get activeMessage() {
+    const step=this.steps[this.cursor];
+    return step?.type==='message' && ['playing','paused'].includes(this.phase) ? step : null;
+  }
   get activeTypeout() {
     const step = this.steps[this.cursor];
     if (this.waitingTypeout !== null && ['playing','paused'].includes(this.phase)) return {blockIndex:this.waitingTypeout,block:this.current.blocks[this.waitingTypeout]};
@@ -175,7 +179,13 @@ class StoryPlayer {
   }
   revealImmediately() {
     const active = this.activeTypeout;
-    if (!active) return false;
+    if (!active) {
+      const message=this.activeMessage;if(!message)return false;
+      this.cancelTimer();this.remaining=null;
+      this.counts.set(message.blockIndex,message.message+1);this.cursor++;
+      if(this.phase==='playing')this.schedule();
+      this.onChange();return true;
+    }
     if (this.waitingTypeout !== null) { this.immediateTypeouts.add(active.blockIndex); this.onChange(); return true; }
     this.cancelTimer(); this.remaining = null;
     this.typeoutCounts.set(active.blockIndex, this.typeoutParts.get(active.blockIndex).length);
@@ -187,7 +197,7 @@ class StoryPlayer {
   }
   setReducedMotion(value) {
     this.reducedMotion = Boolean(value);
-    if (this.reducedMotion) this.revealImmediately();
+    if (this.reducedMotion && this.activeTypeout) this.revealImmediately();
     this.onChange();
   }
   replay() { if (!this.disposed) { this.reset(); this.play(); } }

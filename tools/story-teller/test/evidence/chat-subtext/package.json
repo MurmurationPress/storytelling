@@ -1,0 +1,7 @@
+{
+  "version": "0.18.0",
+  "sha256": "66e7b998617536ff4288f0c6ed10b2e4f417cb13b6a37f34968875e4680c68dc",
+  "bytes": 5923662,
+  "entries": 417,
+  "checks": "both reader bundles, parser, converter, authoring help, CSS and guide byte-match tested build; samples/tests excluded"
+}

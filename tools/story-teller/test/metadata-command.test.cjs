@@ -43,3 +43,16 @@ test('explicit attribution can target one complete selected component, without r
  const result=await h.commands.get('storyTeller.migrateComponentMetadata')();
  assert.equal(result.count,1);assert.match(h.doc.getText(),/@title Chosen/);
 });
+
+test('chat subtext conversion preserves document/selection review and Apply boundaries',async()=>{
+ const first='```chat\n{{A|One|first note}}\n```',second='```chat\n{{B|Two|second note}}\n```';
+ const source='<!-- beat: Rhythm -->\n\n'+first+'\n\nProse bridge.\n\n'+second+'\n';
+ const h=harness(source);const start=source.indexOf(second);
+ h.editor.selection={start,end:source.length,active:source.length,isEmpty:false};
+ const result=await h.commands.get('storyTeller.convertChats')();assert.equal(result.count,1);assert.equal(h.edits(),1);assert.equal(h.diffs[0][0],'vscode.diff');
+ assert.equal(h.doc.getText().slice(0,start),source.slice(0,start));assert.match(h.doc.getText().slice(start),/B: Two\n@subtext\n  \| second note/);
+ h.editor.selection.end=h.doc.getText().length;h.editor.selection.active=h.editor.selection.end;
+ assert.equal((await h.commands.get('storyTeller.convertChats')()).count,0);assert.equal(h.edits(),1);
+ const doc=harness(source);assert.equal((await doc.commands.get('storyTeller.convertChats')()).count,2);assert.equal(doc.edits(),1);assert.ok(doc.doc.getText().includes('Prose bridge.'));
+ for(const [action,change] of [['Cancel',false],['Apply',true]]){const held=harness(second,action,change);const r=await held.commands.get('storyTeller.convertChats')();assert.equal(r.status,change?'stale':'cancelled');assert.equal(held.edits(),0);assert.ok(held.doc.getText().includes('{{B|Two|second note}}'));}
+});

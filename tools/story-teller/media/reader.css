@@ -17,6 +17,7 @@ button:disabled { opacity: .45; cursor: default; }
 #warnings:empty { display: none; }
 .chat { list-style: none; padding: 0; margin: 1.5rem 0; }
 .chat li { border-left: 3px solid var(--vscode-textLink-foreground, #6bf); background: var(--vscode-textBlockQuote-background, #333); padding: .5rem 1rem; margin: .6rem 0; }
+.chat .chat-subtext { font-size: .88em; line-height: 1.5; margin-top: .45em; color: inherit; opacity: .85; }
 .chat strong { font-size: .85rem; }
 .chat p { margin: .2rem 0; white-space: pre-wrap; }
 pre { overflow: auto; padding: .6rem; background: var(--vscode-textCodeBlock-background, #333); }

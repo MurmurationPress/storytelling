@@ -94,7 +94,7 @@ function legacyBody(body) {
     })) fail('ambiguous message-field delimiters need review');
     if (!pipes.length) fail('message lacks a speaker/body delimiter');
     const last = pipes.at(-1);
-    if (pipes.length >= 2 && raw.slice(last + 1).trim()) fail('nonempty subtext has no lossless player representation');
+    const subtext = pipes.length >= 2 ? decodeDelimiters(raw.slice(last + 1)) : null;
     const header = decodeDelimiters(raw.slice(0, pipes[0])).trim();
     const speaker = header || previous;
     if (!speaker || /[:\r\n\[\]*`<>^]/.test(identityRemainder(speaker))) fail('unresolved, formatted or unrepresentable speaker identity');
@@ -104,6 +104,7 @@ function legacyBody(body) {
     if (message.includes('\r')) fail('mixed message line endings need review');
     const parts = message.split('\n');
     output.push(`${speaker}: ${parts[0]}`, ...parts.slice(1).map(line => `  | ${line}`));
+    if(subtext?.length)output.push('@subtext',...subtext.split('\n').map(line=>`  | ${line}`));
     previous = speaker; messages++; at = end + 2;
   }
   if (!messages) fail('no complete manuscript messages');

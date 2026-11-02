@@ -23,7 +23,7 @@ The receiver clicked twice.
 {{|And one more message.|}}
 ```
 
-This last block needs review because its subtext carries information.
+This last block preserves its optional message subtext.
 
 ```chat
 {{Bo|Wait.|quietly}}

@@ -118,6 +118,15 @@ The default message delay is clamp(400 + 35 × Unicode code-point count, 800, 40
 
 @delay Nms **replaces** the next message's calculated delay (0–60000ms). @pause Nms **adds** silence at its position (1–60000ms). Thus a 900ms pause followed by an explicit 1200ms delay takes 2100ms at every pace. A responding cue, when enabled for an incoming message, occupies its delay rather than adding another timer. Reduced motion keeps discrete message sequencing and authored waits.
 
+### Optional message subtext
+
+A bare `@subtext` after a message starts its optional metadata. Put each line beneath
+it as `  | text`. It appears once below that completed message, separately from
+speech, without adding a wait or sound. Legacy third fields now convert losslessly.
+See [Message subtext](CHAT-SUBTEXT.md) for copyable examples, multiline/escaping
+rules, safe supporting links and the synthetic review project. Chats still reveal
+whole messages after responding waits; this adds no character-typing mode.
+
 ### Timing between components
 
 **Automatic prose pacing is opt-in.** In an imported project, run **Story Teller: Set Book Prose Pacing** from a project scene and choose On or Off. This writes `"settings": { "prosePacing": "on" }` (or `"off"`) in `story-teller.project.json`; existing projects without that field remain Off. For a single scene, run **Story Teller: Set Scene Prose Pacing** (also in the Markdown editor context menu) and choose On, Off or Inherit. It edits the scene's initial YAML frontmatter field `story_teller_prose_pacing: on|off|inherit` in one undoable, unsaved editor edit. Inherit or an absent field uses the book value. The picker and preview status show the effective value and its source. Both commands work from the keyboard through the Command Palette; they never insert generated pauses. For a standalone Markdown file, a scene override of On works without a project. Source edits reset the preview to ready, so press Play again to examine the new setting.
@@ -158,8 +167,9 @@ focus and requires explicit Resume.
 Legacy conversion accepts `{{[[Celia|StillLearning]]|Thank you, [[Skip]].}}`
 and aliases within messages. Pipes inside recognised wikilinks are not field
 separators; escaped delimiter pipes and inherited speakers remain supported.
-Malformed links, ambiguous field separators and nonempty subtext stay unchanged
-with review warnings.
+Malformed links and ambiguous field separators stay unchanged with review warnings.
+Optional third-field subtext is preserved using the per-message `@subtext` marker
+and `  | text` lines; see [Message subtext](CHAT-SUBTEXT.md) for syntax and playback.
 
 ### Static images and captions
 
@@ -214,7 +224,7 @@ For example, a formatted annotation can contain `**emphasis**`, `*contrast*`, a 
 
 Always work on a copied adaptation, not the authoritative manuscript. The three conversion commands operate only on the active Markdown buffer, including unsaved changes. They show a native read-only diff with conversion and warning counts. **Review Warnings** opens source-located notes; **Apply** is explicit; Cancel leaves the source untouched. If the source changes after the proposal, Apply refuses it and offers Regenerate. Apply is one undoable editor edit and does not save. Repeating a successful conversion is a no-op.
 
-**Story Teller: Convert Chats in Current Document** recognises inspected, top-level manuscript chat containers inside chat fences: explicit {{speaker|body|subtext}} message wrappers, an optional leading # Title, and an optional explicit > Participant viewer marker. It retains speakers, text, order, multiline messages, titles, prose and existing beat separators. Unsupported subtext, ambiguous viewer/identity, multiple channel comments, unclosed or nested fences, ordinary dialogue and unrelated code stay unchanged with warnings. Existing valid Story Teller chat blocks remain unchanged. The converter does not infer ticks, responding, timing or a viewer.
+**Story Teller: Convert Chats in Current Document** recognises inspected, top-level manuscript chat containers inside chat fences: explicit {{speaker|body|subtext}} message wrappers, an optional leading # Title, and an optional explicit > Participant viewer marker. It retains speakers, text, optional message subtext, order, multiline messages, titles, prose and existing beat separators. Ambiguous viewer/identity, multiple channel comments, unclosed or nested fences, ordinary dialogue and unrelated code stay unchanged with warnings. Existing valid Story Teller chat blocks remain unchanged. The converter does not infer ticks, responding, timing or a viewer.
 
 **Story Teller: Convert Callouts to Type-out** recognises `prime-log`, `divergent`, `annotation`, `janus` and `janus-log`. Titles and attributable leading timestamps become component-owned `@title`/`@timestamp`; `@identity component` prevents accidental legacy inheritance. Beat boundaries and beat titles are untouched. Machine prose around its nested YAML stays in order. Review warnings and the diff before Apply; a selection limits changes to complete selected structures. See [Component identity](COMPONENT-IDENTITY.md) for all mappings, extraction rules and copyable before/after examples. The historical chat converter already owns its title; State remains specialised scene metadata.
 

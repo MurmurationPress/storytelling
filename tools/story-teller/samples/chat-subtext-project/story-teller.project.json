@@ -1,0 +1,23 @@
+{
+  "schema": "story-teller-project",
+  "version": 1,
+  "title": "Chat subtext — synthetic review",
+  "parts": [
+    {
+      "id": "p",
+      "title": "Review",
+      "scenes": [
+        "s"
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "id": "s",
+      "partId": "p",
+      "label": "1",
+      "title": "Retained exchange",
+      "file": "scenes/Chat.md"
+    }
+  ]
+}
