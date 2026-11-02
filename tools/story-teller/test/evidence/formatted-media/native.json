@@ -1,0 +1,4 @@
+{
+  "mode": "installed VSIX",
+  "checks": "12 PNG/JPEG/WebP images loaded; six SVG; metadata/order; pause/speed/reveal; stable SVG IDs; light/dark; desktop/narrow; navigation cancels preparation; readable missing/invalid fallback"
+}

@@ -151,3 +151,20 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .typeout-yaml .component-header { font-family: var(--vscode-editor-font-family, monospace); }
 .janus-document .component-header { padding-bottom: .7rem; border-bottom: 1px solid var(--janus-rule); margin-bottom: 1rem; }
 .janus-document .component-title { color: var(--janus-heading); font-size: 1.35em; }
+
+/* Measurable staging, never a second reading representation. */
+.formatted-preparation { position: fixed; left: -100000px; top: 0; visibility: hidden; pointer-events: none; }
+.formatted-component { min-width: 0; }
+.formatted-component .formatted-future { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0,0,0,0) !important; clip-path: inset(50%) !important; }
+.formatted-component .formatted-body { min-width: 0; max-width: 100%; }
+.formatted-component .story-inline-image { max-width: 100%; height: auto; object-fit: contain; }
+.formatted-component :is(th,td) .story-inline-image { max-width: 12rem; }
+.formatted-component .story-figure { margin: 1em 0; }
+.formatted-component .formatted-atomic { max-width: 100%; }
+.formatted-component .formatted-atomic:has(.story-inline-image) { display: inline-block; }
+.formatted-component .janus-table-scroll { max-width: 100%; overflow-x: auto; }
+.formatted-component table { border-collapse: collapse; }
+.formatted-component :is(th,td) { vertical-align: top; padding: .4em .6em; }
+.story-align-left { text-align: left; }
+.story-align-center { text-align: center; }
+.story-align-right { text-align: right; }

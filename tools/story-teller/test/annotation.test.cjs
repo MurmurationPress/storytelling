@@ -63,12 +63,14 @@ test('structural block boundaries consume no reveal step; code-block newlines re
   const invalid = sceneFor('** PRIME **').beats[0].blocks[0];
   assert.doesNotMatch(invalid.annotation.html, /<strong>/);
 });
-test('annotation HTML, links and images stay inert; YAML remains byte-literal', () => {
+test('annotation HTML and URL links stay inert; image references use the media resolver; YAML remains literal', () => {
   const body = '<script>alert(1)</script> [remote](https://example.test/) ![pic](https://example.test/a.png)';
   const annotation = sceneFor(body).beats[0].blocks[0].annotation;
-  assert.doesNotMatch(annotation.html, /<script|<a\b|<img\b/);
+  assert.doesNotMatch(annotation.html, /<script|<a\b/);
   assert.match(annotation.html, /&lt;script&gt;/);
-  assert.match(annotation.html, /Image omitted: pic/);
+  assert.match(annotation.html, /data-story-src="https:\/\/example.test\/a.png"/);
+  assert.doesNotMatch(annotation.html, /<img[^>]*\ssrc=/);
+  assert.deepEqual(annotation.images,['https://example.test/a.png']);
   const yaml = sceneFor('**raw** [[target|label]]\n  key: value', '@format yaml').beats[0].blocks[0];
   assert.equal(yaml.annotation, undefined);
   assert.equal(yaml.text, '**raw** [[target|label]]\n  key: value\n');

@@ -70,7 +70,7 @@ function convertCallouts(source, { scope } = {}) {
         const warning = documentWarning(body);
         if (warning) { warn(`JANUS ${warning}; callout left unchanged`); continue; }
         const tokens = md.parse(body, {});
-        if (bodyLines.some(line => /^\s*(?:---\s*$|@(delay|pause)\b|<!-- beat:)/.test(line.text)) ||
+        if (bodyLines.some((line,index) => !tokens.some(token => token.type === 'fence' && index >= token.map[0] && index < token.map[1]) && /^\s*(?:---\s*$|@(delay|pause)\b|<!-- beat:)/.test(line.text)) ||
             tokens.some(token => {
               if (token.type !== 'fence') return false;
               const closing = bodyLines[(token.map?.[1] || 0) - 1]?.text.match(/^ {0,3}(`+|~+)\s*$/);

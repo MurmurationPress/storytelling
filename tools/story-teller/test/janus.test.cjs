@@ -44,7 +44,7 @@ test('document units preserve order, formatting, alignments and complete rows ac
   assert.deepEqual(result.units.map(unit => unit.text.trim()), ['Date: Tomorrow', 'To: Council', 'A complete paragraph with a soft wrap.', 'Measure Change', 'α +12', 'β −3 → 0', 'First', 'Second', 'One statement.', 'Another statement.', 'Final Value', 'x ±2', 'Closing.']);
   assert.equal(result.units.filter(unit => unit.afterTable).length, 2);
   assert.equal((result.html.match(/<table>/g)||[]).length, 2);
-  assert.match(result.html, /<strong>\+12<\/strong>/); assert.match(result.html, /text-align:right/);
+  assert.match(result.html, /<strong>\+12<\/strong>/); assert.match(result.html, /story-align-right/);
   assert.equal((result.html.match(/data-janus-unit=/g)||[]).length, result.units.length);
   assert.deepEqual(result.references.map(ref => ref.target), ['Account']);
   assert.ok(!renderJanus('<script>alert(1)</script>').html.includes('<script>'));

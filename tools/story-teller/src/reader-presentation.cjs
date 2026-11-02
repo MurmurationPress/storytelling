@@ -6,6 +6,7 @@ const { beatAtOffset } = require('./structure.cjs');
 const { readerSpeed } = require('./reader-speed.cjs');
 const { StoryPlayer } = require('./player.cjs');
 const { TypeoutSound } = require('./sound.cjs');
+const { createFormattedCache, revealFormatted } = require('./formatted-reader.cjs');
 const { prepareDocument, revealDocument } = require('./janus-reader.cjs');
 const { graphemes } = require('./typeout.cjs');
 const { SceneAutoplay, currentReaderMessage } = require('./scene-navigation.cjs');
@@ -15,7 +16,7 @@ function createReader(api) {
 const sceneAutoplay = new SceneAutoplay();
 let needsAudioGesture = false;
 const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches, playbackSpeed: readerSpeed(api.getState()?.playbackSpeed) });
+const player = new StoryPlayer(undefined, { onChange: render, reducedMotion: motion.matches, playbackSpeed: readerSpeed(api.getState()?.playbackSpeed), prepareTypeout: block => formattedCache.prepare(player,block) });
 const sound = new TypeoutSound();
 let muted = Boolean(api.getState()?.muted);
 let autoplayOnTurn = api.getState()?.autoplayOnTurn !== false;
@@ -31,6 +32,7 @@ let readingSource = 'restore', readingMode = 'manual', readingInteraction = fals
 let media = Object.create(null);
 let mediaDiagnostics = [];
 let preparing = false;
+let sourcePreparation = null;
 let isMatter = false;
 let sceneTitle = '', hideMatchingHeading = false;
 let documentNavigation = {};
@@ -45,6 +47,7 @@ const status = document.getElementById('status');
 const warnings = document.getElementById('warnings');
 const follower = new ScrollFollower({ window, document, content, nav: document.querySelector('nav'),
   button: document.getElementById('follow-story'), reducedMotion: () => motion.matches });
+const formattedCache = createFormattedCache({document,content,available:()=>presented&&!document.hidden&&content.clientWidth>0,header:componentHeader,image:imageOrPlaceholder,prepareImage:(node,signal)=>preload(node.src,signal,node),changed:()=>render()});
 document.addEventListener('story-diagram-diagnostic', event => {
   if (!event.detail.document) event.detail.document = sourceUri;
   api.postMessage({ type: 'diagram-diagnostic', instance: document.body.dataset.readerInstance, revision, diagnostic: event.detail });
@@ -69,7 +72,7 @@ function resetNotes() {
 function controls() {
   const beat = player.current;
   const active = player.activeTypeout;
-  const statusText = isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${!api.compactHeader && beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · ${api.compactHeader ? 'Prose pacing' : 'prose pacing'} ${pacingLabel}` : 'No beats';
+  const statusText = (player.waitingTypeout !== null || player.revealingBeat) ? 'Preparing component media…' : isMatter && !preparing ? 'Book matter · fully displayed' : preparing ? 'Preparing local images…' : beat ? `Beat ${player.index + 1} of ${player.scene.beats.length}${!api.compactHeader && beat.title ? ` · ${beat.title}` : ''} · ${player.phase} · ${api.compactHeader ? 'Prose pacing' : 'prose pacing'} ${pacingLabel}` : 'No beats';
   if (status.textContent !== statusText) status.textContent = statusText;
   warnings.textContent = [...player.scene.diagnostics, ...mediaDiagnostics, ...supportingDiagnostics, ...(pacingWarning ? [pacingWarning] : []),
     ...(sound.unavailable && beat?.blocks.some(block => block.type === 'typeout' && block.sound !== 'none') ? [`Sound unavailable (${sound.failure?.phase}: ${sound.failure?.name}: ${sound.failure?.message}; context ${sound.failure?.contextState || 'unavailable'}); visual reveal continues.`] : [])].join('\n');
@@ -78,7 +81,7 @@ function controls() {
   if (!api.compactControls) document.getElementById('next').textContent = isMatter ? 'Continue →' : 'Next';
   for (const id of ['restart','play','pause','replay','mute','enable-sound']) document.getElementById(id).hidden = isMatter;
   document.getElementById('restart').disabled = preparing || !beat;
-  document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || !presented;
+  document.getElementById('play').disabled = preparing || !beat || player.phase !== 'ready' || player.revealingBeat || !presented;
   document.getElementById('pause').disabled = preparing || !['playing', 'paused'].includes(player.phase) || !presented;
   document.getElementById('pause').textContent = player.phase === 'paused' ? 'Resume' : 'Pause';
   document.getElementById('replay').disabled = preparing || !beat || !presented;
@@ -92,7 +95,7 @@ function controls() {
   document.getElementById('autoplay').checked = autoplayOnTurn;
   document.getElementById('show-source').disabled = preparing || !beat;
   document.getElementById('show-source').hidden = api.showSource === false;
-  sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' ? active?.block.sound : null);
+  sound.sync(!preparing && presented && !document.hidden && !muted && !player.reducedMotion && player.phase === 'playing' && player.waitingTypeout === null ? active?.block.sound : null);
   if (!preparing && presented && !document.hidden && !isMatter && api.onReading) {
     const blocks = player.visibleBlocks;
     const visible = blocks.some(block => ['prose', 'image'].includes(block.type) || (block.type === 'typeout' ? block.revealCount > 0 : block.messages?.length > 0));
@@ -108,6 +111,7 @@ function imageElement(src, alt, inline = false) {
   const image = document.createElement('img');
   image.alt = alt;
   image.className = inline ? 'story-inline-image' : 'story-image';
+  if(media[src].width && media[src].height){image.width=media[src].width;image.height=media[src].height;}
   image.src = media[src].url;
   image.addEventListener('error', () => {
     if (!image.isConnected) return;
@@ -146,9 +150,13 @@ function revealAnnotation(progress, count) {
 }
 function refreshDocumentLinks() {
   notes.afterRender();
+  for(const target of content.querySelectorAll('.formatted-component button.wiki-link,.formatted-component [tabindex]')) {
+    if(target.closest('.formatted-future')) {target.tabIndex=-1;target.setAttribute('aria-disabled','true');if(target.tagName==='BUTTON')target.disabled=true;}
+    else {target.tabIndex=0;target.removeAttribute('aria-disabled');}
+  }
   // The complete reading copy provides keyboard/screen-reader links. Visual
   // links still accept pointer input, without a second hidden tab sequence.
-  for (const link of content.querySelectorAll('.janus-document .typeout-progress button.wiki-link')) link.tabIndex = -1;
+  for (const link of content.querySelectorAll('.janus-document:not(.formatted-component) .typeout-progress button.wiki-link')) link.tabIndex = -1;
 }
 function componentHeader(block, legacyTitleHtml = null) {
   const titleHtml = block.titleHtml ?? legacyTitleHtml;
@@ -165,14 +173,17 @@ function componentHeader(block, legacyTitleHtml = null) {
   return header;
 }
 function render() {
+  formattedCache.sync(player);
   if(preparing){lastTypeoutRender=null;content.replaceChildren();controls();return;}
+  formattedCache.prefetch(player);
   const focusedLink = document.activeElement?.matches?.('button.wiki-link') && content.contains(document.activeElement) ? notes.key(document.activeElement) : null;
   const active = player.activeTypeout;
   if (active && lastTypeoutRender?.scene === player.scene && lastTypeoutRender.index === player.index && lastTypeoutRender.blockIndex === active.blockIndex) {
     const progress = content.querySelector(`[data-typeout-line="${active.block.line}"] .typeout-progress`);
     if (progress) {
       const shown = player.visibleBlocks.find(block => block.type === 'typeout' && block.line === active.block.line);
-      if (shown?.document) revealDocument(progress, shown.revealCount);
+      if (progress.storyFormatted) revealFormatted(progress,shown);
+      else if (shown?.document) revealDocument(progress, shown.revealCount);
       else if (shown?.format === 'annotation') revealAnnotation(progress, shown.revealCount);
       else progress.textContent = shown?.visibleText || '';
       progress.classList.toggle('active', player.phase === 'playing' && !player.reducedMotion);
@@ -189,6 +200,7 @@ function render() {
       .map(surface => ({ surface, left: surface.scrollLeft, top: surface.scrollTop }));
     return [node.dataset.janusLine, node];
   }));
+  formattedCache.capture();
   content.replaceChildren();
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
@@ -222,6 +234,11 @@ function render() {
       }
       content.append(figure);
     } else if (block.type === 'typeout') {
+      if (block.hasMedia) {
+        formattedCache.append(player,block);
+        if(active && active.block.line===block.line)lastTypeoutRender={scene:player.scene,index:player.index,blockIndex:active.blockIndex};
+        continue;
+      }
       if (block.document) {
         let section = retainedDocuments.get(String(block.line));
         if (section?.storyDocument !== block.document) section = null;
@@ -354,7 +371,7 @@ function render() {
   for (const figure of content.querySelectorAll('.story-diagram')) {
     const index = candidates.findIndex(old => old.dataset.diagramLine === figure.dataset.diagramLine &&
       old.dataset.diagramSource === figure.dataset.diagramSource);
-    if (index >= 0) figure.replaceWith(candidates.splice(index, 1)[0]);
+    if (index >= 0) {const old=candidates.splice(index,1)[0];if(old!==figure)figure.replaceWith(old);}
   }
   renderDiagrams(content, () => follower.changed());
   refreshDocumentLinks();
@@ -362,20 +379,26 @@ function render() {
   controls();
   follower.changed();
 }
-function preload(url) {
+function preload(url,signal,target = null) {
   return new Promise(resolve => {
-    const image = new Image();
+    const image = target || new Image();
     let settled = false;
     const finish = error => {
       if (settled) return;
       settled = true; clearTimeout(timeout);
-      image.onload = image.onerror = null;
-      resolve(error);
+      image.onload = image.onerror = null; signal?.removeEventListener('abort',abort);
+      const result={error,width:image.naturalWidth,height:image.naturalHeight};
+      if(error)image.removeAttribute('src');
+      resolve(result);
     };
+    const abort=()=>finish('image preparation cancelled');
     const timeout = setTimeout(() => finish('image load timed out'), 5000);
+    signal?.addEventListener('abort',abort,{once:true});
+    if(signal?.aborted){abort();return;}
     image.onload = () => finish(null);
     image.onerror = () => finish('could not display image');
-    image.src = url;
+    if(target && image.complete){finish(image.naturalWidth ? null : 'could not display image');return;}
+    if(!target)image.src = url;
   });
 }
 const unlockSound = (beat = player.current) => {
@@ -386,6 +409,7 @@ const unlockSound = (beat = player.current) => {
   }
 };
 function startSelectedScene() {
+  if(presented&&!document.hidden&&player.revealingBeat){player.revealBeat();return;}
   if (sceneAutoplay.take(revision, !preparing && presented && !document.hidden)) player.play();
 }
 function turnDocument(direction) {
@@ -458,10 +482,10 @@ function showSource() {
   api.postMessage({ type: 'show-source', uri: sourceUri, revision, index: player.index, startOffset: range.startOffset, endOffset: range.endOffset });
 }
 document.getElementById('show-source').addEventListener('click', showSource);
-document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) { resetNotes(); sceneAutoplay.leave(); player.pause(); } render(); startSelectedScene(); });
+document.addEventListener('visibilitychange', () => { follower.setActive(!document.hidden && presented); if (document.hidden) { resetNotes(); sceneAutoplay.leave(); if(player.revealingBeat)player.cancelTimer(); player.pause(); } render(); startSelectedScene(); });
 window.addEventListener('pagehide', event => { resetNotes(); if(event.persisted){sceneAutoplay.leave();player.pause();sound.stop();follower.setActive(false);}else{notes.dispose();follower.dispose();player.dispose();sound.dispose();} });
 window.addEventListener('pageshow', event=>{if(event.persisted){follower.setActive(!document.hidden&&presented);render();}});
-window.addEventListener('beforeunload', () => sound.stop());
+window.addEventListener('beforeunload', () => {sourcePreparation?.abort();formattedCache.dispose();sound.stop();});
 api.onMessage(async event => {
   const message = event.data;
   if (message?.type?.startsWith('supporting-') && (message.instance !== document.body.dataset.readerInstance || message.revision !== revision)) return;
@@ -480,6 +504,7 @@ api.onMessage(async event => {
   if (!currentReaderMessage(document.body.dataset.readerInstance, message)) return;
   if (message?.type === 'show-source-request') { showSource(); return; }
   if (message?.type === 'source-pending' && Number.isInteger(message.revision) && message.revision > incomingRevision) {
+    sourcePreparation?.abort();
     incomingRevision = message.revision;
     resetNotes();
     pendingDeparture = sceneAutoplay.departure;
@@ -494,7 +519,7 @@ api.onMessage(async event => {
         presentationEpoch = message.epoch;
         presented = message.visible;
         follower.setActive(presented && !document.hidden);
-        if (!presented) { resetNotes(); sceneAutoplay.leave(); player.pause(); }
+        if (!presented) { resetNotes(); sceneAutoplay.leave(); if(player.revealingBeat)player.cancelTimer(); player.pause(); }
         render(); startSelectedScene();
       }
       api.postMessage({ type: 'presentation-ack', epoch: message.epoch });
@@ -518,11 +543,17 @@ api.onMessage(async event => {
   follower.beginTurn({ silent: message.documentPrevious === true || message.matter === true });
   player.reset(); // The pending message already cancelled playback; this also covers a missing pending message.
   preparing = true; render();
+  sourcePreparation?.abort(); sourcePreparation = new AbortController();
+  const parsedScene = message.matter === true ? matterScene(message.source) : parseScene(message.source,{prosePacing:message.prosePacing===true});
+  const preloads = new Map();
   const prepared = Object.create(null);
   const entries = Object.entries(message.media || {});
   await Promise.all(entries.map(async ([src, entry]) => {
     prepared[src] = { ...entry };
-    if (entry.url) prepared[src].error = await preload(entry.url);
+    if (entry.url) {
+      if(!preloads.has(entry.url))preloads.set(entry.url,preload(entry.url,sourcePreparation.signal));
+      Object.assign(prepared[src],await preloads.get(entry.url));
+    }
   }));
   if (message.revision !== incomingRevision || player.disposed) return;
   revision = message.revision;
@@ -534,7 +565,7 @@ api.onMessage(async event => {
   if (typeof message.autoplayOnTurn === 'boolean') autoplayOnTurn = message.autoplayOnTurn;
   media = prepared;
   mediaDiagnostics = [...(message.mediaDiagnostics || [])];
-  for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Image ${src}: ${entry.error}`);
+  for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Line ${parsedScene.imageLines?.[src] || '?'}: Image ${src}: ${entry.error}`);
   const first = !sourceUri;
   sourceUri = message.uri;
   pacingWarning = message.pacingWarning;
@@ -543,7 +574,7 @@ api.onMessage(async event => {
   sceneTitle = typeof message.sceneTitle === 'string' ? message.sceneTitle : '';
   hideMatchingHeading = api.compactHeader === true && message.sceneTitleInBody === true && !isMatter;
   documentNavigation = message.documentNavigation || {};
-  player.update(isMatter ? matterScene(message.source) : parseScene(message.source, { prosePacing: message.prosePacing === true }));
+  player.update(parsedScene);
   const saved = api.getState();
   if (isMatter) { player.revealBeat(); needsAudioGesture = false; } else if (message.documentPrevious === true) { player.index = player.scene.beats.length - 1; player.reset(); player.revealBeat(); needsAudioGesture = false; } else if (message.sceneStart === true) {
     player.index = 0; player.reset();

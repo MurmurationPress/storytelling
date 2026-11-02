@@ -1907,3 +1907,30 @@ supporting note's preview, full content and lack of onward links were checked
 against its first header access; it has no later disclosures. No automatic spoiler
 filter, human screen-reader/Safari/actual-device acceptance, merge, production
 reader deployment or bulk migration of real books is claimed.
+
+## Formatted component images and Mermaid — 2026-11-02 (0.17.0)
+
+Review candidate from main `916b3b2`, including merged #34/#35. Image discovery
+previously stopped at the outer Markdown fence, so nested references never reached
+webview/export resolution. Formatted renderers also treated nested Mermaid as
+literal code. Both now use the existing resource/Markdown/Mermaid pipelines;
+YAML remains literal, with unchanged remote/format/path/security restrictions.
+
+Media is prepared in a measurable hidden stage before component entry. Shared
+player preparation gates are generation-guarded, cancellable and bounded; late
+results cannot enter another beat. JANUS keeps whole paragraph/list/table-row
+units; annotation keeps character typing with atomic media steps. Tables measure
+the complete content, media DOM survives reveal ticks and local inspection, and
+one canonical semantic media tree avoids duplicate SVG IDs/announcements.
+Component-owned metadata, migration and legacy JANUS palettes/title compatibility
+remain. A static/typed annotation link now gets one accessible label.
+
+The deterministic suite passes 345 tests; syntax, both builds and packaging pass.
+Actual HTTP export and installed 0.17.0 VSIX verify loaded PNG/JPEG/WebP, styled
+Mermaid SVGs, atomic order, controls/cancellation, fallbacks, metadata, narrow
+layouts and themes. Existing JANUS, component identity and Mermaid style browser
+regressions were rerun. See [retained evidence](test/evidence/formatted-media/README.md)
+for exact scope, package digest, screenshots, native migration results and test
+harness findings. The [guide](FORMATTED-MEDIA.md) documents syntax and timing;
+[sample](samples/formatted-media-project/) is wholly synthetic. No actual book,
+production reader, merge, Marketplace publication or author acceptance is implied.

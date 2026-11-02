@@ -6,6 +6,19 @@ created: 2026-10-21
 
 # Story Teller
 
+**Formatted component media review (2026-11-02, 0.17.0):** Ted requested local
+images and Mermaid inside JANUS reports, internal logs and annotations after
+merged #34/#35. The review candidate now discovers nested assets through the
+existing resolver/export and renders nested Mermaid through the existing secure
+pipeline. Media enters whole; annotations retain character typing, JANUS retains
+paragraph/row reveal, and YAML stays literal. Component identity/migration and
+beat rhythm remain separate. Synthetic installed-extension/HTTP checks and
+[validation evidence](../tools/story-teller/test/evidence/formatted-media/README.md)
+are recorded separately from Ted's acceptance, which remains open. The
+[authoring guide](../tools/story-teller/FORMATTED-MEDIA.md) includes nested-fence
+syntax and a synthetic mixed-media project. No actual adaptation, production
+reader or publication was changed.
+
 **Playback-speed acceptance (2026-10-28, PR #22 / issue #13):** Ted reports,
 “0.75 works best for me.” and “Checked all three tests, working well.” This
 accepts the playback-speed feature at `28d9fc9823f023961e3dc137e24693e80e094e4d`;

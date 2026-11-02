@@ -178,12 +178,14 @@ function parseScene(source, { prosePacing = false } = {}) {
             identity[key + 'Html'] = md.renderInline(settings[key]);
             wikiReferences.push(...references(md.parseInline(settings[key]), openLine + 1 + contentLines.findIndex(line => line.startsWith('@' + key)) + 1));
           }
-          const document = isJanus(settings.format) ? { ...renderJanus(body), titleHtml: settings.title !== undefined ? identity.titleHtml : settings.identity !== 'component' && settings.timestamp === undefined && range.title ? md.renderInline(range.title) : null } : null;
+          const document = isJanus(settings.format) ? { ...renderJanus(body, {firstLine:bodyStartLine + 1}), titleHtml: settings.title !== undefined ? identity.titleHtml : settings.identity !== 'component' && settings.timestamp === undefined && range.title ? md.renderInline(range.title) : null } : null;
           if (document && settings.title === undefined && settings.timestamp === undefined && settings.identity !== 'component' && range.title) wikiReferences.push(...references(md.parseInline(range.title), (range.titleLine ?? first) + 1));
           if (document) wikiReferences.push(...document.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
-          const annotation = settings.format === 'annotation' ? renderAnnotation(body) : null;
+          const annotation = settings.format === 'annotation' ? renderAnnotation(body, {firstLine:bodyStartLine + 1}) : null;
           if (annotation) wikiReferences.push(...annotation.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
-          add({ type: 'typeout', ...settings, ...identity, text: body, ...(document ? { document } : {}), ...(annotation ? { annotation } : {}), line: openLine + 1 });
+          const formatted = document || annotation;
+          for (const src of formatted?.images || []) { images.add(src); imageLines[src] ??= bodyStartLine + formatted.imageLines[src]; }
+          add({ type: 'typeout', ...(formatted?.hasMedia ? {hasMedia:true} : {}), ...settings, ...identity, text: body, ...(document ? { document } : {}), ...(annotation ? { annotation } : {}), line: openLine + 1 });
         }
       } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];

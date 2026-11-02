@@ -1,0 +1,6 @@
+{
+  "sha256": "94a8df09a6f36326b3f6fe26f50b9c3120618e5ecf122ddd98ac0e7fbc1a471f",
+  "bytes": 5918148,
+  "entries": 416,
+  "checks": "both reader bundles and listed packaged sources byte-match current build; renderer-only Mermaid implementation is bundled; samples/tests excluded"
+}

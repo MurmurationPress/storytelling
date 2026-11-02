@@ -7,11 +7,13 @@ const defaultScheduler = {
 };
 const { readerSpeed, calculatedDuration } = require('./reader-speed.cjs');
 const { defaultDelay, automaticDelay } = require('./pace.cjs');
+const { MEDIA_INTERVAL } = require('./formatted-media.cjs');
 const { readingTime } = require('./janus.cjs');
 const { graphemes, graphemeDelay } = require('./typeout.cjs');
 class StoryPlayer {
-  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false, playbackSpeed = 1 } = {}) {
+  constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false, playbackSpeed = 1, prepareTypeout = null } = {}) {
     this.scene = scene; this.index = 0; this.scheduler = scheduler; this.onChange = onChange;
+    this.prepareTypeout = prepareTypeout;
     this.reducedMotion = reducedMotion; this.playbackSpeed = readerSpeed(playbackSpeed);
     this.generation = 0; this.timer = null; this.disposed = false;
     this.reset();
@@ -28,6 +30,7 @@ class StoryPlayer {
   }
   reset() {
     this.cancelTimer();
+    this.run = (this.run || 0) + 1; this.preparedTypeouts = new Set(); this.waitingTypeout = null; this.revealingBeat = false; this.immediateTypeouts = new Set();
     this.phase = 'ready'; this.cursor = 0; this.remaining = null;
     this.visible = new Set(); this.enteredChats = new Set(); this.enteredTypeouts = new Set();
     this.typeoutCounts = new Map(); this.typeoutParts = new Map(); this.counts = new Map(); this.read = new Set();
@@ -46,16 +49,17 @@ class StoryPlayer {
       if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
       else if (block.type === 'typeout') {
         const parts = block.document ? block.document.units.map(unit => unit.text) : block.format === 'annotation'
-          ? block.annotation.segments.flatMap(graphemes) : graphemes(block.text);
+          ? block.annotation.hasMedia ? block.annotation.parts.map(part=>part.text) : block.annotation.segments.flatMap(graphemes) : graphemes(block.text);
         this.typeoutParts.set(blockIndex, parts);
         this.steps.push({ type: 'typeout-start', blockIndex, delayMs: block.delayMs ?? 0 });
-        const documentInterval = unit => (readingTime(unit) + (unit.afterTable ? 450 : 0)) * 30 / block.speed;
+        const documentInterval = unit => Math.max(unit.media ? MEDIA_INTERVAL : 0, readingTime(unit) * 30 / block.speed) + (unit.afterTable ? 450 * 30 / block.speed : 0);
         for (let index = 0; index < parts.length; index++) {
           const delayMs = block.document
             ? index === 0 ? 300 * 30 / block.speed : documentInterval(block.document.units[index - 1])
-            : graphemeDelay(index, block.speed);
+            : block.annotation?.hasMedia && block.annotation.parts[index - 1]?.media ? MEDIA_INTERVAL : graphemeDelay(index, block.speed);
           this.steps.push({ type: 'typeout-reveal', blockIndex, calculated: true, delayMs });
         }
+        if (block.annotation?.parts?.at(-1)?.media) this.steps.push({type:'pause',documentHold:true,calculated:true,delayMs:MEDIA_INTERVAL});
         if (block.document && parts.length) this.steps.push({
           type: 'pause', documentHold: true, calculated: true, delayMs: documentInterval(block.document.units.at(-1))
         });
@@ -86,6 +90,7 @@ class StoryPlayer {
   }
   get activeTypeout() {
     const step = this.steps[this.cursor];
+    if (this.waitingTypeout !== null && ['playing','paused'].includes(this.phase)) return {blockIndex:this.waitingTypeout,block:this.current.blocks[this.waitingTypeout]};
     return step?.type === 'typeout-reveal' && ['playing', 'paused'].includes(this.phase)
       ? { blockIndex: step.blockIndex, block: this.current.blocks[step.blockIndex] } : null;
   }
@@ -105,7 +110,7 @@ class StoryPlayer {
     });
   }
   play() {
-    if (this.disposed || !this.current || !['ready', 'paused'].includes(this.phase)) return;
+    if (this.disposed || this.revealingBeat || !this.current || !['ready', 'paused'].includes(this.phase)) return;
     this.phase = 'playing'; this.schedule(); this.onChange();
   }
   setPlaybackSpeed(value) {
@@ -127,6 +132,17 @@ class StoryPlayer {
     this.showProse();
     const step = this.steps[this.cursor];
     if (!step) { this.phase = 'completed'; return; }
+    const block = this.current.blocks[step.blockIndex];
+    if (step.type === 'typeout-start' && block.hasMedia && this.prepareTypeout && !this.preparedTypeouts.has(step.blockIndex)) {
+      this.remaining = 0; this.deadline = this.scheduler.now(); this.waitingTypeout = step.blockIndex;
+      const generation = this.generation, cursor = this.cursor;
+      Promise.resolve().then(()=>{if(this.generation===generation)return this.prepareTypeout(block);}).catch(()=>{}).then(()=>{
+        if (this.disposed || this.generation !== generation || this.cursor !== cursor || this.phase !== 'playing') return;
+        this.preparedTypeouts.add(step.blockIndex); this.waitingTypeout = null; this.remaining = null;
+        this.schedule(); this.onChange();
+      });
+      return;
+    }
     if (step.blockIndex !== undefined && this.current.blocks[step.blockIndex].type === 'chat') this.enteredChats.add(step.blockIndex);
     const delay = this.remaining ?? (step.calculated ? calculatedDuration(step.delayMs, this.playbackSpeed) : step.delayMs);
     // Carry calculated deadlines to avoid reveal drift; authored waits start in full.
@@ -139,10 +155,10 @@ class StoryPlayer {
       if (step.type === 'prose' || step.type === 'image') this.visible.add(step.blockIndex);
       if (step.type === 'typeout-start') {
         this.enteredTypeouts.add(step.blockIndex);
-        if (this.reducedMotion) {
+        if (this.reducedMotion || this.immediateTypeouts.has(step.blockIndex)) {
           this.typeoutCounts.set(step.blockIndex, this.typeoutParts.get(step.blockIndex).length);
           while (this.steps[this.cursor + 1]?.type === 'typeout-reveal' && this.steps[this.cursor + 1].blockIndex === step.blockIndex) this.cursor++;
-          if (this.current.blocks[step.blockIndex].document && this.steps[this.cursor + 1]?.documentHold) this.cursor++;
+          if (this.steps[this.cursor + 1]?.documentHold) this.cursor++;
         }
       }
       if (step.type === 'typeout-reveal') this.typeoutCounts.set(step.blockIndex, (this.typeoutCounts.get(step.blockIndex) || 0) + 1);
@@ -160,10 +176,11 @@ class StoryPlayer {
   revealImmediately() {
     const active = this.activeTypeout;
     if (!active) return false;
+    if (this.waitingTypeout !== null) { this.immediateTypeouts.add(active.blockIndex); this.onChange(); return true; }
     this.cancelTimer(); this.remaining = null;
     this.typeoutCounts.set(active.blockIndex, this.typeoutParts.get(active.blockIndex).length);
     while (this.steps[this.cursor]?.type === 'typeout-reveal' && this.steps[this.cursor].blockIndex === active.blockIndex) this.cursor++;
-    if (active.block.document && this.steps[this.cursor]?.documentHold) this.cursor++;
+    if (this.steps[this.cursor]?.documentHold) this.cursor++;
     if (this.phase === 'playing') this.schedule();
     this.onChange();
     return true;
@@ -182,6 +199,18 @@ class StoryPlayer {
   }
   revealBeat() {
     this.cancelTimer();
+    const pending = (this.current?.blocks || []).filter((block,index)=>block.hasMedia && this.prepareTypeout && !this.preparedTypeouts.has(index));
+    if (pending.length) {
+      const generation = this.generation;
+      this.revealingBeat = true; this.phase = 'ready';
+      Promise.all(pending.map(block=>Promise.resolve().then(()=>{if(this.generation===generation)return this.prepareTypeout(block);}).catch(()=>{}))).then(()=>{
+        if (this.disposed || generation !== this.generation) return;
+        for (const [index,block] of this.current.blocks.entries()) if (block.hasMedia) this.preparedTypeouts.add(index);
+        this.revealingBeat = false; this.revealBeat();
+      });
+      this.onChange(); return;
+    }
+    this.waitingTypeout = null; this.revealingBeat = false;
     this.remaining = null; this.cursor = this.steps.length;
     for (const [index, block] of (this.current?.blocks || []).entries()) {
       if (block.type === 'prose' || block.type === 'image') this.visible.add(index);

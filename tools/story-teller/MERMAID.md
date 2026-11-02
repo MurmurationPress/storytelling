@@ -225,3 +225,11 @@ absolute VSIX path for the installed-package run. Export the sample with
 `node src/web-export.cjs samples/diagram-project /new/output/path`, then run
 `python test/mermaid-web.py /new/output/path` with Playwright installed. An optional
 second argument runs the same browser suite against an immutable preview URL.
+
+## Inside formatted typeouts (0.17.0)
+
+`janus`, `janus-log` and `annotation` reuse this same diagram pipeline inside their
+bodies. Enclose the outer typeout in four backticks around three-backtick Mermaid
+fences. Diagram style, security, accessible SVG and captions retain these rules.
+`yaml` stays entirely literal. See [Formatted media](FORMATTED-MEDIA.md) for the
+complete example, preparation and atomic playback rules.

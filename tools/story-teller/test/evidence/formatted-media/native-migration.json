@@ -1,0 +1,10 @@
+{
+  "platform": "Linux VS Code 1.144.0, disposable installed-extension profiles",
+  "candidate": "0.17.0",
+  "baseline": "unchanged local 0.16.0 VSIX from merged PR #35",
+  "candidateResult": "real diff and Apply succeed with two synthetic components; dirty buffer changes; disk stays unchanged; next Undo assertion fails",
+  "baselineResult": "same Undo assertion fails after successful Apply",
+  "followupAttempts": "explicit editor focus, notification closure, preview closure and native pointer/Ctrl+Z did not produce expected source restoration; those exploratory driver changes were discarded",
+  "scope": "No migration production code was changed by this fix. Native project report after Undo is not reached. Existing deterministic document/selection/project migration tests and HTTP component-identity regression pass.",
+  "acceptance": "Complete native Undo/project-report revalidation remains open; the cause of the native Undo failure is unconfirmed. No pass inferred from baseline comparison. No actual adaptation was used or saved."
+}
