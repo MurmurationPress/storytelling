@@ -3,83 +3,62 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const { convertCallouts } = require('../src/convert-callouts.cjs');
 const { parseScene } = require('../src/parser.cjs');
-const { inspectStructure } = require('../src/structure.cjs');
-const ticks = '`'.repeat(3);
-const machine = (title = 'Signal.Received') => `> [!prime-log] ${title}\n> 2030-01-02 03:04\n>\n> ${ticks}yaml\n> status: listening\n> nested:\n>   relation: unresolved\n> ${ticks}\n>\n> The receiver kept its place.\n`;
-test('observed machine wrapper becomes a named beat, preserving YAML indentation and surrounding prose', () => {
-  const source = `---\ntitle: fictional\n---\n\n${machine()}\nFollowing text.\n`;
-  const result = convertCallouts(source);
-  assert.equal(result.count, 1); assert.deepEqual(result.warnings, []);
-  assert.equal(result.text.match(/^---$/gm).length, 2); // Frontmatter only, no empty leading beat.
-  assert.match(result.text, /^<!-- beat: Signal\.Received -->$/m);
-  assert.match(result.text, /2030-01-02 03:04[\s\S]*?```typeout\n@format yaml\n@sound modem\n\nstatus: listening\nnested:\n  relation: unresolved\n```[\s\S]*?The receiver kept its place\.[\s\S]*?Following text/);
-  const scene = parseScene(result.text);
-  assert.equal(scene.beats.length, 1);
-  assert.equal(scene.beats[0].title, 'Signal.Received');
-  assert.deepEqual(scene.beats[0].blocks.map(block => block.type), ['prose', 'typeout', 'prose']);
-  assert.equal(scene.beats[0].blocks[1].text, 'status: listening\nnested:\n  relation: unresolved\n');
-  assert.equal(convertCallouts(result.text).text, result.text);
-});
-test('existing boundaries are reused and existing matching titles remain; conflicts are review-only', () => {
-  const same = 'Opening.\n\n---\n<!-- beat: Signal.Received -->\n\n' + machine();
-  const converted = convertCallouts(same);
-  assert.equal(converted.count, 1);
-  assert.equal(converted.text.match(/^---$/gm).length, 1);
-  assert.equal(converted.text.match(/<!-- beat: Signal\.Received -->/g).length, 1);
-  const bare = convertCallouts('Opening.\n\n---\n\n' + machine());
-  assert.match(bare.text, /---\n<!-- beat: Signal\.Received -->\n/);
-  const conflict = 'Opening.\n\n---\n<!-- beat: Existing title -->\n\n' + machine();
-  const held = convertCallouts(conflict);
-  assert.equal(held.count, 0); assert.equal(held.text, conflict);
-  assert.match(held.warnings[0].message, /conflicts/); assert.equal(held.warnings[0].line, 6);
-  const firstConflict = '<!-- beat: Existing title -->\n\n' + machine();
-  const firstHeld = convertCallouts(firstConflict);
-  assert.equal(firstHeld.count, 0); assert.equal(firstHeld.text, firstConflict);
-  assert.match(firstHeld.warnings[0].message, /conflicts/);
-});
-test('multiple callouts start successive beats; following prose stays with its converted callout', () => {
-  const source = `Opening.\n\n${machine()}\nA bridge paragraph.\n\n> [!annotation]- Margin note\n> First line.\n> > meaningful inner quote\n> Second line.\n\nClosing.\n`;
-  const result = convertCallouts(source);
-  assert.equal(result.count, 2); assert.equal(result.warnings.length, 0);
-  assert.deepEqual(parseScene(result.text).beats.map(beat => beat.title), [null, 'Signal.Received', 'Margin note']);
-  assert.match(result.text, /```typeout\n@format annotation\n@sound keyboard\n\nFirst line\.\n> meaningful inner quote\nSecond line\./);
-  assert.match(result.text, /Second line\.[\s\S]*?Closing\./);
-  assert.equal(convertCallouts(result.text).count, 0);
-});
-test('annotation body backticks and CRLF survive through a longer containing fence', () => {
-  const source = '> [!annotation] Note\r\n> The literal marker is below.\r\n> ```example\r\n> @pause 900ms\r\n> ```\r\n';
-  const result = convertCallouts(source);
-  assert.equal(result.count, 1);
-  assert.match(result.text, /````typeout\r\n@format annotation\r\n@sound keyboard\r\n\r\nThe literal marker is below\.\r\n```example\r\n@pause 900ms\r\n```\r\n````/);
-  assert.equal(parseScene(result.text).beats[0].blocks[0].text, 'The literal marker is below.\r\n```example\r\n@pause 900ms\r\n```\r\n');
-});
-test('unrelated/literal components and frontmatter remain unchanged', () => {
-  const source = `---\ntitle: invented\n---\n\n${ticks}md\n> [!prime-log] Literal\n> ${ticks}yaml\n> a: b\n> ${ticks}\n${ticks}\n\n> [!chat] Dialogue\n> Ari: Hello\n\n> [!State]\n> status: metadata\n\n${ticks}yaml\nordinary: true\n${ticks}\n\n${ticks}typeout\n@format yaml\n\noriginal: true\n${ticks}\n`;
-  const result = convertCallouts(source);
-  assert.equal(result.count, 0); assert.equal(result.text, source); assert.equal(result.warnings.length, 0);
-  assert.deepEqual(inspectStructure(result.text).boundaries, []);
-});
-test('ambiguous machine callouts and unsafe titles are retained with source warnings', () => {
-  for (const [source, pattern] of [
-    ['> [!prime-log] Prose only\n> There is no YAML.\n', /one top-level YAML/],
-    [`> [!divergent] Two fences\n> ${ticks}yaml\n> a: b\n> ${ticks}\n> ${ticks}yaml\n> c: d\n> ${ticks}\n`, /one top-level YAML/],
-    [`> [!prime-log] Unclosed\n> ${ticks}yaml\n> a: b\n`, /unclosed YAML/],
-    [`> [!prime-log] Mixed\n> @pause 100ms\n> ${ticks}yaml\n> a: b\n> ${ticks}\n`, /surrounding prose/],
-    [`> [!prime-log] Outer\n> > [!annotation] Inner\n> ${ticks}yaml\n> a: b\n> ${ticks}\n`, /nested or adjacent callout/],
-    [`> [!prime-log] Outer\n> [!annotation] Adjacent\n> ${ticks}yaml\n> a: b\n> ${ticks}\n`, /nested or adjacent callout/],
-    ['> [!annotation Broken\n> Note.\n', /malformed recognised callout/],
-    [`> [!annotation] Broken --> title\n> Note.\n`, /cannot be represented/]
-  ]) {
-    const result = convertCallouts(source);
-    assert.equal(result.count, 0, source); assert.equal(result.text, source);
-    assert.match(result.warnings[0].message, pattern);
-    assert.equal(result.warnings[0].line, 1);
+const { inspectStructure,beatRanges } = require('../src/structure.cjs');
+const mappings = {'prime-log':['yaml','modem'], divergent:['yaml','modem'], annotation:['annotation','keyboard'],janus:['janus','none'],'janus-log':['janus-log','none']};
+const callout = (label,title,body,marker='') => `> [!${label}]${marker}${title ? ' '+title : ''}\n`+body.split('\n').map(l=>'> '+l).join('\n')+'\n';
+const content = label => ['prime-log','divergent'].includes(label) ? '```yaml\nstatus: observing\n  nested: +2\n```' : 'A **complete** paragraph.\n\n| A | B |\n| :--- | ---: |\n| α | −2 |';
+const beats = source => beatRanges(inspectStructure(source)).map(beat=>beat.title);
+test('every mapping carries its own title and timestamp without changing navigation metadata',()=>{
+  for(const [label,[format,sound]] of Object.entries(mappings)) for(const marker of ['','+','-']) for(const eol of ['\n','\r\n']) {
+    const body=content(label), title='Report — **α** @pause 1ms -->';
+    const source=('Opening.\n\n---\n<!-- beat: Reading rhythm -->\n\nBefore.\n\n'+callout(label.toUpperCase(),title,'2030-01-02 03:04\n\n'+body,marker)+'\nAfter.\n\n---\nLast.\n').replaceAll('\n',eol);
+    const result=convertCallouts(source); assert.equal(result.count,1); assert.deepEqual(result.warnings,[]);
+    assert.deepEqual(beats(result.text),beats(source));
+    assert.deepEqual(result.text.match(/^---\r?$/gm),source.match(/^---\r?$/gm));
+    assert.ok(result.text.includes(`<!-- beat: Reading rhythm -->${eol}${eol}Before.${eol}${eol}`));
+    assert.ok(result.text.endsWith(`${eol}After.${eol}${eol}---${eol}Last.${eol}`));
+    const block=parseScene(result.text).beats[1].blocks.find(b=>b.type==='typeout');
+    assert.equal(block.title,title); assert.equal(block.timestamp,'2030-01-02 03:04'); assert.equal(block.format,format); assert.equal(block.sound,sound); assert.equal(block.identity,'component');
+    assert.equal((result.text.match(/2030-01-02 03:04/g)||[]).length,1);
+    assert.equal(convertCallouts(result.text).text,result.text);
+    assert.ok(result.changes.every(c=>source.slice(c.start,c.end).startsWith('> [!')));
+    if(eol==='\r\n') assert.ok(!/(?<!\r)\n/.test(result.text));
   }
 });
-test('a missing displayed title uses the recognised callout label and existing chat stays intact', () => {
-  const source = `> [!annotation]+  \n> A note.\n\n${ticks}chat\n# Link\nAri: Hi.\n${ticks}\n`;
-  const result = convertCallouts(source);
-  assert.equal(result.count, 1);
-  assert.equal(parseScene(result.text).beats[0].title, 'annotation');
-  assert.ok(result.text.includes(`${ticks}chat\n# Link\nAri: Hi.\n${ticks}`));
+test('title-only, timestamp-only, both and neither work for every mapping, without generated labels',()=>{
+  for(const label of Object.keys(mappings)) for(const title of ['','Title']) for(const stamp of ['','Timestamp: Yesterday — local wording']) {
+    const result=convertCallouts('<!-- beat: Unrelated -->\n\n'+callout(label,title,(stamp?stamp+'\n\n':'')+content(label)));
+    assert.equal(result.count,1); const block=parseScene(result.text).beats[0].blocks[0];
+    assert.equal(block.title,title || undefined); assert.equal(block.timestamp,stamp ? 'Yesterday — local wording' : undefined);
+    if(block.document && !title) assert.equal(block.document.titleHtml,null);
+  }
+});
+test('multiple differently titled callouts and prose retain one beat and exact component order',()=>{
+  const source='<!-- beat: Rhythm -->\n\nOpening.\n\n'+callout('prime-log','One',content('prime-log'))+'\nBridge.\n\n'+callout('annotation','Two',content('annotation'))+'\nClosing.';
+  const result=convertCallouts(source); const scene=parseScene(result.text); assert.equal(result.count,2); assert.equal(scene.beats.length,1); assert.equal(scene.beats[0].title,'Rhythm');
+  assert.deepEqual(scene.beats[0].blocks.map(b=>b.title || b.type),['prose','One','prose','Two','prose']);
+});
+test('machine prose before and after nested YAML stays in order; dates in data and prose are retained',()=>{
+  const body='2030-01-02 03:04\n\nPreceding **prose**.\n\n```yaml\ndate: 2031-02-03\nTimestamp: body_data\n```\n\nFollowing prose on 2032-04-05.';
+  const result=convertCallouts(callout('divergent','Report',body)); assert.equal(result.count,1);
+  const scene=parseScene(result.text); assert.deepEqual(scene.beats[0].blocks.map(b=>b.type),['prose','typeout','prose']);
+  assert.match(scene.beats[0].blocks[0].html,/Preceding <strong>prose/); assert.equal(scene.beats[0].blocks[1].text,'date: 2031-02-03\nTimestamp: body_data\n');
+  assert.match(scene.beats[0].blocks[2].html,/Following prose on 2032-04-05/);
+  const table=convertCallouts(callout('janus','Report','| Date |\n|---|\n|2030-01-02 03:04|')); assert.equal(parseScene(table.text).beats[0].blocks[0].timestamp,undefined);
+  const prose=convertCallouts(callout('annotation','Report','2030-01-02 was the date mentioned in the note.')); assert.equal(parseScene(prose.text).beats[0].blocks[0].timestamp,undefined);
+});
+test('containing fence is safe for metadata and literal body; directive-looking body text is content',()=>{
+  const result=convertCallouts(callout('annotation','``` title','```example\n@pause 900ms\n```'));
+  assert.match(result.text,/^````typeout/); const block=parseScene(result.text).beats[0].blocks[0]; assert.equal(block.title,'``` title'); assert.equal(block.text,'```example\n@pause 900ms\n```\n');
+});
+test('ambiguous and unsupported structures stay unchanged with actionable source warnings',()=>{
+  for(const source of [callout('prime-log','Report','Prose only.'),callout('prime-log','Report','```yaml\nx: 1'),callout('prime-log','Report','```yaml\nx: 1\n```\n```yaml\ny: 2\n```'),callout('annotation','Report','> [!janus] Nested\n> A'),callout('annotation','Report','2030-01-02 03:04\nContinuing prose.'),callout('janus','Report','Timestamp: Dawn\n\nTimestamp: Dusk\n\nBody.'),'> [!annotation Broken\n> Body.\n']) {
+    const result=convertCallouts(source); assert.equal(result.text,source); assert.ok(result.warnings.length); assert.equal(result.warnings[0].line,1);
+  }
+});
+test('unrelated callouts, frontmatter and fenced examples are not converted; selection is local',()=>{
+  const first=callout('annotation','One','Body.'), second=callout('janus','Two','Other.');
+  const source='---\ntitle: Note\n---\n\n'+first+'\n'+second+'\n> [!State]\n> date: data\n\n~~~~md\n'+first+'~~~~\n';
+  const start=source.indexOf(second); const result=convertCallouts(source,{scope:{start,end:start+second.length}});
+  assert.equal(result.count,1); assert.equal(result.text.slice(0,start),source.slice(0,start)); assert.ok(result.text.endsWith('> [!State]\n> date: data\n\n~~~~md\n'+first+'~~~~\n'));
 });

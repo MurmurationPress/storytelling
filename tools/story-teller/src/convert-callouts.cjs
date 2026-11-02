@@ -1,50 +1,47 @@
 'use strict';
 // Pure, conservative conversion of observed Obsidian callout forms.
 const MarkdownIt = require('markdown-it');
-const { inspectStructure, beatRanges } = require('./structure.cjs');
+const { inspectStructure } = require('./structure.cjs');
 const { documentWarning } = require('./janus.cjs');
 const md = new MarkdownIt({ html: false });
 const machineLabels = new Set(['prime-log', 'divergent']);
 const recognised = new Set([...machineLabels, 'annotation', 'janus', 'janus-log']);
 const headerPattern = /^ {0,3}> ?\[!([\w-]+)\]([+-])?[ \t]*(.*?)[ \t]*$/i;
 const quotePattern = /^ {0,3}> ?/;
-function safeTitle(title) {
-  return title && !/[\r\n]/.test(title) && !title.includes('--') && !title.includes('<!--') &&
-    /^<!-- beat: ([^\r\n]*\S) -->$/.test(`<!-- beat: ${title} -->`);
+const { leadingTimestamp, fenceFor, applyChanges, within } = require('./component-identity.cjs');
+function typeout(format, sound, body, eol, title, timestamp) {
+  const metadata = `@identity component${eol}` + (title ? `@title ${title}${eol}` : '') + (timestamp !== undefined ? `@timestamp ${timestamp}${eol}` : '');
+  const fence = fenceFor(body, metadata);
+  return `${fence}typeout${eol}@format ${format}${eol}${metadata}@sound ${sound}${eol}${eol}${body}${body.endsWith('\n') || body.endsWith('\r') ? '' : eol}${fence}${eol}`;
 }
-function fenceFor(body) {
-  const longest = Math.max(2, ...[...body.matchAll(/`+/g)].map(match => match[0].length));
-  return '`'.repeat(longest + 1);
-}
-function typeout(format, sound, body, eol) {
-  const fence = fenceFor(body);
-  return `${fence}typeout${eol}@format ${format}${eol}@sound ${sound}${eol}${eol}${body}${body.endsWith('\n') || body.endsWith('\r') ? '' : eol}${fence}${eol}`;
-}
-function convertCallouts(source) {
+function convertCallouts(source, { scope } = {}) {
   const structure = inspectStructure(source);
   const { lines, start, boundaries, spans } = structure;
   const warnings = [], changes = [];
   if (structure.frontmatter && !structure.frontmatter.closed)
     return { text: source, count: 0, changes, warnings: [{ line: 1, message: 'unclosed frontmatter; document left unchanged' }] };
-  const ranges = beatRanges(structure);
   for (const span of spans) {
     if (span.type !== 'blockquote_open' || span.level !== 0) continue;
     const open = span.start, close = span.end;
+    if (!within(lines[open].start, lines[close - 1].end, scope)) continue;
     const header = lines[open]?.text.match(headerPattern);
     if (!header && /^ {0,3}> ?\[!(?:prime-log|divergent|annotation|janus-log|janus)\b/i.test(lines[open]?.text || '')) {
       warnings.push({ line: open + 1, message: 'malformed recognised callout header left unchanged' }); continue;
     }
     if (!header || !recognised.has(header[1].toLowerCase())) continue;
     const label = header[1].toLowerCase();
-    const title = header[3].trim() || header[1];
+    const title = header[3];
     const warn = message => warnings.push({ line: open + 1, message });
-    if (!safeTitle(title)) { warn('callout title cannot be represented safely as beat metadata'); continue; }
     if (close <= open + 1) { warn('empty callout left unchanged'); continue; }
     const quoted = lines.slice(open + 1, close);
     if (quoted.some(line => !quotePattern.test(line.text))) { warn('malformed callout quoting left unchanged'); continue; }
-    const bodyLines = quoted.map(line => ({ text: line.text.replace(quotePattern, ''), eol: line.eol }));
+    let bodyLines = quoted.map(line => ({ text: line.text.replace(quotePattern, ''), eol: line.eol }));
     if (bodyLines.some(line => /^\s*(?:> ?)?\[!/.test(line.text))) { warn('nested or adjacent callout needs review'); continue; }
     const eol = lines[open].eol || '\n';
+    const stamp = leadingTimestamp(bodyLines);
+    if (stamp.warning) { warn(stamp.warning + '; callout left unchanged'); continue; }
+    if (stamp.index !== undefined) bodyLines = bodyLines.filter((_, index) => index !== stamp.index);
+    if (!bodyLines.some(line => line.text.trim())) { warn('callout has metadata but no body; left unchanged'); continue; }
     let converted;
     if (machineLabels.has(label)) {
       const body = bodyLines.map(line => line.text + line.eol).join('');
@@ -65,7 +62,7 @@ function convertCallouts(source) {
       const yaml = bodyLines.slice(opening + 1, ending).map(line => line.text + line.eol).join('');
       if (!yaml.trim()) { warn('empty YAML fence left unchanged'); continue; }
       converted = bodyLines.slice(0, opening).map(line => line.text + line.eol).join('') +
-        typeout('yaml', 'modem', yaml, eol) + bodyLines.slice(ending + 1).map(line => line.text + line.eol).join('');
+        typeout('yaml', 'modem', yaml, eol, title, stamp.value) + bodyLines.slice(ending + 1).map(line => line.text + line.eol).join('');
     } else {
       const body = bodyLines.map(line => line.text + line.eol).join('');
       if (!body.trim()) { warn(`empty ${label} left unchanged`); continue; }
@@ -81,39 +78,16 @@ function convertCallouts(source) {
             })) {
           warn('JANUS contains ambiguous structure or an unclosed fence; callout left unchanged'); continue;
         }
-        converted = typeout(label, 'none', body, eol);
-      } else converted = typeout('annotation', 'keyboard', body, eol);
+        converted = typeout(label, 'none', body, eol, title, stamp.value);
+      } else converted = typeout('annotation', 'keyboard', body, eol, title, stamp.value);
     }
-    const boundary = boundaries.findLast(line => line < open);
-    const bodyStart = boundary === undefined ? start : boundary + 1;
-    const range = ranges.find(item => item.startLine === (boundary ?? bodyStart));
-    const existingTitleLine = range?.titleLine ?? null;
-    const priorContent = lines.slice(bodyStart, open).map((line, index) => ({ text: line.text, index: bodyStart + index }))
-      .filter(item => item.text.trim() && item.index !== existingTitleLine);
-    const firstContent = priorContent.length === 0;
-    if (firstContent && range?.title && range.title !== title) {
-      warn(`existing beat title “${range.title}” conflicts with callout title “${title}”; left unchanged`); continue;
-    }
-    let changeStart = lines[open].start;
-    let prefix = '';
-    if (firstContent && range?.title === title) {
-      // Existing title wins; the wrapper alone changes.
-    } else if (firstContent && boundary !== undefined) {
-      changeStart = lines[boundary].end;
-      prefix = `<!-- beat: ${title} -->${eol}` + source.slice(changeStart, lines[open].start);
-    } else if (firstContent) {
-      prefix = `<!-- beat: ${title} -->${eol}${eol}`;
-    } else {
-      prefix = `---${eol}<!-- beat: ${title} -->${eol}${eol}`;
-    }
-    changes.push({ start: changeStart, end: lines[close - 1].end, text: prefix + converted, line: open + 1 });
+    changes.push({ start: lines[open].start, end: lines[close - 1].end, text: converted, line: open + 1 });
   }
   changes.sort((a, b) => a.start - b.start);
   // Overlap means the source shape is ambiguous; do not apply a partial set.
   if (changes.some((change, index) => index && change.start < changes[index - 1].end))
     return { text: source, count: 0, changes: [], warnings: [...warnings, { line: 1, message: 'overlapping callout edits need review; document left unchanged' }] };
-  let text = source;
-  for (const change of [...changes].reverse()) text = text.slice(0, change.start) + change.text + text.slice(change.end);
+  const text = applyChanges(source, changes);
   return { text, count: changes.length, changes, warnings };
 }
 module.exports = { convertCallouts };

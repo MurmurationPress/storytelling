@@ -37,7 +37,21 @@ exports.run = async function () {
     last = request.id;
     if (request.action === 'stop') return;
     try {
-      if (request.action === 'upgrade-matter') {
+      if (request.action === 'start-component-migration') {
+        const note = await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
+        const editor = await vscode.window.showTextDocument(note,{viewColumn:vscode.ViewColumn.One,preserveFocus:false});
+        await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+        const deadline = Date.now() + 5000;
+        while (vscode.window.activeTextEditor?.document !== note && Date.now() < deadline) await new Promise(resolve=>setTimeout(resolve,100));
+        if (vscode.window.activeTextEditor?.document !== note) throw Error('Synthetic migration document did not become active');
+        editor.selection = new vscode.Selection(new vscode.Position(0,0),new vscode.Position(0,0));
+        await fs.rm(path.join(directory,'component-migration-result.json'),{force:true});
+        vscode.commands.executeCommand(request.project ? 'storyTeller.migrateProjectMetadata' : 'storyTeller.migrateComponentMetadata').then(result=>fs.writeFile(path.join(directory,'component-migration-result.json'),JSON.stringify({result})));
+      } else if (request.action === 'component-migration-state') {
+        const note = await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
+        if(request.undo) { await vscode.window.showTextDocument(note,{viewColumn:vscode.ViewColumn.One,preserveFocus:false}); await vscode.commands.executeCommand('undo'); }
+        await fs.writeFile(path.join(directory,'component-migration-state.json'),JSON.stringify({text:note.getText(),dirty:note.isDirty}));
+      } else if (request.action === 'upgrade-matter') {
         await vscode.commands.executeCommand('storyTeller.addBookMatter');
       } else if (request.action === 'edit-project-document') {
         const note=await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
@@ -59,6 +73,10 @@ exports.run = async function () {
         const note = await vscode.workspace.openTextDocument(vscode.Uri.file(request.file));
         const edit = new vscode.WorkspaceEdit();edit.replace(note.uri,new vscode.Range(note.positionAt(0),note.positionAt(note.getText().length)),request.source);
         await vscode.workspace.applyEdit(edit);
+      } else if (request.action === 'component-reader-layout') {
+        await vscode.commands.executeCommand('workbench.action.closeAuxiliaryBar');
+        await vscode.commands.executeCommand('workbench.action.closePanel');
+        await vscode.commands.executeCommand('vscode.setEditorLayout',{orientation:0,groups:[{size:request.narrow ? .65 : .45},{size:request.narrow ? .35 : .55}]});
       } else if (request.action === 'narrow-reader') {
         await vscode.commands.executeCommand('vscode.setEditorLayout',{orientation:0,groups:[{size:.75},{size:.25}]});
       } else if (request.action === 'default-bindings') {

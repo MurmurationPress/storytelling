@@ -1,0 +1,9 @@
+{
+  "schema": "story-teller-project", "version": 1,
+  "title": "Component identity — synthetic review",
+  "parts": [{"id":"p","title":"Review","scenes":["mixed","legacy"]}],
+  "scenes": [
+    {"id":"mixed","partId":"p","label":"1","title":"Independent documents","file":"scenes/Mixed.md"},
+    {"id":"legacy","partId":"p","label":"2","title":"Migration workshop","file":"scenes/Legacy.md"}
+  ]
+}

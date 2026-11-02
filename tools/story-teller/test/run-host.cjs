@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'component-identity') {
+    importProject = path.join(directory,'component-project');
+    await fs.cp(path.join(root,'samples/component-identity-project'),importProject,{recursive:true});
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'janus') {
     importProject = path.join(directory, 'janus-project');
     await fs.cp(path.join(root, 'samples/janus-project'), importProject, { recursive: true });
@@ -194,6 +198,63 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'component-identity') {
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Mixed.md'});await bringFront();
+      await until(async()=>await evaluate('Boolean(doc?.getElementById("beat")?.textContent.includes("All the documents below"))'));
+      await evaluate('doc.getElementById("restart").click()');
+      await evaluate('doc.getElementById("play").click()',true);
+      await until(async()=>await evaluate('doc.querySelectorAll(".component-header").length')===1);
+      await evaluate('doc.getElementById("pause").click()');
+      const early=await evaluate('({title:doc.querySelector(".component-title").textContent,timestamp:doc.querySelector(".component-timestamp").textContent,body:doc.querySelector(".typeout-progress").textContent})');
+      assert.ok(early.title.includes('PRIME'));assert.equal(early.timestamp,'2030-01-02 03:04 local, as recorded');
+      await evaluate('(()=>{const s=doc.getElementById("playback-speed");s.value="1.5";s.dispatchEvent(new doc.defaultView.Event("change",{bubbles:true}));doc.getElementById("pause").click();})()');
+      await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+      assert.equal(await evaluate('doc.querySelectorAll(".component-header").length'),5);
+      assert.equal(await evaluate('doc.querySelectorAll(".component-title").length'),4);
+      assert.equal(await evaluate('doc.querySelectorAll(".component-timestamp").length'),3);
+      assert.equal(await evaluate('doc.querySelectorAll(".typeout-janus-log script").length'),0);
+      await evaluate('doc.querySelector(".component-title .wiki-link").click()');
+      await until(async()=>await evaluate('doc.querySelector("dialog[open] article")?.textContent.includes("signed change")'));
+      await evaluate('doc.querySelector("dialog").close()');
+      const main=(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page');
+      const mainSocket=new WebSocket(main.webSocketDebuggerUrl);await new Promise(r=>mainSocket.onopen=r);let mainId=0;
+      const mainEval=expression=>new Promise((resolve,reject)=>{const id=++mainId;mainSocket.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===id)v.error?reject(Error(JSON.stringify(v.error))):resolve(v.result?.result?.value);};mainSocket.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression,returnByValue:true,userGesture:true}}));});
+      const file=path.join(importProject,'scenes/Legacy.md'), before=await fs.readFile(file,'utf8');
+      await request('start-component-migration',undefined,{file});
+      await until(async()=>await mainEval('[...document.querySelectorAll(".monaco-button")].some(b=>b.textContent==="Apply")'));
+      await mainEval('[...document.querySelectorAll(".monaco-button")].find(b=>b.textContent==="Apply").click()');
+      await until(async()=>{const r=JSON.parse(await fs.readFile(path.join(directory,'component-migration-result.json'),'utf8'));return r.result?.status==='applied';});
+      await request('component-migration-state',undefined,{file});
+      const after=JSON.parse(await fs.readFile(path.join(directory,'component-migration-state.json'),'utf8'));
+      assert.ok(after.dirty);assert.ok(after.text.includes('@title Old report'));assert.ok(after.text.includes('@timestamp Before dawn'));assert.ok(after.text.includes('<!-- beat: Deliberate reading interval -->'));
+      assert.equal(await fs.readFile(file,'utf8'),before); // No saving or actual book edits.
+      await request('component-migration-state',undefined,{file,undo:true});
+      assert.equal(JSON.parse(await fs.readFile(path.join(directory,'component-migration-state.json'),'utf8')).text,before);
+      await request('start-component-migration',undefined,{file,project:true});
+      await until(async()=>await mainEval('document.body.innerText.includes("Project metadata:") && document.body.innerText.includes("Legacy.md")'));
+      await mainEval('[...document.querySelectorAll(".quick-input-list .monaco-list-row")].find(b=>b.textContent.includes("Finish review")).click()');
+      await until(async()=>{await fs.access(path.join(directory,'component-migration-result.json'));return true;});
+      mainSocket.close();
+      await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Mixed.md'});await bringFront();
+      await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+      const screenshot = async name => {
+        const ws=new WebSocket(main.webSocketDebuggerUrl);await new Promise(resolve=>ws.onopen=resolve);
+        const data=await new Promise(resolve=>{ws.onmessage=e=>resolve(JSON.parse(e.data).result?.data);ws.send(JSON.stringify({id:1,method:'Page.captureScreenshot',params:{format:'png'}}));});ws.close();
+        if(!data)throw Error('No native screenshot');await fs.writeFile(path.join(directory,name+'.png'),Buffer.from(data,'base64'));
+      };
+      await request('component-reader-layout');
+      await evaluate('(()=>{doc.dispatchEvent(new doc.defaultView.WheelEvent("wheel",{deltaY:-100}));doc.scrollingElement.scrollTop=0;})()');
+      await screenshot('component-desktop');
+      await request('component-reader-layout',undefined,{narrow:true});
+      await evaluate('doc.scrollingElement.scrollTop=0');
+      assert.equal(await evaluate('doc.hidden'),false);
+      assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+      assert.ok(await evaluate('[...doc.querySelectorAll(".component-header")].every(h=>h.scrollWidth<=h.clientWidth+1)'));
+      await screenshot('component-narrow');
+      await fs.writeFile(path.join(directory,'component-identity.json'),JSON.stringify({mode:vsix?'installed VSIX':'Development Host',early,checks:'six components in one beat; independent metadata; safe HTML; header note; speed/pause/resume; native migration diff/Apply/Undo; project per-file review; no automatic saving; narrow overflow'},null,2));
+      console.log('PASS actual VS Code component identity and migration: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'janus') {
       await request('select-scene', undefined, { projectRoot: importProject, file: 'scenes/Reports.md' });
       await bringFront();
@@ -1553,7 +1614,7 @@ async function until(fn, timeout = 60000) {
     const calloutInitial = await snapshot();
     const calloutResult = () => until(async () => JSON.parse(await fs.readFile(path.join(directory, 'callout-conversion-result.json'), 'utf8')));
     await request('start-callout-conversion');
-    await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('<!-- beat: Harbour.Signal -->')));
+    await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('@title Harbour.Signal')));
     assert.ok(await workbench("document.body.innerText.includes('2 callout(s) to convert; 1 review warning(s).')"));
     await action('Review Warnings');
     await until(async () => await workbench("document.body.innerText.replaceAll('\\u00a0', ' ').includes('one top-level YAML fence')"));
@@ -1566,23 +1627,24 @@ async function until(fn, timeout = 60000) {
     await until(async () => await workbench("document.body.innerText.includes('Nothing was applied.')"));
     assert.equal((await snapshot()).text, calloutUnsaved);
     await request('show-notifications'); await action('Regenerate');
-    await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('<!-- beat: Harbour.Signal -->') && item.text.endsWith('An unsaved ending.')));
+    await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('@title Harbour.Signal') && item.text.endsWith('An unsaved ending.')));
     await action('Apply');
     assert.deepEqual(await calloutResult(), { status: 'applied', count: 2 });
     const calloutApplied = await snapshot();
-    assert.ok(calloutApplied.text.includes('<!-- beat: Harbour.Signal -->'));
-    assert.ok(calloutApplied.text.includes('@format annotation\n@sound keyboard'));
+    assert.ok(calloutApplied.text.includes('@title Harbour.Signal'));
+    assert.ok(calloutApplied.text.includes('@title Mara — Margin note'));
+    assert.ok(calloutApplied.text.includes('@sound keyboard'));
     assert.ok(calloutApplied.text.includes('> [!prime-log] Unresolved note'));
     assert.ok(calloutApplied.dirty); assert.equal(calloutApplied.disk, calloutInitial.disk);
-    await request('preview-this', undefined, { start: calloutApplied.text.indexOf('<!-- beat: Harbour.Signal -->') });
-    await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('Harbour.Signal'));
+    await request('preview-this', undefined, { start: calloutApplied.text.indexOf('@title Harbour.Signal') });
+    await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('ready'));
     assert.equal(await inspectConverted("doc.querySelectorAll('.typeout-progress').length"), 0);
     await inspectConverted("doc.getElementById('play').click()");
     await until(async () => (await inspectConverted("doc.querySelector('.typeout-progress')?.textContent.length || 0")) >= 4);
     const firstOutput = await inspectConverted("doc.querySelector('.typeout-progress').textContent.length");
     await until(async () => (await inspectConverted("doc.querySelector('.typeout-progress').textContent.length")) > firstOutput, 2000);
     await inspectConverted("doc.getElementById('next').click()");
-    await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('Mara — Margin note'));
+    await until(async () => (await inspectConverted("doc.getElementById('status').textContent")).includes('ready'));
     await inspectConverted("doc.getElementById('play').click()");
     await until(async () => (await inspectConverted("doc.querySelector('.typeout-annotation .typeout-progress')?.textContent.length || 0")) >= 4);
     await request('undo');

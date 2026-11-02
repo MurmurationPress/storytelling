@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-02",
+  "base": "de3bc87",
+  "version": "0.16.0",
+  "unitTests": 333,
+  "syntaxAndBuild": "PASS",
+  "web": {
+    "browser": "156.0.8078.79",
+    "errors": [],
+    "checks": "metadata at entry; independent mixed-format headers; exact timestamp; body directives; safe HTML; header supporting link; widths 1100/768/375; replay/navigation/reduced motion; no metadata pauses"
+  },
+  "janusRegression": {
+    "browser": "156.0.8078.79",
+    "checks": "unit reveal, tables/widths, pause/resume/speed, reveal, replay, navigation cancellation, Previous, restart, reduced motion, desktop/phone overflow",
+    "errors": []
+  },
+  "installed": {
+    "mode": "installed VSIX",
+    "early": {
+      "title": "PRIME \u2014 Observation reading note",
+      "timestamp": "2030-01-02 03:04 local, as recorded",
+      "body": ""
+    },
+    "checks": "six components in one beat; independent metadata; safe HTML; header note; speed/pause/resume; native migration diff/Apply/Undo; project per-file review; no automatic saving; narrow overflow"
+  },
+  "package": {
+    "entries": 413,
+    "bytes": 5900626,
+    "sha256": "08635a9adc46777d27721c6f46ec5b9ace3aeabdecb855e962e73f4345ac8f3e",
+    "sourcesAndBundlesMatch": true,
+    "samplesAndTestsExcluded": true
+  },
+  "scope": "Synthetic fixtures only. No actual book migration, merge or production deployment.",
+  "limits": "Chromium/Linux and VS Code automation; no Safari, actual touch hardware or human screen-reader acceptance."
+}

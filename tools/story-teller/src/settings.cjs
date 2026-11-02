@@ -13,6 +13,9 @@ const choices = {
     { id: 'responding', label: 'Responding', description: 'Show incoming responding cues throughout this chat.' }
   ],
   typeout: [
+    { id: 'title', label: 'Title', description: 'Component heading as single-line safe Markdown, separate from the beat title.' },
+    { id: 'timestamp', label: 'Timestamp', description: 'Exact authored timestamp wording; no date or timezone conversion.' },
+    { id: 'identity', label: 'Identity', description: 'Component suppresses legacy JANUS beat-title inheritance.' },
     { id: 'format', label: 'Format', description: 'Literal YAML, Markdown annotation, JANUS report or internal analysis.' },
     { id: 'sound', label: 'Sound', description: 'Modem, keyboard, typewriter or silent.' },
     { id: 'speed', label: 'Speed', description: `${MIN_SPEED}–${MAX_SPEED} Unicode grapheme clusters per second.` },
@@ -22,9 +25,9 @@ const choices = {
 };
 const values = {
   pace: Object.keys(PACE_MULTIPLIERS), ticks: ['on'], responding: ['on'],
-  format: FORMATS, sound: SOUNDS, border: BORDERS, fill: FILLS
+  identity: ['component'], format: FORMATS, sound: SOUNDS, border: BORDERS, fill: FILLS
 };
-const defaults = new Set(['title', 'viewer', 'pace', 'ticks', 'responding', 'sound', 'speed', 'border', 'fill']);
+const defaults = new Set(['timestamp', 'identity', 'title', 'viewer', 'pace', 'ticks', 'responding', 'sound', 'speed', 'border', 'fill']);
 function locateSettingContext(source, selection) {
   if (selection.start < 0 || selection.end !== selection.start || selection.end > source.length)
     return { error: 'Place one caret inside a chat or type-out component; selected text will not be changed.' };
@@ -55,7 +58,7 @@ function locateSettingContext(source, selection) {
 function declaration(record, kind) {
   const text = record.text.trim();
   if (kind === 'chat' && /^(?:#\s+|@title\s+)/.test(text)) return 'title';
-  const match = text.match(/^@(format|sound|speed|border|fill|viewer|pace|ticks|responding)(?:\s|$)/);
+  const match = text.match(/^@(format|title|timestamp|identity|sound|speed|border|fill|viewer|pace|ticks|responding)(?:\s|$)/);
   return match?.[1] || null;
 }
 function currentSetting(context, key) {
@@ -84,13 +87,13 @@ function planSetting(source, selection, key, value) {
   } else if (key === 'speed') {
     if (!/^[1-9][0-9]*$/.test(String(value)) || Number(value) < MIN_SPEED || Number(value) > MAX_SPEED)
       return { error: `@speed requires ${MIN_SPEED}–${MAX_SPEED} grapheme clusters per second.` };
-  } else if (key === 'title' || key === 'viewer') {
+  } else if (key === 'title' || key === 'timestamp' || key === 'viewer') {
     if (typeof value !== 'string' || !value.trim() || /[\r\n]/.test(value)) return { error: `${key} needs nonempty, single-line text.` };
   } else if (!values[key]?.includes(value)) return { error: `Unsupported @${key} value.` };
   const declarationLines = currentSetting(context, key);
   if (declarationLines.length > 1) return { error: `This ${kind} has duplicate ${key} declarations. Correct them directly before using settings.` };
   const eol = lines[span.start].eol || '\n';
-  const authored = value === null ? '' : key === 'title' ? `# ${value.trim()}` : `@${key}${value === 'on' ? '' : ` ${value}`}`;
+  const authored = value === null ? '' : key === 'title' && kind === 'chat' ? `# ${value.trim()}` : `@${key}${['ticks','responding'].includes(key) && value === 'on' ? '' : ` ${value}`}`;
   let edits;
   if (declarationLines.length) {
     const record = lines[declarationLines[0]];

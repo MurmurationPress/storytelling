@@ -1870,3 +1870,40 @@ screen-reader or new audible-sound acceptance is claimed. The sole synthetic
 supporting note and its preview/full text were inspected from the earliest report
 link; there are no onward links or later disclosures. No automatic spoiler
 filter is implied.
+
+## Component identity and conservative migration — 2026-11-02 (0.16.0)
+
+Review candidate from current main `de3bc87` (merged JANUS #34). Ted requested
+component-owned identity and migration, not a change to beat rhythm. All five
+callout-to-typeout mappings now put authored titles and attributable leading
+timestamps inside their fences, retaining their format/sound and surrounding
+prose order. No conversion edit includes a beat boundary or beat-title comment.
+The chat wrapper converter already owns its heading; specialised State metadata
+and import behaviour remain separate. See the complete mapping and copyable
+before/after examples in [COMPONENT-IDENTITY.md](COMPONENT-IDENTITY.md).
+
+All four typeout formats share safe inline metadata rendering at component entry,
+outside the body clock. Explicit fields override legacy display. Unmarked JANUS
+retains its former beat-title display; new conversions and presets carry
+`@identity component`, including intentionally untitled components. This does not
+infer ownership during migration. Labels, paired representations and explicit
+per-component author decisions provide bounded associations; ambiguous/conflicting
+cases are unchanged with file/line/reason. Document/selection diff and project
+per-file review use existing unsaved Apply/Undo and stale-source guards, with
+no automatic open/import/save migration and no edits to actual adaptations.
+
+Syntax checks, both bundles, the deterministic suite, standalone Chromium
+metadata/width/control tests, the JANUS table/navigation browser regression,
+Development Host and installed 0.16.0 VSIX scopes pass. The installed scope uses
+real migration diff/Apply/Undo and project reporting, checks independent headers
+in one beat and confirms files remain unsaved. Retained
+[evidence](test/evidence/component-identity/README.md) contains exact counts,
+package inventory/digest, initial driver limitations and desktop/narrow images.
+Source words, explicit timing and playback mechanisms are retained; metadata does
+not add body reveal steps. PRIME, annotation and JANUS playback tests stay green.
+
+Visual review covers long-title/timestamp wrapping in both readers. The sample
+supporting note's preview, full content and lack of onward links were checked
+against its first header access; it has no later disclosures. No automatic spoiler
+filter, human screen-reader/Safari/actual-device acceptance, merge, production
+reader deployment or bulk migration of real books is claimed.
