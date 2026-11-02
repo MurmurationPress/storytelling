@@ -2,9 +2,10 @@
 // Pure, conservative conversion of observed Obsidian callout forms.
 const MarkdownIt = require('markdown-it');
 const { inspectStructure, beatRanges } = require('./structure.cjs');
+const { documentWarning } = require('./janus.cjs');
 const md = new MarkdownIt({ html: false });
 const machineLabels = new Set(['prime-log', 'divergent']);
-const recognised = new Set([...machineLabels, 'annotation']);
+const recognised = new Set([...machineLabels, 'annotation', 'janus', 'janus-log']);
 const headerPattern = /^ {0,3}> ?\[!([\w-]+)\]([+-])?[ \t]*(.*?)[ \t]*$/i;
 const quotePattern = /^ {0,3}> ?/;
 function safeTitle(title) {
@@ -30,7 +31,7 @@ function convertCallouts(source) {
     if (span.type !== 'blockquote_open' || span.level !== 0) continue;
     const open = span.start, close = span.end;
     const header = lines[open]?.text.match(headerPattern);
-    if (!header && /^ {0,3}> ?\[!(?:prime-log|divergent|annotation)\b/i.test(lines[open]?.text || '')) {
+    if (!header && /^ {0,3}> ?\[!(?:prime-log|divergent|annotation|janus-log|janus)\b/i.test(lines[open]?.text || '')) {
       warnings.push({ line: open + 1, message: 'malformed recognised callout header left unchanged' }); continue;
     }
     if (!header || !recognised.has(header[1].toLowerCase())) continue;
@@ -67,8 +68,21 @@ function convertCallouts(source) {
         typeout('yaml', 'modem', yaml, eol) + bodyLines.slice(ending + 1).map(line => line.text + line.eol).join('');
     } else {
       const body = bodyLines.map(line => line.text + line.eol).join('');
-      if (!body.trim()) { warn('empty annotation left unchanged'); continue; }
-      converted = typeout('annotation', 'keyboard', body, eol);
+      if (!body.trim()) { warn(`empty ${label} left unchanged`); continue; }
+      if (label.startsWith('janus')) {
+        const warning = documentWarning(body);
+        if (warning) { warn(`JANUS ${warning}; callout left unchanged`); continue; }
+        const tokens = md.parse(body, {});
+        if (bodyLines.some(line => /^\s*(?:---\s*$|@(delay|pause)\b|<!-- beat:)/.test(line.text)) ||
+            tokens.some(token => {
+              if (token.type !== 'fence') return false;
+              const closing = bodyLines[(token.map?.[1] || 0) - 1]?.text.match(/^ {0,3}(`+|~+)\s*$/);
+              return !closing || closing[1][0] !== token.markup[0] || closing[1].length < token.markup.length;
+            })) {
+          warn('JANUS contains ambiguous structure or an unclosed fence; callout left unchanged'); continue;
+        }
+        converted = typeout(label, 'none', body, eol);
+      } else converted = typeout('annotation', 'keyboard', body, eol);
     }
     const boundary = boundaries.findLast(line => line < open);
     const bodyStart = boundary === undefined ? start : boundary + 1;

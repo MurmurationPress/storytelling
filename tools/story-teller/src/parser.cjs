@@ -2,6 +2,7 @@
 const { PACE_MULTIPLIERS } = require('./pace.cjs');
 const { DEFAULT_SPEED, MIN_SPEED, MAX_SPEED, FORMATS, SOUNDS, BORDERS, FILLS } = require('./typeout.cjs');
 const { inspectStructure, beatRanges } = require('./structure.cjs');
+const { isJanus, renderJanus, documentWarning } = require('./janus.cjs');
 const { renderAnnotation } = require('./annotation.cjs');
 const { visibleWords, proseInterval } = require('./prose-pacing.cjs');
 const { createMarkdown, references, renderChat, inlineText, chatMessage } = require('./markdown.cjs');
@@ -145,7 +146,7 @@ function parseScene(source, { prosePacing = false } = {}) {
           const [, name, value] = setting;
           if (seen.has(name)) { error = `duplicate @${name} in typeout header`; break; }
           seen.add(name);
-          if (name === 'format' && !FORMATS.includes(value)) error = '@format requires yaml or annotation';
+          if (name === 'format' && !FORMATS.includes(value)) error = '@format requires yaml, annotation, janus or janus-log';
           else if (name === 'sound' && !SOUNDS.includes(value)) error = '@sound requires modem, keyboard, typewriter or none';
           else if (name === 'speed' && (!/^[1-9][0-9]*$/.test(value) || Number(value) < MIN_SPEED || Number(value) > MAX_SPEED)) error = `@speed requires ${MIN_SPEED}–${MAX_SPEED} graphemes per second`;
           else if (name === 'border' && !BORDERS.includes(value)) error = '@border requires none or grey';
@@ -153,7 +154,7 @@ function parseScene(source, { prosePacing = false } = {}) {
           if (error) break;
           settings[name] = name === 'speed' ? Number(value) : value;
         }
-        if (!error && !seen.has('format')) { error = 'typeout needs @format yaml or @format annotation'; errorLine = openLine + 1; }
+        if (!error && !seen.has('format')) { error = 'typeout needs @format yaml, annotation, janus or janus-log'; errorLine = openLine + 1; }
         const lastLine = first + token.map[1] - 1;
         const closing = /^(?: {0,3})(`+|~+)\s*$/.test(structure.lines[lastLine]?.text || '') &&
           structure.lines[lastLine].text.trim()[0] === token.markup[0] && structure.lines[lastLine].text.trim().length >= token.markup.length;
@@ -162,14 +163,18 @@ function parseScene(source, { prosePacing = false } = {}) {
         const bodyEnd = closing ? structure.lines[lastLine].start : source.length;
         const body = separator < 0 ? '' : source.slice(bodyStart, bodyEnd);
         if (!error && !body.trim()) { error = 'typeout needs literal body text after its blank header separator'; errorLine = bodyStartLine + 1; }
+        if (!error && isJanus(settings.format)) error = documentWarning(body);
         if (error) {
           diagnostic(errorLine, `${error}; showing the fence as readable code.`);
           prose.push(token);
         } else {
           flush();
+          const document = isJanus(settings.format) ? { ...renderJanus(body), titleHtml: range.title ? md.renderInline(range.title) : null } : null;
+          if (document && range.title) wikiReferences.push(...references(md.parseInline(range.title), (range.titleLine ?? first) + 1));
+          if (document) wikiReferences.push(...document.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
           const annotation = settings.format === 'annotation' ? renderAnnotation(body) : null;
           if (annotation) wikiReferences.push(...annotation.references.map(ref => ({ ...ref, line: ref.line + bodyStartLine })));
-          add({ type: 'typeout', ...settings, text: body, ...(annotation ? { annotation } : {}), line: openLine + 1 });
+          add({ type: 'typeout', ...settings, text: body, ...(document ? { document } : {}), ...(annotation ? { annotation } : {}), line: openLine + 1 });
         }
       } else if (token.type === 'fence' && token.level === 0 && token.info.trim() === 'chat') {
         const messages = [];

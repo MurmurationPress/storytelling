@@ -92,3 +92,55 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .diagram-surface:empty { display: none; }
 .diagram-surface svg { max-width: none !important; height: auto; display: block; }
 .story-diagram * { animation: none !important; transition: none !important; }
+
+/* JANUS documents share lifecycle controls, not PRIME's printout treatment. */
+.janus-document {
+  --janus-surface: #edf4fa; --janus-ink: #23374b; --janus-heading: #153756;
+  --janus-rule: #a9bfd0; --janus-emphasis: #68480f;
+  background: var(--janus-surface); color: var(--janus-ink);
+  border: 1px solid var(--janus-rule); border-radius: .35rem;
+  padding: clamp(1rem, 3vw, 2.2rem); margin: 1.5rem 0;
+  min-width: 0; max-width: 100%; box-sizing: border-box;
+  font-family: Georgia, 'Times New Roman', serif; line-height: 1.65;
+}
+.janus-document.typeout-janus-log {
+  --janus-surface: #14283c; --janus-ink: #e4edf4; --janus-heading: #a2dce6;
+  --janus-rule: #54748c; --janus-emphasis: #efcd91;
+}
+.janus-document .typeout-surface, .janus-document .typeout-progress { min-width: 0; max-width: 100%; }
+.janus-document .typeout-progress { white-space: normal; overflow-wrap: anywhere; }
+.janus-document :is(h1,h2,h3,h4,h5,h6) { color: var(--janus-heading); font-family: inherit; line-height: 1.3; letter-spacing: .015em; }
+.janus-document strong { color: var(--janus-heading); }
+.janus-document em { color: var(--janus-emphasis); }
+.janus-document p { margin: .8em 0; }
+.janus-document .janus-statement { display: block; margin: .35em 0; }
+.janus-document [hidden] { display: none !important; }
+.janus-document .janus-table-scroll { overflow-x: auto; max-width: 100%; margin: 1.2em 0; overscroll-behavior-x: contain; }
+.janus-document table { border-collapse: collapse; width: 100%; min-width: 100%; font: .93em/1.45 system-ui, sans-serif; overflow-wrap: normal; }
+.janus-document :is(th,td) { min-width: 7rem; padding: .7em .9em; border-bottom: 1px solid var(--janus-rule); vertical-align: top; }
+.janus-document th { color: var(--janus-heading); font-weight: 650; border-bottom-width: 2px; }
+.janus-document tbody tr:nth-child(even) { background: color-mix(in srgb, var(--janus-heading) 5%, transparent); }
+.janus-document :is(code,pre) { color: inherit; background: transparent; white-space: pre-wrap; }
+.janus-document .wiki-link { color: var(--janus-heading); text-decoration: underline; }
+.janus-document :focus-visible { outline: 2px solid var(--janus-heading); outline-offset: 3px; }
+.janus-document .typeout-surface { padding: 0; border: 0; background: transparent; color: inherit; }
+.janus-document .typeout-progress.active::after { content: none; }
+.janus-document .janus-title { margin: 0 0 1rem; padding-bottom: .7rem; border-bottom: 1px solid var(--janus-rule); font-size: 1.35em; }
+.janus-document blockquote { margin: 1em 0; padding-left: 1em; border-left: 2px solid var(--janus-rule); }
+@media (forced-colors: active) {
+  .janus-document { background: Canvas; color: CanvasText; --janus-heading: CanvasText; --janus-rule: CanvasText; --janus-emphasis: CanvasText; }
+}
+/* Focusing a link in the complete reading copy exposes that static document,
+   so keyboard focus is visible and meaningful during a progressive reveal. */
+.janus-document .janus-accessible:focus-within {
+  position: static; width: auto; height: auto; margin: 0; overflow: auto;
+  clip: auto; white-space: normal;
+}
+.janus-document .janus-accessible:focus-within + .typeout-surface { display: none; }
+.janus-document.typeout-border-none { border: 0; }
+.janus-document.typeout-border-grey { border-color: var(--vscode-panel-border, #888); }
+.janus-document.typeout-fill-none { --janus-surface: transparent; --janus-ink: var(--vscode-editor-foreground, #23374b); --janus-heading: var(--vscode-textLink-foreground, #153756); --janus-emphasis: var(--janus-ink); }
+.janus-document.typeout-fill-grey { --janus-surface: #e9ebed; --janus-ink: #202124; --janus-heading: #153756; --janus-emphasis: #68480f; }
+.janus-document.typeout-fill-yellow { --janus-surface: #fff1bd; --janus-ink: #29220d; --janus-heading: #153756; --janus-emphasis: #68480f; }
+:is(body.vscode-dark, body.reader-dark) .janus-document:is(.typeout-fill-grey,.typeout-fill-yellow) { --janus-surface: #34383c; --janus-ink: #f0f0f0; --janus-heading: #a2dce6; --janus-emphasis: #efcd91; }
+.janus-document .typeout-surface { color: var(--janus-ink); }

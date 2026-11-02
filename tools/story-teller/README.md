@@ -179,6 +179,10 @@ Images preserve aspect ratio and fit the preview without horizontal overflow. Th
 
 **Insert… → Image** selects an existing local file, inserts a relative Markdown reference with an editable alt-text placeholder, and leaves the file in place. **Insert… → Caption** adds a caption below a standalone image or selects its existing caption text for editing. These helpers do not replace selected prose or create orphan captions. A saved source file is needed to resolve media.
 
+### JANUS reports and internal analysis
+
+`[!janus]` and `[!janus-log]` callouts convert to distinct, silent document profiles, with formatted paragraphs, metadata and complete table rows revealed in sequence. See [JANUS.md](JANUS.md) for copyable examples, cadence, table behaviour and review checks. Both the extension preview and exported reader use the same implementation.
+
 ### Type-out, formatted annotations and sound
 
 A top-level typeout fence has a configuration header, one blank line, then its body. YAML bodies remain entirely literal; annotation bodies render safe Markdown. Directive-looking body text is content in both formats:

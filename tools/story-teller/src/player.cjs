@@ -7,6 +7,7 @@ const defaultScheduler = {
 };
 const { readerSpeed, calculatedDuration } = require('./reader-speed.cjs');
 const { defaultDelay, automaticDelay } = require('./pace.cjs');
+const { readingTime } = require('./janus.cjs');
 const { graphemes, graphemeDelay } = require('./typeout.cjs');
 class StoryPlayer {
   constructor(scene = { beats: [], diagnostics: [] }, { scheduler = defaultScheduler, onChange = () => {}, reducedMotion = false, playbackSpeed = 1 } = {}) {
@@ -44,12 +45,20 @@ class StoryPlayer {
       precedingComponent = block;
       if (block.type === 'prose' || block.type === 'image') this.steps.push({ type: block.type, blockIndex, delayMs: block.delayMs ?? 0 });
       else if (block.type === 'typeout') {
-        const parts = block.format === 'annotation'
+        const parts = block.document ? block.document.units.map(unit => unit.text) : block.format === 'annotation'
           ? block.annotation.segments.flatMap(graphemes) : graphemes(block.text);
         this.typeoutParts.set(blockIndex, parts);
         this.steps.push({ type: 'typeout-start', blockIndex, delayMs: block.delayMs ?? 0 });
-        for (let index = 0; index < parts.length; index++)
-          this.steps.push({ type: 'typeout-grapheme', blockIndex, calculated: true, delayMs: graphemeDelay(index, block.speed) });
+        const documentInterval = unit => (readingTime(unit) + (unit.afterTable ? 450 : 0)) * 30 / block.speed;
+        for (let index = 0; index < parts.length; index++) {
+          const delayMs = block.document
+            ? index === 0 ? 300 * 30 / block.speed : documentInterval(block.document.units[index - 1])
+            : graphemeDelay(index, block.speed);
+          this.steps.push({ type: 'typeout-reveal', blockIndex, calculated: true, delayMs });
+        }
+        if (block.document && parts.length) this.steps.push({
+          type: 'pause', documentHold: true, calculated: true, delayMs: documentInterval(block.document.units.at(-1))
+        });
       }
       else for (const event of block.events) {
         if (event.type === 'pause') this.steps.push({ ...event, blockIndex });
@@ -77,7 +86,7 @@ class StoryPlayer {
   }
   get activeTypeout() {
     const step = this.steps[this.cursor];
-    return step?.type === 'typeout-grapheme' && ['playing', 'paused'].includes(this.phase)
+    return step?.type === 'typeout-reveal' && ['playing', 'paused'].includes(this.phase)
       ? { blockIndex: step.blockIndex, block: this.current.blocks[step.blockIndex] } : null;
   }
   get visibleBlocks() {
@@ -132,10 +141,11 @@ class StoryPlayer {
         this.enteredTypeouts.add(step.blockIndex);
         if (this.reducedMotion) {
           this.typeoutCounts.set(step.blockIndex, this.typeoutParts.get(step.blockIndex).length);
-          while (this.steps[this.cursor + 1]?.type === 'typeout-grapheme' && this.steps[this.cursor + 1].blockIndex === step.blockIndex) this.cursor++;
+          while (this.steps[this.cursor + 1]?.type === 'typeout-reveal' && this.steps[this.cursor + 1].blockIndex === step.blockIndex) this.cursor++;
+          if (this.current.blocks[step.blockIndex].document && this.steps[this.cursor + 1]?.documentHold) this.cursor++;
         }
       }
-      if (step.type === 'typeout-grapheme') this.typeoutCounts.set(step.blockIndex, (this.typeoutCounts.get(step.blockIndex) || 0) + 1);
+      if (step.type === 'typeout-reveal') this.typeoutCounts.set(step.blockIndex, (this.typeoutCounts.get(step.blockIndex) || 0) + 1);
       if (step.type === 'message') this.counts.set(step.blockIndex, step.message + 1);
       if (step.type === 'read') this.read.add(`${step.blockIndex}:${step.message}`);
       this.cursor++;
@@ -152,7 +162,8 @@ class StoryPlayer {
     if (!active) return false;
     this.cancelTimer(); this.remaining = null;
     this.typeoutCounts.set(active.blockIndex, this.typeoutParts.get(active.blockIndex).length);
-    while (this.steps[this.cursor]?.type === 'typeout-grapheme' && this.steps[this.cursor].blockIndex === active.blockIndex) this.cursor++;
+    while (this.steps[this.cursor]?.type === 'typeout-reveal' && this.steps[this.cursor].blockIndex === active.blockIndex) this.cursor++;
+    if (active.block.document && this.steps[this.cursor]?.documentHold) this.cursor++;
     if (this.phase === 'playing') this.schedule();
     this.onChange();
     return true;

@@ -41,6 +41,10 @@ async function until(fn, timeout = 60000) {
     await fs.writeFile(path.join(importProject,'scenes/The Answer.md'), 'Answer opening.\n\n```chat\n@viewer Mara\n@responding\n@delay 1500ms\nIvo: The answer is waiting.\nMara: I can see it.\n```\n---\nAnswer last beat.\n\n![Harbour](../assets/harbour-portrait.png)');
     await fs.writeFile(path.join(importProject,'story-teller.project.json'),JSON.stringify({schema:'story-teller-project',version:1,title:'Lantern',parts:[{id:'p',title:'First',scenes:['s','a']}],scenes:[{id:'s',partId:'p',label:'1.1',title:'The Signal',file:'scenes/The Signal.md'},{id:'a',partId:'p',label:'1.2',title:'The Answer',file:'scenes/The Answer.md'}]}));
   }
+  if (process.env.STORY_TELLER_HOST_SCOPE === 'janus') {
+    importProject = path.join(directory, 'janus-project');
+    await fs.cp(path.join(root, 'samples/janus-project'), importProject, { recursive: true });
+  }
   if (process.env.STORY_TELLER_HOST_SCOPE === 'mermaid-style') {
     importProject=path.join(directory,'style-project');
     await fs.cp(path.join(root,'samples/style-project'),importProject,{recursive:true});
@@ -190,6 +194,43 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'janus') {
+      await request('select-scene', undefined, { projectRoot: importProject, file: 'scenes/Reports.md' });
+      await bringFront();
+      await until(async () => await evaluate('Boolean(doc?.getElementById("play"))'));
+      const click = id => evaluate(`doc.getElementById(${JSON.stringify(id)}).click()`, true);
+      const units = () => evaluate('doc.querySelectorAll(".janus-document .typeout-progress [data-janus-unit]:not([hidden])").length');
+      const widths = () => evaluate('[...doc.querySelectorAll(".typeout-progress col")].map(c=>c.style.width)');
+      await click('play'); await until(async () => await units() === 1);
+      await click('pause'); const initialWidths = await widths();
+      await sleep(850); assert.equal(await units(), 1);
+      await evaluate('(()=>{const s=doc.getElementById("playback-speed");s.value="1.5";s.dispatchEvent(new doc.defaultView.Event("change",{bubbles:true}));})()');
+      await click('pause');
+      await until(async () => await evaluate('Boolean(doc.querySelector(".typeout-progress tbody tr:not([hidden])"))'));
+      await click('pause'); assert.deepEqual(await widths(), initialWidths);
+      const row = await evaluate('doc.querySelector(".typeout-progress tbody tr:not([hidden])").textContent');
+      assert.ok(row.includes('+12')); assert.ok(row.includes('North'));
+      await click('reveal'); await click('pause');
+      await until(async () => (await evaluate('doc.getElementById("status").textContent')).includes('completed'));
+      assert.deepEqual(await widths(), initialWidths);
+      assert.equal(await evaluate('doc.querySelectorAll(".typeout-progress table").length'), 2);
+      await click('replay'); await until(async () => await units() === 1);
+      await click('next'); await until(async () => await evaluate('Boolean(doc.querySelector(".typeout-janus-log"))'));
+      await click('next'); await sleep(1000);
+      assert.equal(await evaluate('doc.querySelectorAll(".janus-document").length'), 0);
+      await click('previous');
+      assert.equal(await evaluate('doc.querySelectorAll(".typeout-janus-log .typeout-progress tbody tr:not([hidden])").length'), 2);
+      for (const [theme, kind] of [['Light Modern', 'vscode-light'], ['Dark Modern', 'vscode-dark']]) {
+        await request('set-theme', undefined, {theme});
+        await until(async () => await evaluate(`doc.body.classList.contains(${JSON.stringify(kind)})`));
+        assert.equal(await evaluate('doc.defaultView.getComputedStyle(doc.querySelector(".janus-document")).backgroundColor'), 'rgb(20, 40, 60)');
+      }
+      await request('narrow-reader');
+      assert.ok(await evaluate('doc.documentElement.scrollWidth<=doc.documentElement.clientWidth+1'));
+      await fs.writeFile(path.join(directory, 'janus.json'), JSON.stringify({mode: vsix ? 'installed VSIX' : 'Development Host', initialWidths, checks:'metadata/complete rows; pause/resume/speed; reveal; replay/navigation cancellation; Previous; narrow overflow; light/dark'}, null, 2));
+      console.log('PASS actual VS Code JANUS documents: ' + directory);
+      await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' })); return;
+    }
     if(process.env.STORY_TELLER_HOST_SCOPE==='mermaid-style') {
       const {sampleStyles,assertStyles}=require('./mermaid-style-probe.cjs');
       const baseline=!!process.env.STORY_TELLER_STYLE_BASELINE;

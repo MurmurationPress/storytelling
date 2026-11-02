@@ -1833,3 +1833,40 @@ Receipt `f187db9f-6d82-494e-be55-96be27cb859d` identifies the same renderer/sour
 commit. Production remains `0195b3ac-865d-45f2-ac5c-f7d46f2dc564`; Stories-Told's
 requested scene hash/status remain unchanged. Summary:
 `test/evidence/mermaid-style-0.14.3.json`. PR #31 remains open for review.
+
+## JANUS document profiles — 2026-11-02 (0.15.0 review candidate)
+
+Based on current main `6664468`. Ted requested implementation of circulated
+`janus` reports and restricted `janus-log` analysis. They extend existing type-out
+formats and share the preview/web parser, StoryPlayer and reader presentation.
+No manuscript wording, publication sources, deployment or accepted legacy format
+is changed. Author acceptance remains pending.
+
+Conversion accepts case variants and existing callout markers without requiring
+YAML, preserves titles/body/EOL and safe fences, and leaves ambiguous material
+with warnings. Extra table cells that Markdown would silently drop are explicitly
+rejected. Complete Markdown document units retain source order; heading sets and
+whole body rows share the existing cancellable clock. Measured column groups,
+collapsed future rows, retained nested scrolling, silent defaults and complete
+semantic reading copies provide the document treatment. Keyboard note links in
+that copy expose the static document while focused. Unchanged live status text
+is no longer rewritten on every reveal.
+
+**Validation:** `npm run check`, both bundles, all **310 tests**, local 0.15.0
+VSIX packaging/archive audit, actual HTTP Chromium 156.0.8078.79 browser regression,
+and the actual installed VS Code JANUS scope pass. Checks cover both profiles,
+metadata/statements/list/prose/row units, multiple tables, explicit alignment and
+Unicode, active-time pause/resume/speed, final reading holds, immediate reveal,
+replay/restart/Previous/Next and stale callbacks, reduced motion, supporting-note
+keyboard access, two documents in one beat, narrow overflow and manual table
+inspection during reveal. Native checks cover live rows and controls, light/dark
+and narrow layout. Existing PRIME/divergent/annotation tests remain green.
+
+See [retained evidence](test/evidence/janus/README.md) for the package digest,
+synthetic screenshots, executed scope and early test-driver failures. The browser
+regression caught a genuine horizontal scroll reset at the completion render;
+preserving scroll positions fixes it. No Apple-device, actual touch, human
+screen-reader or new audible-sound acceptance is claimed. The sole synthetic
+supporting note and its preview/full text were inspected from the earliest report
+link; there are no onward links or later disclosures. No automatic spoiler
+filter is implied.

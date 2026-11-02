@@ -1,0 +1,44 @@
+{
+  "date": "2026-11-02",
+  "base": "6664468",
+  "automatedTests": 310,
+  "web": {
+    "browser": "156.0.8078.79",
+    "checks": [
+      "metadata, paragraphs, analytical statements and complete rows",
+      "two tables in source order with stable measured columns",
+      "pause, resume, playback speed, immediate reveal and replay",
+      "Previous/Next cancellation, restart, reduced motion",
+      "desktop and phone layouts without page overflow",
+      "horizontal table position and vertical position retained during reveal/completion",
+      "keyboard supporting-note access with visible focus",
+      "unchanged live status during unit reveals",
+      "two typeouts in one beat update their own surfaces",
+      "dark theme"
+    ],
+    "errors": []
+  },
+  "native": {
+    "mode": "installed VSIX",
+    "initialWidths": [
+      "140.438px",
+      "140.438px",
+      "140.438px",
+      "140.438px",
+      "140.438px",
+      "140.438px"
+    ],
+    "checks": "metadata/complete rows; pause/resume/speed; reveal; replay/navigation cancellation; Previous; narrow overflow; light/dark"
+  },
+  "package": {
+    "version": "0.15.0",
+    "entries": 409,
+    "bytes": 5887299,
+    "sha256": "aa9f5e5aee1fee4f8fa0cfec97170de3788f001c8a7a7168fab3865e911a96df",
+    "samplesAndTestsExcluded": true
+  },
+  "limits": [
+    "Linux Chrome and VS Code automation; no actual iPad/Safari, touch hardware or human screen-reader acceptance",
+    "No merge, deployment or public extension release"
+  ]
+}

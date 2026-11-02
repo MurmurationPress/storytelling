@@ -1,0 +1,6 @@
+{
+  "schema": "story-teller-project", "version": 1,
+  "title": "JANUS document study — synthetic content",
+  "parts": [{ "id": "study", "title": "Document study", "scenes": ["documents"] }],
+  "scenes": [{ "id": "documents", "partId": "study", "label": "1", "title": "Reports", "file": "scenes/Reports.md" }]
+}
