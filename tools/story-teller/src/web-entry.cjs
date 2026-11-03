@@ -47,6 +47,14 @@ async function start() {
   try {
     const response=await fetch('publication.json');if(!response.ok)throw Error('Publication could not be loaded');book=await response.json();book.readingOrder ||= book.scenes;
     title.textContent=book.title;document.title=book.title;
+    if (book.moreLink) {
+      const url = new URL(book.moreLink.url);
+      if (['https:', 'http:'].includes(url.protocol) && !url.username && !url.password && typeof book.moreLink.label === 'string' && book.moreLink.label.trim()) {
+        const link = document.createElement('a'); link.id = 'publication-more-link';
+        link.href = url.href; link.textContent = book.moreLink.label; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        document.getElementById('more-options').append(link);
+      }
+    }
     try{preference=JSON.parse(localStorage.getItem(`story-teller:${book.id}`)||'{}')||{};}catch{preference={};}
     const ordered=new Map(book.readingOrder.map((s,i)=>[s.id,i]));
     const entryButton = (item, parent=contents, numbered=false) => {

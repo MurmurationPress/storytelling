@@ -45,3 +45,6 @@ button{border-radius:.2rem;}[hidden]{display:none!important;}
 /* Follow stays clear of the privacy badge, including short/narrow safe-area viewports. */
 .has-analytics-consent #follow-story { right:max(10px, env(safe-area-inset-right, 0px)); bottom:max(10px, env(safe-area-inset-bottom, 0px)); max-width:calc(100vw - 82px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)); }
 @media(forced-colors:active){#analytics-privacy-button,#analytics-consent-panel,.analytics-privacy-label{border:1px solid ButtonText;background:Canvas;color:CanvasText;}}
+
+#more-options > a {display:flex;align-items:center;box-sizing:border-box;min-height:44px;margin-top:.4rem;padding:.35rem 0;border-top:1px solid var(--vscode-panel-border);font-size:.85rem;overflow-wrap:anywhere;color:var(--vscode-textLink-foreground);}
+#more-options > a:focus-visible {outline:2px solid var(--vscode-focusBorder);outline-offset:2px;}

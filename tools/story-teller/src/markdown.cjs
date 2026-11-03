@@ -24,11 +24,26 @@ function wikiLinks(md) {
 function inlineText(md, tokens) {
   return md.renderer.renderInlineAsText((tokens || []).map(token => token.type === 'story_wikilink' ? { ...token, type: 'text' } : token), md.options, {});
 }
-function createMarkdown() {
+function createMarkdown({ externalLinks = false } = {}) {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
   wikiLinks(md);
-  md.renderer.rules.link_open = () => '<span class="link-text">';
-  md.renderer.rules.link_close = () => '</span>';
+  md.renderer.rules.link_open = (tokens, index) => {
+    const href = tokens[index].attrGet('href') || '';
+    return externalLinks && /^https?:\/\//i.test(href)
+      ? `<a href="${md.utils.escapeHtml(href)}" target="_blank" rel="noopener noreferrer">`
+      : '<span class="link-text">';
+  };
+  md.renderer.rules.link_close = (tokens, index) => {
+    let depth = 0;
+    for (let at = index - 1; at >= 0; at--) {
+      if (tokens[at].type === 'link_close') depth++;
+      if (tokens[at].type === 'link_open') {
+        if (depth--) continue;
+        return externalLinks && /^https?:\/\//i.test(tokens[at].attrGet('href') || '') ? '</a>' : '</span>';
+      }
+    }
+    return '</span>';
+  };
   md.renderer.rules.image = (tokens, index) => {
     const token = tokens[index], alt = inlineText(md, token.children);
     return `<img class="story-inline-image" data-story-src="${md.utils.escapeHtml(token.attrGet('src') || '')}" alt="${md.utils.escapeHtml(alt)}">`;
@@ -78,8 +93,9 @@ function chatMessage(text) {
   }
   return null;
 }
-const noteMarkdown = createMarkdown();
-function renderMarkdown(source) {
+const matterMarkdown = createMarkdown({ externalLinks: true });
+function renderMarkdown(source, { externalLinks = false } = {}) {
+  const noteMarkdown = externalLinks ? matterMarkdown : inline;
   const tokens = noteMarkdown.parse(source, {});
   const imageLines = Object.create(null);
   for (const token of tokens) for (const child of token.children || []) if (child.type === 'image') imageLines[child.attrGet('src') || ''] ??= (token.map?.[0] || 0) + 1;

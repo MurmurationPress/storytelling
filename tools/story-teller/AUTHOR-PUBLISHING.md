@@ -191,3 +191,12 @@ recursive onward paths were reviewed; no blocking finding required changing the
 approved snapshot. The minor early Clive/Companion terminology item is recorded
 for a future editorial update. This review is distinct from syntax/resource checks
 and does not add automatic filtering. Ghost remains Ted's responsibility.
+
+## Optional More-menu destination
+
+A publication can set `webReader.moreLink` in its project manifest, with `label`
+and an absolute HTTP(S) `url`. A deployment target may supply `moreLink` instead;
+the target value takes precedence. Omit it to show no additional link. The generic
+reader has no publisher default. The link is text-labelled, keyboard accessible
+and opens a separate tab with `noopener noreferrer`. Book-matter Markdown HTTP(S)
+links use the same separate-tab behaviour; other protocols remain inert.

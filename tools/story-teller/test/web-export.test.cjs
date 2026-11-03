@@ -82,3 +82,13 @@ test('analytics export is optional, validates identities and adds only isolated 
  assert.ok((await fs.readFile(path.join(destination,'analytics.html'),'utf8')).includes('https://www.googletagmanager.com'));
  await assert.rejects(prepareWeb(root,{analytics:{...analytics,stories:[{id:'bad',sceneId:'not-exported'}]}}),/existing story/);
 });
+test('optional publication More link has no generic publisher default and rejects unsafe destinations',async t=>{
+ const {root}=await fixture(t);
+ assert.equal((await prepareWeb(root)).book.moreLink,undefined);
+ const link={label:'More from Example Press',url:'https://example.test/'};
+ assert.deepEqual((await prepareWeb(root,{moreLink:link})).book.moreLink,link);
+ for(const url of ['javascript:alert(1)','file:///private','https://user:secret@example.test/','//example.test'])
+  await assert.rejects(prepareWeb(root,{moreLink:{label:'Visit',url}}),/More link URL/);
+ const file=path.join(root,'story-teller.project.json'),manifest=JSON.parse(await fs.readFile(file));manifest.webReader={moreLink:link};await fs.writeFile(file,JSON.stringify(manifest));
+ assert.deepEqual((await prepareWeb(root)).book.moreLink,link);
+});

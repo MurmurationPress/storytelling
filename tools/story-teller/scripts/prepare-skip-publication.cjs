@@ -57,7 +57,7 @@ async function prepare(repo, ref, destination, mode = 'preview', options = {}) {
   const before = new Map(await Promise.all((await files(project)).map(async file => [file, sha(await fs.readFile(file))])));
   execFileSync('npm', ['run', 'build'], { cwd: toolRoot, stdio: 'inherit' });
   const site = path.join(output, 'site'); await fs.mkdir(site);
-  const exported = await exportWeb(project, path.join(site, slug), {analytics: options.analytics});
+  const exported = await exportWeb(project, path.join(site, slug), {analytics: options.analytics, moreLink: options.moreLink});
   const manifest = JSON.parse(await fs.readFile(path.join(project, 'story-teller.project.json'), 'utf8'));
   const book = JSON.parse(await fs.readFile(path.join(site, slug + '/publication.json'), 'utf8'));
   const problems = [...exported.warnings];

@@ -2,7 +2,7 @@
   "name": "story-teller",
   "displayName": "Story Teller",
   "description": "Provisional prose, chat, image and type-out scene preview.",
-  "version": "0.13.1",
+  "version": "0.13.2",
   "private": true,
   "publisher": "murmurationpress",
   "repository": {

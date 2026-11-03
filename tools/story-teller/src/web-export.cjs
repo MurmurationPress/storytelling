@@ -35,6 +35,13 @@ function analyticsConfig(value, scenes) {
   return { measurementId: value.measurementId, publicationId: value.publicationId, stories,
     revision: digest(stories.map(item => scenes.find(scene => scene.id === item.sceneId).data.source).join('\n')) };
 }
+function moreLinkConfig(value) {
+  if (value == null) return undefined;
+  if (typeof value.label !== 'string' || !value.label.trim() || value.label.length > 160) throw Error('Invalid reader More link label');
+  let url; try { url = new URL(value.url); } catch { throw Error('Invalid reader More link URL'); }
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) throw Error('Invalid reader More link URL');
+  return { label: value.label.trim(), url: url.href };
+}
 async function prepareWeb(projectRoot, options = {}) {
   const root = await fs.realpath(projectRoot);
   const manifestFile=await localFile(root,'story-teller.project.json'),manifestBytes=await fs.readFile(manifestFile);
@@ -93,12 +100,14 @@ async function prepareWeb(projectRoot, options = {}) {
   }
   for(const scene of scenes)Object.assign(targets,scene.data.supporting.links);
   const book={version:1,id:digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),sequence:orderedRoots(manifest).map(entry=>({kind:entry.kind,id:entry.item.id})),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
+  const moreLink = moreLinkConfig(options.moreLink ?? manifest.webReader?.moreLink);
+  if (moreLink) book.moreLink = moreLink;
   const analytics = analyticsConfig(options.analytics ?? manifest.webAnalytics, scenes);
   if (analytics) book.analytics = analytics;
   return {root,book,scenes,assets,snapshots,warnings:[...new Set(warnings)]};
 }
-async function exportWeb(projectRoot,destination,{beforeWrite=()=>{},analytics}={}) {
-  const prepared=await prepareWeb(projectRoot,{analytics});
+async function exportWeb(projectRoot,destination,{beforeWrite=()=>{},analytics,moreLink}={}) {
+  const prepared=await prepareWeb(projectRoot,{analytics,moreLink});
   const parent=await fs.realpath(path.dirname(destination));destination=path.join(parent,path.basename(destination));
   if(inside(prepared.root,destination))throw Error('Choose an export destination outside the source project');
   try{await fs.lstat(destination);throw Error('Export destination already exists; choose a new folder');}catch(error){if(error.code!=='ENOENT')throw error;}
@@ -132,7 +141,7 @@ async function exportWeb(projectRoot,destination,{beforeWrite=()=>{},analytics}=
   } catch(error) {if(reserved)await fs.rmdir(destination);throw error;}
   finally {await fs.rm(temp,{recursive:true,force:true});}
 }
-module.exports={analyticsConfig,prepareWeb,exportWeb,publicationBody,localFile};
+module.exports={moreLinkConfig,analyticsConfig,prepareWeb,exportWeb,publicationBody,localFile};
 if(require.main===module) {
   const [root,destination]=process.argv.slice(2);
   if(!root||!destination){console.error('Usage: node src/web-export.cjs PROJECT NEW_DESTINATION');process.exitCode=1;}

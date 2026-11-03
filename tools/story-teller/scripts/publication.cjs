@@ -56,7 +56,7 @@ async function command(action,opts,deps={connection,deploy}) {
     const target=targetValid(await read(opts.target));const project=path.resolve(opts.project);
     const repo=execFileSync('git',['-C',project,'rev-parse','--show-toplevel'],{encoding:'utf8'}).trim();
     if(!opts.renderer||!opts.source) throw Error('Explicit --renderer and --source revisions are required');
-    const report=await prepare(repo,opts.source,opts.build,'preview',{project:path.relative(repo,project),slug:target.slug,renderer:opts.renderer,analytics:target.analytics});
+    const report=await prepare(repo,opts.source,opts.build,'preview',{project:path.relative(repo,project),slug:target.slug,renderer:opts.renderer,analytics:target.analytics,moreLink:target.moreLink});
     await write(path.join(opts.build,'target.json'),target); return report;
   }
   const build=path.resolve(opts.build); const {report,artifact}=await checked(build); const target=targetValid(await read(path.join(build,'target.json')));

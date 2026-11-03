@@ -124,3 +124,10 @@ test('newly imported matter rewrites supported images and preserves original sou
   assert.deepEqual(await fs.readFile(path.join(folder,'Opening.md')),original);assert.deepEqual(await fs.readFile(path.join(dest,'metadata/front-matter-0.md')),original);
   assert.equal((await prepareWeb(dest)).assets.size,1);
 });
+test('matter HTTP links open separately while unsafe schemes and authored HTML stay inert',()=>{
+ const html=matterScene('[Publisher](https://example.test/?a=1&b=2) [Book](http://example.test/book) [Mail](mailto:a@example.test) [Bad](javascript:alert(1)) <a href="https://evil.test">raw</a>').beats[0].blocks[0].html;
+ assert.match(html,/<a href="https:\/\/example.test\/\?a=1&amp;b=2" target="_blank" rel="noopener noreferrer">Publisher<\/a>/);
+ assert.match(html,/<a href="http:\/\/example.test\/book" target="_blank" rel="noopener noreferrer">Book<\/a>/);
+ assert.doesNotMatch(html,/<a href="(?:mailto|javascript):/);
+ assert.match(html,/&lt;a href=/);
+});
