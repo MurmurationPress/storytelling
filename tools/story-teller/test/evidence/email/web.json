@@ -1,0 +1,19 @@
+{
+  "browser": "156.0.8078.79",
+  "themes": {
+    "light": {
+      "fill": "rgb(233, 235, 237)",
+      "text": "rgb(32, 33, 36)",
+      "emphasis": "rgb(32, 33, 36)",
+      "body": "From: Mara To: Receiver Subject: Signal\n\nFirst paragraph.\n\nSee harbour background."
+    },
+    "dark": {
+      "fill": "rgb(52, 56, 60)",
+      "text": "rgb(240, 240, 240)",
+      "emphasis": "rgb(240, 240, 240)",
+      "body": "From: Mara To: Receiver Subject: Signal\n\nFirst paragraph.\n\nSee harbour background."
+    }
+  },
+  "checks": "pause; reveal; formatted headers/body; supporting link; light/dark colours",
+  "errors": []
+}

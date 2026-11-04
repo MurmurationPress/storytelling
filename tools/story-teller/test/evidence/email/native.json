@@ -1,0 +1,16 @@
+{
+  "themes": {
+    "Light Modern": {
+      "fill": "rgb(233, 235, 237)",
+      "text": "rgb(32, 33, 36)",
+      "emphasis": "rgb(32, 33, 36)",
+      "body": "From: Mara To: Receiver Subject: Signal\n\nFirst paragraph.\n\nSecond paragraph."
+    },
+    "Dark Modern": {
+      "fill": "rgb(52, 56, 60)",
+      "text": "rgb(240, 240, 240)",
+      "emphasis": "rgb(240, 240, 240)",
+      "body": "From: Mara To: Receiver Subject: Signal\n\nFirst paragraph.\n\nSecond paragraph."
+    }
+  }
+}

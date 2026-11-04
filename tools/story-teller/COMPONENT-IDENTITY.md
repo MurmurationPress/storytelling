@@ -58,6 +58,7 @@ profiles retain their established body presentation, silence/sound and controls.
 | --- | --- | --- | --- |
 | `[!prime-log]` | `typeout`, `@format yaml` | modem | Callout title/timestamp inside the YAML component header |
 | `[!divergent]` | `typeout`, `@format yaml` | modem | Same |
+| `[!email]` (case-insensitive) | `typeout`, `@format annotation`, grey fill/border | none | Own title; complete body retained without header/timestamp extraction |
 | `[!annotation]` | `typeout`, `@format annotation` | keyboard | Own title/timestamp |
 | `[!janus]` | `typeout`, `@format janus` | none | Own title/timestamp |
 | `[!janus-log]` | `typeout`, `@format janus-log` | none | Own title/timestamp |
@@ -74,7 +75,8 @@ and backticks can be safely represented in a component header.
 
 ## Timestamp extraction
 
-Only the first nonblank content paragraph of a callout is considered. Recognised
+Email callouts bypass timestamp extraction entirely; all their lines remain body.
+For the other recognised type-out callouts, only the first nonblank content paragraph is considered. Recognised
 forms are a standalone `YYYY-MM-DD HH:mm` / `YYYY-MM-DDTHH:mm` line (optional
 seconds, fraction and explicit `Z`/numeric offset), or an explicit `Timestamp:`
 field. Bold `**Timestamp:**` and `**Timestamp**:` labels are also recognised.
@@ -361,3 +363,44 @@ After (no beat changes):
 A **complete** observation.
 ```
 ~~~~
+
+## Email example
+
+Fictional input:
+
+```markdown
+> [!Email] Harbour delivery
+> From: **Mara**
+> To: Receiver
+> Subject: *Signal received*
+>
+> The receiver is ready.
+>
+> See [[Harbour early|harbour background]] before replying.
+```
+
+After conversion:
+
+````markdown
+```typeout
+@format annotation
+@identity component
+@title Harbour delivery
+@fill grey
+@border grey
+@sound none
+
+From: **Mara**
+To: Receiver
+Subject: *Signal received*
+
+The receiver is ready.
+
+See [[Harbour early|harbour background]] before replying.
+```
+````
+
+Untitled emails omit `@title`. Every body line, including leading dates and
+`Timestamp:` fields, remains body content. Selection must contain the whole
+callout; review diff, explicit Apply, Undo, stale-source rejection, safe fences
+and repeat-conversion no-op use the existing workflow.

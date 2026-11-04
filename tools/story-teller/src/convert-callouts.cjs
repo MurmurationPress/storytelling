@@ -5,14 +5,14 @@ const { inspectStructure } = require('./structure.cjs');
 const { documentWarning } = require('./janus.cjs');
 const md = new MarkdownIt({ html: false });
 const machineLabels = new Set(['prime-log', 'divergent']);
-const recognised = new Set([...machineLabels, 'annotation', 'janus', 'janus-log']);
+const recognised = new Set([...machineLabels, 'annotation', 'email', 'janus', 'janus-log']);
 const headerPattern = /^ {0,3}> ?\[!([\w-]+)\]([+-])?[ \t]*(.*?)[ \t]*$/i;
 const quotePattern = /^ {0,3}> ?/;
 const { leadingTimestamp, fenceFor, applyChanges, within } = require('./component-identity.cjs');
-function typeout(format, sound, body, eol, title, timestamp) {
+function typeout(format, sound, body, eol, title, timestamp, treatment = '') {
   const metadata = `@identity component${eol}` + (title ? `@title ${title}${eol}` : '') + (timestamp !== undefined ? `@timestamp ${timestamp}${eol}` : '');
   const fence = fenceFor(body, metadata);
-  return `${fence}typeout${eol}@format ${format}${eol}${metadata}@sound ${sound}${eol}${eol}${body}${body.endsWith('\n') || body.endsWith('\r') ? '' : eol}${fence}${eol}`;
+  return `${fence}typeout${eol}@format ${format}${eol}${metadata}${treatment}@sound ${sound}${eol}${eol}${body}${body.endsWith('\n') || body.endsWith('\r') ? '' : eol}${fence}${eol}`;
 }
 function convertCallouts(source, { scope } = {}) {
   const structure = inspectStructure(source);
@@ -25,7 +25,7 @@ function convertCallouts(source, { scope } = {}) {
     const open = span.start, close = span.end;
     if (!within(lines[open].start, lines[close - 1].end, scope)) continue;
     const header = lines[open]?.text.match(headerPattern);
-    if (!header && /^ {0,3}> ?\[!(?:prime-log|divergent|annotation|janus-log|janus)\b/i.test(lines[open]?.text || '')) {
+    if (!header && /^ {0,3}> ?\[!(?:prime-log|divergent|annotation|email|janus-log|janus)\b/i.test(lines[open]?.text || '')) {
       warnings.push({ line: open + 1, message: 'malformed recognised callout header left unchanged' }); continue;
     }
     if (!header || !recognised.has(header[1].toLowerCase())) continue;
@@ -38,7 +38,8 @@ function convertCallouts(source, { scope } = {}) {
     let bodyLines = quoted.map(line => ({ text: line.text.replace(quotePattern, ''), eol: line.eol }));
     if (bodyLines.some(line => /^\s*(?:> ?)?\[!/.test(line.text))) { warn('nested or adjacent callout needs review'); continue; }
     const eol = lines[open].eol || '\n';
-    const stamp = leadingTimestamp(bodyLines);
+    // Email headers and date-like lines are authored body, never metadata.
+    const stamp = label === 'email' ? {} : leadingTimestamp(bodyLines);
     if (stamp.warning) { warn(stamp.warning + '; callout left unchanged'); continue; }
     if (stamp.index !== undefined) bodyLines = bodyLines.filter((_, index) => index !== stamp.index);
     if (!bodyLines.some(line => line.text.trim())) { warn('callout has metadata but no body; left unchanged'); continue; }
@@ -79,6 +80,8 @@ function convertCallouts(source, { scope } = {}) {
           warn('JANUS contains ambiguous structure or an unclosed fence; callout left unchanged'); continue;
         }
         converted = typeout(label, 'none', body, eol, title, stamp.value);
+      } else if (label === 'email') {
+        converted = typeout('annotation', 'none', body, eol, title, undefined, `@fill grey${eol}@border grey${eol}`);
       } else converted = typeout('annotation', 'keyboard', body, eol, title, stamp.value);
     }
     changes.push({ start: lines[open].start, end: lines[close - 1].end, text: converted, line: open + 1 });

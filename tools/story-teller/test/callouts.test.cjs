@@ -62,3 +62,25 @@ test('unrelated callouts, frontmatter and fenced examples are not converted; sel
   const start=source.indexOf(second); const result=convertCallouts(source,{scope:{start,end:start+second.length}});
   assert.equal(result.count,1); assert.equal(result.text.slice(0,start),source.slice(0,start)); assert.ok(result.text.endsWith('> [!State]\n> date: data\n\n~~~~md\n'+first+'~~~~\n'));
 });
+
+test('email labels, titles, folded forms and complete bodies survive without metadata extraction',()=>{
+  for(const label of ['email','Email','EMAIL','eMaIl']) for(const title of ['', 'Delivery — **private** ```']) for(const marker of ['','+','-']) for(const eol of ['\n','\r\n']) {
+    const body='2030-01-02 03:04\n\nTimestamp: Keep this line\n\nFrom: **Mara**\nTo: Receiver\nSubject: *Harbour*\n\nFirst paragraph.\n\nSee [[Harbour early|harbour]].\n\n```text\n@title Literal body\n```';
+    const source=callout(label,title,body,marker).replaceAll('\n',eol),result=convertCallouts(source);
+    assert.equal(result.count,1);assert.deepEqual(result.warnings,[]);
+    const block=parseScene(result.text).beats[0].blocks[0];
+    assert.equal(block.text.replaceAll('\r\n','\n'),body+'\n');
+    assert.equal(block.title,title||undefined);assert.equal(block.timestamp,undefined);
+    assert.equal(block.format,'annotation');assert.equal(block.identity,'component');assert.equal(block.sound,'none');assert.equal(block.fill,'grey');assert.equal(block.border,'grey');
+    assert.match(block.annotation.html,/<strong>/);assert.match(block.annotation.html,/<em>/);assert.match(block.annotation.html,/data-story-target="Harbour early"/);
+    assert.equal(convertCallouts(result.text).count,0);assert.equal(convertCallouts(result.text).text,result.text);
+    if(eol==='\r\n')assert.ok(!/(?<!\r)\n/.test(result.text));
+  }
+});
+test('email conversion requires complete selection and leaves literal examples untouched',()=>{
+  const email=callout('Email','','From: Mara\nTo: Receiver\nSubject: Signal\n\nBody.'),source='Before.\n\n'+email+'\nAfter.\n\n~~~md\n'+email+'~~~\n',start=source.indexOf(email),end=start+email.length;
+  for(const scope of [{start:start+1,end},{start,end:end-1}])assert.equal(convertCallouts(source,{scope}).text,source);
+  const result=convertCallouts(source,{scope:{start,end}});assert.equal(result.count,1);assert.equal(result.text.slice(0,start),source.slice(0,start));assert.ok(result.text.endsWith(source.slice(end)));
+  assert.equal(convertCallouts(source).count,1);
+  const malformed='> [!Email Broken\n> Body.\n';assert.equal(convertCallouts(malformed).warnings.length,1);
+});
