@@ -27,3 +27,16 @@ The lamp went out.
 
 > [!prime-log] Unresolved note
 > This machine callout has prose only. It is intentionally left for review.
+
+---
+
+Fictional email (link resolves when the adaptation supplies this supporting note).
+
+> [!Email] Harbour delivery
+> From: **Mara**
+> To: Receiver
+> Subject: *Signal received*
+>
+> The receiver is ready.
+>
+> See [[Harbour early|harbour background]] before replying.

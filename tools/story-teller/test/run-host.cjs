@@ -1170,6 +1170,28 @@ async function until(fn, timeout = 60000) {
       await fs.writeFile(path.join(directory, 'request.json'), JSON.stringify({ id: ++id, action: 'stop' }));
       return;
     }
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'email') {
+      const { convertCallouts } = require('../src/convert-callouts.cjs');
+      const source = '> [!Email] Delivery\n> From: **Mara**\n> To: Receiver\n> Subject: *Signal*\n>\n> First paragraph.\n>\n> Second paragraph.\n';
+      await request('edit', convertCallouts(source).text);
+      await until(async()=>await evaluate("doc.getElementById('status')?.textContent.includes('ready')"));
+      await locator('#play').click();
+      await until(async()=>await evaluate("Boolean(doc.querySelector('.typeout-fill-grey .typeout-progress strong'))"));
+      await locator('#reveal').click();
+      const themes={};
+      for(const [theme,kind] of [['Light Modern','vscode-light'],['Dark Modern','vscode-dark']]) {
+        await request('set-theme',undefined,{theme});
+        await until(async()=>await evaluate(`doc.body.classList.contains(${JSON.stringify(kind)})`));
+        themes[theme]=await evaluate("(()=>{const el=doc.querySelector('.typeout-surface'),p=el.querySelector('p'),em=el.querySelector('em');return {fill:doc.defaultView.getComputedStyle(el).backgroundColor,text:doc.defaultView.getComputedStyle(p).color,emphasis:doc.defaultView.getComputedStyle(em).color,body:el.innerText};})()");
+        assert.equal(themes[theme].fill,kind==='vscode-light'?'rgb(233, 235, 237)':'rgb(52, 56, 60)');
+        assert.equal(themes[theme].text,kind==='vscode-light'?'rgb(32, 33, 36)':'rgb(240, 240, 240)');
+        assert.equal(themes[theme].text,themes[theme].emphasis);
+        assert.ok(themes[theme].body.includes('From: Mara'));assert.ok(themes[theme].body.includes('Second paragraph.'));
+      }
+      await fs.writeFile(path.join(directory,'email.json'),JSON.stringify({themes},null,2));
+      console.log(`PASS: installed email annotation, reveal and light/dark colours; evidence: ${directory}`);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'annotation') {
       const source = [
         'Before [[place|the inlet]].', '---',
@@ -1795,7 +1817,7 @@ async function until(fn, timeout = 60000) {
     const calloutResult = () => until(async () => JSON.parse(await fs.readFile(path.join(directory, 'callout-conversion-result.json'), 'utf8')));
     await request('start-callout-conversion');
     await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('@title Harbour.Signal')));
-    assert.ok(await workbench("document.body.innerText.includes('2 callout(s) to convert; 1 review warning(s).')"));
+    assert.ok(await workbench("document.body.innerText.includes('3 callout(s) to convert; 1 review warning(s).')"));
     await action('Review Warnings');
     await until(async () => await workbench("document.body.innerText.replaceAll('\\u00a0', ' ').includes('one top-level YAML fence')"));
     await action('Cancel'); assert.equal((await calloutResult()).status, 'cancelled');
@@ -1809,7 +1831,7 @@ async function until(fn, timeout = 60000) {
     await request('show-notifications'); await action('Regenerate');
     await until(async () => (await snapshot()).snapshots.some(item => item.text.includes('@title Harbour.Signal') && item.text.endsWith('An unsaved ending.')));
     await action('Apply');
-    assert.deepEqual(await calloutResult(), { status: 'applied', count: 2 });
+    assert.deepEqual(await calloutResult(), { status: 'applied', count: 3 });
     const calloutApplied = await snapshot();
     assert.ok(calloutApplied.text.includes('@title Harbour.Signal'));
     assert.ok(calloutApplied.text.includes('@title Mara — Margin note'));

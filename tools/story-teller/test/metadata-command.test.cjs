@@ -56,3 +56,10 @@ test('chat subtext conversion preserves document/selection review and Apply boun
  const doc=harness(source);assert.equal((await doc.commands.get('storyTeller.convertChats')()).count,2);assert.equal(doc.edits(),1);assert.ok(doc.doc.getText().includes('Prose bridge.'));
  for(const [action,change] of [['Cancel',false],['Apply',true]]){const held=harness(second,action,change);const r=await held.commands.get('storyTeller.convertChats')();assert.equal(r.status,change?'stale':'cancelled');assert.equal(held.edits(),0);assert.ok(held.doc.getText().includes('{{B|Two|second note}}'));}
 });
+
+test('email uses shared review, single Apply, repeat and stale-source protection',async()=>{
+ const source='> [!Email] Delivery\n> From: **Mara**\n> To: Receiver\n> Subject: *Signal*\n>\n> Body.\n';
+ const h=harness(source);assert.equal((await h.commands.get('storyTeller.convertCallouts')()).count,1);assert.equal(h.edits(),1);assert.equal(h.diffs[0][0],'vscode.diff');assert.match(h.doc.getText(),/@fill grey/);
+ assert.equal((await h.commands.get('storyTeller.convertCallouts')()).count,0);assert.equal(h.edits(),1);
+ for(const [action,change] of [['Cancel',false],['Apply',true]]){const held=harness(source,action,change);const r=await held.commands.get('storyTeller.convertCallouts')();assert.equal(r.status,change?'stale':'cancelled');assert.equal(held.edits(),0);assert.ok(held.doc.getText().startsWith(source));}
+});
