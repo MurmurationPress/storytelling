@@ -94,3 +94,11 @@ Editor snapshots gain a logical project/scene identity. Old full UUID scene URIs
 Missing/unsupported media keep existing reader diagnostics/placeholders; migration does not invent video playback, scene-link semantics or a general bookmark system. Unsupported path syntax that would break after a move is a blocking manual action. Literal code examples remain unchanged as authored output, rather than being treated as live resource references. Supporting-note resource moves which cannot pass reader equivalence are refused.
 
 Automated Linux/editor/Chromium checks do not establish Safari, iPad, iPhone, Windows/macOS, human audio or human screen-reader acceptance. See the validation record accompanying this candidate for actual results.
+
+A current EMERGENCE copy has an additional conservative blocker: an archived
+asset note contains percent-encoded vault provenance in unknown HTML-comment
+metadata. The migration cannot prove its intended scope and refuses to guess.
+Review that metadata explicitly on a disposable copy; keep the original and do
+not remove authored content merely to bypass validation. Earlier EMERGENCE author
+acceptance remains historical evidence, not a claim that this candidate migrates
+that marker automatically. See the remediation validation evidence for details.

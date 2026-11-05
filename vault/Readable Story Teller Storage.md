@@ -97,3 +97,20 @@ Test portable slug collisions/reserved names/Unicode/long names, first and repea
 Run full unit/build/check/package suites and targeted installed VSIX/HTTP reader checks for playback/navigation, persistence, nested media/supporting content, motion preferences and audio cleanup. Exercise a disposable Skip copy without committing private fixtures. Device and human accessibility claims require actual tests. Existing unsupported behavior remains explicitly limited.
 
 Deliver migration/rename/recovery/Git review documentation, VSIX and a PR referencing #20 on `feature/readable-project-storage`. Do not merge, publish or deploy before author acceptance. This document is the pre-implementation proposal, not evidence that those delivery gates have passed.
+
+## Integration evidence — 2026-11-05
+
+Ted granted author acceptance of PR #39 after EMERGENCE testing. Independent
+review subsequently blocked integration on four reproducible preservation /
+reference defects. The revised candidate fixes those defects and two further
+reference scanner findings with permanent regression coverage and independent
+validation. See the [remediation evidence](../tools/story-teller/test/evidence/readable-storage-remediation/README.md).
+
+The stricter scanner now blocks current EMERGENCE automatic migration on encoded
+vault provenance in unknown HTML-comment metadata; manual review is required.
+This follows the agreed conservative metadata policy above and does not replace
+Ted's historical acceptance with a claim of current successful migration.
+Disposable Skip semantic, editor and HTTP checks pass. Existing native-test
+limitations remain documented; production projects, release and deployment are
+outside this operation. Final reviewed head and any guarded merge are recorded
+in PR #39 rather than inferred from this design note.
