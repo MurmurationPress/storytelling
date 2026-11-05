@@ -4,11 +4,34 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const { allocator, hash, key } = require('./readable-paths.cjs');
 const { portablePath, matterDocuments } = require('./book-matter.cjs');
+const {losslessUtf8,assertAuthoredPreserved}=require('./source-preservation.cjs');
+const markdown=new (require('markdown-it'))({html:false});
 const MANIFEST = 'story-teller.project.json';
 const REPORT = 'metadata/readable-migration.json';
 const slash = value => value.split(path.sep).join('/');
 const json = value => JSON.stringify(value, null, 2) + '\n';
 const textFile = name => /\.(md|chat|ya?ml|json|mmd|txt|css|html|js|cjs|svg)$/i.test(name);
+async function readRewriteText(root,file) {return losslessUtf8(await fs.readFile(path.join(root,file)),file);}
+function markdownLinks(source) {
+  const result=[];
+  for(const m of source.matchAll(/!?\[((?:\\.|[^\]\\\n])*)\]\(/g)) {
+    let start=m.index+m[0].length;
+    while(/[ \t\r\n]/.test(source[start]||'\0'))start++;
+    const destination=markdown.helpers.parseLinkDestination(source,start,source.length);
+    if(!destination.ok)continue;
+    let end=destination.pos;
+    while(/[ \t\r\n]/.test(source[end]||'\0'))end++;
+    if(end>destination.pos&&source[end]!==')') {
+      const title=markdown.helpers.parseLinkTitle(source,end,source.length);
+      if(!title.ok)continue;
+      end=title.pos;while(/[ \t\r\n]/.test(source[end]||'\0'))end++;
+    }
+    if(source[end]!==')')continue;
+    const angled=source[start]==='<';
+    result.push({start:m.index,end:end+1,target:destination.str,targetStart:start+(angled?1:0),targetEnd:destination.pos-(angled?1:0)});
+  }
+  return result;
+}
 async function inventory(root) {
   root = await fs.realpath(root);
   const files = Object.create(null), fileModes=Object.create(null), directoryModes=Object.create(null), directories = [], names = new Set();
@@ -26,7 +49,7 @@ async function inventory(root) {
   await walk(''); return {files,directories,fileModes,directoryModes,rootMode:(await fs.stat(root)).mode&0o777};
 }
 async function readManifest(root) {
-  const raw=await fs.readFile(path.join(root,MANIFEST),'utf8');
+  const raw=await readRewriteText(root,MANIFEST);
   const manifest = JSON.parse(raw,(_key,value)=>{
     if(typeof value==='number'&&(!Number.isFinite(value)||(Number.isInteger(value)&&!Number.isSafeInteger(value))))throw Error('Unsafe numeric metadata cannot be round-tripped losslessly; review it before migration');
     return value;
@@ -47,6 +70,7 @@ async function readManifest(root) {
 function rewriteReferences(source, oldFile, newFile, mapping) {
   const consumed = [];
   const structure=require('./structure.cjs').inspectStructure(source);
+  const metadataAt=offset=>/\.md$/i.test(oldFile)&&structure.frontmatter?.closed&&offset>=structure.lines[1].start&&offset<structure.lines[structure.frontmatter.end-1].start;
   const literalAt=offset=>{
     const line=structure.lines.findIndex((line,i)=>offset>=line.start&&offset<(structure.lines[i+1]?.start??source.length+1));
     if(require('./source-literals.cjs').literalLine(structure,line))return true;
@@ -55,55 +79,60 @@ function rewriteReferences(source, oldFile, newFile, mapping) {
     return [...text.text.matchAll(/(`+).*?\1/g)].some(m=>offset>=text.start+m.index&&offset<text.start+m.index+m[0].length);
   };
   const rewrite = (target, start, end) => {
-    let decoded;
-    try { decoded = decodeURIComponent(target.replace(/\\([ ()])/g,'$1')); } catch { throw Error(`${oldFile}: invalid URL encoding in ${target}`); }
-    if (/^[a-z][\w+.-]*:|^[#\/]/i.test(decoded)) return target;
-    const match = decoded.match(/^([^#?]*)(.*)$/), plain = match[1];
+    if (!target||/^[a-z][\w+.-]*:|^[#?\/]/i.test(target)) return target;
+    const match = target.match(/^([^#?]*)(.*)$/);
+    let plain;
+    try { plain = decodeURIComponent(match[1].replace(/\\([ ()])/g,'$1')); } catch { throw Error(`${oldFile}: invalid URL encoding in ${target}`); }
     const resolved = path.posix.normalize(path.posix.join(path.posix.dirname(oldFile),plain));
     const destination = Object.hasOwn(mapping,resolved) ? mapping[resolved] : resolved;
-    if (destination === resolved && oldFile === newFile) return target;
     if (resolved.startsWith('../')) return target;
-    let relative = path.posix.relative(path.posix.dirname(newFile),destination);
     consumed.push({start,end,target:plain,resolved});
-    return relative.split('/').map(encodeURIComponent).join('/') + match[2];
+    if (destination === resolved && path.posix.dirname(oldFile)===path.posix.dirname(newFile)) return target;
+    const relative = path.posix.relative(path.posix.dirname(newFile),destination);
+    return relative.split('/').map(part=>encodeURIComponent(part).replace(/[!'()*]/g,c=>`%${c.charCodeAt(0).toString(16).toUpperCase()}`)).join('/') + match[2];
   };
   // Preserve link labels and aliases byte for byte. Fenced formatted components
   // use the same Markdown image syntax as ordinary scenes.
   const replacements = [];
-  const regex = /!?\[[^\]\n]*\]\((<[^>\n]+>|(?:\\.|[^)\n])+)\)|!?\[\[([^\]\n]+)\]\]/g;
-  for (const m of source.matchAll(regex)) {
-    if(literalAt(m.index))continue;
-    let target, offset, next;
-    if (m[2]) {
-      target = m[2].split('|')[0]; offset = m.index + m[0].indexOf('[[') + 2;
-      // Bare wikilinks resolve in Supporting Content, not relative to the scene.
-      // Explicit media wiki paths can be rewritten; ambiguous basename targets block.
-      if (!m[0].startsWith('!')) continue;
-      next = rewrite(target,m.index,m.index+m[0].length);
-      if (next === target && !target.includes('/')) {
-        const matches = Object.keys(mapping).filter(file=>path.posix.basename(file)===target);
-        if (matches.length) throw Error(`${oldFile}: ambiguous wiki media target ${target}; use an explicit relative path before migration`);
-      }
-    } else {
-      target = m[1].replace(/^<|>$/g,''); offset = m.index + m[0].indexOf('](') + 2 + (m[1].startsWith('<')?1:0);
-      next = rewrite(target,m.index,m.index+m[0].length);
+  for(const link of markdownLinks(source)) {
+    if(literalAt(link.start)||metadataAt(link.start))continue;
+    const next=rewrite(link.target,link.start,link.end);
+    if(next!==link.target)replacements.push({start:link.targetStart,end:link.targetEnd,value:next});
+  }
+  for (const m of source.matchAll(/!\[\[([^\]\n]+)\]\]/g)) {
+    if(literalAt(m.index)||metadataAt(m.index))continue;
+    const target = m[1].split('|')[0], offset = m.index + 3;
+    // Bare media aliases are ambiguous; supporting-note wikilinks are untouched.
+    const next = rewrite(target,m.index,m.index+m[0].length);
+    if (next === target && !target.includes('/')) {
+      const matches = Object.keys(mapping).filter(file=>path.posix.basename(file)===target);
+      if (matches.length) throw Error(`${oldFile}: ambiguous wiki media target ${target}; use an explicit relative path before migration`);
     }
     if (next !== target) replacements.push({start:offset,end:offset+target.length,value:next});
   }
   // Existing book metadata stores cover_image as a project-root-relative scalar.
   // Preserve quoting and other YAML, including unknown keys, byte for byte.
-  for (const m of source.matchAll(/^cover_image:[ \t]*(["']?)([^\r\n"']+)\1[ \t]*$/gm)) {
-    const target=m[2].trim(),wiki=target.match(/^\[\[([^\]|]+)\]\]$/);
-    let mapped=mapping[target];
-    if(wiki) {
-      const candidates=Object.keys(mapping).filter(file=>path.posix.basename(file)===wiki[1]||file===wiki[1]);
-      if(candidates.length>1)throw Error(`${oldFile}: ambiguous cover reference ${target}`);
-      if(candidates.length===1)mapped=`[[${path.posix.basename(mapping[candidates[0]])}]]`;
-    }
-    if(mapped) {
-      const start=m.index+m[0].indexOf(target);
-      consumed.push({start:m.index,end:m.index+m[0].length});
-      if(mapped!==target)replacements.push({start,end:start+target.length,value:mapped});
+  if(/\.md$/i.test(oldFile)&&structure.frontmatter?.closed) {
+    const begin=structure.lines[1].start,end=structure.lines[structure.frontmatter.end-1].start;
+    const YAML=require('yaml'),doc=YAML.parseDocument(source.slice(begin,end),{uniqueKeys:true});
+    const value=!doc.errors.length&&YAML.isMap(doc.contents)?doc.get('cover_image',true):null;
+    if(YAML.isScalar(value)&&typeof value.value==='string'&&value.range) {
+      const target=value.value.trim(),wiki=target.match(/^\[\[([^\]|]+)\]\]$/);
+      let mapped=Object.hasOwn(mapping,target)?mapping[target]:undefined;
+      if(wiki) {
+        // Archived book metadata may retain an Obsidian vault-scoped cover path.
+        // Resolve its exact-case leaf only when the project asset is unique.
+        const candidates=Object.keys(mapping).filter(file=>file.startsWith('assets/')&&(path.posix.basename(file)===path.posix.basename(wiki[1])||file===wiki[1]));
+        if(candidates.length>1)throw Error(`${oldFile}: ambiguous cover reference ${target}`);
+        if(candidates.length===1)mapped=`[[${path.posix.basename(mapping[candidates[0]])}]]`;
+      }
+      if(mapped) {
+        const start=begin+value.range[0],finish=begin+value.range[1];
+        if(!['PLAIN','QUOTE_SINGLE','QUOTE_DOUBLE'].includes(value.type)||/[\r\n]/.test(source.slice(start,finish)))throw Error(`${oldFile}: multiline cover metadata requires manual review`);
+        consumed.push({start,end:finish});
+        const replacement=value.type==='QUOTE_DOUBLE'?JSON.stringify(mapped):value.type==='QUOTE_SINGLE'?`'${mapped.replace(/'/g,"''")}'`:mapped;
+        if(mapped!==target)replacements.push({start,end:finish,value:replacement});
+      }
     }
   }
   // A reference outside recognised syntax, including metadata/code/HTML, must
@@ -114,6 +143,7 @@ function rewriteReferences(source, oldFile, newFile, mapping) {
       if (!needle) continue;
       let offset = -1;
       while ((offset = source.indexOf(needle,offset+1)) >= 0) {
+        if(literalAt(offset))continue; // Authored examples/output are not resources.
         if (!consumed.some(span=>offset>=span.start&&offset+needle.length<=span.end)) throw Error(`${oldFile}: unrecognised reference to ${from}; review manually before moving it`);
       }
     }
@@ -170,8 +200,7 @@ async function planMigration(root) {
   const changes=[], blockers=[];
   for (const file of Object.keys(before.files)) {
     if (file===MANIFEST || !textFile(file)) continue;
-    const source=await fs.readFile(path.join(root,file),'utf8');
-    try { const content=rewriteReferences(source,file,mapping[file]||file,mapping); if(content!==source)changes.push({file,content}); }
+    try { const source=await readRewriteText(root,file),content=rewriteReferences(source,file,mapping[file]||file,mapping); assertAuthoredPreserved(source,content,file,mapping[file]||file,mapping);if(content!==source)changes.push({file,content}); }
     catch(error){blockers.push(error.message);}
   }
   let next;
@@ -222,6 +251,7 @@ async function materialize(plan,destination,{beforeCommit=()=>{},beforeValidate=
     for(const [file,digest] of Object.entries(plan.before.files)) {
       const change=plan.changes.find(c=>c.file===file),expected=change?hash(change.content):digest;
       if(resultInventory.files[Object.hasOwn(plan.mapping,file)?plan.mapping[file]:file]!==expected)throw Error(`Preservation validation failed: ${file}`);
+      if(change&&file!==MANIFEST&&textFile(file)&&['migration','reimport-baseline'].includes(plan.kind))assertAuthoredPreserved(await readRewriteText(plan.root,file),await readRewriteText(target,Object.hasOwn(plan.mapping,file)?plan.mapping[file]:file),file,Object.hasOwn(plan.mapping,file)?plan.mapping[file]:file,plan.mapping);
     }
     const { prepareWeb }=require('./web-export.cjs');
     const [oldReader,newReader]=await Promise.all([prepareWeb(plan.root),prepareWeb(target)]);
@@ -230,7 +260,7 @@ async function materialize(plan,destination,{beforeCommit=()=>{},beforeValidate=
       for(let i=0;i<oldReader.scenes.length;i++) {
         const old=oldReader.scenes[i],next=newReader.scenes[i],doc=[...plan.manifest.scenes,...matterDocuments(plan.manifest)].find(s=>s.id===old.id);
         const oldFile=Object.keys(plan.mapping).find(f=>plan.mapping[f]===doc.file)||doc.file;
-        if(rewriteReferences(old.data.source,oldFile,doc.file,plan.mapping)!==next.data.source)throw Error(`Reader content changed: ${old.id}`);
+        assertAuthoredPreserved(old.data.source,next.data.source,oldFile,doc.file,plan.mapping);
         const normalizeMedia=data=>Object.values(data.media).map(entry=>entry.url || entry.error).sort();
         if(json(normalizeMedia(old.data))!==json(normalizeMedia(next.data)))throw Error(`Reader media changed: ${old.id}`);
       }
@@ -256,4 +286,4 @@ async function materialize(plan,destination,{beforeCommit=()=>{},beforeValidate=
     throw Error(`${error.message}\nOriginal project is unchanged. Recovery staging: ${staging}`,{cause:error});
   }
 }
-module.exports={MANIFEST,REPORT,inventory,readManifest,rewriteReferences,remapManifest,planMigration,reportFor,materialize,unchanged,json};
+module.exports={MANIFEST,REPORT,inventory,readManifest,readRewriteText,rewriteReferences,remapManifest,planMigration,reportFor,materialize,unchanged,json};

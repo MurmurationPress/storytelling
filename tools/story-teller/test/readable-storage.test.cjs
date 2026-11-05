@@ -96,7 +96,8 @@ test('cancel/dry-run has no writes; stale inputs, existing destination and faile
 test('migration updates explicit nested media references, cover metadata, and blocks unknown reference syntax',async t=>{
   const f=await legacy(t),asset=`assets/forum-${'a'.repeat(64)}.png`;await fs.writeFile(path.join(f.project,asset),Buffer.from([137,80,78,71,13,10,26,10,1]));
   await fs.appendFile(path.join(f.project,f.manifest.scenes[0].file),`\n\n![Forum](../${asset})\n`);
-  await fs.appendFile(path.join(f.project,'metadata/book.md'),`\ncover_image: "[[${path.basename(asset)}]]"\n`);
+  const bookFile=path.join(f.project,'metadata/book.md'),bookSource=await fs.readFile(bookFile,'utf8');
+  await fs.writeFile(bookFile,bookSource.replace('\n---\n',`\ncover_image: "[[${path.basename(asset)}]]"\n---\n`));
   const p=await r.planMigration(f.project);assert.deepEqual(p.blockers,[]);assert.equal(p.mapping[asset],'assets/forum.png');
   await r.materialize(p,path.join(f.root,'media'));
   await fs.writeFile(path.join(f.project,'unknown.json'),r.json({customPath:asset}));
@@ -131,7 +132,8 @@ test('reader restore accepts stable identity and legacy UUID aliases but not a s
   assert.equal(sameDocument({sourceUri:'file:///other/scenes/opening.md'},{uri:'file:///new/scenes/opening.md',legacySceneId:'opening'}),false);
 });
 test('literal examples are never silently rewritten and stale manuscript review is refused',async t=>{
-  assert.throws(()=>r.rewriteReferences('```md\n![example](../assets/old.png)\n```','scenes/a.md','scenes/b.md',{'assets/old.png':'assets/new.png'}),/unrecognised reference/);
+  const literal='```md\n![example](../assets/old.png)\n```';
+  assert.equal(r.rewriteReferences(literal,'scenes/a.md','scenes/b.md',{'assets/old.png':'assets/new.png'}),literal);
   const f=await fixture(t);await f.write('A.md','Opening',1,'Source revision');
   const p=await planReimport(f.project,f.source);await f.write('A.md','Opening',1,'Another source revision');
   await assert.rejects(r.materialize(p,path.join(f.root,'stale-source')),/Manuscript or asset changed/);
@@ -204,4 +206,12 @@ test('a source-deleted opening scene stays in its original position with stable 
   const f=await fixture(t);await fs.unlink(path.join(f.source,'A.md'));
   const p=await planReimport(f.project,f.source);assert.deepEqual(p.blockers,[]);assert.deepEqual(p.manifest.sequence,f.manifest.sequence);assert.deepEqual(p.manifest.scenes.map(s=>[s.id,s.label]),f.manifest.scenes.map(s=>[s.id,s.label]));
   const output=path.join(f.root,'deleted-opening');await r.materialize(p,output);assert.equal((await planReimport(output,f.source)).noop,true);
+});
+test('a deliberate source-only literal component update remains a valid conservative reimport',async t=>{
+  const f=await fixture(t),body=value=>'```typeout\n@format yaml\n@sound none\n@speed 30\n\nstatus: '+value+'\n```';
+  await f.write('A.md','Opening',1,body('original'));
+  const prepared=await m.resolveAssets(m.plan(m.discover(await m.scan(f.source),f.source),'order'),f.source),project=path.join(f.root,'literal-import');
+  await m.writeProject(prepared,project);await f.write('A.md','Opening',1,body('updated'));
+  const plan=await planReimport(project,f.source);assert.deepEqual(plan.blockers,[]);const destination=path.join(f.root,'literal-reimport');await r.materialize(plan,destination);
+  const manifest=await r.readManifest(destination),text=await fs.readFile(path.join(destination,manifest.scenes[0].file),'utf8');assert.ok(text.includes('status: updated'));assert.equal((await planReimport(destination,f.source)).noop,true);
 });

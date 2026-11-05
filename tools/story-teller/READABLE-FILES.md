@@ -1,6 +1,6 @@
 # Readable project files and migration
 
-This review candidate implements [issue #20](https://github.com/MurmurationPress/storytelling/issues/20), with the requested additions for assets, reimport and staged migration. Install `story-teller-0.19.0.vsix` locally for acceptance testing. No production publication needs changing to test it.
+This implements [issue #20](https://github.com/MurmurationPress/storytelling/issues/20), with the requested additions for assets, reimport and staged migration. Install `story-teller-0.19.1.vsix` locally for the preservation fixes. Ted's EMERGENCE author acceptance of PR #39 is retained; the subsequent independent review and remediation evidence are recorded separately. No production publication needs changing to test it.
 
 ## Layout and identity
 
@@ -42,6 +42,10 @@ Declared local `cover_image` media is collected too. If front matter is generate
 
 Migration preserves unknown metadata and user-created files. Explicit Markdown resource destinations and the established `cover_image` metadata convention are mapped. Unknown path-bearing syntax blocks migration rather than undergoing a guessed string replacement. Escaping symlinks, special filesystem entries, case-colliding paths, duplicate identities and missing project documents require manual review. Unreferenced files are preserved too.
 
+Only actual Markdown frontmatter is treated as cover metadata. Literal YAML, chat, code examples, Mermaid and inline code keep their authored text, including strings which resemble paths or metadata. Resource URLs in formatted Markdown may change; destinations and optional quoted titles are parsed separately. Independent token/literal comparisons reject unrelated content changes before a migration can report success.
+
+Text requiring reference inspection must round-trip as UTF-8 without changing bytes. UTF-8 BOMs and line endings are retained. Unsupported text encodings, including Latin-1, produce a blocking diagnostic; the original file bytes remain intact. Convert only an explicitly chosen disposable copy with an appropriate encoding-aware editor before retrying. Binary/user files which are not interpreted as text are copied byte for byte; there is no automatic encoding guess or conversion.
+
 Book-local scope does not establish spoiler safety. Supporting Content previews, complete panels and onward links retain the existing [point-of-access editorial rule](../../vault/Supporting%20Content.md). There is no automatic spoiler filter.
 
 ## Failure and recovery
@@ -75,7 +79,7 @@ Use **Story Teller: Rename / Move Scene File**. Choose a scene and a project-rel
 
 For a file moved in Explorer or a shell, run the same command, choose the missing scene and enter its actual new path. Repair requires the old path to be absent and the new file to exist. It does not guess which file corresponds to a missing scene. Folder-wide external reorganizations should be repaired scene by scene, reviewing references. Alternatively, edit manifest `file` entries and relative references deliberately, preserving IDs and updating ledger paths. Avoid changing several unrelated things before repairing membership.
 
-Case-only renames use a distinct temporary name first. Destination collisions, traversal, reserved filenames and paths outside `scenes/` are refused. Use ordinary Markdown editing for beat renames/moves; beat identity remains the existing raw-text/index restoration convention, not a newly introduced GUID per beat.
+Case-only renames use a distinct temporary name first. Every destination component is checked: reuse the existing exact spelling of parent directories; `Part` and `part`, or Unicode-equivalent variants, cannot become separate parents. Destination collisions, parents which are files, traversal, reserved filenames and paths outside `scenes/` are refused before editing. Use ordinary Markdown editing for beat renames/moves; beat identity remains the existing raw-text/index restoration convention, not a newly introduced GUID per beat.
 
 ## Reader compatibility and limits
 
@@ -85,6 +89,6 @@ Migration initializes `publicationId` to the exact previous exported book identi
 
 Editor snapshots gain a logical project/scene identity. Old full UUID scene URIs can be recognized across migration; same-root renamed URIs have aliases. The extension does not provide a global reading-history/bookmark database or restore serialized editor panels across a fresh installation. Existing raw-text/index beat restoration remains bounded when authors reorder/delete duplicate beats. Playback resumes ready under existing policy, not mid-audio.
 
-Missing/unsupported media keep existing reader diagnostics/placeholders; migration does not invent video playback, scene-link semantics or a general bookmark system. Unsupported path syntax that would break after a move is a blocking manual action. Literal code examples referencing moved resources also require review rather than changing their words silently. Supporting-note resource moves which cannot pass reader equivalence are refused.
+Missing/unsupported media keep existing reader diagnostics/placeholders; migration does not invent video playback, scene-link semantics or a general bookmark system. Unsupported path syntax that would break after a move is a blocking manual action. Literal code examples remain unchanged as authored output, rather than being treated as live resource references. Supporting-note resource moves which cannot pass reader equivalence are refused.
 
 Automated Linux/editor/Chromium checks do not establish Safari, iPad, iPhone, Windows/macOS, human audio or human screen-reader acceptance. See the validation record accompanying this candidate for actual results.

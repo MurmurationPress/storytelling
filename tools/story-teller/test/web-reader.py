@@ -88,6 +88,8 @@ async def run(root):
         await more_action(page, '#reveal');assert '[[JANUS later|JANUS]]' in await page.locator('.typeout-progress').inner_text()
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         assert await page.locator('.story-image').count()==1
+        await page.wait_for_function("() => document.querySelector('.story-image')?.naturalWidth > 0")
+        evidence['checks']['rendered_image_natural_width']=await page.locator('.story-image').evaluate('(image)=>image.naturalWidth')
         await page.locator('.beat-ending button').click();await page.wait_for_function("title => document.querySelector('#scene-title').textContent===title",arg=title_by_label['1.2'])
         await page.wait_for_function("() => document.querySelector('#status').textContent.includes('completed')")
         assert await page.locator('.image-placeholder').count()>=2

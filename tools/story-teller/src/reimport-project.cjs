@@ -3,7 +3,7 @@ const fs=require('node:fs/promises');
 const path=require('node:path');
 const os=require('node:os');
 const {hash,allocator}=require('./readable-paths.cjs');
-const {inventory,readManifest,json,MANIFEST}=require('./readable-project.cjs');
+const {inventory,readManifest,readRewriteText,json,MANIFEST}=require('./readable-project.cjs');
 const {scan,discover,plan,resolveAssets,writeProject}=require('./manuscript-import.cjs');
 const {portablePath}=require('./book-matter.cjs');
 const slash=value=>value.split(path.sep).join('/');
@@ -16,7 +16,7 @@ async function planReimport(root,sourceFolder,assetRoot=sourceFolder) {
   if(manifest.version!==2)throw Error('Migrate Project to Readable Files before reimporting');
   if(!manifest.importState)return planBaseline(root,sourceFolder,assetRoot,before,manifest);
   portablePath(manifest.importState);
-  const state=JSON.parse(await fs.readFile(path.join(root,manifest.importState),'utf8'));
+  const state=JSON.parse(await readRewriteText(root,manifest.importState));
   if(state.version!==1 || !Array.isArray(state.outputs)||!Array.isArray(state.assets))throw Error('Unsupported import ledger');
   const prepared=await resolveAssets(plan(discover(await scan(sourceFolder),sourceFolder),manifest.orderField),assetRoot);
   if(prepared.errors.length || prepared.unresolved.length)throw Error([...prepared.errors,...prepared.unresolved].join('\n'));

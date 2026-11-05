@@ -1,7 +1,8 @@
 'use strict';
 const path=require('node:path');
 const fs=require('node:fs/promises');
-const {inventory,readManifest,rewriteReferences,remapManifest,MANIFEST,REPORT,json}=require('./readable-project.cjs');
+const {inventory,readManifest,readRewriteText,rewriteReferences,remapManifest,MANIFEST,REPORT,json}=require('./readable-project.cjs');
+const {assertAuthoredPreserved}=require('./source-preservation.cjs');
 const {key,hash,slug}=require('./readable-paths.cjs');
 const {portablePath}=require('./book-matter.cjs');
 function scenePath(name) {
@@ -18,6 +19,12 @@ async function planSceneMove(root,id,name,{repair=false}={}) {
   const from=scene.file;
   if(from===name)return {root,before,mapping:{},changes:[],noop:true};
   if(key(from)===key(name))throw Error('For a case-only rename, first move to a distinct temporary name');
+  const existing=[...Object.keys(before.files),...before.directories],segments=name.split('/');
+  for(let i=1;i<=segments.length;i++) {
+    const prefix=segments.slice(0,i).join('/'),alias=existing.find(file=>key(file)===key(prefix)&&file!==prefix);
+    if(alias)throw Error(`Case-insensitive or Unicode path collision: ${prefix} aliases ${alias}; use the existing parent spelling`);
+    if(i<segments.length&&Object.hasOwn(before.files,prefix))throw Error(`Destination parent is a file: ${prefix}`);
+  }
   if(repair) {
     if(before.files[from]||!before.files[name])throw Error('Repair requires a missing old file and an existing new file');
   } else if(Object.keys(before.files).some(f=>key(f)===key(name))||before.directories.some(f=>key(f)===key(name)))throw Error('Destination exists; never overwrite it');
@@ -26,12 +33,13 @@ async function planSceneMove(root,id,name,{repair=false}={}) {
   next.pathAliases={...manifest.pathAliases,[from]:id};
   for(const file of Object.keys(before.files)) {
     if(file===MANIFEST||file===manifest.importState||file===REPORT||!/\.(md|chat|mmd|json|ya?ml|txt)$/i.test(file))continue;
-    const source=await fs.readFile(path.join(root,file),'utf8'),old=repair&&file===name?from:file;
+    const source=await readRewriteText(root,file),old=repair&&file===name?from:file;
     const content=rewriteReferences(source,old,mapping[old]||file,mapping);
+    assertAuthoredPreserved(source,content,old,mapping[old]||file,mapping);
     if(content!==source)changes.push({file,content});
   }
   if(manifest.importState) {
-    const state=JSON.parse(await fs.readFile(path.join(root,manifest.importState),'utf8'));
+    const state=JSON.parse(await readRewriteText(root,manifest.importState));
     for(const output of state.outputs) {
       const file=repair&&output.file===from?name:output.file;
       const change=changes.find(c=>c.file===file);

@@ -43,7 +43,7 @@ Neither that PR nor its H1 behaviour is marked accepted or merged. Main was
 Component Types are preserved. No manuscript content or private image is committed.
 
 **Established causes:** read-only inspection of the current local PrimeTrilogy
-revision `383bcf5656c340a5988df5064f26482a2d95aef3` confirms First Detection is a
+revision `382bcf5656c340a5988df5064f26482a2d95aef3` confirms First Detection is a
 scene parented to EMERGENCE itself. MWC `08ec248d6bdd1cef33cd1eab255df24430a8e9fa`,
 `src/manuscript/ManuscriptOrder.ts` (`distributedEntries`/`appendChildren`), sorts
 book children (parts and direct scenes) as siblings and then visits part children.

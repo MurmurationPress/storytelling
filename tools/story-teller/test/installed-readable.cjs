@@ -12,14 +12,20 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
   const supplied=process.argv[3]&&await fs.realpath(process.argv[3]);
   const suppliedBefore=supplied&&await r.inventory(supplied);
   if(supplied)await fs.cp(supplied,root,{recursive:true});
-  const manifest=supplied?await r.readManifest(root):await require('./readable-fixture.cjs').legacyWebFixture(root),before=await r.inventory(root);
+  const manifest=supplied?await r.readManifest(root):await require('./readable-fixture.cjs').legacyWebFixture(root);
+  if(!supplied) {
+    await fs.copyFile(path.join(root,'assets/harbour-lamp.webp'),path.join(root,'assets/harbour lamp.webp'));
+    const file=path.join(root,manifest.scenes[0].file),source=await fs.readFile(file,'utf8');
+    await fs.writeFile(file,source.replace('(../assets/harbour-lamp.webp)','(<../assets/harbour lamp.webp> "Authored lamp title")'));
+  }
+  const before=await r.inventory(root);
   await fs.mkdir(path.join(directory,'profile/User'),{recursive:true});
   await fs.writeFile(path.join(directory,'profile/User/settings.json'),JSON.stringify({'files.simpleDialog.enable':true,'window.dialogStyle':'custom','workbench.startupEditor':'none','files.hotExit':'off'}));
   const log=await fs.open(path.join(directory,'code.log'),'w'),common=[`--user-data-dir=${path.join(directory,'profile')}`,`--extensions-dir=${path.join(directory,'extensions')}`];
   execFileSync('/usr/bin/code',[...common,'--install-extension',vsix,'--force'],{stdio:['ignore',log.fd,log.fd]});
   const server=net.createServer();await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const port=server.address().port;await new Promise(resolve=>server.close(resolve));
   let code=spawn('/usr/share/code/code',[...common,`--remote-debugging-port=${port}`,'--skip-welcome','--skip-release-notes','--disable-updates','--disable-telemetry','--disable-workspace-trust','--new-window',root],{stdio:['ignore',log.fd,log.fd]});
-  let socket,inspect,send;
+  let socket,readerSocket,inspect,send;
   async function connect() {
     socket?.close();const page=await until(async()=>{try{return(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='page');}catch{return false;}});
     socket=new WebSocket(page.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{socket.onopen=resolve;socket.onerror=reject;});
@@ -55,12 +61,33 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
     await until(()=>inspect("document.body.innerText.includes('Scene path and project references saved')"));
     await until(async()=>{try{return (await r.readManifest(destination)).scenes.find(s=>s.id===manifest.scenes[0].id).file==='scenes/workshop/renamed-account.md';}catch{return false;}});
     const renamed=await r.readManifest(destination);assert.equal(renamed.scenes[0].id,manifest.scenes[0].id);await fs.access(path.join(destination,renamed.scenes[0].file));
+    let titledPreviewImage=false;
+    if(!supplied) {
+      const text=await fs.readFile(path.join(destination,renamed.scenes[0].file),'utf8');assert.ok(text.includes('"Authored lamp title"'));
+      const line=text.split('\n').findIndex(line=>line.includes('![An original pulsing harbour lamp]'))+1;assert.ok(line>0);
+      await key('Escape');await key('P',2);await until(()=>inspect("Boolean(document.querySelector('.quick-input-widget input')?.checkVisibility())"));
+      await send('Input.insertText',{text:`${renamed.scenes[0].file}:${line}`});await sleep(400);await key('Enter');
+      await until(()=>inspect("[...document.querySelectorAll('.tab.active .label-name')].some(n=>n.textContent==='renamed-account.md')"));
+      await command('Story Teller: Preview This Beat');
+      const target=await until(async()=>(await(await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t=>t.type==='iframe'&&t.url.includes('murmurationpress.story-teller')));
+      readerSocket=new WebSocket(target.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{readerSocket.onopen=resolve;readerSocket.onerror=reject;});
+      let serial=0;const pending=new Map();readerSocket.onmessage=event=>{const response=JSON.parse(event.data),done=pending.get(response.id);if(done){pending.delete(response.id);done(response);}};
+      const reader=expression=>new Promise((resolve,reject)=>{
+        const id=++serial,timer=setTimeout(()=>{pending.delete(id);reject(Error('Reader probe timeout'));},10000);
+        pending.set(id,response=>{clearTimeout(timer);if(response.error||response.result?.exceptionDetails)reject(Error(JSON.stringify(response.error||response.result.exceptionDetails)));else resolve(response.result.result.value);});
+        readerSocket.send(JSON.stringify({id,method:'Runtime.evaluate',params:{expression:`(()=>{const doc=document.getElementById('active-frame')?.contentDocument;return (${expression});})()`,returnByValue:true,userGesture:true}}));
+      });
+      await until(()=>reader("doc?.getElementById('status')?.textContent.includes('ready')"));
+      await reader("doc.getElementById('play').click()");
+      await until(()=>reader("[...doc.querySelectorAll('img')].some(img=>img.alt==='An original pulsing harbour lamp'&&img.complete&&img.naturalWidth>0)"));
+      titledPreviewImage=true;
+    }
     // Export the actual editor-renamed project through the core exporter; the
     // standalone HTTP playback suite exercises the resulting reader separately.
     const web=path.join(directory,'web');await require('../src/web-export.cjs').exportWeb(destination,web);
     if(supplied)assert.deepEqual(await r.inventory(supplied),suppliedBefore);
-    const evidence={version:JSON.parse(await fs.readFile('/usr/share/code/resources/app/package.json')).version,mode:'normal installed VSIX; no development/test flags',fixture:supplied?'private project copied before use':'synthetic',cancellationPreservedOriginal:true,migrationPreservedOriginal:true,reportValidated:true,renameMoveManifestAndFile:true,sceneIdentityPreserved:true,webExport:web,root:directory};
+    const evidence={version:JSON.parse(await fs.readFile('/usr/share/code/resources/app/package.json')).version,mode:'normal installed VSIX; no development/test flags',fixture:supplied?'private project copied before use':'synthetic',cancellationPreservedOriginal:true,migrationPreservedOriginal:true,reportValidated:true,renameMoveManifestAndFile:true,sceneIdentityPreserved:true,titledPreviewImage,webExport:web,root:directory};
     await fs.writeFile(path.join(directory,'evidence.json'),r.json(evidence));console.log(r.json(evidence));
   }catch(error){if(inspect)await fs.writeFile(path.join(directory,'failure.json'),r.json(await inspect('({body:document.body.innerText})').catch(e=>({error:e.message}))));console.error(`Failure profile: ${directory}`);throw error;}
-  finally{socket?.close();code.kill('SIGKILL');await log.close();}
+  finally{readerSocket?.close();socket?.close();code.kill('SIGKILL');await log.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
