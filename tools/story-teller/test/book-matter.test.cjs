@@ -120,7 +120,7 @@ test('newly imported matter rewrites supported images and preserves original sou
   const original=await fs.readFile(path.join(folder,'Opening.md'));
   const prepared=await importer.resolveAssets(importer.plan(importer.discover(await importer.scan(folder),folder),'order'),folder);
   const dest=path.join(f.root,'asset-import');await importer.writeProject(prepared,dest);
-  const front=await fs.readFile(path.join(dest,'Front Matter.md'),'utf8');assert.match(front,/\]\(assets\/portrait-[a-f0-9]+\.png\)/);
+  const front=await fs.readFile(path.join(dest,'Front Matter.md'),'utf8');assert.match(front,/\]\(assets\/portrait\.png\)/);
   assert.deepEqual(await fs.readFile(path.join(folder,'Opening.md')),original);assert.deepEqual(await fs.readFile(path.join(dest,'metadata/front-matter-0.md')),original);
   assert.equal((await prepareWeb(dest)).assets.size,1);
 });

@@ -1,0 +1,10 @@
+{
+  "fixture": "EMERGENCE disposable complete copy",
+  "automaticMigration": "blocked safely before writes",
+  "blocker": "percent-encoded vault provenance path in unknown HTML comment metadata requires manual review",
+  "blockers": 1,
+  "sourceInventoryUnchanged": true,
+  "disposableInventoryUnchanged": true,
+  "noSuccessfulValidationClaimed": true,
+  "earlierAuthorAcceptanceRetained": true
+}

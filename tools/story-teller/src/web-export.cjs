@@ -92,7 +92,7 @@ async function prepareWeb(projectRoot, options = {}) {
     warnings.push(...note.diagnostics);
   }
   for(const scene of scenes)Object.assign(targets,scene.data.supporting.links);
-  const book={version:1,id:digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),sequence:orderedRoots(manifest).map(entry=>({kind:entry.kind,id:entry.item.id})),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
+  const book={version:1,id:manifest.publicationId || digest(documents.map(s=>s.id).join('\n')),title:String(manifest.title||'Story Teller'),sequence:orderedRoots(manifest).map(entry=>({kind:entry.kind,id:entry.item.id})),parts:manifest.parts.map(p=>({id:p.id,title:String(p.title),scenes:p.scenes})),scenes:scenes.filter(item=>item.kind==='scene').map(({data,...scene})=>scene),readingOrder:scenes.map(({data,...scene})=>scene),notes,targets};
   const analytics = analyticsConfig(options.analytics ?? manifest.webAnalytics, scenes);
   if (analytics) book.analytics = analytics;
   return {root,book,scenes,assets,snapshots,warnings:[...new Set(warnings)]};

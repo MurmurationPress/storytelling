@@ -1,0 +1,11 @@
+{
+  "version": "1.144.0",
+  "mode": "normal installed VSIX; no development/test flags",
+  "fixture": "private project copied before use",
+  "cancellationPreservedOriginal": true,
+  "migrationPreservedOriginal": true,
+  "reportValidated": true,
+  "renameMoveManifestAndFile": true,
+  "sceneIdentityPreserved": true,
+  "vsix_sha256": "9f9a4189b4d4212c857f65e822fea5804fe5cb3065dfa6647ffa7634b957ec16"
+}

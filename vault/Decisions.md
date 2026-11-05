@@ -5,6 +5,10 @@ status: active
 
 # Decisions
 
+## 2026-11-05 — Preserve adaptation edits during readable-storage reimport
+
+**Ted's acceptance:** for the requested readable-filesystem work extending issue #20, unchanged source preserves authored adaptation edits; changes on both sides are conflicts for explicit resolution; source-deleted scenes stay in the adaptation for author review. This accepts the reconciliation policy, not the implementation or a production migration. The proposed architecture and implementation evidence remain separate in [[Readable Story Teller Storage]]. Migration testing uses disposable copies, with no release, merge or deployment before acceptance.
+
 ## 2026-10-23 — Accept reader conveniences; trial explicit supporting notes
 
 **Ted's acceptance:** automatic scroll-follow, all five direct keyboard commands and Part–Scene Outline autoplay at `bf846888f0cbedc70328ff103eea12b9ea8b861e` are tested and accepted. This supersedes their earlier pending statuses. It is not a release, licence or general reader-compatibility decision.

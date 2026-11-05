@@ -48,7 +48,7 @@ test('shared assets relocate with collision-safe names and originals remain unch
   const dest = path.join(f.root, 'adaptation'); const manifest = await m.writeProject(prepared, dest);
   assert.equal(m.orderedScenes(manifest).length, 13);
   const imported = await fs.readFile(path.join(dest, manifest.scenes.at(-1).file), 'utf8');
-  assert.match(imported, /!\[Alt\]\(\.\.\/assets\/picture-[0-9a-f]{64}\.png\)/);
+  assert.match(imported, /!\[Alt\]\(\.\.\/assets\/picture\.png\)/);
   assert.deepEqual(await fs.readFile(source), before);
   assert.deepEqual(await fs.readFile(path.join(dest, 'metadata', 'book.md')), await fs.readFile(path.join(f.root, 'Books/Lantern.md')));
   await assert.rejects(m.writeProject(prepared, dest), /already exists/);
@@ -81,7 +81,7 @@ test('same-basename media from different directories have distinct copied names'
   const prepared = await m.resolveAssets(m.plan(m.discover(await m.scan(f.book), f.book), 'manuscript_order_key'), f.root);
   const names = prepared.assets.map(a => a.name);
   assert.equal(new Set(names).size, 2);
-  assert.ok(names.every(n => /picture-[a-f0-9]{64}\.png/.test(n)));
+  assert.ok(names.every(n => /picture(?:-[a-f0-9]{8,64})?\.png/.test(n)));
 });
 test('selected numeric and structured fields sort beyond scene nine', () => {
   assert.deepEqual([10, 2, 1].sort(m.compareValue), [1, 2, 10]);
@@ -100,7 +100,7 @@ test('Unicode, spaces, escaped paths, unsupported and ambiguous embeds receive d
   assert.match(prepared.unresolved.join('\n'), /ambiguous media embed/);
   assert.match(prepared.warnings.join('\n'), /unsupported media format \.svg/);
   const rewritten = m.rewriteScene(prepared.scenes[0]);
-  assert.match(rewritten, /!\[alt\]\(\.\.\/assets\/A%20spaced%20%F0%9F%9B%B0%EF%B8%8F-[a-f0-9]{64}\.png\)/);
+  assert.match(rewritten, /!\[alt\]\(\.\.\/assets\/a-spaced\.png\)/);
   assert.match(rewritten, /`!\[\[literal\.png\]\]`/);
   assert.match(rewritten, /\\!\[\[escaped\.png\]\]/);
   assert.match(rewritten, /\[\[ordinary link\]\]/);

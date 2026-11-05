@@ -56,7 +56,7 @@ test('bare wiki PNG in a callout resolves uniquely under the explicitly selected
  const narrow=await m.resolveAssets(await f.plan(),f.folder);assert.equal(narrow.unresolved.length,1);assert.match(narrow.unresolved[0],/Child.md:7: Shared graph.png: Not found/);
  const prepared=await m.resolveAssets(await f.plan(),f.root);assert.deepEqual(prepared.unresolved,[]);assert.equal(prepared.assets[0].source,image);
  const dest=path.join(f.root,'project'),manifest=await m.writeProject(prepared,dest),scene=manifest.scenes.find(s=>s.title==='Child'&&s.partId===manifest.parts[0].id);
- const content=await fs.readFile(path.join(dest,scene.file),'utf8');assert.match(content,/> !\[A fictional chart\.\]\(\.\.\/assets\/Shared%20graph-/);
+ const content=await fs.readFile(path.join(dest,scene.file),'utf8');assert.match(content,/> !\[A fictional chart\.\]\(\.\.\/assets\/shared-graph/);
  assert.equal(await fs.readFile(path.join(f.folder,'First/Child.md'),'utf8'),source);assert.deepEqual(await fs.readFile(path.join(dest,'assets',prepared.assets[0].name)),await fs.readFile(image));
  const web=await prepareWeb(dest);assert.equal(web.assets.size,1);assert.ok(web.scenes.find(s=>s.id===scene.id).data.sceneTitleInBody);
 });

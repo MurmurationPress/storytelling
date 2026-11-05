@@ -1,0 +1,25 @@
+{
+  "originalReviewedHead": "a159a8087b01f398bd20b3bd1aab2cc86dcd4548",
+  "originalFourProbes": {
+    "pass": 0,
+    "fail": 4
+  },
+  "remediationCodeHead": "825df4a5972052a0d2ef83b24fce0c3da26545f7",
+  "sameFourProbesAfterFix": {
+    "pass": 4,
+    "fail": 0
+  },
+  "preservationSuite": {
+    "pass": 14,
+    "fail": 0
+  },
+  "fullSuite": {
+    "pass": 399,
+    "fail": 0,
+    "skip": 0
+  },
+  "checkBuildPackage": "pass",
+  "additionalIndependentFindings": "unsupported HTML/code/style/SVG references and encoded Markdown reference definitions now block before edits",
+  "vsixVersion": "0.19.1",
+  "vsixSha256": "73b78879716264be54f818cfdb3838407d9db3f150489c7c0a958631f541a024"
+}

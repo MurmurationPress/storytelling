@@ -1981,3 +1981,54 @@ the separately recorded component-metadata migration Undo verification limitatio
 No actual adaptation, PrimeTrilogy manuscript, merge, deployment or publication is
 included. Author acceptance remains open; Safari/iPad and human screen-reader
 acceptance are not inferred from DOM/keyboard/contrast checks.
+
+# Readable storage — 0.19.0 review candidate (2026-11-05)
+
+New imports use version 2 readable source paths with permanent logical identities,
+explicit sequence, a stable publication key and an import ledger. New extension
+commands review staged sibling-copy migration/reimport and rename/repair scene
+files. Originals remain intact during migration. The accepted reimport policy
+preserves adaptation edits and reports conflicts/deletions for author review.
+
+Validation: 384 passing unit tests, check/build/package; normal installed-VSIX
+migration/cancel/nested-rename/save/export checks; actual HTTP reader playback
+and same-origin legacy reading-position preservation. An independent disposable
+Skip inventory matches 14 scenes, 150 beats, 598 components, 700 references and
+52 assets, with zero reader warnings and unchanged original file hashes.
+
+The broad default native runner **does not pass**: its visible-folding assertion
+times out in both this candidate and unchanged 0.18.1-email. Do not infer a cure
+or exhaustive native-editor coverage from the narrower passing migration test.
+The navigation scope also times out at its synthetic keyboard beat-title prompt
+in both candidate and unchanged baseline; this is not a passing navigation run.
+
+See [validation and evidence](test/evidence/readable-storage/README.md) and the
+[author migration/recovery guide](READABLE-FILES.md). Implementation acceptance
+remains pending. No production project, release or deployment was changed; no
+new actual-device, human listening or screen-reader acceptance is claimed.
+
+## Readable storage preservation remediation — 0.19.1 (2026-11-05)
+
+Supersedes the pending implementation-acceptance status above: Ted granted author
+acceptance following EMERGENCE testing at a159a8087b01f398bd20b3bd1aab2cc86dcd4548.
+Independent review then blocked integration on four preservation/reference
+findings. All four permanent regression probes fail at that head and pass after
+remediation. Metadata ownership, independent literal/authored-token validation,
+lossless UTF-8 handling, Markdown title parsing and parent-directory collision
+checks address them; the historical PrimeTrilogy evidence SHA is restored.
+
+The revised full suite passes 399/399 tests, syntax checks, reader builds and
+packaging. Fresh independent cumulative review also found and verified fixes
+for unsupported text-reference scanning and encoded reference definitions.
+Normal installed VSIX migration/cancel/nested rename, actual titled-image preview,
+full HTTP playback, saved-position replacement and disposable Skip semantic /
+installed-editor / HTTP checks pass. Skip's original inventory is unchanged.
+
+The current EMERGENCE copy safely blocks on encoded vault provenance in unknown
+HTML-comment metadata; both source and disposable inventories remain unchanged.
+That metadata requires manual review. Earlier EMERGENCE acceptance is retained;
+current successful automatic migration is not claimed. The documented baseline
+native folding/keyboard-prompt limitations remain unresolved, separately from
+passing targeted checks. No production project, release or deployment changed.
+See [remediation evidence](test/evidence/readable-storage-remediation/README.md)
+and [migration guide](READABLE-FILES.md) for checks, limitations and reproduction.

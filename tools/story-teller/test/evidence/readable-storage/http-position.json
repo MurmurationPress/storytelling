@@ -1,0 +1,13 @@
+{
+  "method": "same HTTP origin; existing browser localStorage; legacy export replaced by migrated export",
+  "browser": "156.0.8078.79",
+  "publicationKeyPreserved": true,
+  "sceneIdentityPreserved": true,
+  "beatIndexPreserved": true,
+  "reopensReady": true,
+  "pageErrors": [],
+  "unverified": [
+    "Safari/iPad/iPhone",
+    "human screen-reader use"
+  ]
+}
