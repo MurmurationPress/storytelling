@@ -1,0 +1,16 @@
+{
+  "fixture": "private disposable migrated/renamed project export",
+  "browser": "156.0.8078.79",
+  "sceneCount": 14,
+  "contentsCount": 16,
+  "selectedFirstStory": true,
+  "nextBeatAndReopenPosition": true,
+  "httpErrors": [],
+  "pageErrors": [],
+  "reducedMotion": "browser emulation",
+  "unverified": [
+    "actual devices",
+    "human listening",
+    "human screen reader"
+  ]
+}

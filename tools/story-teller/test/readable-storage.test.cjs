@@ -195,3 +195,13 @@ test('reimport within a containing vault does not mistake copied adaptation imag
   const prepared=await m.resolveAssets(m.plan(m.discover(await m.scan(f.source),f.source),'order'),f.root);assert.deepEqual(prepared.unresolved,[]);
   const output=path.join(f.root,'inside-vault');await m.writeProject(prepared,output);assert.equal((await planReimport(output,f.source,f.root)).noop,true);
 });
+test('migration retains user-file executable bits and restrictive project directory permissions',async t=>{
+  const f=await legacy(t);await fs.writeFile(path.join(f.project,'author-tool.sh'),'#!/bin/sh\nexit 0\n',{mode:0o750});await fs.chmod(f.project,0o700);
+  const destination=path.join(f.root,'permissions');await r.materialize(await r.planMigration(f.project),destination);
+  assert.equal((await fs.stat(path.join(destination,'author-tool.sh'))).mode&0o777,0o750);assert.equal((await fs.stat(destination)).mode&0o777,0o700);
+});
+test('a source-deleted opening scene stays in its original position with stable neighbouring labels',async t=>{
+  const f=await fixture(t);await fs.unlink(path.join(f.source,'A.md'));
+  const p=await planReimport(f.project,f.source);assert.deepEqual(p.blockers,[]);assert.deepEqual(p.manifest.sequence,f.manifest.sequence);assert.deepEqual(p.manifest.scenes.map(s=>[s.id,s.label]),f.manifest.scenes.map(s=>[s.id,s.label]));
+  const output=path.join(f.root,'deleted-opening');await r.materialize(p,output);assert.equal((await planReimport(output,f.source)).noop,true);
+});

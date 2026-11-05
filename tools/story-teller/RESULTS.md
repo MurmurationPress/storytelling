@@ -43,7 +43,7 @@ Neither that PR nor its H1 behaviour is marked accepted or merged. Main was
 Component Types are preserved. No manuscript content or private image is committed.
 
 **Established causes:** read-only inspection of the current local PrimeTrilogy
-revision `382bcf5656c340a5988df5064f26482a2d95aef3` confirms First Detection is a
+revision `383bcf5656c340a5988df5064f26482a2d95aef3` confirms First Detection is a
 scene parented to EMERGENCE itself. MWC `08ec248d6bdd1cef33cd1eab255df24430a8e9fa`,
 `src/manuscript/ManuscriptOrder.ts` (`distributedEntries`/`appendChildren`), sorts
 book children (parts and direct scenes) as siblings and then visits part children.
@@ -1981,6 +1981,7 @@ the separately recorded component-metadata migration Undo verification limitatio
 No actual adaptation, PrimeTrilogy manuscript, merge, deployment or publication is
 included. Author acceptance remains open; Safari/iPad and human screen-reader
 acceptance are not inferred from DOM/keyboard/contrast checks.
+
 # Readable storage — 0.19.0 review candidate (2026-11-05)
 
 New imports use version 2 readable source paths with permanent logical identities,
@@ -1989,7 +1990,7 @@ commands review staged sibling-copy migration/reimport and rename/repair scene
 files. Originals remain intact during migration. The accepted reimport policy
 preserves adaptation edits and reports conflicts/deletions for author review.
 
-Validation: 382 passing unit tests, check/build/package; normal installed-VSIX
+Validation: 384 passing unit tests, check/build/package; normal installed-VSIX
 migration/cancel/nested-rename/save/export checks; actual HTTP reader playback
 and same-origin legacy reading-position preservation. An independent disposable
 Skip inventory matches 14 scenes, 150 beats, 598 components, 700 references and

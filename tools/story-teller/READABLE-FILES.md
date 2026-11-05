@@ -59,7 +59,7 @@ Run **Story Teller: Reimport Markdown Manuscript** from the adaptation. Select t
 - Source unchanged: preserve adaptation edits.
 - Only source changed: update an unchanged imported file.
 - Both changed: block and report the conflict, even if a merge might appear straightforward.
-- Source scene deleted: retain its adaptation and report it for author review.
+- Source scene deleted: retain its adaptation and existing sequence, membership and labels for author review. Deletion review does not silently move retained scenes to the end.
 - Source reordered/title changed: retain IDs and filenames; update source-controlled structure only when it does not conflict with author changes.
 - Source moved unchanged: reuse a unique source-digest match. Multiple matches or changed-and-moved notes without reliable identity block rather than guessing from titles.
 

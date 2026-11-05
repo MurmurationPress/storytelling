@@ -73,6 +73,16 @@ async function planReimport(root,sourceFolder,assetRoot=sourceFolder) {
     for(const p of deletedParts)next.parts.push(structuredClone(p));
     for(const s of deletedScenes){next.scenes.push(structuredClone(s));if(s.partId!==null){const p=next.parts.find(p=>p.id===s.partId);if(!p.scenes.includes(s.id))p.scenes.push(s.id);}}
     for(const entry of manifest.sequence||[])if((entry.kind==='part'?deletedParts:deletedScenes).some(s=>s.id===entry.id))next.sequence.push(entry);
+    if(deletedScenes.length||deletedParts.length) {
+      // Retaining a source-deleted adaptation must not quietly move it to the
+      // end, renumber its neighbours or orphan moved children. Deletion review
+      // retains the existing structure while allowing safe content updates.
+      const incomingScenes=new Map(next.scenes.map(s=>[s.id,s])),incomingParts=new Map(next.parts.map(p=>[p.id,p]));
+      next.scenes=manifest.scenes.map(old=>({...incomingScenes.get(old.id),partId:old.partId,label:old.label,orderValue:old.orderValue}));
+      next.parts=manifest.parts.map(old=>({...incomingParts.get(old.id),scenes:[...old.scenes],orderValue:old.orderValue}));
+      next.sequence=structuredClone(manifest.sequence);
+      warnings.push('Source deletions retain existing sequence, membership and labels. Review any requested structural changes explicitly.');
+    }
     // Unknown metadata and author settings survive; field changes on both sides
     // are conflicts, rather than a hidden replacement of the manifest.
     fresh=structuredClone(managed(next));

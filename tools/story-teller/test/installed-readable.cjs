@@ -9,7 +9,10 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
 (async()=>{
   const vsix=path.resolve(process.argv[2]),directory=await fs.mkdtemp(path.join(os.tmpdir(),'story-installed-readable-'));
   const root=path.join(directory,'legacy'),destination=root+' - readable';
-  const manifest=await require('./readable-fixture.cjs').legacyWebFixture(root),before=await r.inventory(root);
+  const supplied=process.argv[3]&&await fs.realpath(process.argv[3]);
+  const suppliedBefore=supplied&&await r.inventory(supplied);
+  if(supplied)await fs.cp(supplied,root,{recursive:true});
+  const manifest=supplied?await r.readManifest(root):await require('./readable-fixture.cjs').legacyWebFixture(root),before=await r.inventory(root);
   await fs.mkdir(path.join(directory,'profile/User'),{recursive:true});
   await fs.writeFile(path.join(directory,'profile/User/settings.json'),JSON.stringify({'files.simpleDialog.enable':true,'window.dialogStyle':'custom','workbench.startupEditor':'none','files.hotExit':'off'}));
   const log=await fs.open(path.join(directory,'code.log'),'w'),common=[`--user-data-dir=${path.join(directory,'profile')}`,`--extensions-dir=${path.join(directory,'extensions')}`];
@@ -46,8 +49,8 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
     socket?.close();code.kill('SIGKILL');await sleep(500);
     const nextProfile=path.join(directory,'profile-readable');await fs.mkdir(path.join(nextProfile,'User'),{recursive:true});await fs.copyFile(path.join(directory,'profile/User/settings.json'),path.join(nextProfile,'User/settings.json'));
     code=spawn('/usr/share/code/code',[`--user-data-dir=${nextProfile}`,`--extensions-dir=${path.join(directory,'extensions')}`,`--remote-debugging-port=${port}`,'--skip-welcome','--disable-workspace-trust','--disable-updates','--disable-telemetry','--new-window',destination],{stdio:['ignore',log.fd,log.fd]});await connect();
-    await command('Story Teller: Rename / Move Scene File');await until(async()=>String(await widget()).includes('Two accounts'));
-    await input('Two accounts');await until(async()=>String(await widget()).includes('New scene path'));
+    await command('Story Teller: Rename / Move Scene File');await until(async()=>String(await widget()).includes(manifest.scenes[0].title));
+    await input(manifest.scenes[0].title);await until(async()=>String(await widget()).includes('New scene path'));
     await input('scenes/workshop/renamed-account.md');
     await until(()=>inspect("document.body.innerText.includes('Scene path and project references saved')"));
     await until(async()=>{try{return (await r.readManifest(destination)).scenes.find(s=>s.id===manifest.scenes[0].id).file==='scenes/workshop/renamed-account.md';}catch{return false;}});
@@ -55,7 +58,8 @@ async function until(fn,timeout=30000){const end=Date.now()+timeout;let last;whi
     // Export the actual editor-renamed project through the core exporter; the
     // standalone HTTP playback suite exercises the resulting reader separately.
     const web=path.join(directory,'web');await require('../src/web-export.cjs').exportWeb(destination,web);
-    const evidence={version:JSON.parse(await fs.readFile('/usr/share/code/resources/app/package.json')).version,mode:'normal installed VSIX; no development/test flags',cancellationPreservedOriginal:true,migrationPreservedOriginal:true,reportValidated:true,renameMoveManifestAndFile:true,sceneIdentityPreserved:true,webExport:web,root:directory};
+    if(supplied)assert.deepEqual(await r.inventory(supplied),suppliedBefore);
+    const evidence={version:JSON.parse(await fs.readFile('/usr/share/code/resources/app/package.json')).version,mode:'normal installed VSIX; no development/test flags',fixture:supplied?'private project copied before use':'synthetic',cancellationPreservedOriginal:true,migrationPreservedOriginal:true,reportValidated:true,renameMoveManifestAndFile:true,sceneIdentityPreserved:true,webExport:web,root:directory};
     await fs.writeFile(path.join(directory,'evidence.json'),r.json(evidence));console.log(r.json(evidence));
   }catch(error){if(inspect)await fs.writeFile(path.join(directory,'failure.json'),r.json(await inspect('({body:document.body.innerText})').catch(e=>({error:e.message}))));console.error(`Failure profile: ${directory}`);throw error;}
   finally{socket?.close();code.kill('SIGKILL');await log.close();}

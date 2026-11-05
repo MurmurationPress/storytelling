@@ -4,12 +4,13 @@ This is implementation evidence for issue #20 and the requested broader storage/
 
 ## Passing checks
 
-- Baseline: 359 unit tests. Final candidate: **382/382 unit tests**, zero failures/skips; `npm run check`, build and VSIX packaging pass.
+- Baseline: 359 unit tests. Final candidate: **384/384 unit tests**, zero failures/skips; `npm run check`, build and VSIX packaging pass.
 - [Normal installed VSIX](installed-migration.json): VS Code 1.144.0 on Linux, isolated profiles/extensions directories, no extension development/test flags. Actual commands verify read-only preview/cancel, validated migration, preserved original, opening the result and nested scene move/manifest saves. The scene ID stays unchanged and the moved result exports normally. OS-native folder pickers and Workspace Trust are outside this check.
 - [HTTP playback](http-playback.json): actual export of that installed-editor migrated/renamed synthetic project, served over HTTP in Chrome 156.0.8078.79. Covers scene/beat turns, chat delivery/read ticks, formatted annotation prefixes, literal YAML, sound graph cleanup, nested supporting panels/links, scroll following, preferences/reopening, rapid stale-scene rejection and reduced-motion/touch **emulation**. It is not device/human listening evidence.
 - [Existing reading position](http-position.json): the same HTTP origin and browser localStorage retain publication key, scene ID and beat index when a legacy export is replaced by a migrated export; reopening stays ready. No page errors.
 - [Private Skip copy](skip-inventory.json): an independent parsed semantic inventory compares 14 scenes, 16 scene/matter documents, 150 beats, 598 components, 700 references and 52 assets. Identity, text/component/settings/media semantics and asset bytes match. 65 paths change, reader validation has zero warnings, repeated migration is a no-op. The supplied original's complete inventory is checked unchanged. No private manuscript, media, filenames or raw migration report is committed here.
-- Deterministic tests additionally cover conflict preservation, no-write unchanged reimport, changed sources, duplicate names, portable slugs/reserved names/Unicode, ordering, source relocation/moves, source asset rename/reuse, nested formatted media and literal code, book covers, missing/duplicate media behavior, dry-run/cancel, stale buffers/files, interrupted staging/retry, unknown fields/files, unusual filenames, ambiguous JSON and numeric metadata, reference resolution and legacy baseline adoption.
+- [Private Skip installed-editor check](installed-skip.json) exercises the actual migration, cancellation, nested scene move, save and export commands on a disposable copy. Its [HTTP smoke check](http-skip.json) opens the first story, turns a beat and reopens at that position, with 14 scenes/16 Contents entries and no page/HTTP errors. No private text or screenshots are recorded.
+- Deterministic tests additionally cover conflict preservation, no-write unchanged reimport, changed sources, duplicate names, portable slugs/reserved names/Unicode, ordering, source relocation/moves, source asset rename/reuse, nested formatted media and literal code, book covers, missing/duplicate media behavior, dry-run/cancel, stale buffers/files, interrupted staging/retry, unknown fields/files, unusual filenames, Git executable bits/directory permissions, ambiguous JSON and numeric metadata, reference resolution, deletion-position preservation and legacy baseline adoption.
 
 ## Native runner limitation
 
@@ -45,5 +46,10 @@ For private acceptance, the following reads the supplied project, makes a dispos
 ```sh
 node test/real-readable.cjs '/path/to/Story Teller - The Curious Adventures of Skip'
 ```
+
+To exercise the commands in the installed editor on a private project, add its
+path as the third argument to `node test/installed-readable.cjs VSIX PROJECT`.
+That runner also makes its own disposable copy before use. The returned export
+can be checked with `python test/readable-private-web.py EXPORT EVIDENCE.json`.
 
 For manual testing install the VSIX, open a disposable full project copy, run **Migrate Project to Readable Files**, review/cancel once, then create the validated sibling. Open that sibling and inspect scenes, matter, representative components and supporting links. Export to another unused directory and test over HTTP. Keep the original copy and inspect the permanent migration report/Git diff before deciding whether to replace any working copy.

@@ -11,18 +11,19 @@ const json = value => JSON.stringify(value, null, 2) + '\n';
 const textFile = name => /\.(md|chat|ya?ml|json|mmd|txt|css|html|js|cjs|svg)$/i.test(name);
 async function inventory(root) {
   root = await fs.realpath(root);
-  const files = Object.create(null), directories = [], names = new Set();
+  const files = Object.create(null), fileModes=Object.create(null), directoryModes=Object.create(null), directories = [], names = new Set();
   async function walk(relative) {
     for (const entry of (await fs.readdir(path.join(root,relative),{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name,'en'))) {
       const name = relative ? `${relative}/${entry.name}` : entry.name;
       if (names.has(key(name))) throw Error(`Case-insensitive or Unicode path collision: ${name}`);
       names.add(key(name));
       if (entry.isSymbolicLink() || (!entry.isFile() && !entry.isDirectory())) throw Error(`Unsupported filesystem entry (review manually): ${name}`);
-      if (entry.isDirectory()) { directories.push(name); await walk(name); }
-      else files[name] = hash(await fs.readFile(path.join(root,name)));
+      const mode=(await fs.stat(path.join(root,name))).mode&0o777;
+      if (entry.isDirectory()) { directoryModes[name]=mode;directories.push(name); await walk(name); }
+      else {files[name] = hash(await fs.readFile(path.join(root,name)));fileModes[name]=mode;}
     }
   }
-  await walk(''); return {files,directories};
+  await walk(''); return {files,directories,fileModes,directoryModes,rootMode:(await fs.stat(root)).mode&0o777};
 }
 async function readManifest(root) {
   const raw=await fs.readFile(path.join(root,MANIFEST),'utf8');
@@ -240,6 +241,11 @@ async function materialize(plan,destination,{beforeCommit=()=>{},beforeValidate=
     if(resultInventory.files[REPORT] && plan.kind==='migration')throw Error('Migration report already exists');
     if(plan.kind==='migration') {await fs.mkdir(path.join(target,'metadata'),{recursive:true});await fs.writeFile(path.join(target,REPORT),json(report),{flag:'wx'});}
     await fs.writeFile(path.join(staging,'transaction.json'),json({version:1,status:'validated',destination,report}));
+    // Keep Git's executable bit and private author-file permissions. Apply
+    // modes after edits so read-only originals can still be staged safely.
+    for(const [file,mode]of Object.entries(plan.before.fileModes))await fs.chmod(path.join(target,Object.hasOwn(plan.mapping,file)?plan.mapping[file]:file),mode);
+    for(const [dir,mode]of Object.entries(plan.before.directoryModes))await fs.chmod(path.join(target,dir),mode);
+    await fs.chmod(target,plan.before.rootMode);
     await fs.mkdir(destination);reserved=true;
     await fs.rename(target,destination);reserved=false;
     await fs.rm(staging,{recursive:true,force:true});
