@@ -34,6 +34,7 @@ function authoredSnapshot(source,file,mapping,after) {
     const [,raw,suffix]=value.match(/^([^#?]*)(.*)$/);
     let decoded;try{decoded=decodeURIComponent(raw);}catch{return value;}
     const resolved=decoded?path.posix.normalize(path.posix.join(path.posix.dirname(file),decoded)):file;
+    if(after&&Object.hasOwn(mapping,resolved)&&mapping[resolved]!==resolved)throw Error(`${file}: unresolved moved reference ${value}; refusing to validate or save the rewrite`);
     const identity=after?(Object.keys(mapping).find(old=>mapping[old]===resolved)||resolved):resolved;
     return `project:${identity}${suffix}`;
   }

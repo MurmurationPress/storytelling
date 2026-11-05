@@ -12,6 +12,13 @@ const slash = value => value.split(path.sep).join('/');
 const json = value => JSON.stringify(value, null, 2) + '\n';
 const textFile = name => /\.(md|markdown|chat|ya?ml|json|mmd|txt|css|html?|js|cjs|mjs|svg)$/i.test(name);
 async function readRewriteText(root,file) {return losslessUtf8(await fs.readFile(path.join(root,file)),file);}
+function referencePattern(value) {
+  // Match raw and percent-encoded UTF-8 spellings, retaining original offsets so
+  // code literals and already parsed links can be excluded without guessing.
+  const escaped=char=>char.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+  const hex=byte=>byte.toString(16).padStart(2,'0').replace(/[a-f]/g,c=>`[${c}${c.toUpperCase()}]`);
+  return new RegExp([...value].map(char=>`(?:${escaped(char)}|${[...Buffer.from(char)].map(byte=>'%'+hex(byte)).join('')})`).join(''),'g');
+}
 function markdownLinks(source) {
   const result=[];
   for(const m of source.matchAll(/!?\[((?:\\.|[^\]\\\n])*)\]\(/g)) {
@@ -139,15 +146,14 @@ function rewriteReferences(source, oldFile, newFile, mapping) {
   }
   // A reference outside recognised syntax, including metadata/code/HTML, must
   // be resolved explicitly. Archived manuscript metadata is preserved too.
-  const scanSource=markdownSource?source:source.replace(/(?:%[0-9a-f]{2})+/gi,run=>{try{return decodeURIComponent(run);}catch{return run;}});
   for (const [from,to] of Object.entries(mapping)) {
     if (from === to) continue;
     for (const needle of new Set([from,path.posix.relative(path.posix.dirname(oldFile),from),path.posix.basename(from)])) {
       if (!needle) continue;
-      let offset = -1;
-      while ((offset = scanSource.indexOf(needle,offset+1)) >= 0) {
+      for(const match of source.matchAll(referencePattern(needle))) {
+        const offset=match.index;
         if(literalAt(offset))continue; // Authored examples/output are not resources.
-        if (!consumed.some(span=>offset>=span.start&&offset+needle.length<=span.end)) throw Error(`${oldFile}: unrecognised reference to ${from}; review manually before moving it`);
+        if (!consumed.some(span=>offset>=span.start&&offset+match[0].length<=span.end)) throw Error(`${oldFile}: unrecognised reference to ${from}; review manually before moving it`);
       }
     }
   }
