@@ -1,7 +1,7 @@
 'use strict';
 const path=require('node:path');
 const fs=require('node:fs/promises');
-const {inventory,readManifest,readRewriteText,rewriteReferences,remapManifest,MANIFEST,REPORT,json}=require('./readable-project.cjs');
+const {inventory,readManifest,readRewriteText,rewriteReferences,remapManifest,MANIFEST,REPORT,textFile,json}=require('./readable-project.cjs');
 const {assertAuthoredPreserved}=require('./source-preservation.cjs');
 const {key,hash,slug}=require('./readable-paths.cjs');
 const {portablePath}=require('./book-matter.cjs');
@@ -32,7 +32,7 @@ async function planSceneMove(root,id,name,{repair=false}={}) {
   const next=remapManifest(manifest,mapping);
   next.pathAliases={...manifest.pathAliases,[from]:id};
   for(const file of Object.keys(before.files)) {
-    if(file===MANIFEST||file===manifest.importState||file===REPORT||!/\.(md|chat|mmd|json|ya?ml|txt)$/i.test(file))continue;
+    if(file===MANIFEST||file===manifest.importState||file===REPORT||!textFile(file))continue;
     const source=await readRewriteText(root,file),old=repair&&file===name?from:file;
     const content=rewriteReferences(source,old,mapping[old]||file,mapping);
     assertAuthoredPreserved(source,content,old,mapping[old]||file,mapping);

@@ -10,7 +10,7 @@ const MANIFEST = 'story-teller.project.json';
 const REPORT = 'metadata/readable-migration.json';
 const slash = value => value.split(path.sep).join('/');
 const json = value => JSON.stringify(value, null, 2) + '\n';
-const textFile = name => /\.(md|chat|ya?ml|json|mmd|txt|css|html|js|cjs|svg)$/i.test(name);
+const textFile = name => /\.(md|markdown|chat|ya?ml|json|mmd|txt|css|html?|js|cjs|mjs|svg)$/i.test(name);
 async function readRewriteText(root,file) {return losslessUtf8(await fs.readFile(path.join(root,file)),file);}
 function markdownLinks(source) {
   const result=[];
@@ -69,9 +69,11 @@ async function readManifest(root) {
 // blocks a move, rather than a global replacement changing authored prose/code.
 function rewriteReferences(source, oldFile, newFile, mapping) {
   const consumed = [];
+  const markdownSource=/\.(md|markdown|txt|chat)$/i.test(oldFile);
   const structure=require('./structure.cjs').inspectStructure(source);
   const metadataAt=offset=>/\.md$/i.test(oldFile)&&structure.frontmatter?.closed&&offset>=structure.lines[1].start&&offset<structure.lines[structure.frontmatter.end-1].start;
   const literalAt=offset=>{
+    if(!markdownSource)return false; // Backticks in JS/config are not Markdown literals.
     const line=structure.lines.findIndex((line,i)=>offset>=line.start&&offset<(structure.lines[i+1]?.start??source.length+1));
     if(require('./source-literals.cjs').literalLine(structure,line))return true;
     const text=structure.lines[line];
@@ -94,12 +96,12 @@ function rewriteReferences(source, oldFile, newFile, mapping) {
   // Preserve link labels and aliases byte for byte. Fenced formatted components
   // use the same Markdown image syntax as ordinary scenes.
   const replacements = [];
-  for(const link of markdownLinks(source)) {
+  for(const link of markdownSource?markdownLinks(source):[]) {
     if(literalAt(link.start)||metadataAt(link.start))continue;
     const next=rewrite(link.target,link.start,link.end);
     if(next!==link.target)replacements.push({start:link.targetStart,end:link.targetEnd,value:next});
   }
-  for (const m of source.matchAll(/!\[\[([^\]\n]+)\]\]/g)) {
+  for (const m of markdownSource?source.matchAll(/!\[\[([^\]\n]+)\]\]/g):[]) {
     if(literalAt(m.index)||metadataAt(m.index))continue;
     const target = m[1].split('|')[0], offset = m.index + 3;
     // Bare media aliases are ambiguous; supporting-note wikilinks are untouched.
@@ -137,12 +139,13 @@ function rewriteReferences(source, oldFile, newFile, mapping) {
   }
   // A reference outside recognised syntax, including metadata/code/HTML, must
   // be resolved explicitly. Archived manuscript metadata is preserved too.
+  const scanSource=markdownSource?source:source.replace(/(?:%[0-9a-f]{2})+/gi,run=>{try{return decodeURIComponent(run);}catch{return run;}});
   for (const [from,to] of Object.entries(mapping)) {
     if (from === to) continue;
     for (const needle of new Set([from,path.posix.relative(path.posix.dirname(oldFile),from),path.posix.basename(from)])) {
       if (!needle) continue;
       let offset = -1;
-      while ((offset = source.indexOf(needle,offset+1)) >= 0) {
+      while ((offset = scanSource.indexOf(needle,offset+1)) >= 0) {
         if(literalAt(offset))continue; // Authored examples/output are not resources.
         if (!consumed.some(span=>offset>=span.start&&offset+needle.length<=span.end)) throw Error(`${oldFile}: unrecognised reference to ${from}; review manually before moving it`);
       }
@@ -286,4 +289,4 @@ async function materialize(plan,destination,{beforeCommit=()=>{},beforeValidate=
     throw Error(`${error.message}\nOriginal project is unchanged. Recovery staging: ${staging}`,{cause:error});
   }
 }
-module.exports={MANIFEST,REPORT,inventory,readManifest,readRewriteText,rewriteReferences,remapManifest,planMigration,reportFor,materialize,unchanged,json};
+module.exports={MANIFEST,REPORT,textFile,inventory,readManifest,readRewriteText,rewriteReferences,remapManifest,planMigration,reportFor,materialize,unchanged,json};

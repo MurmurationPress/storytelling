@@ -150,3 +150,17 @@ test('a format-looking line in a YAML body cannot turn authored output into form
   const p=await r.planMigration(f.original);assert.deepEqual(p.blockers,[]);const dest=path.join(f.root,'migrated');await r.materialize(p,dest);
   assert.equal(parseScene(await fs.readFile(path.join(dest,p.mapping[scene.file]),'utf8')).beats[0].blocks[0].text,parseScene(source).beats[0].blocks[0].text);
 });
+test('rename blocks affected unsupported HTML, code, style and SVG references before any edit',async t=>{
+  const f=await legacy(t),dest=path.join(f.root,'migrated');await r.materialize(await r.planMigration(f.original),dest);
+  const m=await r.readManifest(dest),scene=m.scenes[0];
+  const cases=[['html',`<a href="${scene.file}">Open scene</a>`],['css',`@import url("${scene.file}");`],['js',`const scene = \`${scene.file}\`;`],['cjs',`module.exports = "${scene.file}";`],['mjs',`export default \`${scene.file}\`;`],['svg',`<svg><a href="${scene.file}"/></svg>`],['json',JSON.stringify({example:`[Scene](${scene.file})`})]];
+  for(const [ext,source]of cases) {
+    const file=path.join(dest,`custom.${ext}`);await fs.writeFile(file,source);
+    const before=await r.inventory(dest);await assert.rejects(planSceneMove(dest,scene.id,'scenes/renamed.md'),/unrecognised reference/);
+    assert.deepEqual(await r.inventory(dest),before);await fs.unlink(file);
+  }
+  const unicodePath='scenes/café.md';
+  await fs.rename(path.join(dest,scene.file),path.join(dest,unicodePath));m.scenes[0].file=unicodePath;await fs.writeFile(path.join(dest,r.MANIFEST),r.json(m));
+  await fs.writeFile(path.join(dest,'custom.html'),'<a href="scenes/caf%c3%a9.md">Scene</a>');
+  await assert.rejects(planSceneMove(dest,scene.id,'scenes/renamed.md'),/unrecognised reference/);
+});
