@@ -35,6 +35,7 @@ This vault develops that question and records evidence before broader product co
 Add new ideas where they belong, link them, and retain unresolved alternatives. A note can remain a question.
 
 - [[Story Teller]] — provisional VS Code manual scene-preview experiment; separate from EPUB delivery.
+- [[Readable Story Teller Storage]] — requested readable source paths, staged migration and accepted reimport conflict policy; implementation under validation.
 
 - [[Supporting Content]] — explicit supporting-note previews in the Story Teller adaptation; a separate extension trial.
 

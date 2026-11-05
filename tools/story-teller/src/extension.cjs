@@ -32,6 +32,8 @@ function currentEditor() {
 function activate(context) {
   const diagramOutput = vscode.window.createOutputChannel('Story Teller diagram diagnostics');
   context.subscriptions.push(diagramOutput);
+  require('./readable-command.cjs').registerReadable(vscode, context);
+  require('./scene-files.cjs').registerSceneFiles(vscode, context);
   registerWebExport(vscode, context);
   registerConversion(vscode, context);
   registerProjectMigration(vscode, context);
@@ -132,7 +134,7 @@ function activate(context) {
         entry.projectDocuments = documents; entry.projectIndex = docIndex; entry.projectRoot = project && path.dirname(project.file); entry.isMatter = matter;
         entry.supportIndex = supporting.index; entry.setSupportingWatch(supporting.index);
         entry.sentSource = source;
-        panel.webview.postMessage({ type: 'source', instance, source, uri: key, revision: current, targetOffset: requestedOffset, sceneStart: startScene, sceneAutoplay: startScene && entry.sceneMayAutoplay && panel.visible, playbackSpeed: preferredSpeed, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
+        panel.webview.postMessage({ type: 'source', instance, source, uri: key, sourceIdentity: project?.manifest.publicationId && documents[docIndex] ? `${project.manifest.publicationId}:${documents[docIndex].id}` : undefined, sourceAliases: Object.entries(project?.manifest.pathAliases || {}).filter(([,id])=>id===documents[docIndex]?.id).map(([file])=>vscode.Uri.file(path.join(path.dirname(project.file),file)).toString()), legacySceneId: documents[docIndex]?.id, revision: current, targetOffset: requestedOffset, sceneStart: startScene, sceneAutoplay: startScene && entry.sceneMayAutoplay && panel.visible, playbackSpeed: preferredSpeed, muted: preferredMute, autoplayOnTurn: preferredAutoplay,
           matter, documentPrevious: startScene && entry.previousDocument, documentNavigation: { previous: docIndex > 0, next: docIndex >= 0 && docIndex < documents.length - 1 }, supporting: { links: supporting.links, diagnostics: supporting.diagnostics }, supportingVersion: supportVersion,
           prosePacing: pacing.enabled, pacingSource: pacing.source, pacingWarning: pacingWarning || pacing.warning || null, ...prepared });
       }

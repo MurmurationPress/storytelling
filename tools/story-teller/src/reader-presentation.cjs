@@ -28,6 +28,7 @@ let revision = -1;
 let incomingRevision = -1;
 let pendingDeparture = 0;
 let sourceUri = '';
+let sourceIdentity;
 let readingSource = 'restore', readingMode = 'manual', readingInteraction = false;
 let media = Object.create(null);
 let mediaDiagnostics = [];
@@ -105,7 +106,7 @@ function controls() {
       source: readingSource, mode: readingMode, interaction: readingInteraction });
   }
   api.onControls?.({ phase: player.phase, preparing, presented, isMatter, muted });
-  if (sourceUri && !preparing) api.setState({ sourceUri, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
+  if (sourceUri && !preparing) api.setState({ sourceUri, sourceIdentity, index: player.index, raw: player.current?.raw, muted, autoplayOnTurn, playbackSpeed: player.playbackSpeed });
 }
 function imageElement(src, alt, inline = false) {
   const image = document.createElement('img');
@@ -573,6 +574,7 @@ api.onMessage(async event => {
   for (const [src, entry] of Object.entries(media)) if (entry.error && !(message.mediaDiagnostics || []).some(line => line.includes(`Image ${src}:`))) mediaDiagnostics.push(`Line ${parsedScene.imageLines?.[src] || '?'}: Image ${src}: ${entry.error}`);
   const first = !sourceUri;
   sourceUri = message.uri;
+  sourceIdentity = message.sourceIdentity;
   pacingWarning = message.pacingWarning;
   pacingLabel = `${message.prosePacing ? 'On' : 'Off'} (${message.pacingSource || 'unchanged default'})`;
   isMatter = message.matter === true;
@@ -588,7 +590,7 @@ api.onMessage(async event => {
   } else if (Number.isInteger(message.targetOffset)) {
     const selected = beatAtOffset(player.scene.beats.map(beat => beat.sourceRange), message.targetOffset);
     if (selected >= 0) { player.index = selected; player.reset(); }
-  } else if (first && saved?.sourceUri === sourceUri && Number.isInteger(saved.index)) {
+  } else if (first && require('./reader-position.cjs').sameDocument(saved,message) && Number.isInteger(saved.index)) {
     const matches = player.scene.beats.map((beat, i) => beat.raw === saved.raw ? i : -1).filter(i => i >= 0);
     const restored = matches.length ? matches.reduce((a, b) => Math.abs(a - saved.index) <= Math.abs(b - saved.index) ? a : b) : saved.index;
     player.index = Math.max(0, Math.min(restored, player.scene.beats.length - 1));

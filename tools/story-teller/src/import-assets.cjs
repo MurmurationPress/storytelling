@@ -2,9 +2,13 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { inside, FORMATS } = require('./media.cjs');
-async function assetIndex(root) {
+async function assetIndex(root, {excludeProjects=false} = {}) {
   const files = new Map();
   async function walk(directory) {
+    if(excludeProjects) {
+      try{if((await fs.stat(path.join(directory,'story-teller.project.json'))).isFile())return;}
+      catch(error){if(!['ENOENT','ENOTDIR'].includes(error.code))throw error;}
+    }
     for (const entry of await fs.readdir(directory, { withFileTypes: true })) {
       if (entry.name.startsWith('.') || entry.isSymbolicLink()) continue;
       const file = path.join(directory, entry.name);

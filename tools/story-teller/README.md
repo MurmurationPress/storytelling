@@ -557,3 +557,7 @@ Optional standalone analytics: see [consent, event meanings and GA4 reporting](A
 See [authored diagram syntax, accessibility, security and examples](MERMAID.md).
 
 Publication of the examples/authoring guide uses its [dedicated Story Telling target](PUBLISH-STORY-TELLING.md), independently of Skip.
+
+## Readable project files
+
+New imports use version 2 readable scene and asset paths, retaining stable IDs and explicit order. See [migration, reimport, rename and recovery instructions](READABLE-FILES.md). Existing version 1 projects remain readable; migration creates a validated sibling copy and retains the original.

@@ -1,0 +1,16 @@
+{
+  "fixture": "private local project copied before migration",
+  "productionSourcePreserved": true,
+  "semanticInventoryEqual": true,
+  "semanticHash": "84b94b5b2a736efabd5e42287cc56c26d1ee849750d9df291ad87dbc0b3332ed",
+  "scenes": 14,
+  "documents": 16,
+  "beats": 150,
+  "components": 598,
+  "references": 700,
+  "assets": 52,
+  "renamedFiles": 65,
+  "readerWarnings": 0,
+  "publicationIdentityPreserved": true,
+  "repeatedMigrationNoop": true
+}

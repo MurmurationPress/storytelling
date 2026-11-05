@@ -25,6 +25,8 @@ function host(savedAutoplay = true, project = null) {
   Module._load=function(request,parent,...rest){
     if(parent?.filename.endsWith('/src/extension.cjs')){
       if(request==='vscode')return vscode;
+      if(request==='./readable-command.cjs')return {registerReadable:()=>{}};
+      if(request==='./scene-files.cjs')return {registerSceneFiles:()=>{}};
       if(request==='./import-command.cjs')return {registerImport:(v,c,options)=>{integration=options;}};
       if(request==='./conversion-command.cjs')return {registerConversion:()=>{}};
       if(request==='./insert-command.cjs')return {registerInsert:()=>{}};
