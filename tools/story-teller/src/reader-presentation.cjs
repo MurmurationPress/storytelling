@@ -206,7 +206,22 @@ function render() {
   const beat = player.current;
   if (!beat) content.textContent = 'No story beats yet. Add prose or a chat block in the Markdown document.';
   let openingTitle = player.index === 0 && hideMatchingHeading;
+  let currentCallout = null, destination = content;
   for (const block of player.visibleBlocks) {
+    if (block.callout?.id !== currentCallout) {
+      currentCallout = block.callout?.id;
+      destination = content;
+      if (block.callout) {
+        const parent = block.callout;
+        destination = document.createElement('section');
+        destination.className = 'story-callout'; destination.dataset.calloutType = parent.type;
+        destination.setAttribute('aria-label', parent.title || parent.type);
+        if (parent.fold) destination.dataset.calloutFold = parent.fold;
+        if (parent.title) { const heading = document.createElement('h2'); heading.className = 'callout-title'; heading.innerHTML = parent.titleHtml; destination.append(heading); }
+        if (parent.timestamp) { const stamp = document.createElement('p'); stamp.className = 'callout-timestamp'; stamp.innerHTML = parent.timestampHtml; destination.append(stamp); }
+        content.append(destination);
+      }
+    }
     if (block.type === 'prose') {
       const section = document.createElement('section');
       section.className = 'prose';
@@ -223,7 +238,7 @@ function render() {
       for (const image of section.querySelectorAll('img[data-story-src]')) {
         image.replaceWith(imageOrPlaceholder(image.getAttribute('data-story-src'), image.alt, true));
       }
-      content.append(section);
+      destination.append(section);
     } else if (block.type === 'image') {
       const figure = document.createElement('figure');
       figure.className = 'story-figure';
@@ -233,7 +248,7 @@ function render() {
         caption.textContent = block.caption;
         figure.append(caption);
       }
-      content.append(figure);
+      destination.append(figure);
     } else if (block.type === 'typeout') {
       if (block.hasMedia) {
         formattedCache.append(player,block);
@@ -259,9 +274,9 @@ function render() {
           progress.innerHTML = block.document.html;
           // Complete semantic content is available once, without live row announcements.
           for (const child of progress.children) child.setAttribute('aria-hidden', 'true');
-          surface.append(progress); section.append(accessible, surface); content.append(section);
+          surface.append(progress); section.append(accessible, surface); destination.append(section);
           prepareDocument(progress);
-        } else content.append(section);
+        } else destination.append(section);
         revealDocument(section.querySelector('.typeout-progress'), block.revealCount);
         for (const position of section.storyScroll || []) {
           position.surface.scrollLeft = position.left; position.surface.scrollTop = position.top;
@@ -302,14 +317,14 @@ function render() {
         const reserve = document.createElement('pre'); reserve.className = 'typeout-reserve'; reserve.setAttribute('aria-hidden', 'true'); reserve.textContent = block.text;
         surface.append(reserve);
       }
-      surface.append(progress); section.append(accessible, surface); content.append(section);
+      surface.append(progress); section.append(accessible, surface); destination.append(section);
       if (active && active.block.line === block.line) lastTypeoutRender = { scene: player.scene, index: player.index, blockIndex: active.blockIndex };
     } else {
       if (block.title) {
         const heading = document.createElement('h2');
         heading.className = 'chat-title';
         if (block.titleHtml) heading.innerHTML = block.titleHtml; else heading.textContent = block.title;
-        content.append(heading);
+        destination.append(heading);
       }
       const list = document.createElement('ol');
       list.className = 'chat';
@@ -336,13 +351,13 @@ function render() {
         }
         list.append(item);
       }
-      content.append(list);
+      destination.append(list);
       if (block.responding) {
         const indicator = document.createElement('p');
         indicator.className = 'responding';
         indicator.setAttribute('role', 'status');
         indicator.textContent = `${block.responding} is responding…`;
-        content.append(indicator);
+        destination.append(indicator);
       }
     }
   }

@@ -175,7 +175,8 @@ async function until(fn, timeout = 60000) {
       const front=new WebSocket(page.webSocketDebuggerUrl);await new Promise((resolve,reject)=>{front.onopen=resolve;front.onerror=reject;});
       try { await new Promise((resolve,reject)=>{front.onmessage=event=>{const result=JSON.parse(event.data);if(result.id===1)result.error?reject(Error(JSON.stringify(result.error))):resolve();};front.send(JSON.stringify({id:1,method:'Page.bringToFront',params:{}}));}); } finally { front.close(); }
     };
-    let readerRoot=directory;
+    // The first reader already belongs to the workspace opened above.
+    let readerRoot=importProject || directory;
     reconnectReader=async root=>{
       const replacing=Boolean(root&&root!==readerRoot);
       const live=await until(async()=>{
@@ -213,6 +214,71 @@ async function until(fn, timeout = 60000) {
     });
     const frame = { locator };
     const beat = locator('#beat');
+    if (process.env.STORY_TELLER_HOST_SCOPE === 'callout-chat') {
+      const report = { mode: vsix ? 'installed VSIX' : 'Development Host' };
+      const fixture = await fs.readFile(process.env.STORY_TELLER_CALLOUT_SOURCE || path.join(root, 'test/fixtures/mixed-callout-sequence.md'), 'utf8');
+      const expected = require('../src/convert-callouts.cjs').convertCallouts(fixture);
+      assert.equal(expected.count, 5); assert.deepEqual(expected.warnings, []);
+      const parent = require('../src/parser.cjs').parseScene(expected.text).beats[0].callouts[0];
+      const sceneHeading = fixture.match(/^# (.+)$/m)[1];
+      const main = (await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()).find(t => t.type === 'page');
+      const mainSocket = new WebSocket(main.webSocketDebuggerUrl); await new Promise(r => mainSocket.onopen = r); let mainId = 0;
+      const mainCommand = (method, params) => new Promise((resolve,reject) => { const id=++mainId; mainSocket.onmessage=e=>{const v=JSON.parse(e.data);if(v.id===id)v.error?reject(Error(JSON.stringify(v.error))):resolve(v.result);};mainSocket.send(JSON.stringify({id,method,params})); });
+      const mainEval = async expression => (await mainCommand('Runtime.evaluate',{expression,returnByValue:true,userGesture:true}))?.result?.value;
+      const action = async label => {
+        await request('show-notifications');
+        const expression = `Array.from(document.querySelectorAll('.monaco-button')).filter(b=>b.textContent.trim()===${JSON.stringify(label)}).at(-1)`;
+        await until(async()=>await mainEval(`Boolean(${expression})`)); await mainEval(`${expression}.click()`);
+      };
+      const snapshot = async () => { await request('snapshot');return JSON.parse(await fs.readFile(path.join(directory,'snapshot.json'),'utf8')); };
+      await request('close-preview'); await request('edit', fixture); const before=await snapshot();
+      await request('start-callout-conversion');
+      await until(async()=>(await snapshot()).snapshots.some(s=>s.text===expected.text));
+      assert.equal((await snapshot()).text,fixture);report.previewMatches=true;
+      await action('Apply');
+      await until(async()=>JSON.parse(await fs.readFile(path.join(directory,'callout-conversion-result.json'),'utf8')).status==='applied');
+      const applied=await snapshot();assert.equal(applied.text,expected.text);assert.equal(applied.disk,before.disk);assert.ok(applied.dirty);
+      report.applyMatches=true;report.diskUnchanged=true;
+      await request('hide-notifications');await request('undo');assert.equal((await snapshot()).text,fixture);report.undoRestores=true;
+      await request('start-callout-conversion');await action('Apply');
+      await until(async()=>JSON.parse(await fs.readFile(path.join(directory,'callout-conversion-result.json'),'utf8')).status==='applied');
+      await request('start-callout-conversion');await action('Cancel');
+      const repeated=JSON.parse(await fs.readFile(path.join(directory,'callout-conversion-result.json'),'utf8'));
+      assert.equal(repeated.count,0);assert.equal((await snapshot()).text,expected.text);report.idempotent=true;
+      await request('hide-notifications');await request('preview-current');await reconnectReader();await bringFront();
+      await until(async()=>await evaluate(`Boolean(doc?.getElementById('beat')?.textContent.includes(${JSON.stringify(sceneHeading)}))`));
+      // Reveal each existing component through the installed reader's real control.
+      await evaluate('doc.getElementById("play").click()', true);
+      for(let i=0;i<30;i++) {
+        if(await evaluate('doc.getElementById("status").textContent.includes("completed")'))break;
+        await evaluate('doc.getElementById("reveal").click()');await sleep(100);
+      }
+      await until(async()=>await evaluate('doc.getElementById("status").textContent.includes("completed")'));
+      const rendered=await evaluate(`(()=>{const parent=doc.querySelector('.story-callout');return {groups:doc.querySelectorAll('.story-callout').length,type:parent?.dataset.calloutType,title:parent?.querySelector('.callout-title')?.textContent,timestamp:parent?.querySelector('.callout-timestamp')?.textContent,chats:parent?.querySelectorAll('ol.chat').length,messages:[...doc.querySelectorAll('.chat li')].map(li=>({speaker:li.querySelector('strong').textContent,text:li.querySelector('p').textContent,outgoing:li.classList.contains('outgoing')})),paragraphs:[...doc.querySelectorAll('.story-callout .prose p')].map(p=>p.textContent),warnings:doc.getElementById('warnings').textContent};})()`);
+      assert.equal(rendered.groups,1);assert.equal(rendered.type,'divergent');assert.equal(rendered.title,parent.title);assert.equal(rendered.timestamp,parent.timestamp);assert.equal(rendered.chats,4);
+      const expectedMessages=require('../src/parser.cjs').parseScene(expected.text).beats[0].blocks.filter(b=>b.type==='chat').flatMap(b=>b.messages.map(m=>({speaker:m.speaker,text:m.text,outgoing:true})));
+      assert.deepEqual(rendered.messages,expectedMessages);assert.equal(rendered.paragraphs.length,10);assert.equal(rendered.warnings,'');
+      // Commit structural evidence only: the acceptance manuscript stays local.
+      report.rendered={groups:rendered.groups,type:rendered.type,title:rendered.title,timestamp:rendered.timestamp,chats:rendered.chats,messageCount:rendered.messages.length,paragraphCount:rendered.paragraphs.length,allMessagesMatch:true,allOutgoing:rendered.messages.every(m=>m.outgoing),warnings:rendered.warnings};
+      await evaluate('doc.querySelector(".story-callout .chat").scrollIntoView({block:"center"})');
+      const image=(await mainCommand('Page.captureScreenshot',{format:'png'})).data;await fs.writeFile(path.join(directory,'callout-chat.png'),Buffer.from(image,'base64'));
+      // Exercise third-field subtext inside a mixed parent through the same native command.
+      const synthetic = '> [!annotation] Synthetic mixed parent\n> Before chat.\n> \n> ```chat\n> > A\n> {{A|One|local state}}\n> {{B|Two|second note}}\n> ```\n> \n> After chat.\n';
+      const syntheticExpected=require('../src/convert-callouts.cjs').convertCallouts(synthetic);
+      await request('close-preview');await request('edit',synthetic);await request('start-callout-conversion');await action('Apply');
+      await until(async()=>JSON.parse(await fs.readFile(path.join(directory,'callout-conversion-result.json'),'utf8')).status==='applied');
+      assert.equal((await snapshot()).text,syntheticExpected.text);
+      await request('hide-notifications');await request('preview-current');await reconnectReader();await bringFront();
+      await until(async()=>await evaluate('Boolean(doc?.getElementById("beat")?.textContent.includes("Before chat."))'));
+      await evaluate('doc.getElementById("play").click()',true);
+      for(let i=0;i<8;i++){await evaluate('doc.getElementById("reveal").click()');await sleep(100);}
+      const subtext=await evaluate('[...doc.querySelectorAll(".story-callout .chat-subtext")].map(p=>p.textContent)');
+      assert.deepEqual(subtext,['local state','second note']);report.mixedSubtext=subtext;
+      await request('undo');assert.equal((await snapshot()).text,synthetic);report.mixedSubtextUndoRestores=true;
+      await fs.writeFile(path.join(directory,'callout-chat.json'),JSON.stringify(report,null,2));
+      mainSocket.close();console.log('PASS actual VS Code mixed callout conversion: '+directory);
+      await fs.writeFile(path.join(directory,'request.json'),JSON.stringify({id:++id,action:'stop'}));return;
+    }
     if (process.env.STORY_TELLER_HOST_SCOPE === 'chat-subtext') {
       const {probeChatSubtext}=require('./chat-subtext-probe.cjs'),report={mode:vsix?'installed VSIX':'Development Host',layouts:{}};
       await request('select-scene',undefined,{projectRoot:importProject,file:'scenes/Chat.md'});await bringFront();

@@ -6,8 +6,9 @@ const { documentWarning } = require('./janus.cjs');
 const md = new MarkdownIt({ html: false });
 const machineLabels = new Set(['prime-log', 'divergent']);
 const recognised = new Set([...machineLabels, 'annotation', 'email', 'janus', 'janus-log']);
-const headerPattern = /^ {0,3}> ?\[!([\w-]+)\]([+-])?[ \t]*(.*?)[ \t]*$/i;
-const quotePattern = /^ {0,3}> ?/;
+const { headerPattern, quotePattern, calloutSpans, closedFence } = require('./callout-container.cjs');
+const { convertChats } = require('./convert.cjs');
+const { parseScene } = require('./parser.cjs');
 const { leadingTimestamp, fenceFor, applyChanges, within } = require('./component-identity.cjs');
 function typeout(format, sound, body, eol, title, timestamp, treatment = '') {
   const metadata = `@identity component${eol}` + (title ? `@title ${title}${eol}` : '') + (timestamp !== undefined ? `@timestamp ${timestamp}${eol}` : '');
@@ -16,12 +17,11 @@ function typeout(format, sound, body, eol, title, timestamp, treatment = '') {
 }
 function convertCallouts(source, { scope } = {}) {
   const structure = inspectStructure(source);
-  const { lines, start, boundaries, spans } = structure;
+  const { lines } = structure;
   const warnings = [], changes = [];
   if (structure.frontmatter && !structure.frontmatter.closed)
     return { text: source, count: 0, changes, warnings: [{ line: 1, message: 'unclosed frontmatter; document left unchanged' }] };
-  for (const span of spans) {
-    if (span.type !== 'blockquote_open' || span.level !== 0) continue;
+  for (const span of calloutSpans(structure)) {
     const open = span.start, close = span.end;
     if (!within(lines[open].start, lines[close - 1].end, scope)) continue;
     const header = lines[open]?.text.match(headerPattern);
@@ -34,9 +34,10 @@ function convertCallouts(source, { scope } = {}) {
     const warn = message => warnings.push({ line: open + 1, message });
     if (close <= open + 1) { warn('empty callout left unchanged'); continue; }
     const quoted = lines.slice(open + 1, close);
-    if (quoted.some(line => !quotePattern.test(line.text))) { warn('malformed callout quoting left unchanged'); continue; }
+    if (quoted.some(line => line.text.trim() && !quotePattern.test(line.text))) { warn('malformed callout quoting left unchanged'); continue; }
     let bodyLines = quoted.map(line => ({ text: line.text.replace(quotePattern, ''), eol: line.eol }));
-    if (bodyLines.some(line => /^\s*(?:> ?)?\[!/.test(line.text))) { warn('nested or adjacent callout needs review'); continue; }
+    const bodyTokens = md.parse(bodyLines.map(l => l.text + l.eol).join(''), {});
+    if (bodyLines.some((line, index) => /^\s*(?:> ?)?\[!/.test(line.text) && !bodyTokens.some(t => t.type === 'fence' && index >= t.map[0] && index < t.map[1]))) { warn('nested or adjacent callout needs review'); continue; }
     const eol = lines[open].eol || '\n';
     // Email headers and date-like lines are authored body, never metadata.
     const stamp = label === 'email' ? {} : leadingTimestamp(bodyLines);
@@ -44,7 +45,33 @@ function convertCallouts(source, { scope } = {}) {
     if (stamp.index !== undefined) bodyLines = bodyLines.filter((_, index) => index !== stamp.index);
     if (!bodyLines.some(line => line.text.trim())) { warn('callout has metadata but no body; left unchanged'); continue; }
     let converted;
-    if (machineLabels.has(label)) {
+    const mixedBody = bodyLines.map(line => line.text + line.eol).join('');
+    const mixedTokens = md.parse(mixedBody, {});
+    if (mixedTokens.some(t => t.type === 'fence' && /^chat(?:[-\s]|$)/.test(t.info.trim()))) {
+      const fences = mixedTokens.filter(t => t.type === 'fence');
+      if (fences.some(t => t.level !== 0 || !['yaml', 'chat'].includes(t.info.trim()) || !closedFence(t, bodyLines))) {
+        warn('mixed callout needs closed top-level yaml/chat fences; close the fence or review unsupported nested content'); continue;
+      }
+      if (bodyLines.some((line, i) => !fences.some(t => i >= t.map[0] && i < t.map[1]) && /^\s*(?:---\s*$|@(delay|pause)\b|<!-- beat:)/.test(line.text))) {
+        warn('mixed callout contains Story Teller structure or timing; callout left unchanged'); continue;
+      }
+      const chats = convertChats(mixedBody);
+      if (chats.warnings.length) {
+        warn('embedded chat: ' + chats.warnings.map(w => `body line ${w.line}: ${w.message}`).join('; ') + '; entire callout left unchanged'); continue;
+      }
+      // Re-inspect after chat edits; preserve prose and convert YAML independently.
+      const nested = inspectStructure(chats.text);
+      const edits = nested.spans.filter(t => t.type === 'fence' && t.level === 0 && t.info === 'yaml').map(t => ({
+        start: nested.lines[t.start].start, end: nested.lines[t.end - 1].end,
+        text: typeout('yaml', 'modem', nested.lines.slice(t.start + 1, t.end - 1).map(l => l.text + l.eol).join(''), eol)
+      }));
+      const body = applyChanges(chats.text, edits);
+      const metadata = `@type ${header[1]}${eol}` + (title ? `@title ${title}${eol}` : '') + (stamp.value !== undefined ? `@timestamp ${stamp.value}${eol}` : '') + (header[2] ? `@fold ${header[2]}${eol}` : '');
+      const fence = fenceFor(body, metadata);
+      converted = `${fence}callout${eol}${metadata}${eol}${body}${body.endsWith('\n') ? '' : eol}${fence}${eol}`;
+      const validation = parseScene(converted);
+      if (validation.diagnostics.length) { warn('mixed callout conversion needs review: ' + validation.diagnostics.join('; ') + '; entire callout left unchanged'); continue; }
+    } else if (machineLabels.has(label)) {
       const body = bodyLines.map(line => line.text + line.eol).join('');
       const tokens = md.parse(body, {});
       const fences = tokens.filter(token => token.type === 'fence');

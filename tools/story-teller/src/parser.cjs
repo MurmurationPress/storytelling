@@ -51,7 +51,7 @@ function timingValue(name, value) {
   return { delayMs: amount };
 }
 
-function parseScene(source, { prosePacing = false } = {}) {
+function parseScene(source, { prosePacing = false, calloutDepth = 0 } = {}) {
   const structure = inspectStructure(source);
   const lines = structure.lines.map((line, i) => i === 0 ? line.text.replace(/^\uFEFF/, '') : line.text);
   const diagnostics = [];
@@ -71,6 +71,7 @@ function parseScene(source, { prosePacing = false } = {}) {
     const text = bodyLines.join('\n');
     const tokens = md.parse(text, {});
     const blocks = [];
+    const callouts = [];
     const sequence = []; // Timing metadata and references in source order.
     let pendingDelay = null;
     const diagnostic = (line, message) => diagnostics.push(`Line ${line}: ${message}`);
@@ -101,6 +102,41 @@ function parseScene(source, { prosePacing = false } = {}) {
         const src = child.attrGet('src') || '';
         images.add(src);
         imageLines[src] ??= first + (token.map?.[0] || 0) + 1;
+      }
+      if (token.type === 'fence' && token.info.trim() === 'callout' && token.level === 0) {
+        const openLine = first + token.map[0], parts = token.content.split('\n');
+        const separator = parts.findIndex(line => !line.trim());
+        const identity = { id: openLine + 1, line: openLine + 1 };
+        let error = calloutDepth ? 'nested callout containers need review' : null;
+        if (separator < 0) error = 'callout needs a blank line between metadata and body';
+        for (const line of parts.slice(0, Math.max(0, separator))) {
+          const setting = line.match(/^@(type|title|timestamp|fold)[ \t](.*)$/);
+          if (!setting || !setting[2].trim() || Object.hasOwn(identity, setting[1])) { error = 'callout needs unique @type, optional @title, @timestamp and @fold metadata'; break; }
+          identity[setting[1]] = setting[2];
+        }
+        if (!/^[\w-]+$/.test(identity.type || '') || (identity.fold !== undefined && !['+', '-'].includes(identity.fold))) error = 'callout needs a valid @type and optional @fold + or -';
+        const last = first + token.map[1] - 1;
+        const closing = structure.lines[last]?.text.match(/^ {0,3}(`+|~+)\s*$/);
+        if (!closing || closing[1][0] !== token.markup[0] || closing[1].length < token.markup.length || last <= openLine) error = 'unclosed callout fence; add a matching closing fence';
+        const body = parts.slice(separator + 1).join('\n');
+        const bodyLine = openLine + separator + 2;
+        const nested = error ? null : parseScene('\n'.repeat(bodyLine) + body, { prosePacing, calloutDepth: calloutDepth + 1 });
+        if (nested && (nested.beats.length !== 1 || nested.frontmatter || nested.diagnostics.length)) error = 'callout body needs one valid sequence: ' + (nested.diagnostics.join('; ') || 'beat boundaries/frontmatter need review');
+        if (error) { diagnostic(openLine + 1, error + '; showing complete callout as code.'); prose.push(token); continue; }
+        flush();
+        for (const key of ['title', 'timestamp']) if (identity[key]) {
+          identity[key + 'Html'] = md.renderInline(identity[key]);
+          wikiReferences.push(...references(md.parseInline(identity[key]), openLine + 2 + parts.findIndex(line => line.startsWith('@' + key))));
+        }
+        const offset = blocks.length;
+        callouts.push({ ...identity, blockStart: offset, blockEnd: offset + nested.beats[0].blocks.length });
+        for (const block of nested.beats[0].blocks) add({ ...block, callout: identity });
+        // Child timing stays ordered; add() above handles a parent entry delay.
+        sequence.splice(sequence.length - nested.beats[0].blocks.length, nested.beats[0].blocks.length,
+          ...nested.beats[0].sequence.map(entry => entry.type === 'component' ? { ...entry, blockIndex: entry.blockIndex + offset } : entry));
+        wikiReferences.push(...nested.wikiReferences);
+        for (const src of nested.images) { images.add(src); imageLines[src] ??= nested.imageLines[src]; }
+        continue;
       }
       if (token.type === 'fence' && token.info.trim() === 'mermaid' && token.level === 0) {
         flush();
@@ -328,7 +364,7 @@ function parseScene(source, { prosePacing = false } = {}) {
     }
     flush();
     if (pendingDelay) diagnostic(pendingDelay.line, '@delay needs a following prose, image, chat or typeout component in this beat');
-    return { raw, line: first + 1, title: range.title, sourceRange: range, blocks, sequence };
+    return { raw, line: first + 1, title: range.title, sourceRange: range, blocks, sequence, ...(callouts.length ? { callouts } : {}) };
   });
   return { frontmatter, beats, diagnostics, images: [...images], imageLines, wikiReferences: wikiReferences.sort((a,b)=>a.line-b.line) };
 }

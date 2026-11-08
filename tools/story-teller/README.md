@@ -561,3 +561,11 @@ Publication of the examples/authoring guide uses its [dedicated Story Telling ta
 ## Readable project files
 
 New imports use version 2 readable scene and asset paths, retaining stable IDs and explicit order. See [migration, reimport, rename and recovery instructions](READABLE-FILES.md). Existing version 1 projects remain readable; migration creates a validated sibling copy and retains the original.
+
+### Mixed callouts containing chats (0.20.0 review candidate)
+
+**Convert Callouts to Type-out** now converts embedded legacy chats atomically
+with their parent callout. A fenced `callout` container retains the parent
+identity around prose, YAML type-outs and independent chats. See
+[the syntax, limits and acceptance procedure](CALLOUT-CHATS.md) and
+[validation evidence](test/evidence/callout-chat/README.md).

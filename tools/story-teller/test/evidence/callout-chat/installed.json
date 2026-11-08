@@ -1,0 +1,25 @@
+{
+  "mode": "installed VSIX",
+  "previewMatches": true,
+  "applyMatches": true,
+  "diskUnchanged": true,
+  "undoRestores": true,
+  "idempotent": true,
+  "rendered": {
+    "groups": 1,
+    "type": "divergent",
+    "title": "LocalCorrection.SequenceDependency",
+    "timestamp": "2029-05-27 23:22",
+    "chats": 4,
+    "messageCount": 5,
+    "paragraphCount": 10,
+    "allMessagesMatch": true,
+    "allOutgoing": true,
+    "warnings": ""
+  },
+  "mixedSubtext": [
+    "local state",
+    "second note"
+  ],
+  "mixedSubtextUndoRestores": true
+}
