@@ -1,0 +1,32 @@
+{
+  "accepted": true,
+  "acceptance": "Ted: All working; installed extension, cost-of-withholding.md",
+  "pr": 41,
+  "issue": 40,
+  "reviewedHead": "f47bb5bfe1e0d6c725a0194925c41680c182f104",
+  "mergeCommit": "71f1e78fd5f4b0577ea73e761076f43769f073cf",
+  "reviewedTree": "120ae09947965a3b5d5c54438ab1523697b45f71",
+  "mergedTree": "120ae09947965a3b5d5c54438ab1523697b45f71",
+  "treeEquality": true,
+  "actualSourceTests": {
+    "passed": 408,
+    "failed": 0
+  },
+  "portableTests": {
+    "passed": 408,
+    "failed": 0
+  },
+  "syntaxCheck": "passed",
+  "typecheck": "not configured in this CommonJS project",
+  "build": "both browser bundles passed",
+  "package": "passed",
+  "acceptedVsixSha256": "dca1a72472f9500e4fb2bc82802e1aae1002de3d52e8509bea850edfb6504dd2",
+  "validationVsixSha256": "3581dce81f35139c5cfdfeb897b5f5896e2471928f64d1002e0af97b269c68c8",
+  "allArchiveEntryContentsEqual": true,
+  "archiveIntegrity": "passed",
+  "manuscriptAndFixtureExclusion": "passed",
+  "installedNativeConversion": "passed",
+  "nativeProfile": "/tmp/story-teller-host-cbJy12",
+  "manuscriptUnchanged": true,
+  "releaseOrDeployment": false
+}

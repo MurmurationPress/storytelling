@@ -1,4 +1,4 @@
-# Mixed callouts and authored chats — 0.20.0 review candidate
+# Mixed callouts and authored chats — 0.20.0
 
 Use **Story Teller: Convert Callouts to Type-out** on a separate adaptation copy.
 The command now converts legacy chats inside recognized callouts as part of the
@@ -90,6 +90,10 @@ parser diagnostic. Arbitrary recursive callout nesting is not supported.
 
 ## Acceptance evidence
 
-See [validation](test/evidence/callout-chat/README.md). Automated installed-VSIX
-checks are implementation evidence. Ted's acceptance of the conversion in his
-installed extension remains pending; do not merge or publish before that.
+Ted completed installed-extension acceptance using Cost of Withholding on
+2026-11-08: “All working.” [PR #41](https://github.com/MurmurationPress/storytelling/pull/41)
+was squash-merged as `71f1e78fd5f4b0577ea73e761076f43769f073cf` with an expected-head
+guard; the merged tree exactly matches the reviewed head. See
+[validation and integration evidence](test/evidence/callout-chat/README.md).
+The documented format limits remain. No extension release or deployment is
+implied by this acceptance and integration.

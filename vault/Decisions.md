@@ -5,6 +5,24 @@ status: active
 
 # Decisions
 
+## 2026-11-08 — Accept and integrate mixed callout/chat conversion
+
+**Ted's acceptance:** completed installed-extension testing with
+`MULTIPLICITY/scenes/cost-of-withholding.md` and reports, “All working.” This
+accepts the requested conversion fix in [PR #41](https://github.com/MurmurationPress/storytelling/pull/41)
+at `f47bb5bfe1e0d6c725a0194925c41680c182f104`. It supersedes the pending acceptance
+record in [[Story Teller]] for this fix only.
+
+**Completed integration:** final actual-source and synthetic suites each passed
+408/408; syntax checks, both reader builds, packaging and native installed
+conversion checks passed. No TypeScript typecheck is configured. Expected-head
+squash merge produced `71f1e78fd5f4b0577ea73e761076f43769f073cf`; its complete tree
+matches the reviewed tree `120ae09947965a3b5d5c54438ab1523697b45f71`. Associated
+[issue #40](https://github.com/MurmurationPress/storytelling/issues/40) is closed.
+The subsequent tracking changes are documentation only. No manuscript changes,
+new features, release or deployment are part of this wrap-up. See
+[the integration evidence](../tools/story-teller/test/evidence/callout-chat/README.md).
+
 ## 2026-11-05 — Preserve adaptation edits during readable-storage reimport
 
 **Ted's acceptance:** for the requested readable-filesystem work extending issue #20, unchanged source preserves authored adaptation edits; changes on both sides are conflicts for explicit resolution; source-deleted scenes stay in the adaptation for author review. This accepts the reconciliation policy, not the implementation or a production migration. The proposed architecture and implementation evidence remain separate in [[Readable Story Teller Storage]]. Migration testing uses disposable copies, with no release, merge or deployment before acceptance.

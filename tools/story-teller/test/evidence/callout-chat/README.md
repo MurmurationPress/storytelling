@@ -1,9 +1,12 @@
 # Mixed callout/chat conversion validation — 2026-11-08
 
-Candidate: Story Teller **0.20.0**, issue
+Story Teller **0.20.0**, issue
 [#40](https://github.com/MurmurationPress/storytelling/issues/40).
-Ted's installed-extension acceptance is **pending**. No merge, release or
-publication was performed.
+**Accepted by Ted:** installed-extension testing with Cost of Withholding,
+“All working.” [PR #41](https://github.com/MurmurationPress/storytelling/pull/41)
+was squash-merged as `71f1e78fd5f4b0577ea73e761076f43769f073cf` with an expected-head
+guard; issue #40 is closed. No extension release or deployment was performed.
+The original candidate evidence below is retained as historical validation.
 
 ## Reproduction and outcome
 
@@ -99,3 +102,37 @@ unchanged with warnings. Fold markers are retained but the reader shows expanded
 content. Top-level-only Convert Chats remains its existing separate command.
 These automated Linux VS Code checks do not imply author acceptance, new browser
 or device coverage, or permission to merge/publish.
+
+## Final review and integration — 2026-11-08
+
+The PR remained at the accepted head
+`f47bb5bfe1e0d6c725a0194925c41680c182f104` throughout final validation and merge.
+Review confirmed only the mixed callout fix, required chat metadata preservation,
+regression fixtures/native adapter, version metadata and related documentation/
+evidence. No unrelated scene, feature or refactoring was introduced.
+
+Final checks passed on that exact head:
+
+- Actual-source suite: 408/408; portable suite: 408/408.
+- `npm run check`: passed; no TypeScript configuration/typecheck script exists.
+- `npm run build`: both browser bundles built.
+- `npm run package -- --out /tmp/story-teller-0.20.0-final.vsix`: passed.
+  ZIP integrity and source parity passed; no manuscript, sample or test fixtures
+  are included. Every archive entry has identical content to Ted's accepted VSIX.
+  The ZIP hashes differ because a new archive was packaged; no contained file differs.
+- Installed accepted VSIX native callout/chat check: passed again, actual scene,
+  diff/Apply/Undo/idempotence, rendering and synthetic embedded subtext. Isolated
+  profile: `/tmp/story-teller-host-cbJy12`.
+- Live manuscript SHA-256 remains
+  `78d9ef4c2e5d7fca14e5039045c4a4394d772f0f809d1e242f47818ed0d858ef`.
+
+Squash merge `71f1e78fd5f4b0577ea73e761076f43769f073cf` and reviewed head both
+have tree `120ae09947965a3b5d5c54438ab1523697b45f71`;
+`git diff --exit-code` between them returned no differences. Acceptance/tracking
+updates were made afterward in a separate documentation-only commit, preserving
+the accepted PR head and exact merge-tree verification.
+
+[Machine-readable integration summary](integration.json) records identities and
+package checks. Final logs remain local at `/tmp/callout-wrap-{check,actual-tests,tests,build,package,native}.log`.
+The accepted local VSIX was retained unchanged. Known format limits are unchanged;
+this completion is not an extension release, website publication or deployment.

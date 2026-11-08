@@ -200,3 +200,17 @@ retained. [Syntax and limits](../tools/story-teller/CALLOUT-CHATS.md) and
 [validation](../tools/story-teller/test/evidence/callout-chat/README.md) distinguish
 automated installed-VSIX checks from Ted's acceptance. No authoritative
 manuscript changes, merge, release or publication are authorized by these checks.
+
+### Accepted and integrated — 2026-11-08
+
+Ted completed installed-extension acceptance using Cost of Withholding and
+reports, “All working.” This supersedes the pending review status above for the
+mixed callout conversion fix. [PR #41](https://github.com/MurmurationPress/storytelling/pull/41)
+was squash-merged with an expected-head guard at `f47bb5bfe1e0d6c725a0194925c41680c182f104`;
+merge `71f1e78fd5f4b0577ea73e761076f43769f073cf` has the identical reviewed tree
+`120ae09947965a3b5d5c54438ab1523697b45f71`. [Issue #40](https://github.com/MurmurationPress/storytelling/issues/40)
+is closed. Final actual-source and portable tests each passed 408/408, syntax
+checks/build/package checks passed, and native conversion was exercised again.
+No TypeScript typecheck is configured. Package contents match the accepted VSIX
+entry for entry. The manuscript remains unchanged. Existing unsupported nesting
+and expanded-fold presentation limits remain; no release or deployment occurred.
