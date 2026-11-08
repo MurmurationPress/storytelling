@@ -58,7 +58,7 @@ function legacyBody(body) {
         viewer = true; output.push(line); continue;
       }
       // Only explicit existing Story Teller settings are carried over. No inferred timing/ticks.
-      if (/^@(ticks|responding)$/.test(line) || /^@(delay|pause)\s+\S+$/.test(line)) { output.push(line); continue; }
+      if (/^@(ticks|responding)$/.test(line) || /^@(delay|pause)\s+\S+$/.test(line) || /^@pace (normal|brisk|deliberate)$/.test(line)) { output.push(line); continue; }
       fail('unsupported control/comment, divider or prose inside the chat container');
     }
   };

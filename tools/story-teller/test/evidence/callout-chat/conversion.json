@@ -1,0 +1,36 @@
+{
+  "source": "Stories-Told/MULTIPLICITY/scenes/cost-of-withholding.md",
+  "sha256": "78d9ef4c2e5d7fca14e5039045c4a4394d772f0f809d1e242f47818ed0d858ef",
+  "baseline": "origin/main converter",
+  "before": {
+    "chats": {
+      "count": 0,
+      "warnings": [],
+      "parserDiagnostics": [],
+      "beats": 1,
+      "chatBlocks": 0,
+      "messages": 0
+    },
+    "callouts": {
+      "count": 4,
+      "warnings": [
+        {
+          "line": 72,
+          "message": "machine callout needs exactly one top-level YAML fence; prose-only or mixed fences need review"
+        }
+      ],
+      "parserDiagnostics": [],
+      "beats": 1,
+      "chatBlocks": 0,
+      "messages": 0
+    }
+  },
+  "after": {
+    "count": 5,
+    "warnings": [],
+    "parserDiagnostics": [],
+    "beats": 1,
+    "chatBlocks": 4,
+    "messages": 5
+  }
+}

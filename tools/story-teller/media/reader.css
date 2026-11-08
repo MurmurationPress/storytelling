@@ -173,3 +173,8 @@ button.wiki-link.note-unavailable { text-decoration-style:dotted; }
 .story-align-left { text-align: left; }
 .story-align-center { text-align: center; }
 .story-align-right { text-align: right; }
+
+/* Mixed authored callout: retain one parent around prose, YAML and chats. */
+.story-callout { border-inline-start: 3px solid var(--vscode-textBlockQuote-border, #888); padding-inline-start: 1rem; margin-block: 1rem; }
+.callout-title { font-size: 1.1em; }
+.callout-timestamp { opacity: .75; font-size: .9em; }

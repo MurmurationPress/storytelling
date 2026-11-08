@@ -183,3 +183,20 @@ author attribution. Actual book adaptations remain untouched. See the
 [validation](../tools/story-teller/test/evidence/component-identity/README.md).
 Implementation/test evidence is separate from author acceptance; no merge or
 production deployment is authorised by this implementation task.
+
+## Mixed callout/chat conversion — 2026-11-08 review candidate
+
+**Ted's request:** investigate Cost of Withholding without rewriting its
+manuscript, correct the general conversion architecture, and validate in an
+installed extension before acceptance. [Issue #40](https://github.com/MurmurationPress/storytelling/issues/40)
+records the reproduced failure: four of five callouts convert; the mixed
+Divergent callout at line 72 is rejected, and chat conversion skips quoted
+fences without warnings.
+
+**Implementation for review:** a fenced `callout` parent preserves identity and
+ordered prose/YAML/chat children; embedded chats reuse existing conversion,
+including viewer and third-field subtext. Existing simple conversion paths are
+retained. [Syntax and limits](../tools/story-teller/CALLOUT-CHATS.md) and
+[validation](../tools/story-teller/test/evidence/callout-chat/README.md) distinguish
+automated installed-VSIX checks from Ted's acceptance. No authoritative
+manuscript changes, merge, release or publication are authorized by these checks.
